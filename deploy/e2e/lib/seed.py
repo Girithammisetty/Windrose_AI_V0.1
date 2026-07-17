@@ -253,10 +253,15 @@ def register_inference_tool(tenant_id: str) -> str:
                                    "model_version_urn": {
                                        "type": "string",
                                        "x-windrose-urn":
-                                           "wr:{tenant}:experiment:model_version/{value}"},
+                                           "wr:{tenant}:experiment:model_version/{value}",
+                                       # Role-governed resource (see promote):
+                                       # cross-tenant guarded, but not part of the
+                                       # per-user obo-grant intersection.
+                                       "x-windrose-urn-obo": False},
                                    "input_dataset_urn": {
                                        "type": "string",
-                                       "x-windrose-urn": "wr:{tenant}:dataset:dataset/{value}"},
+                                       "x-windrose-urn": "wr:{tenant}:dataset:dataset/{value}",
+                                       "x-windrose-urn-obo": False},
                                    "output_dataset_name": {"type": "string"},
                                    "workspace_id": {"type": "string"}},
                                "required": ["model_version_urn", "input_dataset_urn"]},
@@ -604,6 +609,143 @@ def seed_evalkey(tenant_id: str) -> str:
     return vkey
 
 
+def _register_tool(tenant_id: str, *, tool_id: str, version: str, display: str,
+                   owner_service: str, backend_url: str, semantic_description: str,
+                   input_schema: dict, tags: list[str]) -> str:
+    """Shared idempotent register->publish->tenant-enable->backend recipe
+    (the register_inference_tool pattern, §TPL-FR-012), parameterized so the
+    ML-lifecycle tools don't copy 100 lines each."""
+    import psycopg
+
+    su = c.superadmin_token()
+
+    def _post(url, token, body):
+        return requests.post(url, json=body,
+                             headers={"Authorization": f"Bearer {token}",
+                                      "Content-Type": "application/json"}, timeout=15)
+
+    r = _post(f"{c.TOOL_REGISTRY}/api/v1/tools", su,
+             {"tool_id": tool_id, "display_name": display,
+              "owner_service": owner_service, "owner_team": "ml-platform",
+              "enabled_by_default": True, "side_effects": "reversible", "tags": tags})
+    if r.status_code not in (200, 201) and "already exists" not in r.text.lower():
+        print(f"register {tool_id} tool: {r.status_code} {r.text[:150]}", file=sys.stderr)
+
+    r = _post(f"{c.TOOL_REGISTRY}/api/v1/tools/{tool_id}/versions", su,
+             {"version": version, "semantic_description": semantic_description,
+              "input_schema": input_schema,
+              "output_schema": {"type": "object", "additionalProperties": True},
+              "permission_tier": "write-proposal", "cost_weight": 2,
+              "declared_sla": {"p95_ms": 10000}, "side_effects": "reversible",
+              "examples": []})
+    if r.status_code not in (200, 201) and "already exists" not in r.text.lower():
+        print(f"register {tool_id} version: {r.status_code} {r.text[:150]}", file=sys.stderr)
+
+    try:
+        with psycopg.connect("postgresql://windrose:windrose_dev@localhost:5432/tool_plane") as cn:
+            pubs = [row[0] for row in cn.execute(
+                "SELECT version FROM tool_versions WHERE tool_id=%s AND status='published' "
+                "AND version<>%s", (tool_id, version)).fetchall()]
+        for vv in pubs:
+            requests.post(f"{c.TOOL_REGISTRY}/api/v1/tools/{tool_id}/versions/{vv}/deprecate",
+                          headers={"Authorization": f"Bearer {su}"}, timeout=15)
+    except Exception as e:
+        print(f"deprecate prior published {tool_id} versions: {e}", file=sys.stderr)
+
+    pubr = requests.post(f"{c.TOOL_REGISTRY}/api/v1/tools/{tool_id}/versions/{version}/publish",
+                         headers={"Authorization": f"Bearer {su}"}, timeout=20)
+    if pubr.status_code not in (200, 201) and "only draft" not in pubr.text:
+        print(f"publish {tool_id} {version}: {pubr.status_code} {pubr.text[:150]}", file=sys.stderr)
+
+    tenant_tok = c.service_token("svc:seed", tenant_id, ["*"])
+    requests.put(f"{c.TOOL_REGISTRY}/api/v1/tenants/self/tools/{tool_id}",
+                headers={"Authorization": f"Bearer {tenant_tok}",
+                         "Content-Type": "application/json"},
+                json={"enabled": True}, timeout=15)
+
+    with psycopg.connect("postgresql://windrose:windrose_dev@localhost:5432/tool_plane",
+                         autocommit=True) as cn:
+        cn.execute("SELECT set_config('app.role','platform', false)")
+        cn.execute(
+            """INSERT INTO mcp_backends (name, tenant_id, internal_url, spiffe_id, kind, status)
+               VALUES (%s,'00000000-0000-0000-0000-000000000000',%s,
+                       'spiffe://windrose/ns/tools/sa/mcp-gateway','internal','active')
+               ON CONFLICT (name) DO UPDATE SET internal_url=EXCLUDED.internal_url,
+                   spiffe_id=EXCLUDED.spiffe_id, status='active'""",
+            (owner_service, backend_url))
+    print(f"{tool_id} registered + enabled; mcp_backends[{owner_service}] -> {backend_url}",
+          file=sys.stderr)
+    return tool_id
+
+
+def register_ml_lifecycle_tools(tenant_id: str) -> list[str]:
+    """BRD 52 (ml-engineer agent): register the two write-proposal tools the
+    autonomous train->evaluate->propose loop needs. Closes two pre-existing
+    gaps: pipeline.template.create_from_algorithm was referenced by the
+    model-training agent but never registered; experiment.model.promote had a
+    facade but no reachable backend route until experiment-service grew
+    /internal/v1/mcp/invoke."""
+    pipeline_url = os.environ.get("PIPELINE_URL", c.PIPELINE)
+    experiment_url = os.environ.get("EXPERIMENT_URL", c.EXPERIMENT)
+    tools = []
+    tools.append(_register_tool(
+        tenant_id,
+        tool_id="pipeline.template.create_from_algorithm", version="1.0.0",
+        display="Create + launch a training pipeline from an algorithm template",
+        owner_service="pipeline-orchestrator",
+        backend_url=f"{pipeline_url}/internal/v1/mcp/invoke",
+        semantic_description=(
+            "Instantiate and launch a training pipeline run from a catalog "
+            "algorithm template against a governed dataset. Use when a human "
+            "has approved (or tenant policy auto-approves) an agent plan to "
+            "train a model candidate."),
+        input_schema={"type": "object", "additionalProperties": False,
+                      "properties": {
+                          "algorithm": {"type": "string"},
+                          "mode": {"type": "string"},
+                          "dataset_refs": {"type": "object",
+                                           "additionalProperties": {"type": "string"}},
+                          "params": {"type": "object", "additionalProperties": True},
+                          "workspace_id": {"type": "string"},
+                          "name": {"type": "string"}},
+                      "required": ["algorithm", "dataset_refs"]},
+        tags=["pipeline", "training", "ml-engineer"]))
+    tools.append(_register_tool(
+        tenant_id,
+        tool_id="experiment.model.promote", version="1.0.0",
+        display="Request a model promotion (four-eyes)",
+        owner_service="experiment-service",
+        backend_url=f"{experiment_url}/internal/v1/mcp/invoke",
+        semantic_description=(
+            "Create a PENDING promotion request for a registered model version "
+            "toward a target lifecycle stage; a second human must decide it "
+            "(four-eyes). Use when an agent's evaluated candidate is worth "
+            "promoting and a human approved the proposal."),
+        input_schema={"type": "object", "additionalProperties": False,
+                      "properties": {
+                          "model_id": {"type": "string"},
+                          "version": {"type": "integer"},
+                          "model_version_urn": {
+                              "type": "string",
+                              "x-windrose-urn":
+                                  "wr:{tenant}:experiment:model_version/{value}",
+                              # A model version is ROLE-governed (the deciding
+                              # human's experiment.model.update capability, checked
+                              # at experiment-service's facade), not per-user ABAC-
+                              # assigned like a case. Opt out of tool-plane's per-
+                              # resource obo-grant intersection (which would demand
+                              # a perm:{tenant}:{user}:res:* grant that is never
+                              # minted for model versions -> deny-forever) while
+                              # keeping the cross-tenant URN guard.
+                              "x-windrose-urn-obo": False},
+                          "target_stage": {"type": "string"},
+                          "rationale": {"type": "string"},
+                          "workspace_id": {"type": "string"}},
+                      "required": ["model_id", "version", "target_stage"]},
+        tags=["experiment", "promotion", "ml-engineer"]))
+    return tools
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else ""
     if cmd == "tenant":
@@ -618,8 +760,11 @@ if __name__ == "__main__":
         register_ingestion_tool(sys.argv[2])
     elif cmd == "chart_dashboard_tool":
         register_chart_dashboard_tool(sys.argv[2])
+    elif cmd == "ml_lifecycle_tools":
+        register_ml_lifecycle_tools(sys.argv[2])
     else:
         print("usage: seed.py {tenant|aigw <tenant_id>|evalkey <tenant_id>|"
              "inference_tool <tenant_id>|ingestion_tool <tenant_id>|"
-             "chart_dashboard_tool <tenant_id>}", file=sys.stderr)
+             "chart_dashboard_tool <tenant_id>|ml_lifecycle_tools <tenant_id>}",
+             file=sys.stderr)
         sys.exit(2)

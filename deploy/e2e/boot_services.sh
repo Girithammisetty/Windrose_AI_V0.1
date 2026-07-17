@@ -28,7 +28,8 @@ start_identity() {
     REDIS_ADDR="$REDIS_ADDR"
     KEYCLOAK_URL="http://localhost:8180"
     KEYCLOAK_ADMIN_USER="admin" KEYCLOAK_ADMIN_PASSWORD="admin"
-    OPA_URL="$OPA_URL" RBAC_URL="$RBAC_URL" )
+    OPA_URL="$OPA_URL" RBAC_URL="$RBAC_URL"
+    OIDC_ISSUER="${OIDC_ISSUER:-}" OIDC_CLIENT_ID="${OIDC_CLIENT_ID:-}" OIDC_TENANT_ID="${OIDC_TENANT_ID:-}" )
   say "boot identity (bootstrap pass)"
   boot identity "${env[@]}" "$BIN_DIR/identity-e2e"
   wait_ready identity "$IDENTITY_URL" || die "identity failed first boot"
@@ -67,6 +68,8 @@ start_case() {
     JWKS_URL="$WR_JWKS_URL" JWT_ISSUER="$WR_ISS" JWT_AUDIENCE="$WR_AUD" \
     SNAPSHOT_ROOT="${E2E_DIR}/run/case-snapshots" \
     QUERY_SERVICE_URL="$QUERY_URL" \
+    MINIO_ENDPOINT="${S3_ENDPOINT#http://}" MINIO_ACCESS_KEY=windrose MINIO_SECRET_KEY=windrose_dev \
+    MINIO_USE_SSL=false CASE_EVIDENCE_BUCKET=windrose-case-evidence \
     RBAC_URL="$RBAC_URL" REGISTER_SIGNING_KEY_PEM="$reg_key" \
     REGISTER_SIGNING_KID="e2e-harness-key-1" REGISTER_TENANT_ID="$TENANT_ID" \
     CASE_FACADE_ALLOWED_SPIFFE="spiffe://windrose/ns/tools/sa/mcp-gateway" \

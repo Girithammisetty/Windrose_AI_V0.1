@@ -59,11 +59,23 @@ PERSONA_SCOPES = [
     "chart.dashboard.read", "usage.report.read",
     "agent.proposal.read", "agent.proposal.decide", "agent.run.create",
 ]
+# `sub` is each persona's REAL identity-service user id (services/identity-
+# service/internal/api/handlers_users.go's POST /users/invite), not a synthetic
+# string. Case assignment (case-service's assigned_to_id is a real uuid FK) and
+# tool-plane's per-resource OBO grant (rbac's perm:{tenant}:{user}:res:{hash}
+# Redis projection, populated from real case-service assignment events) both
+# require the decider to be a real, assignable identity-service user — a
+# synthetic "user-adjuster" string sub can never be assigned a case or hold a
+# per-resource grant, which silently broke every case.apply_disposition
+# execution end-to-end until this was fixed (found live 2026-07-17). If this
+# tenant is rebuilt from scratch, re-run the one-time invite step (see
+# docs/design or project memory "windrose persona identity fix") before
+# reusing these ids literally — they are THIS tenant's real user ids.
 PERSONAS = {
-    "adjuster@demo.windrose": {"sub": "user-adjuster", "role": "adjuster"},
-    "manager@demo.windrose": {"sub": "user-manager", "role": "manager"},
-    "datascientist@demo.windrose": {"sub": "user-datascientist", "role": "datascientist"},
-    "admin@demo.windrose": {"sub": "user-admin", "role": "admin"},
+    "adjuster@demo.windrose": {"sub": "019f6de5-3498-70f2-93d3-51311340a1ea", "role": "adjuster"},
+    "manager@demo.windrose": {"sub": "019f6de5-34b4-7eb1-b169-1c66b95be578", "role": "manager"},
+    "datascientist@demo.windrose": {"sub": "019f6de5-34c7-760a-b3ff-97f324237f0d", "role": "datascientist"},
+    "admin@demo.windrose": {"sub": "019f6de5-34da-7301-a45b-a525052cd74d", "role": "admin"},
 }
 
 

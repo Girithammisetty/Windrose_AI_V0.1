@@ -43,10 +43,42 @@ def load_tenant():
 
 
 TENANT = load_tenant()
+# Fabricated default — REPLACED at main() start by align_workspace_to_rbac() with
+# rbac's real "Default use case" workspace id. The copilot caller-gate
+# (agent-runtime) authorizes workspace-scoped actions (case.case.update) via the
+# single-key authz:proj:{tenant}:{sub}:{action}:{ws} projection, which the rbac
+# worker only materializes for REAL rbac workspaces — a fabricated uuid5 has no
+# facts, so the gate denies every triage proposal (Step D "no proposal"). Aligning
+# to the real workspace (the same fix seed_platform.py::_align_workspace_to_rbac
+# applies for the personas) makes the case's workspace one the projection knows.
 WORKSPACE = str(uuid.uuid5(uuid.NAMESPACE_DNS, "claims-triage-ws-" + TENANT))
 MANAGER = str(uuid.uuid5(uuid.NAMESPACE_DNS, "triage-manager-" + TENANT))
 APPROVER = str(uuid.uuid5(uuid.NAMESPACE_DNS, "triage-approver-" + TENANT))
 SESSION = str(uuid.uuid4())
+
+_RBAC_DSN = os.environ.get(
+    "RBAC_DATABASE_URL", "postgres://windrose:windrose_dev@localhost:5432/rbac")
+
+
+def align_workspace_to_rbac():
+    """Point WORKSPACE at rbac's real 'Default use case' workspace so every
+    workspace-scoped authz check (esp. the copilot caller-gate) resolves against
+    a workspace the rbac projection worker actually materializes facts for. No-op
+    (keeps the fabricated id, with a warning) if the row can't be resolved."""
+    global WORKSPACE
+    try:
+        import psycopg
+        with psycopg.connect(_RBAC_DSN) as cn:
+            row = cn.execute(
+                "SELECT id FROM workspaces WHERE tenant_id = %s AND lower(name) = lower(%s)",
+                (TENANT, "Default use case")).fetchone()
+        if row and str(row[0]) != WORKSPACE:
+            WORKSPACE = str(row[0])
+            print(f"  aligned WORKSPACE to rbac default use case: {WORKSPACE}")
+        elif not row:
+            print("  !! could not resolve rbac default workspace; keeping fabricated id")
+    except Exception as e:  # noqa: BLE001
+        print(f"  !! align_workspace_to_rbac failed ({e}); keeping fabricated id")
 rds = redislib.Redis(host="localhost", port=6379, db=0)
 
 
@@ -1108,11 +1140,31 @@ def step_i_retrain(dataset_urn):
                headers=J(), json={"workspace_id": WORKSPACE, "name": RETRAIN_TEMPLATE_NAME,
                                    "mode": "train", "dataset_refs": {"TRAIN": dataset_urn},
                                    "parameters": {"n_estimators": 60, "max_depth": 5}})
-    if inst.status_code not in (200, 201):
+    template_id = None
+    if inst.status_code in (200, 201):
+        template_id = (inst.json().get("data", {}) or {}).get("id")
+        ok("instantiated a real training pipeline template (random_forest, mode=train)",
+           f"template_id={template_id}")
+    elif inst.status_code == 409:
+        # Idempotent re-run: the template name is unique per workspace, and the
+        # demo seed (seed_claims_demo) or a prior driver run already created it.
+        # The template NAME must stay RETRAIN_TEMPLATE_NAME because _reg_model_name()
+        # derives the MLflow registered-model name from it, so reuse the existing
+        # template by looking it up rather than uniquifying the name.
+        g = req("GET", f"{c.PIPELINE}/api/v1/pipelines", tok,
+                params={"filter[name]": RETRAIN_TEMPLATE_NAME})
+        if g.status_code == 200:
+            for t in (g.json().get("data", []) or []):
+                if t.get("name") == RETRAIN_TEMPLATE_NAME:
+                    template_id = t.get("id"); break
+        if template_id:
+            ok("reused the existing training pipeline template (name already in workspace)",
+               f"template_id={template_id}")
+        else:
+            bad(f"template name exists but could not be looked up: {g.status_code} {g.text[:200]}")
+            return None
+    else:
         bad(f"instantiate training pipeline: {inst.status_code} {inst.text[:300]}"); return None
-    template_id = (inst.json().get("data", {}) or {}).get("id")
-    ok("instantiated a real training pipeline template (random_forest, mode=train)",
-       f"template_id={template_id}")
     # Route the training run into experiment-service's OWN MLflow experiment (by id)
     # so the mirror reconciliation sweep — which searches only experiment-service's
     # experiments — can see and materialize the run. Without this the run lands in the
@@ -1155,15 +1207,31 @@ def step_i_retrain(dataset_urn):
         metrics = dict(mr.data.metrics)
         params = dict(mr.data.params)
         arts = {a.path for a in cl.list_artifacts(mlflow_run_id)}
-        if mr.info.run_id == mlflow_run_id and "accuracy" in metrics and "model" in arts:
-            ok("REAL MLflow run verified via MLflowClient: metrics + model artifact present",
+        # MLflow 3.x logs the model as a first-class LoggedModel (models:/m-... uri)
+        # + registers it, and does NOT store it under the run's artifact tree — so
+        # list_artifacts(run_id) is legitimately empty on a 3.x server (confirmed
+        # live 2026-07-17: the model is registered and loadable — inference-service
+        # scores with it in Step K — yet the run has no "model" artifact dir). The
+        # model's real existence is the registered version whose source run IS this
+        # run; accept EITHER the 2.x "model" run-artifact OR a 3.x registered
+        # version tied back to this run.
+        reg = _reg_model_name()
+        try:
+            _reg_versions = cl.search_model_versions(f"name='{reg}'")
+        except Exception:  # noqa: BLE001
+            _reg_versions = []
+        model_present = ("model" in arts) or any(
+            v.run_id == mlflow_run_id for v in _reg_versions)
+        if mr.info.run_id == mlflow_run_id and "accuracy" in metrics and model_present:
+            how = "run-artifact" if "model" in arts else "registered LoggedModel (MLflow 3.x)"
+            ok("REAL MLflow run verified via MLflowClient: metrics + model present",
                f"run={mlflow_run_id} accuracy={metrics.get('accuracy')} "
-               f"algorithm={params.get('algorithm')} artifacts={sorted(arts)}")
+               f"algorithm={params.get('algorithm')} model_via={how}")
             EVID["mlflow_verified_metrics"] = metrics
         else:
-            bad(f"MLflow run missing metrics/model artifact: metrics={metrics} arts={arts}")
-        reg = _reg_model_name()
-        versions = cl.search_model_versions(f"name='{reg}'")
+            bad(f"MLflow run missing metrics/model: metrics={metrics} arts={arts} "
+                f"reg_versions_for_run={[v.version for v in _reg_versions if v.run_id == mlflow_run_id]}")
+        versions = _reg_versions
         if versions:
             mv = max(versions, key=lambda v: int(v.version))
             ok("REAL registered model version present in the MLflow model registry",
@@ -1369,9 +1437,13 @@ def step_k_inference(dataset_urn):
        f"urn={input_urn} rows={len(rows)} storage={storage_uri}")
     # submit the batch scoring job against the PROMOTED (Production) model
     mv_urn = f"wr:{TENANT}:experiment:model_version/{reg}@{mlflow_ver}"
+    # Unique per-run output name: the inference-service derives the job name from
+    # dataset_name + date and enforces per-workspace uniqueness, so a fixed name
+    # 409s on a re-run / demo-seeded stack. No downstream lookup depends on the
+    # name (results are read back by job_id), so a unique suffix is safe.
     sub = req("POST", f"{c.INFERENCE}/api/v1/inferences", utok(), headers=J(),
               json={"model_version_urn": mv_urn, "input_dataset_urn": input_urn,
-                    "output": {"dataset_name": "claims-scores"}})
+                    "output": {"dataset_name": f"claims-scores-{uuid.uuid4().hex[:8]}"}})
     if sub.status_code != 202:
         bad(f"submit scoring job: {sub.status_code} {sub.text[:300]}"); return None
     job_id = (sub.json().get("data", {}) or {}).get("job_id")
@@ -1435,6 +1507,7 @@ def step_l_loop_closed():
 
 def main():
     print(f"{B}Windrose e2e — insurance claims triage-and-governance journey{N}")
+    align_workspace_to_rbac()  # BEFORE step0 seeds anything workspace-scoped
     print(f"tenant={TENANT}\nworkspace={WORKSPACE}\ntriage-manager={MANAGER}\n")
     step0_seed()
     dataset_urn = step_a_ingest()
