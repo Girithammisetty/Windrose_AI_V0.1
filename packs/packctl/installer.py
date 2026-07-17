@@ -32,8 +32,8 @@ from .manifest import Manifest, load_component_file
 
 INSTALL_ORDER = (
     "datasets", "semantic_models", "verified_queries", "saved_queries",
-    "dashboards", "dispositions", "cases", "roles", "agent_configs",
-    "memories", "pipelines",
+    "dashboards", "dispositions", "decision_models", "cases", "roles",
+    "agent_configs", "memories", "pipelines",
 )
 
 
@@ -135,6 +135,12 @@ def install(manifest: Manifest, client: PlatformClient,
                     client.ensure_disposition(
                         comp.identity, d["code"], d["label"], d["category"],
                         d.get("requires_note", False))
+
+            elif kind == "decision_models":
+                for dm in doc if isinstance(doc, list) else [doc]:
+                    client.ensure_decision_model(
+                        dm["identity"] if isinstance(doc, list) else comp.identity,
+                        dm["name"], dm["rules"], dm.get("default_outcome"))
 
             elif kind == "cases":
                 urn = resolve_dataset(doc["dataset"])

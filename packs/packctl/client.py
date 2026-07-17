@@ -580,6 +580,33 @@ class PlatformClient:
                      f"{name!r} {cr.status_code}: {cr.text[:200]}")
         return None
 
+    # ---- agent-runtime governed decision tables (BRD 54 inc2) ----------------
+    def ensure_decision_model(self, identity: str, name: str, rules: list[dict],
+                              default_outcome: dict | None) -> str | None:
+        """Publish a governed decision table (agent-runtime). Idempotent by name
+        within the workspace: an existing model of the same name is a noop. The
+        outcome disposition_codes are validated against the workspace catalog by
+        the service, so `dispositions` must install first (INSTALL_ORDER)."""
+        tok = self.author_token()
+        g = self._req("GET", f"{self.endpoints.agent}/api/v1/decision-models", tok)
+        if g.status_code == 200:
+            for mdl in g.json().get("data", []):
+                if mdl.get("name") == name and mdl.get("workspace_id") == self.workspace_id:
+                    self._record("decision_models", identity, "noop", None, name)
+                    return mdl.get("id")
+        cr = self._req("POST", f"{self.endpoints.agent}/api/v1/decision-models", tok,
+                       headers=JSON, json={"name": name, "rules": rules,
+                                           "default_outcome": default_outcome,
+                                           "workspace_id": self.workspace_id})
+        if cr.status_code in (200, 201):
+            mid = (cr.json().get("data", cr.json())).get("id")
+            self._record("decision_models", identity, "create", None,
+                         f"{name!r} ({len(rules)} rule(s))")
+            return mid
+        self._record("decision_models", identity, "failed", None,
+                     f"{name!r} {cr.status_code}: {cr.text[:200]}")
+        return None
+
 
 def any_failed(client: PlatformClient) -> list[dict[str, Any]]:
     return [a for a in client.actions if a["action"] == "failed"]

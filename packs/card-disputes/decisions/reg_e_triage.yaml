@@ -1,0 +1,34 @@
+# Governed decision table (BRD 54) — a deterministic, explainable, no-LLM
+# first-cut triage over the seeded dispute queue's real projection columns
+# (dispute_type, amount, deadline_days_left). It EXECUTES to the same governed
+# four-eyes proposal an agent produces: an operator dry-runs or batch-runs it
+# across the worklist, and every matched case becomes a case.apply_disposition
+# proposal that the Dispute Operations Manager must approve. No autonomous
+# determination — the table proposes, a human decides. Outcome disposition_codes
+# are validated against this workspace's disposition catalog at install time, so
+# `dispositions` installs before this (packctl INSTALL_ORDER).
+- identity: reg_e_triage
+  name: "Reg E dispute triage table"
+  rules:
+    # Reg E provisional-credit clock at/near expiry — must reach a human fast.
+    - when:
+        - { column: deadline_days_left, op: between, value: [0, 2] }
+      then: { disposition_code: escalate_fraud_review, severity: critical }
+      note: "Reg E provisional-credit clock ≤ 2 business days — escalate now"
+    # High-value card-not-present unauthorized fraud.
+    - when:
+        - { column: dispute_type, op: in, value: [fraud_unauthorized] }
+        - { column: amount, op: between, value: [500, 1000000] }
+      then: { disposition_code: escalate_fraud_review, severity: high }
+      note: "High-value unauthorized fraud — fraud investigation review"
+    # Post-cancellation recurring billing — chargeable with the cancellation record.
+    - when:
+        - { column: dispute_type, op: in, value: [cancelled_recurring] }
+      then: { disposition_code: file_chargeback, severity: medium }
+      note: "Post-cancellation billing — chargeback with cancellation evidence"
+    # 'Item not received' — requires carrier delivery-confirmation review.
+    - when:
+        - { column: dispute_type, op: in, value: [not_received] }
+      then: { disposition_code: escalate_fraud_review, severity: high }
+      note: "Not-received claim — delivery-confirmation + first-party pattern review"
+  default_outcome: { disposition_code: deny_no_error_found, severity: low }

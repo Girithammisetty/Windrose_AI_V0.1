@@ -34,6 +34,8 @@ components:
     - { file: "dashboards/chargeback_recovery.yaml", identity: "chargeback_recovery" }
   dispositions:
     - { file: "cases/dispositions.yaml", identity: "dispositions" }
+  decision_models:
+    - { file: "decisions/reg_e_triage.yaml", identity: "reg_e_triage" }
   cases:
     - { file: "cases/queue.yaml", identity: "dispute_queue" }
   roles:

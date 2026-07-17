@@ -50,6 +50,11 @@ class RecordingClient:
         self._record("dispositions", identity, "create", None, code)
         return "d-1"
 
+    def ensure_decision_model(self, identity, name, rules, default_outcome):
+        self.calls.append(("decision_models", name, len(rules)))
+        self._record("decision_models", identity, "create", None, name)
+        return "dm-1"
+
     def create_cases(self, identity, dataset_urn, rows, due_days=7):
         self.calls.append(("cases", dataset_urn, len(rows)))
         self._record("cases", identity, "create", dataset_urn, f"{len(rows)}")
@@ -72,8 +77,18 @@ def _write_pack(tmp_path: Path) -> Path:
             - { file: "model.yaml", identity: "model" }
           dispositions:
             - { file: "dispositions.yaml", identity: "dispositions" }
+          decision_models:
+            - { file: "decisions.yaml", identity: "triage_table" }
         deferred:
           - { kind: guardrails, reason: "not in core" }
+    """))
+    (tmp_path / "decisions.yaml").write_text(textwrap.dedent("""
+        - identity: triage_table
+          name: "Triage table"
+          rules:
+            - when: [{ column: v, op: between, value: [1, 5] }]
+              then: { disposition_code: ok, severity: low }
+          default_outcome: { disposition_code: ok, severity: low }
     """))
     (tmp_path / "datasets.yaml").write_text(
         "- {identity: main_ds, name: main-ds, file: rows.csv}\n")
@@ -107,16 +122,20 @@ def test_install_order_and_urn_resolution(tmp_path):
     result = install(manifest, client, ledger_dir=tmp_path / "ledgers")
     assert result.ok
     kinds_in_call_order = [c[0] for c in client.calls]
-    # datasets run before semantic models before dispositions before cases,
-    # regardless of manifest declaration order.
-    assert kinds_in_call_order == ["datasets", "semantic_models",
-                                   "dispositions", "cases"]
+    # datasets → semantic models → dispositions → decision_models → cases,
+    # regardless of manifest declaration order (decision outcomes reference the
+    # disposition catalog, so dispositions must land first).
+    assert kinds_in_call_order == ["datasets", "semantic_models", "dispositions",
+                                   "decision_models", "cases"]
+    dm_call = next(c for c in client.calls if c[0] == "decision_models")
+    assert dm_call[1] == "Triage table" and dm_call[2] == 1
     # the semantic entity's `dataset:` ref was rebound to the live URN
     _, _, definition = client.calls[1]
     assert definition["entities"][0]["dataset_urn"] == "wr:t-1:dataset:dataset/main-ds"
     assert "dataset" not in definition["entities"][0]
     # cases resolved the same URN
-    assert client.calls[3][1] == "wr:t-1:dataset:dataset/main-ds"
+    cases_call = next(c for c in client.calls if c[0] == "cases")
+    assert cases_call[1] == "wr:t-1:dataset:dataset/main-ds"
 
 
 def test_ledger_records_actions_and_deferred(tmp_path):

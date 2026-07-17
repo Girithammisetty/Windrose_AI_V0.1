@@ -38,6 +38,7 @@ SUPPORTED_KINDS = (
     "saved_queries",      # query-service saved queries ({{dataset()}} macros)
     "dashboards",         # chart-service dashboards + charts + layout
     "dispositions",       # case-service disposition taxonomy
+    "decision_models",    # agent-runtime governed decision tables (BRD 54)
     "cases",              # case-service seeded queue rows (+ reindex)
     "roles",              # rbac-service tenant custom roles + permission group
     "agent_configs",      # agent-runtime TenantAgentConfig prompt_params
