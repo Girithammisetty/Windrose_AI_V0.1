@@ -23,6 +23,7 @@ type Server struct {
 	Verifier   *Verifier
 	RowFetcher RowFetcher
 	Snapshots  SnapshotStore
+	Evidence   EvidenceStore // object storage for case evidence attachments (task #77)
 	// Redis backs the per-tenant bulk concurrency gate (CASE-FR-032). Nil
 	// disables the gate (unit tests); the runtime always wires it.
 	Redis *redisx.Client
@@ -63,6 +64,11 @@ func (s *Server) Router() http.Handler {
 			r.With(s.RequireAction(authz.ActionCaseUpdate)).Patch("/{id}", s.handlePatchCase)
 			r.With(s.RequireAction(authz.ActionCaseRead)).Get("/{id}/timeline", s.handleTimeline)
 			r.With(s.RequireAction(authz.ActionCaseComment)).Post("/{id}/comments", s.handleAddComment)
+
+			// Evidence attachments (task #77): list/upload/download files on a case.
+			r.With(s.RequireAction(authz.ActionEvidenceRead)).Get("/{id}/evidence", s.handleListEvidence)
+			r.With(s.RequireAction(authz.ActionEvidenceCreate)).Post("/{id}/evidence", s.handleAddEvidence)
+			r.With(s.RequireAction(authz.ActionEvidenceRead)).Get("/{id}/evidence/{eid}/download", s.handleDownloadEvidence)
 
 			r.With(s.RequireAction(authz.ActionCaseAssign)).Post("/{id}/assign", s.handleAssign)
 			r.With(s.RequireAction(authz.ActionCaseAssign)).Post("/{id}/unassign", s.handleUnassign)

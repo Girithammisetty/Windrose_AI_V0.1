@@ -81,6 +81,15 @@ type SnapshotStore interface {
 	GetBytes(ctx context.Context, ref string) ([]byte, error)
 }
 
+// EvidenceStore persists case evidence attachment bytes in object storage
+// (task #77). The production adapter is MinIO/S3 (internal/blob); the pointer +
+// metadata rows live in Postgres (case_evidence). Kept separate from
+// SnapshotStore so evidence can use its own bucket/lifecycle.
+type EvidenceStore interface {
+	Put(ctx context.Context, key string, data []byte, contentType string) error
+	Get(ctx context.Context, key string) ([]byte, error)
+}
+
 // FSSnapshotStore writes gzip snapshots to a local object root.
 type FSSnapshotStore struct {
 	Root string

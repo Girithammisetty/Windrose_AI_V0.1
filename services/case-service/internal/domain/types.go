@@ -129,6 +129,22 @@ type Disposition struct {
 	UpdatedAt    time.Time `json:"updated_at"`
 }
 
+// CaseEvidence is one uploaded attachment on a case (task #77): a PDF/image/
+// report/photo held as governed, tenant-isolated evidence. The bytes live in
+// object storage (keyed by StorageKey); this is the pointer + metadata.
+type CaseEvidence struct {
+	ID          uuid.UUID `json:"id"`
+	TenantID    uuid.UUID `json:"-"`
+	WorkspaceID uuid.UUID `json:"workspace_id"`
+	CaseID      uuid.UUID `json:"case_id"`
+	Filename    string    `json:"filename"`
+	ContentType string    `json:"content_type"`
+	SizeBytes   int64     `json:"size_bytes"`
+	StorageKey  string    `json:"-"` // object-store key; never exposed to clients
+	UploadedBy  string    `json:"uploaded_by"`
+	CreatedAt   time.Time `json:"created_at"`
+}
+
 // CaseField is a custom field definition (CASE-FR-022).
 type CaseField struct {
 	ID          uuid.UUID      `json:"id"`

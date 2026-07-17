@@ -67,6 +67,10 @@ const (
 	ActionFieldManage       = "case.case.update" // case field configs write
 	ActionAdminReindex      = "case.case.admin"  // operator reindex
 	ActionSLAManage         = "case.case.admin"  // SLA policy config
+	// Case evidence attachments (task #77): list/download vs upload vs remove.
+	ActionEvidenceRead   = "case.evidence.read"
+	ActionEvidenceCreate = "case.evidence.create"
+	ActionEvidenceDelete = "case.evidence.delete"
 )
 
 // Manifest is case-service's action catalog slice (RBC-FR-022): the exact set
@@ -82,6 +86,7 @@ func Manifest() []ActionManifestEntry {
 		ActionCaseExport, ActionCaseComment, ActionProposalApply,
 		ActionDispositionRead, ActionDispositionCreate, ActionDispositionUpdate,
 		ActionFieldRead, ActionFieldManage, ActionAdminReindex, ActionSLAManage,
+		ActionEvidenceRead, ActionEvidenceCreate, ActionEvidenceDelete,
 	} {
 		if seen[a] {
 			continue

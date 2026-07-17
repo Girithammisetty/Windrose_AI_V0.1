@@ -28,6 +28,7 @@ import (
 
 	"github.com/windrose-ai/case-service/internal/api"
 	"github.com/windrose-ai/case-service/internal/authz"
+	"github.com/windrose-ai/case-service/internal/blob"
 	"github.com/windrose-ai/case-service/internal/domain"
 	"github.com/windrose-ai/case-service/internal/events"
 	"github.com/windrose-ai/case-service/internal/register"
@@ -96,6 +97,21 @@ func main() {
 	// Real authorization via the OPA sidecar + Redis projection (MASTER-FR-012).
 	az := authz.NewOPAClient(env("OPA_URL", "http://localhost:8281"), env("REDIS_ADDR", "localhost:6379"))
 
+	// Object storage for case evidence attachments (task #77): real MinIO/S3,
+	// same adapter audit-service uses, minus object-lock. Fatal if unreachable —
+	// evidence upload/download is a real capability, not a best-effort side path.
+	evidence, err := blob.NewMinioEvidence(ctx, blob.Config{
+		Endpoint:  env("MINIO_ENDPOINT", "localhost:9000"),
+		AccessKey: env("MINIO_ACCESS_KEY", "windrose"),
+		SecretKey: env("MINIO_SECRET_KEY", "windrose_dev"),
+		UseSSL:    os.Getenv("MINIO_USE_SSL") == "true",
+		Bucket:    env("CASE_EVIDENCE_BUCKET", "windrose-case-evidence"),
+	})
+	if err != nil {
+		slog.Error("case evidence store init", "err", err)
+		os.Exit(1)
+	}
+
 	verifier := api.NewVerifierJWKS(
 		env("JWKS_URL", "http://identity-service/api/v1/.well-known/jwks.json"),
 		os.Getenv("JWT_ISSUER"), os.Getenv("JWT_AUDIENCE"))
@@ -108,6 +124,7 @@ func main() {
 		Verifier:   verifier,
 		RowFetcher: api.NewHTTPRowFetcher(os.Getenv("QUERY_SERVICE_URL")),
 		Snapshots:  api.NewFSSnapshotStore(env("SNAPSHOT_ROOT", "/var/lib/case-service/snapshots")),
+		Evidence:   evidence,
 		Redis:      redisx.NewFromEnv(env("REDIS_ADDR", "localhost:6379"), os.Getenv), // bulk concurrency gate (CASE-FR-032)
 	}
 
