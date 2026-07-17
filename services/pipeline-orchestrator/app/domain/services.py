@@ -385,18 +385,34 @@ class RunService:
             # can target the experiment-service experiment (by MLflow experiment id or
             # name) so the mirror reconciliation sweep materializes the run into
             # experiment-service; otherwise it lands in the shared orchestrator experiment.
+            # workspace_id rides along as a run tag (windrose.workspace_id after the
+            # gateway prefixes it) so experiment-service's registry mirror can place
+            # the mirrored model in the tenant workspace the run belongs to — the
+            # MLflow experiment name is unreliable for that (agent runs land in the
+            # shared orchestrator experiment, whose name encodes a different workspace).
             mlflow_run_id = await self.d.mlflow.create_run(
-                tags={"tenant_id": ctx.tenant_id, "template_id": template.id},
+                tags={"tenant_id": ctx.tenant_id, "template_id": template.id,
+                      "workspace_id": template.workspace_id},
                 experiment_id=merged.get("mlflow_experiment_id"),
-                experiment_name=merged.get("mlflow_experiment"))
+                experiment_name=(merged.get("mlflow_experiment")
+                                 or f"{ctx.tenant_id}/{template.workspace_id}/pipelines"))
 
             quota = quota or TenantQuota(tenant_id=ctx.tenant_id)
             active = await uow.runs.count_active(ctx.tenant_id)
             now = self.d.clock.now()
+            run_id = new_id()
+            # Derive the argo_workflow_name suffix from the run's OWN id random tail,
+            # NOT a second new_id()[:8]: new_id() is a UUID7, whose first 8 hex chars
+            # are the millisecond-timestamp prefix — identical for any two runs of the
+            # same template submitted in the same coarse time window, which collides on
+            # the argo_workflow_name UNIQUE constraint and surfaces as an opaque 500
+            # (confirmed live 2026-07-17 on back-to-back retrains of one template). The
+            # last 12 hex of a UUID7 are 62 random bits, so this is collision-safe and
+            # ties the workflow name to the real run id.
             run = PipelineRun(
-                id=new_id(), tenant_id=ctx.tenant_id, template_id=template.id,
+                id=run_id, tenant_id=ctx.tenant_id, template_id=template.id,
                 version_id=version.id, status=int(RunStatus.pending),
-                argo_workflow_name=f"{version.argo_template_name}-{new_id()[:8]}",
+                argo_workflow_name=f"{version.argo_template_name}-{run_id.replace('-', '')[-12:]}",
                 mlflow_run_id=mlflow_run_id, run_parameters=merged,
                 components_status={}, error=None,
                 input_dataset_urns=self._input_urns(version.definition, merged),

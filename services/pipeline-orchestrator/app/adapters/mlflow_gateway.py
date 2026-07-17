@@ -30,13 +30,26 @@ class MlflowGateway:
             client = MlflowClient(tracking_uri=self.tracking_uri)
             # A retrain run targets the experiment-service experiment so the mirror
             # reconciliation sweep can materialize it (experiment_id is exact; name is
-            # a fallback). Otherwise fall back to the shared orchestrator experiment.
+            # a fallback). Otherwise the caller passes a PER-TENANT experiment name so
+            # each tenant's runs land in their own MLflow experiment (never a shared
+            # one) — experiment-service keys the mirror on a globally-unique
+            # mlflow_experiment_id, so a shared experiment would collide across
+            # tenants. A freshly created experiment is tagged with the tenant/workspace
+            # so it is attributable the same way authoritative experiments are.
             if experiment_id:
                 exp_id = experiment_id
             else:
                 name = experiment_name or self.experiment
                 exp = client.get_experiment_by_name(name)
-                exp_id = exp.experiment_id if exp else client.create_experiment(name)
+                if exp:
+                    exp_id = exp.experiment_id
+                else:
+                    exp_tags = {}
+                    if tags.get("tenant_id"):
+                        exp_tags["windrose_tenant"] = str(tags["tenant_id"])
+                    if tags.get("workspace_id"):
+                        exp_tags["windrose_workspace"] = str(tags["workspace_id"])
+                    exp_id = client.create_experiment(name, tags=exp_tags or None)
             run = client.create_run(
                 exp_id, tags={f"windrose.{k}": str(v) for k, v in tags.items()})
             return run.info.run_id
