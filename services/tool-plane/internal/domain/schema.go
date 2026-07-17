@@ -147,8 +147,26 @@ func validateField(name string, p map[string]any, val any) []FieldError {
 
 // URNFields returns arg field names annotated with x-windrose-urn in the schema,
 // mapped to their URN template (BRD example, TPL-FR-032/BR-12). These are the
-// fields whose values carry resource URNs used for OBO-grant + cross-tenant checks.
+// fields whose values carry resource URNs used for the cross-tenant check (BR-12)
+// and, unless opted out, the per-resource OBO-grant intersection (TPL-FR-032).
 func URNFields(schema map[string]any) map[string]string {
+	return urnFields(schema, false)
+}
+
+// OboURNFields returns the subset of URN fields that participate in the
+// per-resource OBO-grant intersection — i.e. resources whose governance is a
+// per-user ABAC assignment (a case the human is granted on). A field opts out
+// with `"x-windrose-urn-obo": false` when its resource is instead role-governed
+// (e.g. a model version, gated by the action capability `experiment.model.update`
+// at the owning service's facade, not by a per-user resource grant). Such fields
+// still feed the cross-tenant guard via URNFields; they are only excluded here so
+// the OBO intersection cannot demand a `perm:{tenant}:{user}:res:*` grant that is
+// never minted for role-governed resources (which would deny-by-default forever).
+func OboURNFields(schema map[string]any) map[string]string {
+	return urnFields(schema, true)
+}
+
+func urnFields(schema map[string]any, oboOnly bool) map[string]string {
 	out := map[string]string{}
 	props, _ := schema["properties"].(map[string]any)
 	for name, raw := range props {
@@ -156,19 +174,38 @@ func URNFields(schema map[string]any) map[string]string {
 		if !ok {
 			continue
 		}
-		if tmpl, ok := p["x-windrose-urn"].(string); ok {
-			out[name] = tmpl
+		tmpl, ok := p["x-windrose-urn"].(string)
+		if !ok {
+			continue
 		}
+		// Default (annotation absent) is obo-eligible so existing per-resource
+		// tools (case.*) are unchanged; only an explicit false opts out.
+		if oboOnly {
+			if obo, present := p["x-windrose-urn-obo"].(bool); present && !obo {
+				continue
+			}
+		}
+		out[name] = tmpl
 	}
 	return out
 }
 
-// AffectedURNs resolves the x-windrose-urn templates against args, producing the
-// concrete resource URNs the call touches (used for OPA obo-grant + cross-tenant
-// checks). Template form: "wr:{tenant}:case:case/{value}".
+// AffectedURNs resolves ALL x-windrose-urn templates against args, producing the
+// concrete resource URNs the call touches. Used for the cross-tenant guard (BR-12)
+// and the audit record. Template form: "wr:{tenant}:case:case/{value}".
 func AffectedURNs(schema, args map[string]any, tenant string) []string {
+	return resolveURNs(URNFields(schema), args, tenant)
+}
+
+// AffectedOboURNs resolves only the obo-eligible URN templates (OboURNFields) —
+// the resources whose per-user grant the OPA obo_grant gate must intersect.
+func AffectedOboURNs(schema, args map[string]any, tenant string) []string {
+	return resolveURNs(OboURNFields(schema), args, tenant)
+}
+
+func resolveURNs(fields map[string]string, args map[string]any, tenant string) []string {
 	var urns []string
-	for field, tmpl := range URNFields(schema) {
+	for field, tmpl := range fields {
 		v, ok := args[field].(string)
 		if !ok || v == "" {
 			continue

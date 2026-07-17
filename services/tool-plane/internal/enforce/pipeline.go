@@ -190,12 +190,20 @@ func (p *Pipeline) run(ctx context.Context, req Request) Outcome {
 		}
 	}
 
-	// Affected URNs from schema annotations (BR-12 / OPA obo-grant).
+	// Affected URNs from schema annotations. The FULL set drives the cross-tenant
+	// guard + audit; the obo-eligible SUBSET (role-governed resources opt out via
+	// x-windrose-urn-obo:false) drives the per-resource OPA obo-grant intersection
+	// (BR-12 / TPL-FR-032).
 	affected := domain.AffectedURNs(tv.InputSchema, req.Args, req.TenantStr)
+	oboURNs := domain.AffectedOboURNs(tv.InputSchema, req.Args, req.TenantStr)
 	oc.affectedURNs = affected
+	fmt.Fprintf(os.Stderr, "WRDBG tool=%s affected=%v oboURNs=%v hasKey=%v\n",
+		req.ToolID, affected, oboURNs, domain.OboURNFields(tv.InputSchema))
 
 	// Step 3a: cross-tenant URN guard (BR-12/AC-13): a URN whose tenant segment
-	// != caller tenant → 404-shaped denial + security.cross_tenant_denied.
+	// != caller tenant → 404-shaped denial + security.cross_tenant_denied. Applies
+	// to ALL annotated URNs, including obo-opted-out ones (a model version still
+	// may not be cross-tenant even though its authz is role-based).
 	for _, urn := range affected {
 		if t := domain.URNTenant(urn); t != "" && t != req.TenantStr {
 			oc.Decision, oc.Code, oc.HTTP, oc.Message = events.DecisionDeniedPolicy, domain.CodeNotFound, 404, "not found"
@@ -204,11 +212,14 @@ func (p *Pipeline) run(ctx context.Context, req Request) Outcome {
 		}
 	}
 
-	// Step 3b: OPA check (real sidecar). Fail-closed on infra error (BR-1).
+	// Step 3b: OPA check (real sidecar). Fail-closed on infra error (BR-1). The
+	// obo-grant intersection only considers obo-eligible URNs — role-governed
+	// resources (model versions) are authorized by the action capability at the
+	// owning service's facade, not a per-user resource grant.
 	constraints := mergeConstraints(tv.InputSchema, settings.ArgumentConstraints)
 	var grants []string
-	if req.OboSub != "" && len(affected) > 0 {
-		grants, err = p.Grants.GrantsFor(ctx, req.TenantStr, req.OboSub, affected)
+	if req.OboSub != "" && len(oboURNs) > 0 {
+		grants, err = p.Grants.GrantsFor(ctx, req.TenantStr, req.OboSub, oboURNs)
 		if err != nil {
 			oc.Decision, oc.Code, oc.HTTP, oc.Message = events.DecisionDeniedPolicy, domain.CodePolicyUnavailable, 503, "grant lookup failed"
 			return oc
@@ -223,7 +234,7 @@ func (p *Pipeline) run(ctx context.Context, req Request) Outcome {
 		ResourceURN:  domain.ToolURN(req.TenantStr, req.ToolID, tv.Version),
 		Tier:         tier,
 		MaxTier:      tier,
-		AffectedURNs: affected,
+		AffectedURNs: oboURNs,
 		Args:         req.Args,
 		Toolset:      req.Toolset,
 		Constraints:  constraints,
@@ -328,15 +339,32 @@ func (p *Pipeline) run(ctx context.Context, req Request) Outcome {
 	if err != nil {
 		code := domain.CodeToolBackendError
 		httpCode := 502
+		message := "backend error"
 		if be, ok := err.(*mcp.BackendError); ok {
 			switch be.Kind {
 			case "timeout":
 				code, httpCode = domain.CodeToolBackendTimeout, 504
 			case "output_invalid":
 				code, httpCode = domain.CodeToolOutputInvalid, 502
+			case "backend_rejected":
+				// The backend facade REJECTED the call (e.g. case-service's
+				// "not allowed: case.disposition.approve") -- surface its real
+				// status + message instead of masking it as a generic 502, and
+				// critically, oc.Decision stays denied_policy (NOT allowed) so
+				// this is never mistaken for a successful execution.
+				httpCode = be.StatusCode
+				message = be.Error()
+				switch {
+				case be.StatusCode == 403:
+					code = domain.CodePermission
+				case be.StatusCode == 404:
+					code = domain.CodeNotFound
+				case be.StatusCode == 400 || be.StatusCode == 422:
+					code = domain.CodeValidation
+				}
 			}
 		}
-		oc.Decision, oc.Code, oc.HTTP, oc.Message = events.DecisionDeniedPolicy, code, httpCode, "backend error"
+		oc.Decision, oc.Code, oc.HTTP, oc.Message = events.DecisionDeniedPolicy, code, httpCode, message
 		oc.backendKind = backendKind(err)
 		p.recordHealth(ctx, req.ToolID, tv.Version, backendMS, false, oc.backendKind)
 		return oc

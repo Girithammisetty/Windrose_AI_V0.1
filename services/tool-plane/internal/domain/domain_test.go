@@ -54,6 +54,31 @@ func TestAffectedURNs_CrossTenant(t *testing.T) {
 	}
 }
 
+// A role-governed URN field (x-windrose-urn-obo:false) still expands for the
+// cross-tenant guard (AffectedURNs) but is excluded from the per-resource
+// obo-grant intersection (AffectedOboURNs), while a default-annotated field
+// stays in both.
+func TestAffectedOboURNs_RoleGovernedOptOut(t *testing.T) {
+	schema := map[string]any{"properties": map[string]any{
+		"case_id": map[string]any{"type": "string",
+			"x-windrose-urn": "wr:{tenant}:case:case/{value}"},
+		"model_version_urn": map[string]any{"type": "string",
+			"x-windrose-urn":     "wr:{tenant}:experiment:model_version/{value}",
+			"x-windrose-urn-obo": false},
+	}}
+	args := map[string]any{"case_id": "c1", "model_version_urn": "mv1"}
+
+	all := AffectedURNs(schema, args, "t-42")
+	if len(all) != 2 {
+		t.Fatalf("cross-tenant set should include both URNs, got %+v", all)
+	}
+
+	obo := AffectedOboURNs(schema, args, "t-42")
+	if len(obo) != 1 || obo[0] != "wr:t-42:case:case/c1" {
+		t.Fatalf("obo set should include only the case (assignable) URN, got %+v", obo)
+	}
+}
+
 func TestArgsDigest_Deterministic(t *testing.T) {
 	a := map[string]any{"b": 2, "a": 1}
 	b := map[string]any{"a": 1, "b": 2}

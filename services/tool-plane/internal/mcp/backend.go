@@ -27,8 +27,16 @@ const MaxResponseBytes = 1 << 20
 // BackendError distinguishes timeout from other backend failures for health
 // accounting (TPL-FR-036/BR-7).
 type BackendError struct {
-	Kind string // timeout | backend_error | output_invalid
+	Kind string // timeout | backend_error | output_invalid | backend_rejected
 	Err  error
+	// StatusCode/Body carry the real backend response through for "backend_rejected"
+	// (4xx) so the caller sees the ACTUAL reason (e.g. case-service's "not allowed:
+	// case.disposition.approve") instead of a generic 502. Confirmed live
+	// 2026-07-17: every case-service 403 from handleToolFacade was previously
+	// swallowed here and reported to the caller as decision=allowed — a real
+	// authorization failure was being recorded as a successful tool call.
+	StatusCode int
+	Body       map[string]any
 }
 
 func (e *BackendError) Error() string { return e.Kind + ": " + e.Err.Error() }
@@ -152,6 +160,25 @@ func (b *HTTPBackend) once(ctx context.Context, target BackendTarget, in Invocat
 	raw, err := io.ReadAll(io.LimitReader(resp.Body, MaxResponseBytes))
 	if err != nil {
 		return nil, &BackendError{Kind: "backend_error", Err: err}
+	}
+	if resp.StatusCode >= 400 {
+		// The backend REJECTED the call (auth/validation/not-found) — this is a
+		// real failure, not a successful invocation. Previously only >=500 was
+		// treated as an error, so every 4xx from the backend facade (e.g.
+		// case-service's "not allowed: case.disposition.approve") unmarshalled
+		// cleanly into a Result and was reported to the caller as decision=allowed.
+		var body map[string]any
+		_ = json.Unmarshal(raw, &body) // best-effort: surface the real message if JSON
+		msg := fmt.Sprintf("backend status %d", resp.StatusCode)
+		if body != nil {
+			if out, ok := body["output"].(map[string]any); ok {
+				if e, ok := out["error"].(string); ok && e != "" {
+					msg = e
+				}
+			}
+		}
+		return nil, &BackendError{Kind: "backend_rejected", Err: fmt.Errorf("%s", msg),
+			StatusCode: resp.StatusCode, Body: body}
 	}
 	var res Result
 	if err := json.Unmarshal(raw, &res); err != nil {
