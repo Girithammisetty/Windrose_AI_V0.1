@@ -1,0 +1,60 @@
+# Seeded Rx PA / DUR review queue (BRD 28 US-1/US-2): the pending prior-auth
+# requests and open DUR alerts from the seed datasets become OPEN cases so a
+# PA pharmacist logging in sees a real worklist on day one. Expedited PAs
+# (24-hour CMS Part D clock) and clinical-critical DURs carry high severity.
+dataset: pbm_pa_requests
+due_days: 2
+rows:
+  - row_pk: PA-9007
+    severity: high
+    display_projection:
+      pa_id: PA-9007
+      drug_name: "semaglutide 1mg pen"
+      gpi_class: "272700"
+      urgency: expedited
+      formulary_tier: "3"
+      step_therapy_met: "yes"
+      agent_recommendation: approve
+      agent_confidence: "0.90"
+      note: "Expedited GLP-1 PA pending 10h of the 24h CMS Part D window — step therapy met, copilot recommends one-click approve"
+  - row_pk: PA-9012
+    severity: medium
+    display_projection:
+      pa_id: PA-9012
+      drug_name: "adalimumab 40mg pen"
+      gpi_class: "664000"
+      urgency: standard
+      formulary_tier: "5"
+      step_therapy_met: "no"
+      agent_recommendation: escalate_pharmacist
+      agent_confidence: "0.58"
+      note: "Specialty TNF-inhibitor PA pending 30h of the 72h window — step therapy NOT documented, needs pharmacist review of UM criteria"
+  - row_pk: PA-9015
+    severity: high
+    display_projection:
+      pa_id: PA-9015
+      drug_name: "oxycodone-acetaminophen 5-325mg"
+      gpi_class: "651000"
+      urgency: standard
+      cs_schedule: C2
+      agent_recommendation: escalate_pharmacist
+      agent_confidence: "0.41"
+      note: "Schedule II opioid PA pending 20h — controlled substances are NEVER auto-approved; verify cumulative MME and EPCS audit trail"
+  - row_pk: DUR-8003
+    severity: medium
+    display_projection:
+      dur_id: DUR-8003
+      rx_claim_id: RX-30018
+      drug_name: "oxycodone-acetaminophen 5-325mg"
+      conflict_code: ER
+      severity_level: "2"
+      note: "Early-refill DUR on Schedule II opioid (62% days supply elapsed, claim rejected NCPDP 88) — pharmacist intervention decision pending"
+  - row_pk: DUR-8009
+    severity: high
+    display_projection:
+      dur_id: DUR-8009
+      rx_claim_id: RX-30003
+      drug_name: "warfarin 5mg"
+      conflict_code: TD
+      severity_level: "1"
+      note: "Clinical-critical duplicate anticoagulation (warfarin + apixaban on profile) — contact prescriber before next fill"

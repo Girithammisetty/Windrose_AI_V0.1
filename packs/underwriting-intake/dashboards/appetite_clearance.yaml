@@ -1,0 +1,69 @@
+# Appetite & Clearance: appetite posture on the open book, file completeness,
+# broker-deadline runway, and the accepted-to-underwriter trend — the view an
+# underwriting operations manager walks first thing each morning.
+name: "Appetite & Clearance"
+module: insights
+semantic_model: underwriting_core
+description: >-
+  Appetite and clearance posture: open submissions by appetite fit, file
+  completeness mix, deadline runway buckets on the open book, the
+  accept-to-underwriter monthly trend, and volume/outcome detail per
+  appetite band.
+tags: [insurance, underwriting, appetite, clearance, pack]
+charts:
+  - name: "Open submissions by appetite fit"
+    chart_type: vertical_bar_chart
+    description: "Open triage backlog split by in-appetite / marginal / out-of-appetite / pending clearance"
+    config:
+      x: { dimension: appetite_fit }
+      y: [ { measure: open_submission_count, agg_fn: count } ]
+    sources: [ { measure: open_submission_count } ]
+    w: 6
+    h: 4
+  - name: "File completeness mix"
+    chart_type: pie_chart
+    description: "Complete files vs missing loss runs vs missing SOV vs missing applications"
+    config:
+      x: { dimension: completeness }
+      y: [ { measure: submission_count, agg_fn: count } ]
+    sources: [ { measure: submission_count } ]
+    w: 6
+    h: 4
+  - name: "Deadline runway (open book)"
+    chart_type: vertical_bar_chart
+    description: "Open submissions by days remaining to the broker's needed-by date"
+    config:
+      x: { dimension: deadline_bucket }
+      y: [ { measure: open_submission_count, agg_fn: count } ]
+    sources: [ { measure: open_submission_count } ]
+    w: 6
+    h: 4
+  - name: "Accepted-to-underwriter trend"
+    chart_type: line_chart
+    description: "Submissions cleared and routed to an underwriter per month"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: accepted_count, agg_fn: count } ]
+    sources: [ { measure: accepted_count } ]
+    w: 6
+    h: 4
+  - name: "Appetite posture grid"
+    chart_type: grid_chart
+    description: "Volume, open backlog, closures, accepts and declinations by appetite band"
+    config:
+      columns: [appetite_fit, submission_count, open_submission_count, closed_submission_count, accepted_count, declined_count]
+      x: { dimension: appetite_fit }
+      y:
+        - { measure: submission_count, agg_fn: count }
+        - { measure: open_submission_count, agg_fn: count }
+        - { measure: closed_submission_count, agg_fn: count }
+        - { measure: accepted_count, agg_fn: count }
+        - { measure: declined_count, agg_fn: count }
+    sources:
+      - { measure: submission_count }
+      - { measure: open_submission_count }
+      - { measure: closed_submission_count }
+      - { measure: accepted_count }
+      - { measure: declined_count }
+    w: 12
+    h: 4

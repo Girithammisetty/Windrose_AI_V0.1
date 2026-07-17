@@ -1,0 +1,91 @@
+# Semantic model `payer_claims` — INS-FR-020/021 KPI catalog, expressed in the
+# Core semantic grammar (SEM-FR-004: agg whitelist, measure filters, derived
+# expr_metric with nullif; join_paths left/many_to_one, acyclic).
+#
+# entity.table is main.<safe_relation(dataset name)> — the physical relation
+# query-service materializes; `dataset:` refs are rebound to live dataset URNs
+# by packctl at install. Amount columns ingest as bronze strings, so numeric
+# measures cast(... as double) (the proven claims_core pattern).
+name: payer_claims
+description: >-
+  US health-payer claims KPI model (BRD 24 INS-FR-020): denial rate, appeal
+  overturn rate, paid/billed amounts — dimensions per INS-FR-021.
+definition:
+  entities:
+    - name: claims
+      dataset: payer_claims
+      table: main.payer_claims
+      primary_key: [claim_id]
+      dataset_version_policy: { policy: latest }
+    - name: denials
+      dataset: payer_denials
+      table: main.payer_denials
+      primary_key: [denial_id]
+      dataset_version_policy: { policy: latest }
+    - name: appeals
+      dataset: payer_appeals
+      table: main.payer_appeals
+      primary_key: [appeal_id]
+      dataset_version_policy: { policy: latest }
+  join_paths:
+    - name: denials_claims
+      from_entity: denials
+      to_entity: claims
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: claim_id, to_column: claim_id }]
+    - name: appeals_denials
+      from_entity: appeals
+      to_entity: denials
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: denial_id, to_column: denial_id }]
+  dimensions:
+    - { name: product_type, entity: claims, type: categorical, column: product_type }
+    - { name: service_line, entity: claims, type: categorical, column: service_line }
+    - { name: member_state, entity: claims, type: categorical, column: member_state }
+    - { name: service_month, entity: claims, type: categorical, column: service_month }
+    - { name: provider_specialty, entity: claims, type: categorical, column: provider_specialty }
+    - { name: network_status, entity: claims, type: categorical, column: network_status }
+    - { name: claim_status, entity: claims, type: categorical, column: status }
+    - { name: cpt_code, entity: claims, type: categorical, column: cpt_code }
+    - { name: denial_reason_code, entity: denials, type: categorical, column: denial_reason_code }
+    - { name: appeal_status, entity: appeals, type: categorical, column: status }
+    - { name: appeal_level, entity: appeals, type: categorical, column: level }
+  measures:
+    - { name: claim_count, entity: claims, agg: count,
+        description: "Number of claims" }
+    - { name: denied_claim_count, entity: claims, agg: count,
+        filters: "status = 'denied'",
+        description: "Claims in denied status" }
+    - { name: paid_claim_count, entity: claims, agg: count,
+        filters: "status = 'paid'",
+        description: "Claims paid" }
+    - { name: total_billed, entity: claims, agg: sum,
+        expr: "cast(billed_amount as double)", format: decimal,
+        description: "Total billed amount" }
+    - { name: total_paid, entity: claims, agg: sum,
+        expr: "cast(paid_amount as double)", format: decimal,
+        description: "Total paid amount" }
+    - { name: avg_allowed, entity: claims, agg: avg,
+        expr: "cast(allowed_amount as double)", format: decimal,
+        description: "Average allowed amount" }
+    - { name: denial_count, entity: denials, agg: count,
+        description: "Number of denials" }
+    - { name: appeal_count, entity: appeals, agg: count,
+        description: "Number of appeals" }
+    - { name: overturned_count, entity: appeals, agg: count,
+        filters: "status = 'overturned'",
+        description: "Appeals overturned" }
+    - { name: denial_rate,
+        expr_metric: "denied_claim_count / nullif(claim_count, 0)",
+        format: percent,
+        description: "INS-FR-020 denial_rate: denied claims over all claims" }
+    - { name: appeal_overturn_rate,
+        expr_metric: "overturned_count / nullif(appeal_count, 0)",
+        format: percent,
+        description: "INS-FR-020 appeal_overturn_rate" }
+    - { name: first_pass_yield,
+        expr_metric: "paid_claim_count / nullif(claim_count, 0)",
+        format: percent,
+        description: "INS-FR-020 first_pass_yield (paid over submitted)" }

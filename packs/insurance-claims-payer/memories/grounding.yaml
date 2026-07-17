@@ -1,0 +1,65 @@
+# Tenant-scope RAG grounding records (memory-service). This is the payer
+# domain knowledge the triage copilot retrieves when reasoning about a case —
+# CARC code semantics, CMS turnaround rules, appeal precedents from the seed
+# data. Every record is factual domain reference material.
+- content: >-
+    CARC CO-50 means "non-covered service: not deemed a medical necessity by
+    the payer." Appeals against CO-50 denials succeed when the provider
+    supplies clinical evidence matching plan medical-necessity criteria
+    (InterQual/MCG). In this plan's history, imaging CO-50 denials (brain MRI
+    CPT 70553) have been overturned on appeal when migraine history was
+    documented.
+  tags: [carc, denials, medical_necessity]
+  confidence: 0.95
+- content: >-
+    CARC CO-197 means "precertification/authorization/notification absent."
+    These denials are administrative: if the service was medically necessary
+    and a retro-authorization is permitted by the plan, level-1 provider
+    appeals routinely overturn CO-197 (see appeal APL-5002: knee replacement
+    CPT 27447, overturned). Check whether the provider initiated PA before the
+    service date.
+  tags: [carc, denials, prior_auth]
+  confidence: 0.95
+- content: >-
+    CARC CO-151 means "payment adjusted because the payer deems the
+    information submitted does not support this many/frequency of services."
+    Frequency-limit denials on repeat imaging (e.g. second brain MRI within 90
+    days) are upheld unless interval clinical change is documented.
+  tags: [carc, denials, frequency]
+  confidence: 0.9
+- content: >-
+    CARC PR-204 means "service not covered under the patient's current benefit
+    plan" (patient responsibility). Out-of-network imaging under HMO products
+    is member liability unless network-adequacy exceptions apply; these
+    denials are rarely overturned at level 1.
+  tags: [carc, denials, network]
+  confidence: 0.9
+- content: >-
+    CMS-4201-F prior-authorization turnaround requirements: expedited/urgent
+    requests must be decided within 72 hours, standard requests within 7
+    calendar days. A pending urgent PA older than 24 hours should be treated
+    as at-risk and escalated; SLA breach is a compliance reportable.
+  tags: [cms, prior_auth, sla]
+  confidence: 0.98
+- content: >-
+    CMS 2024 Medicare Advantage rule: an adverse determination (denial of
+    care) assisted by AI must be reviewed by a qualified human clinician
+    before issuance. The reviewing clinician must be identified in the case
+    record; AI systems draft rationale but never decide denials.
+  tags: [cms, ai_governance, denials]
+  confidence: 0.98
+- content: >-
+    Appeal precedent (this plan): spinal fusion CPT 22551 medical-necessity
+    denial (DEN-3004) was UPHELD at level 1 but OVERTURNED at level 2 external
+    review (APL-5008) — conservative-therapy documentation submitted late.
+    Lesson: verify conservative-therapy history BEFORE the level-1 verdict.
+  tags: [appeals, precedent, spine]
+  confidence: 0.85
+- content: >-
+    Specialty-drug PAs (e.g. infliximab J1745, chemotherapy 96413) carry the
+    highest appeal exposure: administrative denials on these codes have an
+    elevated overturn rate and high dollar value. Route low-confidence
+    specialty-drug PAs to the medical director rather than deciding at nurse
+    level.
+  tags: [prior_auth, specialty_rx, routing]
+  confidence: 0.9

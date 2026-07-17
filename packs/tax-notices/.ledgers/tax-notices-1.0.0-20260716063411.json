@@ -1,0 +1,70 @@
+{
+  "pack": "tax-notices",
+  "version": "1.0.0",
+  "workspace_id": "019f6a77-f5ca-74f5-903a-3c4d99408ce3",
+  "tenant_id": "019f6a77-f193-75c8-8af7-e27aa7bc5024",
+  "started_at": "2026-07-16T10:33:52Z",
+  "finished_at": "2026-07-16T10:34:11Z",
+  "actions": [
+    {
+      "kind": "datasets",
+      "identity": "tx_entities",
+      "action": "failed",
+      "urn": null,
+      "detail": "complete 500: {\"error\":{\"code\":\"INTERNAL\",\"message\":\"internal error\",\"trace_id\":\"019f6a7d-6c7c-702c-bce1-b777e4877aea\"}}"
+    },
+    {
+      "kind": "datasets",
+      "identity": "tx_accounts",
+      "action": "failed",
+      "urn": null,
+      "detail": "complete 500: {\"error\":{\"code\":\"INTERNAL\",\"message\":\"internal error\",\"trace_id\":\"019f6a7d-85b9-7e26-97eb-a0f144c1861e\"}}"
+    },
+    {
+      "kind": "datasets",
+      "identity": "tx_notices",
+      "action": "failed",
+      "urn": null,
+      "detail": "complete 500: {\"error\":{\"code\":\"INTERNAL\",\"message\":\"internal error\",\"trace_id\":\"019f6a7d-9ef3-7cac-a424-f0645ed6c50d\"}}"
+    }
+  ],
+  "deferred": [
+    {
+      "kind": "guardrails",
+      "reason": "Tax-notice domain policies (no response filed or payment remitted before the human determination; abatement requests must cite the actual facts of the taxpayer's compliance history; never advise ignoring a statutory notice; deadline-forfeiture watch \u2014 a missed response window forfeits administrative appeal rights) require guardrail-service / OPA policy materialization, which Core does not expose as a pack surface yet. The behavioral core is partially covered today by Core invariants: every pack-configured agent is proposal-mode with four-eyes approval (agent-runtime), and the agent instructions + disposition taxonomy route final determinations exclusively to human analysts with the Tax Compliance Manager as approver."
+    },
+    {
+      "kind": "agent_recipes",
+      "reason": "Bespoke LangGraph recipes (Notice Intake Copilot, Abatement Request Builder, Economic-Nexus Threshold Monitor, Deadline Calendar Sentinel, Certificate Remediation Planner) require agent-runtime graph-module registration (BRD 23 BR-12). This pack specializes the existing case-triage + analytics agents via TenantAgentConfig prompt_params + tenant-scope RAG grounding instead."
+    },
+    {
+      "kind": "connection_templates",
+      "reason": "Production read connectors (IRS transcript/e-Services correspondence feeds, state DOR portal inboxes, ERP tax engines: SAP/Oracle/NetSuite and rate providers such as Vertex/Avalara-class services, exemption-certificate management systems, payroll providers' agency notice feeds, mailroom OCR/scanning services) require customer credentials and pack-service connector materialization. The pack ships seed datasets in the exact landing shape; production connectors are configured through the product Data > Connections UI."
+    },
+    {
+      "kind": "write_adapters",
+      "reason": "Write adapters (file a notice response or protest through an agency portal, submit a penalty-abatement request, remit an assessed payment, file an amended return through the compliance engine, update the exemption-certificate repository, register for a new jurisdiction) execute only behind pack-service's materialization contract and customer credentials; every such write stays proposal-mode with human approval \u2014 no autonomous filing, payment, or registration, ever."
+    },
+    {
+      "kind": "eval_sets",
+      "reason": "Golden eval sets (notice triage, deadline-risk ranking, abatement-eligibility screening, duplicate-notice detection, nexus-threshold determination) require eval-service write APIs whose action names are not yet in the rbac canonical catalog (Core follow-up noted in rbac catalog.go)."
+    },
+    {
+      "kind": "ontology",
+      "reason": "Ontology registration (LegalEntity, TaxAccount, Jurisdiction, Notice, Assessment, Penalty, Interest, AbatementRequest, AmendedReturn, ExemptionCertificate, FilingObligation, DeadlineClock, VoluntaryDisclosure) awaits pack-service; entity semantics are carried today by the tax_notices_core semantic model and dataset schemas."
+    },
+    {
+      "kind": "case_schemas",
+      "reason": "Typed case schemas (notice_intake, abatement_request, nexus_review, cert_audit_remediation, information_mismatch_response, duplicate_reconciliation) await case-service schema materialization; today's cases carry the same fields via display_projection + the disposition taxonomy."
+    },
+    {
+      "kind": "model_archetypes",
+      "reason": "Model archetypes (abatement_success_likelihood, notice_validity_score) await experiment-service archetype APIs; the scoring capability ships as pipeline seeds instead (isolation_forest account-anomaly scan + xgboost notice-outcome scorer) with model-governance expectations noted in grounding memories."
+    },
+    {
+      "kind": "display_labels",
+      "reason": "Display-label overlays (\"Notice\", \"Assessment\", \"Response due\", \"Deadline at risk\", \"Abated\", entity templates) require the BFF label-registry endpoints (BFF-FR-082/088) which are pack-service-tier features."
+    }
+  ],
+  "result": "failed"
+}

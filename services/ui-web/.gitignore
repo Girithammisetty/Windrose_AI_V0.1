@@ -1,0 +1,14 @@
+node_modules
+.next
+out
+dist
+coverage
+playwright-report
+test-results
+*.log
+.env.local
+next-env.d.ts
+.DS_Store
+tests-live/.live-context.json
+playwright-live-report/
+test-results-live/

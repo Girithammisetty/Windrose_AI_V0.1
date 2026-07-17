@@ -1,0 +1,25 @@
+# Pack datasets (ingestion-service file_upload, stable names for idempotency).
+# In production these tables arrive via the tenant's TMS, telematics/video
+# platform, and FMCSA-data connectors (deferred until pack-service ships
+# connector materialization); this seed data is REAL rows in the same landing
+# shape, encoding genuine claims-and-safety patterns so every downstream
+# component runs against real signal from day one: a reefer
+# temperature-excursion produce claim with the unit download pending, a
+# repeat intact-seal shortage on the same carrier/lane (origin short-count vs
+# seal-tamper question), a new-authority partner carrier changing banking
+# details mid-load (double-brokering signature), a harsh-braking camera event
+# disputed by a million-mile driver, a full-trailer electronics theft on a
+# known hot lane by a carrier already escalated in vetting, and a
+# repeat-damage carrier/lane cluster feeding carrier recovery.
+- identity: tl_claims
+  name: tl-claims
+  file: data/tl_claims.csv
+  format: csv
+- identity: tl_shipments
+  name: tl-shipments
+  file: data/tl_shipments.csv
+  format: csv
+- identity: tl_carriers
+  name: tl-carriers
+  file: data/tl_carriers.csv
+  format: csv

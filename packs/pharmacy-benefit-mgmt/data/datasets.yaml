@@ -1,0 +1,24 @@
+# Pack datasets (ingestion-service file_upload, stable names for idempotency).
+# In production these tables arrive via Rx-claim / ePA / formulary connectors
+# (RX-FR-080 — deferred until pack-service ships connector materialization);
+# this seed data is REAL rows in the exact landing shape those connectors
+# produce (NCPDP-style Rx claims with 11-digit NDCs, GPI classes, DAW codes,
+# NCPDP reject codes; DUR alerts with NCPDP conflict codes), so every
+# downstream component (semantic models, dashboards, cases, pipelines) runs
+# against genuine data from day one.
+- identity: pbm_rx_claims
+  name: pbm-rx-claims
+  file: data/pbm_rx_claims.csv
+  format: csv
+- identity: pbm_formulary
+  name: pbm-formulary
+  file: data/pbm_formulary.csv
+  format: csv
+- identity: pbm_pa_requests
+  name: pbm-pa-requests
+  file: data/pbm_pa_requests.csv
+  format: csv
+- identity: pbm_dur_alerts
+  name: pbm-dur-alerts
+  file: data/pbm_dur_alerts.csv
+  format: csv

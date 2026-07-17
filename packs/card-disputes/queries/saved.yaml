@@ -1,0 +1,28 @@
+# Saved queries (query-service) — includes the cardholder->merchant edge
+# source (parent/child/n) for network-family charts: dispute-ring and
+# problem-merchant clustering from the transaction book.
+- identity: dispute_merchant_edges
+  name: "Disputes: cardholder-merchant network edges"
+  description: >-
+    Cardholder -> merchant edge list (parent/child/n) from the card
+    transaction book — network-chart source for spotting problem-merchant
+    clusters (many cardholders, one merchant) and serial-disputer fans (one
+    cardholder, many disputed merchants).
+  sql: >-
+    SELECT cardholder_id AS parent, merchant_name AS child,
+           count(*) AS n
+    FROM {{dataset('cd-transactions')}}
+    GROUP BY cardholder_id, merchant_name
+  tags: [disputes, network, merchants, pack]
+- identity: high_value_open_disputes
+  name: "Disputes: high-value open queue"
+  description: "Open disputes ranked by dollar exposure — the analyst ranked-queue seed (deadline x dollar x severity, not FIFO)."
+  sql: >-
+    SELECT dispute_id, cardholder_id, dispute_type, reason_code, severity,
+           reg_flag, provisional_credit,
+           cast(deadline_days_left AS double) AS deadline_days_left,
+           cast(amount AS double) AS amount
+    FROM {{dataset('cd-disputes')}}
+    WHERE status = 'open'
+    ORDER BY amount DESC
+  tags: [disputes, queue, backlog, pack]

@@ -1,0 +1,69 @@
+# Dispute Operations Center: dispute mix by reason, backlog aging, outcome
+# mix, intake trend. Chart families restricted to the render-verified set
+# (vertical_bar / grid / pie / line); expr_metric measures (rates) are
+# query/NL surfaces, never charted directly.
+name: "Dispute Operations Center"
+module: insights
+semantic_model: credit_disputes_core
+description: >-
+  Top-line credit-reporting dispute operations KPIs: dispute volumes by
+  reason, reinvestigation backlog aging by severity, human determination
+  outcome mix, and the per-reason worklist.
+tags: [credit_reporting, fcra, disputes, pack]
+charts:
+  - name: "Disputes by reason"
+    chart_type: vertical_bar_chart
+    description: "Dispute volume by claimed reason (not mine, wrong balance, identity theft, ...)"
+    config:
+      x: { dimension: dispute_reason }
+      y: [ { measure: dispute_count, agg_fn: count } ]
+    sources: [ { measure: dispute_count } ]
+    w: 6
+    h: 4
+  - name: "Backlog aging by severity"
+    chart_type: vertical_bar_chart
+    description: "Average dispute age in days by severity (cycle-time watch on the 30/45-day clock)"
+    config:
+      x: { dimension: severity }
+      y: [ { measure: avg_dispute_age_days, agg_fn: avg } ]
+    sources: [ { measure: avg_dispute_age_days } ]
+    w: 6
+    h: 4
+  - name: "Determination outcome mix"
+    chart_type: pie_chart
+    description: "Corrections vs verified-accurate vs deletions vs identity-theft escalations vs frivolous vs pending"
+    config:
+      x: { dimension: dispute_disposition }
+      y: [ { measure: dispute_count, agg_fn: count } ]
+    sources: [ { measure: dispute_count } ]
+    w: 6
+    h: 4
+  - name: "Dispute intake by month"
+    chart_type: line_chart
+    description: "Dispute filings trend by filed month"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: dispute_count, agg_fn: count } ]
+    sources: [ { measure: dispute_count } ]
+    w: 6
+    h: 4
+  - name: "Dispute-reason worklist grid"
+    chart_type: grid_chart
+    description: "Disputes, closures, corrections, verified-accurate and deletions by claimed reason"
+    config:
+      columns: [dispute_reason, dispute_count, closed_dispute_count, correction_count, verified_accurate_count, deletion_count]
+      x: { dimension: dispute_reason }
+      y:
+        - { measure: dispute_count, agg_fn: count }
+        - { measure: closed_dispute_count, agg_fn: count }
+        - { measure: correction_count, agg_fn: count }
+        - { measure: verified_accurate_count, agg_fn: count }
+        - { measure: deletion_count, agg_fn: count }
+    sources:
+      - { measure: dispute_count }
+      - { measure: closed_dispute_count }
+      - { measure: correction_count }
+      - { measure: verified_accurate_count }
+      - { measure: deletion_count }
+    w: 12
+    h: 4

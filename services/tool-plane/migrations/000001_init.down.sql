@@ -1,0 +1,10 @@
+DROP TABLE IF EXISTS outbox;
+DROP TABLE IF EXISTS idempotency_keys;
+DROP TABLE IF EXISTS invocation_log;
+DROP TABLE IF EXISTS tool_health_hourly;
+DROP TABLE IF EXISTS kill_switches;
+DROP TABLE IF EXISTS byo_submissions;
+DROP TABLE IF EXISTS mcp_backends;
+DROP TABLE IF EXISTS tenant_tool_settings;
+DROP TABLE IF EXISTS tool_versions;
+DROP TABLE IF EXISTS tools;

@@ -1,0 +1,70 @@
+# Cargo Claims & Recovery: Carmack liability posture, filing-deadline runway,
+# and carrier-recovery effectiveness — the view a claims manager and a
+# revenue-leakage owner walk first.
+name: "Cargo Claims & Recovery"
+module: insights
+semantic_model: trucking_claims_core
+description: >-
+  Cargo OS&D posture: claimed dollars by claim type, deadline runway on the
+  open book (9-month filing / carrier-response clocks), liability-band mix,
+  monthly carrier-recovery trend, and the recovery ledger by liability band.
+tags: [logistics, trucking, cargo, recovery, carmack, pack]
+charts:
+  - name: "Claimed dollars by claim type"
+    chart_type: vertical_bar_chart
+    description: "Dollar exposure by claim type (damage, reefer breakdown, theft, shortage, ...)"
+    config:
+      x: { dimension: claim_type }
+      y: [ { measure: total_claim_amount, agg_fn: sum } ]
+    sources: [ { measure: total_claim_amount } ]
+    w: 6
+    h: 4
+  - name: "Deadline runway (open book)"
+    chart_type: vertical_bar_chart
+    description: "Open claims and reviews by days remaining to the next filing/response deadline"
+    config:
+      x: { dimension: deadline_bucket }
+      y: [ { measure: open_claim_count, agg_fn: count } ]
+    sources: [ { measure: open_claim_count } ]
+    w: 6
+    h: 4
+  - name: "Liability band mix"
+    chart_type: pie_chart
+    description: "Carrier liable vs shipper fault vs released-value cap vs undetermined"
+    config:
+      x: { dimension: liability_band }
+      y: [ { measure: claim_count, agg_fn: count } ]
+    sources: [ { measure: claim_count } ]
+    w: 6
+    h: 4
+  - name: "Carrier recovery by month"
+    chart_type: line_chart
+    description: "Dollars recovered from responsible carriers by filed month"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: total_recovery_amount, agg_fn: sum } ]
+    sources: [ { measure: total_recovery_amount } ]
+    w: 6
+    h: 4
+  - name: "Liability & recovery grid"
+    chart_type: grid_chart
+    description: "Claims, payments, denials, recovery filings and dollars by liability band"
+    config:
+      columns: [liability_band, claim_count, paid_claim_count, denied_claim_count, recovery_filed_count, total_claim_amount, total_recovery_amount]
+      x: { dimension: liability_band }
+      y:
+        - { measure: claim_count, agg_fn: count }
+        - { measure: paid_claim_count, agg_fn: count }
+        - { measure: denied_claim_count, agg_fn: count }
+        - { measure: recovery_filed_count, agg_fn: count }
+        - { measure: total_claim_amount, agg_fn: sum }
+        - { measure: total_recovery_amount, agg_fn: sum }
+    sources:
+      - { measure: claim_count }
+      - { measure: paid_claim_count }
+      - { measure: denied_claim_count }
+      - { measure: recovery_filed_count }
+      - { measure: total_claim_amount }
+      - { measure: total_recovery_amount }
+    w: 12
+    h: 4

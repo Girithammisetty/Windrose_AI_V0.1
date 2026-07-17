@@ -1,0 +1,134 @@
+# Tenant-scope RAG grounding records (memory-service). This is the RESPA
+# Reg X / investor-waterfall domain knowledge the loss-mit copilot retrieves
+# when reasoning about an application. Every record is factual regulatory or
+# operational reference material.
+- content: >-
+    Reg X loss-mitigation evaluation clock (12 CFR 1024.41(c)): if a servicer
+    receives a COMPLETE loss-mitigation application more than 37 days before
+    a foreclosure sale, it must evaluate the borrower within 30 days for ALL
+    loss-mitigation options available to that borrower and provide a written
+    decision stating which options (if any) it will offer. The evaluation
+    covers both home-retention options (modification, forbearance, repayment
+    plan) and non-retention options (short sale, deed-in-lieu). The clock
+    runs only on complete applications — completeness status therefore
+    controls the deadline posture of every file.
+  tags: [reg_x, deadlines, evaluation, complete_application]
+  confidence: 0.97
+- content: >-
+    Reg X acknowledgment/completeness notice (12 CFR 1024.41(b)(2)): within
+    5 business days of receiving a loss-mitigation application (when
+    received 45 days or more before a foreclosure sale), the servicer must
+    acknowledge receipt in writing, state whether the application is
+    complete or incomplete, and if incomplete list the specific documents
+    and information needed to complete it, with a reasonable date by which
+    the borrower should submit them. Servicers must exercise reasonable
+    diligence in obtaining the missing items — a documented follow-up chase
+    is an examination expectation, not a courtesy.
+  tags: [reg_x, acknowledgment, completeness, doc_chase]
+  confidence: 0.96
+- content: >-
+    Dual-tracking prohibitions (12 CFR 1024.41(f) and (g)): a servicer may
+    not make the first notice or filing for foreclosure until the borrower
+    is more than 120 days delinquent. If a complete loss-mitigation
+    application is received before the first filing, the servicer may not
+    make that first filing while the application is pending (until the
+    borrower is properly denied with appeal rights exhausted, rejects the
+    offer, or fails to perform). If a complete application arrives after the
+    first filing but more than 37 days before a scheduled sale, the servicer
+    may not move for foreclosure judgment or order of sale, or conduct the
+    sale, while the application is pending. Foreclosure-process holds must
+    be placed and logged the moment a timely complete application is
+    identified.
+  tags: [reg_x, dual_tracking, foreclosure_hold, 120_day_rule]
+  confidence: 0.97
+- content: >-
+    Denial-appeal rights (12 CFR 1024.41(h)): when a servicer denies a
+    complete application for a trial or permanent loan modification and the
+    application was received 90 days or more before a scheduled foreclosure
+    sale (or before any sale was scheduled), the borrower may appeal. The
+    borrower has 14 days from the denial notice to appeal; the appeal must
+    be decided within 30 days by personnel different from and not
+    subordinate to those who made the original decision; and the servicer
+    must state whether it will offer a modification based on the appeal. New
+    evidence submitted with an appeal (updated income documentation, for
+    example) must be weighed in the appeal review.
+  tags: [reg_x, appeals, denial, independent_review]
+  confidence: 0.95
+- content: >-
+    Denial specificity (12 CFR 1024.41(d)): when a complete application is
+    denied for any trial or permanent loan-modification option, the written
+    notice must state the specific reason or reasons for the denial of each
+    such option — and if the denial rests on an investor requirement, the
+    notice must identify the owner or assignee of the loan and the specific
+    requirement that is the basis. Boilerplate denials are a cited
+    examination finding. A loan modification is also a credit decision, so
+    ECOA/Regulation B adverse-action obligations (notification within the
+    Reg B timeframes, stated principal reasons) run alongside Reg X.
+  tags: [reg_x, ecoa_reg_b, denial_reasons, adverse_action]
+  confidence: 0.93
+- content: >-
+    Continuity of contact and early intervention (12 CFR 1024.40 and
+    1024.39): the servicer must assign single-point-of-contact (SPOC)
+    personnel to a delinquent borrower by the 45th day of delinquency, and
+    that personnel must be accessible to the borrower and able to explain
+    loss-mitigation options, application status, and missing items. Early
+    intervention requires good-faith efforts to establish live contact by
+    the 36th day of delinquency and a written notice describing
+    loss-mitigation options by the 45th day. Stale borrower contact on an
+    active application is a SPOC-obligation red flag.
+  tags: [reg_x, spoc, early_intervention, borrower_contact]
+  confidence: 0.94
+- content: >-
+    Investor waterfalls: each investor prescribes the order in which workout
+    options must be evaluated, and servicers must follow that order rather
+    than steering the borrower to an option convenient for the servicer.
+    GSE (Fannie Mae/Freddie Mac) books run reinstatement/repayment-plan,
+    payment-deferral, and Flex-Modification-style evaluations in the
+    prescribed sequence; FHA loss mitigation uses its own waterfall built
+    around informal/formal forbearance, loan modification, and
+    partial-claim-style tools; VA has parallel home-retention options with
+    VA-specific oversight. Anti-steering and fair-servicing expectations
+    (ECOA) mean similarly situated borrowers must be evaluated consistently
+    — outcome patterns that skew by protected class or by servicer economics
+    are examination and enforcement risks.
+  tags: [waterfall, gse, fha, va, anti_steering, fair_servicing]
+  confidence: 0.88
+- content: >-
+    Forbearance mechanics: short-term forbearance and repayment plans may be
+    offered on an evaluation of an INCOMPLETE application under Reg X
+    (1024.41(c)(2)(iii)) subject to conditions, including telling the
+    borrower they can still complete the application for a full evaluation.
+    A forbearance exit is itself an evaluation event: the accumulated
+    forborne amount must be resolved through reinstatement, a repayment
+    plan, a deferral-style option, or a modification — disaster-related
+    forbearances in particular typically flow to a deferral evaluation
+    before any modification. A borrower exiting forbearance should never be
+    treated as newly delinquent for dual-tracking purposes without checking
+    the actual contractual delinquency.
+  tags: [forbearance, disaster, deferral, exit_evaluation]
+  confidence: 0.88
+- content: >-
+    Repeat workouts and redefault: a broken trial-period plan or a redefault
+    after a permanent modification does not extinguish Reg X rights, but
+    investors impose re-eligibility rules (waiting periods, caps on the
+    number of assistance events, performance requirements) that must be
+    checked before re-evaluating. Repeat-request share and post-workout
+    redefault patterns are core program-health KPIs: a rising repeat share
+    signals workouts that do not resolve the underlying hardship (payment
+    reductions too shallow, arrears not addressed) rather than borrower bad
+    faith. Each repeat application is still evaluated on its own evidence.
+  tags: [redefault, trial_plan, re_eligibility, repeat_requests]
+  confidence: 0.87
+- content: >-
+    Recordkeeping and AI governance: Reg X requires servicers to maintain
+    policies and procedures reasonably designed to achieve the servicing
+    objectives (12 CFR 1024.38), to retain records documenting actions on a
+    borrower's account, and to be able to compile a borrower's servicing
+    file on request. Examiners review loss-mitigation files for the specific
+    findings behind each denial and the timeline of every clock. Every
+    AI-assisted disposition must preserve a provenance chain (data version,
+    model version, prompt hash, reviewer identity, timestamp); pattern-level
+    over-denial or disparate workout outcomes are UDAAP/ECOA examination
+    risks even when each file individually appears defensible.
+  tags: [recordkeeping, governance, cfpb, udaap, audit]
+  confidence: 0.9

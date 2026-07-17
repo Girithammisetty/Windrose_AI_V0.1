@@ -1,0 +1,135 @@
+# Semantic model `rcm_claims` — RCM-FR-020 KPI catalog (clean-claim rate,
+# denial rate, first-pass yield, net collection rate, denial overturn rate,
+# underpayment detection) expressed in the Core semantic grammar (SEM-FR-004:
+# agg whitelist, measure filters, derived expr_metric with nullif; join_paths
+# left/many_to_one, acyclic).
+#
+# entity.table is main.<safe_relation(dataset name)> — the physical relation
+# query-service materializes; `dataset:` refs are rebound to live dataset URNs
+# by packctl at install. Amount columns ingest as bronze strings, so numeric
+# measures cast(... as double).
+name: rcm_claims
+description: >-
+  Provider revenue-cycle claims KPI model (BRD 26 RCM-FR-020): clean-claim
+  rate, denial rate, first-pass yield, net collection rate, denial overturn
+  rate, and 835 remit underpayment variance — over 837 claims, 835 remittance
+  lines, and the denial worklist.
+definition:
+  entities:
+    - name: claims
+      dataset: rcm_claims
+      table: main.rcm_claims
+      primary_key: [claim_id]
+      dataset_version_policy: { policy: latest }
+    - name: remits
+      dataset: rcm_remits
+      table: main.rcm_remits
+      primary_key: [remit_id]
+      dataset_version_policy: { policy: latest }
+    - name: denials
+      dataset: rcm_denials
+      table: main.rcm_denials
+      primary_key: [denial_id]
+      dataset_version_policy: { policy: latest }
+  join_paths:
+    - name: remits_claims
+      from_entity: remits
+      to_entity: claims
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: claim_id, to_column: claim_id }]
+    - name: denials_claims
+      from_entity: denials
+      to_entity: claims
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: claim_id, to_column: claim_id }]
+  dimensions:
+    - { name: payer_name, entity: claims, type: categorical, column: payer_name }
+    - { name: payer_type, entity: claims, type: categorical, column: payer_type }
+    - { name: service_line, entity: claims, type: categorical, column: service_line }
+    - { name: cpt_code, entity: claims, type: categorical, column: cpt_code }
+    - { name: service_month, entity: claims, type: categorical, column: service_month }
+    - { name: claim_status, entity: claims, type: categorical, column: status }
+    - { name: clean_claim, entity: claims, type: categorical, column: clean_claim }
+    - { name: first_pass, entity: claims, type: categorical, column: first_pass }
+    - { name: denial_carc_code, entity: denials, type: categorical, column: carc_code }
+    - { name: denial_rarc_code, entity: denials, type: categorical, column: rarc_code }
+    - { name: denial_category, entity: denials, type: categorical, column: denial_category }
+    - { name: denial_cpt_code, entity: denials, type: categorical, column: cpt_code }
+    - { name: denial_payer, entity: denials, type: categorical, column: payer_name }
+    - { name: denial_month, entity: denials, type: categorical, column: denial_month }
+    - { name: appeal_status, entity: denials, type: categorical, column: appeal_status }
+    - { name: remit_month, entity: remits, type: categorical, column: remit_month }
+    - { name: remit_carc_code, entity: remits, type: categorical, column: carc_code }
+    - { name: underpayment_flag, entity: remits, type: categorical, column: underpayment_flag }
+  measures:
+    - { name: claim_count, entity: claims, agg: count,
+        description: "Number of claims submitted (837)" }
+    - { name: clean_claim_count, entity: claims, agg: count,
+        filters: "clean_claim = 'yes'",
+        description: "Claims accepted without edits or rework" }
+    - { name: first_pass_paid_count, entity: claims, agg: count,
+        filters: "first_pass = 'yes'",
+        description: "Claims paid on first submission" }
+    - { name: denied_status_count, entity: claims, agg: count,
+        filters: "status = 'denied'",
+        description: "Claims currently in denied status" }
+    - { name: paid_status_count, entity: claims, agg: count,
+        filters: "status = 'paid'",
+        description: "Claims paid" }
+    - { name: total_billed, entity: claims, agg: sum,
+        expr: "cast(billed_amount as double)", format: decimal,
+        description: "Total gross charges billed" }
+    - { name: total_net_charges, entity: claims, agg: sum,
+        expr: "cast(net_charges as double)", format: decimal,
+        description: "Net charges (gross minus contractual adjustments)" }
+    - { name: total_paid, entity: claims, agg: sum,
+        expr: "cast(paid_amount as double)", format: decimal,
+        description: "Total payer payments received" }
+    - { name: total_expected_paid, entity: claims, agg: sum,
+        expr: "cast(expected_paid as double)", format: decimal,
+        description: "Total contracted expected payment" }
+    - { name: avg_days_to_payment, entity: claims, agg: avg,
+        expr: "cast(days_to_payment as double)", format: decimal,
+        description: "RCM-FR-020 days_in_ar: average days from date of service to payment (days outstanding for unresolved claims)" }
+    - { name: denial_count, entity: denials, agg: count,
+        description: "Denial records on the worklist" }
+    - { name: overturned_appeal_count, entity: denials, agg: count,
+        filters: "appeal_status = 'overturned'",
+        description: "Denials overturned on appeal" }
+    - { name: total_denied_amount, entity: denials, agg: sum,
+        expr: "cast(denied_amount as double)", format: decimal,
+        description: "Dollars denied (net charge value of denied lines)" }
+    - { name: remit_line_count, entity: remits, agg: count,
+        description: "835 remittance lines received" }
+    - { name: underpaid_line_count, entity: remits, agg: count,
+        filters: "underpayment_flag = 'yes'",
+        description: "RCM-FR-050: remit lines paid below the contracted amount" }
+    - { name: total_payment_variance, entity: remits, agg: sum,
+        expr: "cast(payment_variance as double)", format: decimal,
+        description: "RCM-FR-020 underpayment_recovery_$ pipeline: sum(expected_paid - actual_paid) across remit lines" }
+    - { name: clean_claim_rate,
+        expr_metric: "clean_claim_count / nullif(claim_count, 0)",
+        format: percent,
+        description: "RCM KPI clean-claim rate (HFMA MAP benchmark >= 95%)" }
+    - { name: first_pass_yield,
+        expr_metric: "first_pass_paid_count / nullif(claim_count, 0)",
+        format: percent,
+        description: "RCM-FR-020 first_pass_yield: claims paid on first submission over claims submitted" }
+    - { name: denial_rate,
+        expr_metric: "denial_count / nullif(claim_count, 0)",
+        format: percent,
+        description: "RCM-FR-020 denial_rate: count(denials) / count(claims)" }
+    - { name: denial_overturn_rate,
+        expr_metric: "overturned_appeal_count / nullif(denial_count, 0)",
+        format: percent,
+        description: "RCM-FR-020 denial_reversal_rate: overturned appeals over denials" }
+    - { name: net_collection_rate,
+        expr_metric: "total_paid / nullif(total_net_charges, 0)",
+        format: percent,
+        description: "RCM-FR-020 net_collection_rate: net payments over (net charges - contractual adjustments)" }
+    - { name: underpayment_line_rate,
+        expr_metric: "underpaid_line_count / nullif(remit_line_count, 0)",
+        format: percent,
+        description: "Share of 835 lines paid below contract (RCM-FR-050)" }

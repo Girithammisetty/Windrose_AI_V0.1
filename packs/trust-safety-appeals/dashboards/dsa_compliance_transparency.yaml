@@ -1,0 +1,70 @@
+# DSA Compliance & Transparency: statutory complaint-handling posture — the
+# deadline runway on the open book, appellant-standing mix, enforcement
+# geography, closure throughput, and the enforcement-source transparency grid
+# a regulator or transparency-report author walks first.
+name: "DSA Compliance & Transparency"
+module: insights
+semantic_model: appeals_core
+description: >-
+  Statutory complaint-handling posture: open-appeal deadline runway,
+  appellant standing mix, enforcement decisions by geography, appeal
+  closure throughput by month, and the transparency-reporting grid by
+  enforcement source.
+tags: [trust_safety, appeals, dsa, compliance, transparency, pack]
+charts:
+  - name: "Deadline runway (open book)"
+    chart_type: vertical_bar_chart
+    description: "Open appeals by days remaining to the complaint-handling deadline"
+    config:
+      x: { dimension: deadline_bucket }
+      y: [ { measure: open_appeal_count, agg_fn: count } ]
+    sources: [ { measure: open_appeal_count } ]
+    w: 6
+    h: 4
+  - name: "Appeals by user standing"
+    chart_type: pie_chart
+    description: "First-strike vs repeat vs power-user appellants (proportionality watch)"
+    config:
+      x: { dimension: user_standing }
+      y: [ { measure: appeal_count, agg_fn: count } ]
+    sources: [ { measure: appeal_count } ]
+    w: 6
+    h: 4
+  - name: "Enforcement decisions by geography"
+    chart_type: vertical_bar_chart
+    description: "Enforcement decision volume by geography (EU rows carry DSA obligations)"
+    config:
+      x: { dimension: geography }
+      y: [ { measure: enforcement_count, agg_fn: count } ]
+    sources: [ { measure: enforcement_count } ]
+    w: 6
+    h: 4
+  - name: "Appeal closures by month"
+    chart_type: line_chart
+    description: "Closed appeals by filed month — complaint-handling throughput"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: closed_appeal_count, agg_fn: count } ]
+    sources: [ { measure: closed_appeal_count } ]
+    w: 6
+    h: 4
+  - name: "Transparency grid by enforcement source"
+    chart_type: grid_chart
+    description: "Volume, open backlog, overturns, upholds and aging by enforcement origin — the transparency-report cut"
+    config:
+      columns: [enforcement_source, appeal_count, open_appeal_count, overturned_count, upheld_count, avg_appeal_age_days]
+      x: { dimension: enforcement_source }
+      y:
+        - { measure: appeal_count, agg_fn: count }
+        - { measure: open_appeal_count, agg_fn: count }
+        - { measure: overturned_count, agg_fn: count }
+        - { measure: upheld_count, agg_fn: count }
+        - { measure: avg_appeal_age_days, agg_fn: avg }
+    sources:
+      - { measure: appeal_count }
+      - { measure: open_appeal_count }
+      - { measure: overturned_count }
+      - { measure: upheld_count }
+      - { measure: avg_appeal_age_days }
+    w: 12
+    h: 4

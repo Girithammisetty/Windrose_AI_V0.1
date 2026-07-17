@@ -1,0 +1,70 @@
+# Timeliness & Due Process: processing-deadline runway (SNAP 7-day expedited
+# / 30-day, UI first-payment promptness, fair-hearing docket) and the
+# due-process posture an oversight reviewer walks first — notice, verification
+# burden, and appeal outcomes.
+name: "Timeliness & Due Process"
+module: insights
+semantic_model: benefits_core
+description: >-
+  Processing-timeliness and due-process posture: open determinations by
+  deadline runway bucket and by program, verification-document status on the
+  claim book, appeal-docket activity by month, and per-program due-process
+  indicators (verification requests, appeals, overturns, aging).
+tags: [government, benefits, timeliness, due_process, pack]
+charts:
+  - name: "Deadline runway (open book)"
+    chart_type: vertical_bar_chart
+    description: "Open determinations by days remaining to the processing or hearing deadline"
+    config:
+      x: { dimension: deadline_bucket }
+      y: [ { measure: open_determination_count, agg_fn: count } ]
+    sources: [ { measure: open_determination_count } ]
+    w: 6
+    h: 4
+  - name: "Open backlog by program"
+    chart_type: vertical_bar_chart
+    description: "Open determinations split by benefit program"
+    config:
+      x: { dimension: program }
+      y: [ { measure: open_determination_count, agg_fn: count } ]
+    sources: [ { measure: open_determination_count } ]
+    w: 6
+    h: 4
+  - name: "Verification documents on file"
+    chart_type: pie_chart
+    description: "Claims by verification-document status (complete / partial / missing) — the verification-burden surface"
+    config:
+      x: { dimension: verification_docs }
+      y: [ { measure: claim_count, agg_fn: count } ]
+    sources: [ { measure: claim_count } ]
+    w: 6
+    h: 4
+  - name: "Appeal docket by month"
+    chart_type: line_chart
+    description: "Appeal-hearing-prep determinations opened per month (fair-hearing docket trend)"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: appeal_prep_count, agg_fn: count } ]
+    sources: [ { measure: appeal_prep_count } ]
+    w: 6
+    h: 4
+  - name: "Due-process posture grid"
+    chart_type: grid_chart
+    description: "Open backlog, verification requests, appeal docket, overturns and aging by program"
+    config:
+      columns: [program, open_determination_count, verification_request_count, appeal_prep_count, appeal_overturned_count, avg_determination_age_days]
+      x: { dimension: program }
+      y:
+        - { measure: open_determination_count, agg_fn: count }
+        - { measure: verification_request_count, agg_fn: count }
+        - { measure: appeal_prep_count, agg_fn: count }
+        - { measure: appeal_overturned_count, agg_fn: count }
+        - { measure: avg_determination_age_days, agg_fn: avg }
+    sources:
+      - { measure: open_determination_count }
+      - { measure: verification_request_count }
+      - { measure: appeal_prep_count }
+      - { measure: appeal_overturned_count }
+      - { measure: avg_determination_age_days }
+    w: 12
+    h: 4

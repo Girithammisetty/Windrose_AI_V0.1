@@ -1,0 +1,121 @@
+# Tenant-scope RAG grounding records (memory-service). This is the FCRA /
+# EEOC / identity-matching domain knowledge the adjudication copilot
+# retrieves when reasoning about a screening hit. Every record is factual
+# regulatory or methodological reference material; numbers appear only where
+# well established, otherwise the point is stated qualitatively.
+- content: >-
+    FCRA obsolescence limits (15 U.S.C. 1681c, section 605(a)): a consumer
+    report may not include arrest records that did not result in conviction,
+    civil suits, civil judgments, or paid tax liens older than seven years,
+    or bankruptcies older than ten years. Records of criminal CONVICTIONS
+    are excluded from the federal seven-year bar and may be reported
+    indefinitely under federal law — but many states impose their own
+    seven-year conviction limits or salary-based conditions, so jurisdiction
+    rules must be checked before reporting an old conviction. Section 605(b)
+    exempts certain high-salary positions from the obsolescence limits
+    (annual salary expected to equal or exceed $75,000).
+  tags: [fcra, obsolescence, seven_year_rule, section_605, state_law]
+  confidence: 0.95
+- content: >-
+    Adverse-action two-step (FCRA 604(b)(3) and 615(a)): BEFORE taking
+    adverse action based in whole or in part on a consumer report for
+    employment purposes, the employer must provide the applicant a copy of
+    the report and the CFPB's "A Summary of Your Rights Under the Fair
+    Credit Reporting Act", then wait a reasonable period for the applicant
+    to respond — about five business days is the customary minimum drawn
+    from regulator staff guidance, not a statutory number. The final
+    adverse-action notice must give the CRA's name and contact information,
+    state that the CRA did not make the decision and cannot explain it, and
+    describe the rights to a free copy of the report within 60 days and to
+    dispute its accuracy. Skipping or collapsing the two steps is the most
+    commonly litigated employment-FCRA failure.
+  tags: [fcra, adverse_action, pre_adverse, summary_of_rights, deadlines]
+  confidence: 0.95
+- content: >-
+    Public-record information for employment (FCRA section 613): a CRA
+    reporting public-record information that is likely to have an adverse
+    effect on employment must EITHER notify the consumer contemporaneously
+    that the information is being reported (with the name and address of the
+    recipient) OR maintain strict procedures to ensure the information is
+    complete and up to date — for criminal records, "up to date" means
+    reflecting the current disposition (charges dropped, expunged, or
+    reduced must not surface as open or as convictions). Programs choose one
+    rail and must be able to evidence it per report.
+  tags: [fcra, section_613, public_records, strict_procedures, contemporaneous_notice]
+  confidence: 0.92
+- content: >-
+    Accuracy and dispute duties: FCRA 607(b) requires reasonable procedures
+    to assure "maximum possible accuracy" of the information reported, and
+    611 gives the consumer the right to dispute — the CRA must reinvestigate
+    within 30 days (extendable to 45 in limited circumstances), forward the
+    dispute to the furnisher, and delete or correct information that is
+    inaccurate or cannot be verified, notifying the consumer of the results
+    shortly after completion. Mixed files (another person's record on the
+    applicant's report) are a leading source of FCRA litigation and CFPB
+    enforcement against background screeners.
+  tags: [fcra, accuracy, section_607, section_611, dispute_reinvestigation]
+  confidence: 0.95
+- content: >-
+    Identity-matching best practice for criminal records: name-plus-partial-
+    date-of-birth matching is insufficient on common names — the classic
+    mixed-file fact pattern is a same-name, same-birth-year record belonging
+    to someone else. Before a hit is attributed, corroborate at least full
+    middle name AND full date of birth, and prefer additional identifiers
+    (address history intersecting the record jurisdiction, SSN fragment
+    where lawfully available, physical identifiers on the court record). A
+    common-name flag on the applicant raises the matching standard, never
+    lowers it; when corroboration is unavailable, the record is escalated or
+    suppressed, not reported.
+  tags: [identity_matching, common_name, mixed_file, methodology, accuracy]
+  confidence: 0.9
+- content: >-
+    EEOC criminal-history guidance (2012 Enforcement Guidance under Title
+    VII): blanket exclusions for any criminal record risk disparate impact.
+    A defensible screen is job-related and consistent with business
+    necessity, built on the Green v. Missouri Pacific Railroad factors —
+    (1) the nature and gravity of the offense, (2) the time elapsed since
+    the offense or completion of the sentence, and (3) the nature of the job
+    sought — and offers an individualized assessment where the targeted
+    screen would exclude: notice to the applicant, an opportunity to provide
+    context (facts of the offense, rehabilitation, work history), and
+    consideration of that evidence before a final decision.
+  tags: [eeoc, individualized_assessment, green_factors, title_vii, adjudication]
+  confidence: 0.92
+- content: >-
+    Ban-the-box / fair-chance laws: a large and growing set of states and
+    localities restrict WHEN in the hiring process criminal history may be
+    requested (often only after a conditional offer) and HOW it may be used
+    — several require a written job-relatedness / individualized assessment
+    analysis and specific notices before withdrawing an offer, with their
+    own response windows layered on top of the FCRA two-step. Requirements
+    vary materially by jurisdiction; the adjudication matrix must apply the
+    rules of the applicant's and the position's jurisdiction, not a single
+    national default.
+  tags: [ban_the_box, fair_chance, state_law, jurisdiction, adverse_action]
+  confidence: 0.88
+- content: >-
+    Continuous monitoring on gig platforms: transport and delivery platforms
+    increasingly run post-hire continuous criminal-record and MVR monitoring
+    instead of point-in-time re-screens. Each actionable alert is a new
+    consumer-report event: permissible purpose and the applicant's consent
+    must cover ongoing screening, the alert must clear the same accuracy and
+    identity-matching bar as a pre-hire hit, and a deactivation based on a
+    monitoring alert triggers the full pre-adverse/adverse-action sequence.
+    Pending charges surfaced by monitoring are not convictions — they get a
+    relevance analysis against the safety-sensitive role, not an automatic
+    adverse outcome.
+  tags: [continuous_monitoring, gig_platforms, mvr, pending_charges, adverse_action]
+  confidence: 0.85
+- content: >-
+    Adjudication governance and AI provenance: the adjudication matrix
+    (which offense categories, ages, and dispositions map to which outcomes
+    per position) must be documented and consistently applied — ad-hoc
+    deviations and pattern-level disparities in adverse rates across
+    protected groups are EEOC and state-regulator exposure even when each
+    individual file looks defensible. Every AI-assisted disposition must
+    preserve a provenance chain (data version, model version, prompt hash,
+    reviewer identity, timestamp), the human reviewer owns the outcome, and
+    the employer end user must certify its permissible purpose and
+    compliance obligations to the CRA before receiving reports.
+  tags: [governance, provenance, adjudication_matrix, disparate_impact, permissible_purpose]
+  confidence: 0.9

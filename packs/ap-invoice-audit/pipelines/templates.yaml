@@ -1,0 +1,17 @@
+# Pipeline seeds (expressed against the real pipeline-orchestrator algorithm
+# catalog): an unsupervised invoice-anomaly detector (duplicate / threshold-
+# clustering / shell-vendor surface scan over the invoice register) and a
+# supervised exception-outcome scorer trained on human dispositions (the
+# deterministic-first pre-router for exception triage). Trained models
+# require review before promotion — the AP Controls Manager approves
+# promotions.
+- identity: ap_invoice_anomaly_isolation_forest
+  name: "Invoice anomaly detector (isolation forest)"
+  algorithm: isolation_forest
+  mode: train
+  dataset: ap_invoices
+- identity: ap_exception_outcome_xgboost
+  name: "Exception outcome scorer (xgboost)"
+  algorithm: xgboost
+  mode: train
+  dataset: ap_exceptions

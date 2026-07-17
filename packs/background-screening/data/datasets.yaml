@@ -1,0 +1,26 @@
+# Pack datasets (ingestion-service file_upload, stable names for idempotency).
+# In production these tables arrive via court-record aggregators, DMV/MVR
+# rails, education clearinghouses, verification bureaus, and the customer's
+# ATS/HRIS (deferred until pack-service ships connector materialization);
+# this seed data is REAL rows in the same landing shape, encoding genuine
+# screening-adjudication patterns so every downstream component runs against
+# real signal from day one: a common-name felony hit with a middle-name
+# mismatch (low identity confidence — suppress candidate), an ~8-year-old
+# non-conviction arrest wrongly surfaced (FCRA 605(a) obsolete), a pending
+# charge caught by continuous monitoring on an active gig driver (relevance
+# analysis), a 12-year-old conviction with rehabilitation evidence routed to
+# EEOC individualized assessment, a pre-adverse-action response window
+# expiring in 2 days, and an education-verification conferral-year
+# discrepancy that may be a registrar migration error.
+- identity: bs_applicants
+  name: bs-applicants
+  file: data/bs_applicants.csv
+  format: csv
+- identity: bs_orders
+  name: bs-orders
+  file: data/bs_orders.csv
+  format: csv
+- identity: bs_reviews
+  name: bs-reviews
+  file: data/bs_reviews.csv
+  format: csv

@@ -1,0 +1,107 @@
+# Tenant-scope RAG grounding records (memory-service). This is the BSA/OFAC/
+# FinCEN domain knowledge the triage copilot retrieves when reasoning about
+# an alert (AML-FR-110 regulatory guardrail content carried as factual
+# grounding until guardrail-service policies ship). Every record is factual
+# regulatory or typology reference material.
+- content: >-
+    FinCEN SAR filing clock: a SAR must be filed within 30 calendar days of
+    the initial detection of facts constituting a basis for filing (60 days
+    if no suspect is identified). The dollar threshold for SAR filing on
+    suspicious activity involving a known suspect is $5,000 aggregate. For
+    continuing suspicious activity, file a continuing-activity SAR every 120
+    days (90-day review period plus the 30-day filing window).
+  tags: [fincen, sar, deadlines, bsa]
+  confidence: 0.98
+- content: >-
+    CTR (Currency Transaction Report): required for cash transactions
+    exceeding $10,000, aggregated over a 24-hour period across all accounts
+    and branches for the same person (31 CFR 1010.313 related-party
+    aggregation). Filing deadline is 15 days. A CTR is a routine report, not
+    an accusation — a lawful cash-intensive business exceeding $10K in cash
+    is a CTR filing, not automatically a SAR.
+  tags: [ctr, fincen, cash, thresholds]
+  confidence: 0.98
+- content: >-
+    Structuring is breaking cash transactions into amounts below the $10,000
+    CTR threshold to evade reporting — a federal crime under 31 USC 5324
+    regardless of whether the underlying funds are legal. The classic
+    signature is paired same-day cash deposits in the $8,000-$9,900 range,
+    often across multiple branches. Cash-intensive businesses (restaurants,
+    convenience stores — SIC 5812/5411) get relaxed baselines: deposits
+    consistent with declared business volume are frequently false positives,
+    but repeated just-under-threshold pairing across branches is suspicious
+    even for them.
+  tags: [structuring, typology, ctr-evasion]
+  confidence: 0.95
+- content: >-
+    Layering is the second stage of money laundering: rapidly moving funds
+    through chains of accounts and entities (often shell/holding companies
+    and cross-border wires) to obscure origin. Signature: multi-hop wire
+    chains completing within 24-72 hours where each hop passes through
+    ~95-100% of the amount received, terminating offshore. Shared directors,
+    shared addresses, or overlapping beneficial ownership among chain
+    entities materially strengthen the case.
+  tags: [layering, typology, wires]
+  confidence: 0.95
+- content: >-
+    Dormant-then-active (mule) pattern: an account dormant or low-activity
+    for 90+ days suddenly receives repeated inbound transfers followed within
+    24-48 hours by outbound wires, commonly to higher-risk jurisdictions.
+    Compare observed volume to the customer's expected monthly volume from
+    KYC; a student or retiree account moving 10x its declared volume is a
+    strong mule indicator. Funnel accounts are the many-to-one variant:
+    multiple unrelated senders in, single rapid transfer out.
+  tags: [dormant_activity, funnel_account, mule, typology]
+  confidence: 0.9
+- content: >-
+    OFAC blocking obligation: on a confirmed (true-hit) match to the SDN
+    list, the bank must block the property/funds immediately and report to
+    OFAC within 10 business days; rejecting or unwinding the transaction
+    instead of blocking can itself be a violation. The OFAC 50% Rule extends
+    blocking to entities owned 50% or more, directly or indirectly, by one
+    or more SDN parties — resolve multi-tier ownership chains (this program
+    resolves to 5 hops; deeper chains go to L3 manual review).
+  tags: [ofac, sanctions, blocking, fifty_percent_rule]
+  confidence: 0.95
+- content: >-
+    Sanctions name-match adjudication: a fuzzy name-match score alone is not
+    a true hit. Weigh distinguishing evidence — date of birth, address,
+    nationality, government ID number, entity registration data — against
+    the listed SDN entry. Mismatched DOB plus mismatched address on a
+    moderate score (<0.6) is a defensible false positive; a high score
+    (>0.85) with no distinguishing evidence available requires escalation
+    and possible interim blocking, never a convenience clear.
+  tags: [sanctions, adjudication, evidence]
+  confidence: 0.9
+- content: >-
+    SAR confidentiality / tipping-off: under 31 USC 5318(g)(2)(A)(i) the
+    existence of a SAR (filed or contemplated) is confidential; disclosure
+    to the customer, a counterparty, or any unauthorized party is a criminal
+    offense. No SAR indicator may ever surface in a customer-facing UI,
+    customer letter, or any downstream write the customer or counterparty
+    could access. This extends to related parties: if Customer B is a
+    counterparty in a SAR on Customer A, B is never told of the A-SAR link.
+  tags: [sar_confidentiality, tipping_off, bsa]
+  confidence: 0.98
+- content: >-
+    SR 11-7 model risk management (Fed-supervised banks): every model used in
+    BSA/AML decisioning — including AI alert-triage and scoring models —
+    requires model-inventory documentation, independent validation, ongoing
+    performance monitoring, and defined retirement criteria. Every
+    AI-assisted disposition must preserve a provenance chain (data version,
+    model version, prompt hash, reviewer identity, timestamp) to satisfy
+    FFIEC BSA/AML Examination Manual expectations and BSA 5-year
+    recordkeeping.
+  tags: [sr_11_7, model_risk, ffiec, governance]
+  confidence: 0.95
+- content: >-
+    Peer-group anomaly typology: compare a customer's transaction pattern to
+    its declared business type (SIC code) and geographic peer group. A
+    business transacting far outside its peer envelope — e.g., a florist
+    (SIC 5992) sending weekly ~$50K international wires — is a strong L2
+    case-build trigger. International wires touching FATF greylist/blacklist
+    or other high-risk jurisdictions auto-strengthen the anomaly; declared
+    business type consistent with the pattern (e.g., freight forwarder with
+    large foreign wires) weakens it.
+  tags: [peer_anomaly, typology, sic_code, fatf]
+  confidence: 0.9

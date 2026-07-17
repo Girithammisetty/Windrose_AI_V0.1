@@ -1,0 +1,223 @@
+openapi: 3.0.3
+info:
+  title: identity-service
+  version: 1.0.0
+  description: >
+    Windrose platform root of trust: tenant lifecycle + provisioning, users +
+    invitations, service accounts / API keys, agent principals + OBO tokens,
+    JWKS. Inherits every master-BRD contract: error envelope
+    {error:{code,message,details,trace_id}}, cursor pagination
+    {data,page:{next_cursor,has_more}}, Idempotency-Key on POSTs, X-Trace-Id
+    on every response, cross-tenant reads answered 404.
+servers:
+  - url: /api/v1
+security:
+  - bearerAuth: []
+paths:
+  /tenants:
+    post:
+      summary: Create tenant (super-admin). publish=true starts provisioning.
+      parameters: [{$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CreateTenantRequest'}
+      responses:
+        '201': {description: Draft tenant created, content: {application/json: {schema: {$ref: '#/components/schemas/Tenant'}}}}
+        '202': {description: Provisioning started, content: {application/json: {schema: {$ref: '#/components/schemas/OperationAccepted'}}}}
+        '422': {$ref: '#/components/responses/ValidationFailed'}
+    get:
+      summary: List tenants (super-admin)
+      parameters:
+        - {name: limit, in: query, schema: {type: integer, default: 50, maximum: 200}}
+        - {name: cursor, in: query, schema: {type: string}}
+        - {name: 'filter[status]', in: query, schema: {type: string}}
+        - {name: 'filter[cell]', in: query, schema: {type: string}}
+        - {name: 'filter[cloud]', in: query, schema: {type: string, enum: [aws, azure, gcp]}}
+      responses:
+        '200': {description: Page of tenants, content: {application/json: {schema: {$ref: '#/components/schemas/TenantPage'}}}}
+  /tenants/{id}:
+    get:
+      summary: Get tenant (super-admin, or the tenant's own admin)
+      description: Cross-tenant access returns 404 and emits security.cross_tenant_denied (MASTER-FR-003).
+      parameters: [{$ref: '#/components/parameters/ID'}]
+      responses:
+        '200': {description: Tenant, content: {application/json: {schema: {$ref: '#/components/schemas/Tenant'}}}}
+        '404': {$ref: '#/components/responses/NotFound'}
+    patch:
+      summary: Update quotas / display_name / auto_upgrade (super-admin)
+      parameters: [{$ref: '#/components/parameters/ID'}]
+      responses:
+        '200': {description: Updated tenant, content: {application/json: {schema: {$ref: '#/components/schemas/Tenant'}}}}
+    delete:
+      summary: Delete tenant (super-admin) — IDN-FR-008
+      parameters:
+        - {$ref: '#/components/parameters/ID'}
+        - {name: mode, in: query, required: true, schema: {type: string, enum: [archive, destroy]}}
+        - {name: force, in: query, schema: {type: boolean}, description: super-admin skips the 7-day grace period}
+      responses:
+        '200': {description: Tenant (deleting/suspended), content: {application/json: {schema: {$ref: '#/components/schemas/Tenant'}}}}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /tenants/{id}/publish:
+    post: {summary: draft -> provisioning (state-machine guarded), parameters: [{$ref: '#/components/parameters/ID'}], responses: {'202': {description: workflow started}, '409': {$ref: '#/components/responses/Conflict'}}}
+  /tenants/{id}/suspend:
+    post: {summary: active -> suspended, parameters: [{$ref: '#/components/parameters/ID'}], responses: {'200': {description: suspended}, '409': {$ref: '#/components/responses/Conflict'}}}
+  /tenants/{id}/reactivate:
+    post: {summary: suspended -> active (runs Verify probe first, BR-5), parameters: [{$ref: '#/components/parameters/ID'}], responses: {'200': {description: reactivated + drift report}}}
+  /tenants/{id}/provisioning:
+    get: {summary: Step-by-step provisioning status (IDN-FR-007), parameters: [{$ref: '#/components/parameters/ID'}], responses: {'200': {description: steps, content: {application/json: {schema: {type: object, properties: {steps: {type: array, items: {$ref: '#/components/schemas/ProvisioningStep'}}}}}}}}}
+  /tenants/{id}/provisioning/retry:
+    post: {summary: Resume from the failed step (US-2/AC-3), parameters: [{$ref: '#/components/parameters/ID'}], responses: {'202': {description: resumed}, '409': {$ref: '#/components/responses/Conflict'}}}
+  /users/invite:
+    post:
+      summary: Invite a user (tenant admin) — IDN-FR-021
+      requestBody: {content: {application/json: {schema: {type: object, required: [email], properties: {email: {type: string, format: email}, full_name: {type: string}, groups: {type: array, items: {type: string}}}}}}}
+      responses:
+        '201': {description: Invited user, content: {application/json: {schema: {$ref: '#/components/schemas/User'}}}}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /invitations/{token}/accept:
+    post:
+      summary: Accept an invitation (public activation link)
+      security: []
+      parameters: [{name: token, in: path, required: true, schema: {type: string}}]
+      responses:
+        '200': {description: Activated user}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '410': {description: 'INVITATION_EXPIRED with resend hint (AC-5)', content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}}
+  /users:
+    get: {summary: List users (tenant admin; cursor pagination), responses: {'200': {description: page of users}}}
+  /users/{id}:
+    get: {summary: Get user, parameters: [{$ref: '#/components/parameters/ID'}], responses: {'200': {description: user}, '404': {$ref: '#/components/responses/NotFound'}}}
+    patch: {summary: Update full_name, parameters: [{$ref: '#/components/parameters/ID'}], responses: {'200': {description: user}}}
+    delete: {summary: Soft-delete (IDN-FR-023), parameters: [{$ref: '#/components/parameters/ID'}], responses: {'204': {description: deleted}}}
+  /users/{id}/deactivate:
+    post: {summary: 'Deactivate: disables IdP user, revokes sessions (IDN-FR-022, BR-9)', parameters: [{$ref: '#/components/parameters/ID'}], responses: {'200': {description: user}, '409': {$ref: '#/components/responses/Conflict'}}}
+  /users/{id}/invite/resend:
+    post: {summary: Resend invite; invalidates prior tokens (AC-5), parameters: [{$ref: '#/components/parameters/ID'}], responses: {'200': {description: user}}}
+  /service-accounts:
+    post:
+      summary: Create API key — secret shown once (IDN-FR-031, BR-11)
+      requestBody: {content: {application/json: {schema: {type: object, required: [name, scopes], properties: {name: {type: string}, scopes: {type: array, items: {type: string, example: dataset.dataset.read}}, expires_at: {type: string, format: date-time}}}}}}
+      responses:
+        '201': {description: '{service_account, api_key: wr_sa_<id>.<secret>}'}
+        '422': {$ref: '#/components/responses/ValidationFailed'}
+    get: {summary: List service accounts, responses: {'200': {description: page}}}
+  /service-accounts/{id}/rotate:
+    post: {summary: Rotate — old secret valid for a 5-min overlap (IDN-FR-033), parameters: [{$ref: '#/components/parameters/ID'}], responses: {'200': {description: new shown-once key}}}
+  /service-accounts/{id}:
+    delete: {summary: Revoke — immediate via denylist (AC-11), parameters: [{$ref: '#/components/parameters/ID'}], responses: {'204': {description: revoked}}}
+  /token/obo:
+    post:
+      summary: OBO token exchange (IDN-FR-041)
+      security: []
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object, required: [subject_token, agent_id, agent_version], properties: {subject_token: {type: string}, agent_id: {type: string}, agent_version: {type: string}, session_id: {type: string}}}
+            example: {subject_token: "<user JWT>", agent_id: analytics, agent_version: v14, session_id: "s-01H..."}
+      responses:
+        '200': {description: '{access_token (typ=agent_obo), token_type, expires_in: 300}'}
+        '401': {description: invalid/expired/alg-downgraded subject token (AC-13)}
+        '403': {description: 'PERMISSION_DENIED (user inactive, AC-6) | AGENT_DISABLED (kill-switch/eval gate, AC-7) | TENANT_SUSPENDED (AC-10)'}
+        '429': {description: 'RATE_LIMITED with Retry-After — 60/min per (user, agent) (AC-14)'}
+  /token/agent:
+    post:
+      summary: Autonomous agent token (IDN-FR-042) — agent-runtime only (SPIFFE mTLS)
+      security: []
+      responses:
+        '200': {description: typ=agent_autonomous token}
+        '403': {description: untrusted workload or autonomous_allowed=false}
+  /token/apikey:
+    post:
+      summary: Edge exchange API key -> typ=service JWT (IDN-FR-032)
+      security: []
+      responses:
+        '200': {description: service token}
+        '401': {description: unknown/revoked/expired key}
+        '403': {description: TENANT_SUSPENDED (AC-10)}
+  /credentials:
+    get: {summary: Credential inventory with last-used (US-8), responses: {'200': {description: users + service accounts + agent principals}}}
+  /keys/rotate:
+    post: {summary: On-demand signing key rotation (IDN-FR-052), responses: {'200': {description: new kid}}}
+components:
+  securitySchemes:
+    bearerAuth: {type: http, scheme: bearer, bearerFormat: JWT}
+  parameters:
+    ID: {name: id, in: path, required: true, schema: {type: string, format: uuid}}
+    IdempotencyKey: {name: Idempotency-Key, in: header, schema: {type: string}, description: 24h replay window (MASTER-FR-025)}
+  responses:
+    NotFound: {description: NOT_FOUND (also used for cross-tenant access), content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}}
+    Conflict: {description: CONFLICT (invalid state transition / duplicate), content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}}
+    ValidationFailed: {description: VALIDATION_FAILED with per-field details, content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}}
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          required: [code, message, trace_id]
+          properties:
+            code: {type: string, example: VALIDATION_FAILED}
+            message: {type: string}
+            details: {}
+            trace_id: {type: string}
+    OperationAccepted:
+      type: object
+      properties:
+        operation_id: {type: string, example: provision-01890a5d-...}
+        tenant: {$ref: '#/components/schemas/Tenant'}
+    Tenant:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        name: {type: string, example: acme-corp}
+        display_name: {type: string}
+        owner_email: {type: string}
+        tier: {type: string, enum: [pool, bridge, silo]}
+        cell_id: {type: string, format: uuid, nullable: true}
+        cloud: {type: string, enum: [aws, azure, gcp]}
+        status: {type: string, enum: [draft, provisioning, provision_failed, active, suspended, deleting, deleted]}
+        quotas:
+          type: object
+          properties:
+            cpu: {type: integer, default: 4}
+            memory: {type: string, default: 16Gi}
+            processing_cpu: {type: integer, default: 4}
+            processing_memory: {type: string, default: 16Gi}
+        platform_version: {type: string}
+        subdomain: {type: string}
+        k8s_namespace: {type: string}
+        schema_prefix: {type: string}
+        auto_upgrade: {type: boolean}
+        modules: {type: array, items: {type: string}}
+        created_at: {type: string, format: date-time}
+        updated_at: {type: string, format: date-time}
+    TenantPage:
+      type: object
+      properties:
+        data: {type: array, items: {$ref: '#/components/schemas/Tenant'}}
+        page:
+          type: object
+          properties:
+            next_cursor: {type: string, nullable: true}
+            has_more: {type: boolean}
+    User:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        tenant_id: {type: string, format: uuid}
+        email: {type: string}
+        full_name: {type: string}
+        status: {type: string, enum: [invited, active, deactivated]}
+        idp_subject: {type: string, nullable: true}
+        last_login_at: {type: string, format: date-time, nullable: true}
+    ProvisioningStep:
+      type: object
+      properties:
+        step_index: {type: integer}
+        step_name: {type: string, example: ProvisionInfra}
+        status: {type: string, enum: [pending, running, succeeded, failed, compensated]}
+        attempt: {type: integer}
+        error: {type: string}
+        compensation: {type: string, example: TerraformDestroy}

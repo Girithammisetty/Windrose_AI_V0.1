@@ -1,0 +1,22 @@
+# Saved queries (query-service) — includes the network-chart edge source
+# (denial reason -> service line flow), the pattern proven by the claims demo.
+- identity: denial_flow_edges
+  name: "Payer: denial reason to service line"
+  description: >-
+    Denial counts by (reason code -> service line) — edge list for
+    network-family charts and ad-hoc denial-flow analysis.
+  sql: >-
+    SELECT denial_reason_code AS parent, service_line AS child, count(*) AS n
+    FROM {{dataset('payer-denials')}}
+    GROUP BY denial_reason_code, service_line
+  tags: [insurance, denials, network, pack]
+- identity: high_value_denials
+  name: "Payer: high-value denied claims"
+  description: "Denied claims ranked by billed amount (recovery targets)."
+  sql: >-
+    SELECT claim_id, member_id, service_line, cpt_code,
+           cast(billed_amount AS double) AS billed
+    FROM {{dataset('payer-claims')}}
+    WHERE status = 'denied'
+    ORDER BY billed DESC
+  tags: [insurance, denials, pack]

@@ -1,0 +1,20 @@
+[project]
+name = "windrose-e2e"
+version = "0.1.0"
+description = "Windrose repo-level end-to-end claims triage-and-governance journey driver"
+requires-python = ">=3.11"
+dependencies = [
+    "pyjwt>=2.9",
+    "cryptography>=43",
+    "requests>=2.32",
+    "boto3>=1.35",
+    "psycopg[binary]>=3.2",
+    "kafka-python-ng>=2.2",
+    "redis>=5",
+    "mlflow>=3.11,<4",
+    "pyarrow>=23.0.1",
+    "pandas>=2",
+]
+
+[tool.uv]
+package = false

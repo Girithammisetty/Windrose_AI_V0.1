@@ -1,0 +1,127 @@
+# manufacturing-mrb capability pack — Core-neutral edition: manufacturing
+# nonconformance disposition / Material Review Board (MRB) adjudication for
+# regulated discrete manufacturers (aerospace & defense suppliers under
+# AS9100, medical-device manufacturers under ISO 13485 / 21 CFR 820.90,
+# automotive tiers under IATF 16949, and contract manufacturers spanning all
+# three). Installable TODAY against Windrose Core's public APIs via packctl;
+# the manifest envelope follows BRD 23 (PKG-FR-001/003). Components the
+# current Core cannot materialize are declared under `deferred` — recorded in
+# the install ledger, never faked.
+pack_manifest: 1
+name: manufacturing-mrb
+version: 1.0.0
+publisher: { id: pub-windrose, name: "Windrose Inc." }
+description: >-
+  AI-assisted nonconformance disposition and Material Review Board workflow
+  for regulated manufacturers: NC intake triage with disposition-deadline
+  awareness, MRB authority-limit guardrails (use-as-is on critical
+  characteristics routes to customer/design-authority approval), supplier
+  quality watch (repeat-SCAR suppliers, suspect certs), containment and
+  suspect-lot traceability, escape/customer-notification assessment, a
+  quality-operations KPI semantic model and dashboards (rework rate,
+  use-as-is share, scrap share, supplier-return share, backlog aging,
+  deadline runway, detection-point and spec-class mix), supplier-part-family
+  network analytics, AS9100 / ISO 13485 / IATF 16949 + 8D/CAPA grounding
+  memories, and lot-anomaly + disposition-outcome training pipelines.
+categories: [manufacturing, quality, aerospace, medical_devices, automotive]
+regulatory: [as9100, iso13485, iatf16949, fda_21cfr820, iso9001]
+components:
+  datasets:
+    - { file: "data/datasets.yaml", identity: "datasets" }
+  semantic_models:
+    - { file: "semantic/mrb_core.yaml", identity: "mrb_core" }
+  verified_queries:
+    - { file: "queries/verified.yaml", identity: "canonical_questions" }
+  saved_queries:
+    - { file: "queries/saved.yaml", identity: "saved_queries" }
+  dashboards:
+    - { file: "dashboards/nonconformance_command_center.yaml", identity: "nonconformance_command_center" }
+    - { file: "dashboards/mrb_dispositions_cycle_time.yaml", identity: "mrb_dispositions_cycle_time" }
+    - { file: "dashboards/supplier_quality_watch.yaml", identity: "supplier_quality_watch" }
+  dispositions:
+    - { file: "cases/dispositions.yaml", identity: "dispositions" }
+  cases:
+    - { file: "cases/queue.yaml", identity: "mrb_queue" }
+  roles:
+    - { file: "rbac/roles.yaml", identity: "roles" }
+  agent_configs:
+    - { file: "agents/configs.yaml", identity: "agent_configs" }
+  memories:
+    - { file: "memories/grounding.yaml", identity: "grounding" }
+  pipelines:
+    - { file: "pipelines/templates.yaml", identity: "pipelines" }
+deferred:
+  - kind: guardrails
+    reason: >-
+      MRB-domain policies (no autonomous disposition of nonconforming
+      material; use-as-is or repair on a critical characteristic must carry
+      documented customer/design-authority concurrence before closure;
+      med-device rework must attach re-verification evidence per ISO 13485 /
+      21 CFR 820.90; an escape assessment must precede any release of
+      customer-return stock) require guardrail-service / OPA policy
+      materialization, which Core does not expose as a pack surface yet. The
+      behavioral core is partially covered today by Core invariants: every
+      pack-configured agent is proposal-mode with four-eyes approval
+      (agent-runtime), and the agent instructions + disposition taxonomy
+      route final dispositions exclusively to human engineers with the
+      Quality Manager as approver.
+  - kind: agent_recipes
+    reason: >-
+      Bespoke LangGraph recipes (NC Intake Copilot, MRB Package Builder,
+      Supplier SCAR Drafter, Containment Sweep Sentinel, Escape Notification
+      Assessor) require agent-runtime graph-module registration (BRD 23
+      BR-12). This pack specializes the existing case-triage + analytics
+      agents via TenantAgentConfig prompt_params + tenant-scope RAG
+      grounding instead.
+  - kind: connection_templates
+    reason: >-
+      Production read connectors (QMS platforms: ETQ Reliance, MasterControl,
+      Arena, Greenlight Guru; ERP quality modules: SAP QM, Oracle Quality;
+      MES/SPC systems and CMM/inspection-result feeds; PLM for drawing and
+      characteristic data; supplier portals for certs and SCAR responses)
+      require customer credentials and pack-service connector
+      materialization. The pack ships seed datasets in the exact landing
+      shape; production connectors are configured through the product
+      Data > Connections UI.
+  - kind: write_adapters
+    reason: >-
+      Write adapters (write the approved disposition back to the QMS/ERP
+      nonconformance record, issue a SCAR through the supplier portal, place
+      or lift a stock/ship hold in MES/ERP, generate a concession/waiver
+      request package to the customer or design authority, open an escape
+      notification) execute only behind pack-service's materialization
+      contract and customer credentials; every such write stays
+      proposal-mode with human approval — no autonomous material release,
+      hold, or supplier action, ever.
+  - kind: eval_sets
+    reason: >-
+      Golden eval sets (disposition triage accuracy, containment-scope
+      recall on suspect lots, SCAR-routing precision, escape-risk ranking)
+      require eval-service write APIs whose action names are not yet in the
+      rbac canonical catalog (Core follow-up noted in rbac catalog.go).
+  - kind: ontology
+    reason: >-
+      Ontology registration (Nonconformance, Lot, Part, Characteristic,
+      Supplier, Program, Disposition, MRBReview, Concession, SCAR,
+      Containment, Escape, CertificateOfConformance) awaits pack-service;
+      entity semantics are carried today by the mrb_core semantic model and
+      dataset schemas.
+  - kind: case_schemas
+    reason: >-
+      Typed case schemas (nc_intake, mrb_review, supplier_scar,
+      containment_sweep, escape_assessment) await case-service schema
+      materialization; today's cases carry the same fields via
+      display_projection + the disposition taxonomy.
+  - kind: model_archetypes
+    reason: >-
+      Model archetypes (disposition_confidence, escape_risk_score) await
+      experiment-service archetype APIs; the scoring capability ships as
+      pipeline seeds instead (isolation_forest lot anomaly + xgboost
+      disposition-outcome scorer) with model-governance expectations noted
+      in grounding memories.
+  - kind: display_labels
+    reason: >-
+      Display-label overlays ("Nonconformance", "MRB queue", "Disposition
+      due", "Containment active", entity templates) require the BFF
+      label-registry endpoints (BFF-FR-082/088) which are pack-service-tier
+      features.

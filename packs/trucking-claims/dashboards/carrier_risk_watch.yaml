@@ -1,0 +1,67 @@
+# Carrier Risk Watch: the shipment-side surfaces that drive claims and fraud
+# (mode mix, telematics flags, service failures) and the carrier-roster risk
+# posture the vetting team manages.
+name: "Carrier Risk Watch"
+module: insights
+semantic_model: trucking_claims_core
+description: >-
+  Carrier and shipment risk posture: shipment mix by equipment mode,
+  telematics-flag mix on the moved book, carrier fraud-risk tiers,
+  service-failure (late-delivery) trend, and the carrier-type risk grid
+  (watch tier, insurance gaps, high fraud risk).
+tags: [logistics, trucking, carriers, vetting, telematics, pack]
+charts:
+  - name: "Shipments by mode"
+    chart_type: vertical_bar_chart
+    description: "Shipment volume by equipment mode (dry van / reefer / intermodal)"
+    config:
+      x: { dimension: mode }
+      y: [ { measure: shipment_count, agg_fn: count } ]
+    sources: [ { measure: shipment_count } ]
+    w: 6
+    h: 4
+  - name: "Telematics flag mix"
+    chart_type: pie_chart
+    description: "Shipments by telematics/camera flag count (none / one / two-plus)"
+    config:
+      x: { dimension: telematics_flags }
+      y: [ { measure: shipment_count, agg_fn: count } ]
+    sources: [ { measure: shipment_count } ]
+    w: 6
+    h: 4
+  - name: "Carriers by fraud-risk tier"
+    chart_type: vertical_bar_chart
+    description: "Carrier roster by fraud-risk tier (double-broker / identity-theft watch)"
+    config:
+      x: { dimension: fraud_risk }
+      y: [ { measure: carrier_count, agg_fn: count } ]
+    sources: [ { measure: carrier_count } ]
+    w: 6
+    h: 4
+  - name: "Late shipments by month"
+    chart_type: line_chart
+    description: "Service failures (late deliveries) by ship month"
+    config:
+      x: { dimension: ship_month }
+      y: [ { measure: late_shipment_count, agg_fn: count } ]
+    sources: [ { measure: late_shipment_count } ]
+    w: 6
+    h: 4
+  - name: "Carrier risk grid"
+    chart_type: grid_chart
+    description: "Roster size, safety watch tier, insurance gaps and high fraud risk by carrier type"
+    config:
+      columns: [carrier_type, carrier_count, watch_tier_carrier_count, insurance_lapsed_carrier_count, high_fraud_risk_carrier_count]
+      x: { dimension: carrier_type }
+      y:
+        - { measure: carrier_count, agg_fn: count }
+        - { measure: watch_tier_carrier_count, agg_fn: count }
+        - { measure: insurance_lapsed_carrier_count, agg_fn: count }
+        - { measure: high_fraud_risk_carrier_count, agg_fn: count }
+    sources:
+      - { measure: carrier_count }
+      - { measure: watch_tier_carrier_count }
+      - { measure: insurance_lapsed_carrier_count }
+      - { measure: high_fraud_risk_carrier_count }
+    w: 12
+    h: 4

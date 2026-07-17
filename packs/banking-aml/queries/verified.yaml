@@ -1,0 +1,67 @@
+# Verified NL<->SQL queries (BRD 30 Appendix canonical questions; SEM-FR-040
+# four-eyes approved at install). SQL uses {{dataset('<name>')}} macros — the
+# only table references query-service's tenant-namespace guard admits.
+- nl_text: "What's our alert false-positive rate by typology?"
+  sql_text: >-
+    SELECT typology,
+           count(*) AS closed_alerts,
+           sum(CASE WHEN disposition = 'false_positive' THEN 1 ELSE 0 END) AS false_positives,
+           round(sum(CASE WHEN disposition = 'false_positive' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS false_positive_rate
+    FROM {{dataset('aml-alerts')}}
+    WHERE status = 'closed'
+    GROUP BY typology
+    ORDER BY false_positive_rate DESC
+  model: aml_core
+  tags: [aml, false-positives, typology, pack]
+- nl_text: "SAR conversion rate by month — how many closed alerts became SARs?"
+  sql_text: >-
+    SELECT alert_month,
+           count(*) AS closed_alerts,
+           sum(CASE WHEN disposition = 'sar_filed' THEN 1 ELSE 0 END) AS sars_filed,
+           round(sum(CASE WHEN disposition = 'sar_filed' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS sar_conversion_rate
+    FROM {{dataset('aml-alerts')}}
+    WHERE status = 'closed'
+    GROUP BY alert_month
+    ORDER BY alert_month
+  model: aml_core
+  tags: [aml, sar, kpi, pack]
+- nl_text: "Which sanctions match false-positive types are most common — can we tune the screen?"
+  sql_text: >-
+    SELECT disposition,
+           count(*) AS hits,
+           round(avg(cast(match_score AS double)), 2) AS avg_match_score,
+           round(min(cast(match_score AS double)), 2) AS min_match_score,
+           round(max(cast(match_score AS double)), 2) AS max_match_score
+    FROM {{dataset('aml-alerts')}}
+    WHERE typology = 'sanctions_near_match'
+    GROUP BY disposition
+    ORDER BY hits DESC
+  model: aml_core
+  tags: [sanctions, ofac, tuning, pack]
+- nl_text: "Paired sub-$10K same-day cash deposits by party (structuring candidates)"
+  sql_text: >-
+    SELECT party_id, txn_date,
+           count(*) AS deposits,
+           sum(cast(amount AS double)) AS day_total
+    FROM {{dataset('aml-transactions')}}
+    WHERE channel = 'cash' AND direction = 'credit'
+      AND cast(amount AS double) >= 8000 AND cast(amount AS double) < 10000
+    GROUP BY party_id, txn_date
+    HAVING count(*) >= 2
+    ORDER BY day_total DESC
+  model: aml_core
+  tags: [structuring, ctr-evasion, typology, pack]
+- nl_text: "Open alert backlog aging by tier and severity"
+  sql_text: >-
+    SELECT assigned_tier, severity,
+           count(*) AS open_alerts,
+           round(avg(cast(age_days AS double)), 1) AS avg_age_days,
+           max(cast(age_days AS double)) AS oldest_days
+    FROM {{dataset('aml-alerts')}}
+    WHERE status = 'open'
+    GROUP BY assigned_tier, severity
+    ORDER BY avg_age_days DESC
+  model: aml_core
+  tags: [aml, backlog, cycle-time, pack]

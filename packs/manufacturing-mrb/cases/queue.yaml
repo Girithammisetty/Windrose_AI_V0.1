@@ -1,0 +1,71 @@
+# Seeded MRB adjudication queue: the OPEN nonconformances from the seed
+# dataset become cases so a quality engineer logging in sees a real,
+# pattern-diverse worklist on day one — a critical-characteristic dimensional
+# NC on a serialized flight part, a repeat casting-porosity supplier, a
+# solder-void PCB batch, a FOD containment sweep, a documentation-only cert
+# gap, and a customer-return cracking trend with escape exposure.
+# due_days=4 keeps triage inside the tightest disposition-deadline rows
+# (NC-5001 at 2 days, NC-5004 at 3).
+dataset: nc_nonconformances
+due_days: 4
+rows:
+  - row_pk: NC-5001
+    severity: high
+    display_projection:
+      nc_id: NC-5001
+      lot: "L-3004 (Precision Aerofab, machined, talon_uav)"
+      nc_type: dimensional
+      spec_class: critical_characteristic
+      est_cost_impact: "14500.00"
+      days_to_deadline: "2"
+      note: "Serialized talon_uav machined fitting (lot L-3004): wall thickness below drawing minimum on a CRITICAL characteristic, found at final inspection. Use-as-is is NOT within internal MRB authority on a critical characteristic — any concession routes to the customer/design authority with a stress justification; unit quarantined. Rework feasibility marginal (material already at min condition); compare NC-4007 on sister lot L-3001, same feature family, scrapped in April — recurrence points at fixture wear on the finishing cell"
+  - row_pk: NC-5002
+    severity: medium
+    display_projection:
+      nc_id: NC-5002
+      lot: "L-3011 (Castwell Foundry, casting, talon_uav)"
+      nc_type: material_property
+      spec_class: major
+      est_cost_impact: "8900.00"
+      days_to_deadline: "8"
+      note: "Subsurface porosity above spec on incoming radiographic sample, lot L-3011 — the FOURTH Castwell Foundry porosity NC in four months (NC-4003 Mar, NC-4009 Apr on lot L-3008; NC-4014 May on L-3010, all return_to_supplier). Supplier is red scorecard with 3+ prior SCARs: return + escalated SCAR with recurrence evidence is the pattern disposition; recommend source-inspection and desourcing review to the Quality Manager"
+  - row_pk: NC-5003
+    severity: medium
+    display_projection:
+      nc_id: NC-5003
+      lot: "L-3015 (CircuitCore Assembly, pcb_assembly, talon_uav)"
+      nc_type: process_deviation
+      spec_class: major
+      est_cost_impact: "4700.00"
+      days_to_deadline: "12"
+      note: "Solder voiding above workmanship limit on in-process X-ray, serialized PCB batch L-3015 (11-50 boards affected). Same failure mode as NC-4008 (April, lot L-3014) which reworked cleanly under a revised reflow profile — rework-to-spec is the likely path, but closure REQUIRES re-verification evidence (re-X-ray of every reworked joint) attached to the MRB record before release"
+  - row_pk: NC-5004
+    severity: high
+    display_projection:
+      nc_id: NC-5004
+      lot: "L-3018 (HarnessPro Interconnect, harness, talon_uav)"
+      nc_type: foreign_object
+      spec_class: critical_characteristic
+      est_cost_impact: "9800.00"
+      days_to_deadline: "3"
+      note: "FOD — wire clipping found inside a sealed connector backshell at final inspection, lot L-3018. Containment sweep triggered on all three lots from the same build line and window: L-3018, L-3019, L-3020 (all serialized — unit-level traceability bounds the sweep). Hold all three quarantined pending 100% inspection; FOD on a flight harness is a stop-ship condition until the sweep clears; feed root cause to the line's FOD-prevention program"
+  - row_pk: NC-5005
+    severity: medium
+    display_projection:
+      nc_id: NC-5005
+      lot: "L-3028 (Vector Machining Co, machined, meridian_sat)"
+      nc_type: documentation
+      spec_class: minor
+      est_cost_impact: "450.00"
+      days_to_deadline: "21"
+      note: "Raw-material certificate of conformance missing from the lot package for L-3028; dimensional and material verification on the parts themselves PASS (measurement report on file). Documentation-only NC: parts physically conform — release path is no_defect_found_release once the mill cert is retrieved from Vector Machining; do NOT release before the cert closes the traceability chain (counterfeit-material prevention requires an unbroken pedigree)"
+  - row_pk: NC-5006
+    severity: high
+    display_projection:
+      nc_id: NC-5006
+      lot: "L-3023 (PolyForm Medical Molding, molded, pulseguard_md)"
+      nc_type: material_property
+      spec_class: major
+      est_cost_impact: "18200.00"
+      days_to_deadline: "9"
+      note: "Third consecutive month of housing-cracking customer returns on the pulseguard_md molded family: NC-4012 (Apr, L-3021, scrapped), NC-4017 (May, L-3022, scrapped), now L-3023 on customer hold. This is an ESCAPE trend on a medical-device part — quarantine remaining stock, open root-cause analysis (suspect resin drying / molding parameters), and put the correction-and-removal / customer-notification assessment in front of the Quality Manager; ISO 13485 nonconforming-product-after-delivery obligations apply"

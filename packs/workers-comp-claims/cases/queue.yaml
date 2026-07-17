@@ -1,0 +1,78 @@
+# Seeded compensability-adjudication queue: the OPEN claims from the seed
+# dataset become cases so an adjuster logging in sees a real, pattern-diverse
+# worklist on day one — Monday-morning SIU red-flag cluster, a compensability
+# claim 2 days from its statutory decision deadline, a catastrophic scaffold
+# fall with fast-rising reserves, a medical-only claim converting to
+# indemnity, a pain-management provider billing far above the fee schedule
+# across claims, and a litigated repetitive-stress claim with attorney
+# representation. due_days=4 keeps triage inside the tightest statutory
+# decision windows on the open book.
+dataset: wc_claims
+due_days: 4
+rows:
+  - row_pk: WC-6001
+    severity: high
+    display_projection:
+      claim_id: WC-6001
+      claimant: "Colton Briggs (E-3009 RedRock Warehousing)"
+      injury: "strain_sprain / lower_back"
+      claim_type: indemnity
+      jurisdiction_state: TX
+      days_to_deadline: "9"
+      incurred_reserve: "7500.00"
+      note: "Lower-back strain reported Monday 08:05 for an injury claimed to have occurred Friday evening; no witnesses; claimant received a written layoff notice three business days before the report (RedRock June reduction-in-force). Classic red-flag cluster — Monday-morning report + unwitnessed + claim immediately after adverse employment action — matching the pattern behind WC-5012 (same employer, SIU-referred). Red flags justify escalate_siu_fraud, not denial: benefits and the 9-day compensability clock keep running unless SIU develops disqualifying evidence. Initial eval B-8025 on file."
+  - row_pk: WC-6002
+    severity: high
+    display_projection:
+      claim_id: WC-6002
+      claimant: "Yolanda Marsh (E-3003 Lakeside Assisted Living)"
+      injury: "strain_sprain / shoulder"
+      claim_type: indemnity
+      jurisdiction_state: IL
+      days_to_deadline: "2"
+      incurred_reserve: "16800.00"
+      note: "Resident-transfer shoulder injury; statutory accept/deny decision due in 2 days. Imaging B-8026 on file; still outstanding: supervisor witness statement and treating-physician causation note. Decide on the evidence in file or issue the jurisdiction's delay/investigation notice before the clock lapses — a silent lapse can waive denial defenses and trigger late-payment penalties. Mechanism of injury (patient handling in nursing care) strongly supports AOE/COE."
+  - row_pk: WC-6003
+    severity: high
+    display_projection:
+      claim_id: WC-6003
+      claimant: "Rafael Quintana (E-3002 Summit Ridge Construction)"
+      injury: "fracture / multiple"
+      claim_type: indemnity
+      jurisdiction_state: TX
+      days_to_deadline: "24"
+      incurred_reserve: "275000.00"
+      note: "Catastrophic scaffold fall (~20 ft), multiple fractures; surgery B-8027 ($58,200) and imaging B-8028 ($6,900) already in; incurred reserve at $275,000 and rising, paid-to-date $64,300 in 18 days. Compensability is not in doubt — priorities are reserve adequacy review, nurse case manager assignment, hospital discharge planning, and early return-to-work/vocational trajectory. Document every reserve change with rationale; a claim this size draws reinsurer and management attention."
+  - row_pk: WC-6004
+    severity: medium
+    display_projection:
+      claim_id: WC-6004
+      claimant: "Denise Holloway (E-3004 Prairie Foods Processing)"
+      injury: "strain_sprain / knee"
+      claim_type: indemnity
+      jurisdiction_state: IL
+      days_to_deadline: "12"
+      incurred_reserve: "9800.00"
+      note: "Fall on the same level, initially handled medical-only; treating physician has now taken the claimant off work beyond the state waiting period — claim converts to indemnity. Obtain the wage statement, calculate the temporary-disability rate, and re-reserve for wage replacement (reserve already raised $2,200 -> $9,800). Confirm modified-duty availability with the employer: early transitional work is the best lever on duration."
+  - row_pk: WC-6005
+    severity: medium
+    display_projection:
+      claim_id: WC-6005
+      claimant: "Jerome Askew (E-3001 Harbor Point Logistics)"
+      injury: "strain_sprain / lower_back"
+      claim_type: medical_only
+      jurisdiction_state: CA
+      days_to_deadline: "30"
+      incurred_reserve: "6400.00"
+      note: "Medical-only back strain, claimant on modified duty — but Meridian Spine & Pain Center is billing far above the fee schedule on this claim (B-8029 $5,350 billed vs $1,720 allowed; B-8030 $1,450 vs $430) and shows the same above-schedule pattern on WC-5003 (B-8005), WC-5005 (B-8009), and WC-5012 (B-8021). Refer to utilization review / bill-review audit of the provider cluster; verify medical necessity of repeat injection procedures before further authorizations."
+  - row_pk: WC-6006
+    severity: medium
+    display_projection:
+      claim_id: WC-6006
+      claimant: "Bethany Kroll (E-3006 Ironvale Metal Works)"
+      injury: "repetitive_stress / shoulder"
+      claim_type: indemnity
+      jurisdiction_state: PA
+      days_to_deadline: "5"
+      incurred_reserve: "42500.00"
+      note: "Repetitive-stress shoulder claim; claimant has retained counsel and litigation is active — the answer/response to the petition is due in 5 days. All claimant contact goes through counsel from here. Causation is the contested issue (degenerative change vs occupational repetitive motion): strong IME candidate; assemble job-task analysis and prior medical records for defense counsel, and document the reserve rationale ($42,500) for the litigated exposure."

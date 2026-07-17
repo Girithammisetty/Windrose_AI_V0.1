@@ -1,0 +1,215 @@
+openapi: 3.0.3
+info:
+  title: rbac-service
+  version: 1.0.0
+  description: >
+    Windrose authorization data plane: workspaces, groups, memberships, roles,
+    the action catalog, content grants, the permissions_flat projection admin
+    APIs and the authz decision fallback/explain endpoints. All endpoints
+    (except health/metrics) require an RS256 bearer JWT; the tenant context is
+    taken exclusively from the verified token.
+servers:
+  - url: /api/v1
+security:
+  - bearerAuth: []
+components:
+  securitySchemes:
+    bearerAuth: {type: http, scheme: bearer, bearerFormat: JWT}
+  parameters:
+    limit: {name: limit, in: query, schema: {type: integer, default: 50, maximum: 200}}
+    cursor: {name: cursor, in: query, schema: {type: string}}
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: {type: string, enum: [VALIDATION_FAILED, NOT_FOUND, PERMISSION_DENIED, CONFLICT, WORKSPACE_ARCHIVED, LAST_ADMIN, ROLE_IN_USE, GROUP_NOT_IN_WORKSPACE, SYSTEM_IMMUTABLE, UNAUTHENTICATED, RATE_LIMITED, INTERNAL]}
+            message: {type: string}
+            details: {}
+            trace_id: {type: string}
+    Page:
+      type: object
+      properties:
+        next_cursor: {type: string}
+        has_more: {type: boolean}
+    Workspace:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        tenant_id: {type: string, format: uuid}
+        name: {type: string}
+        description: {type: string}
+        public: {type: boolean}
+        created_by: {type: string}
+        archived_at: {type: string, format: date-time, nullable: true}
+        created_at: {type: string, format: date-time}
+        updated_at: {type: string, format: date-time}
+    Group:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        tenant_id: {type: string, format: uuid}
+        name: {type: string}
+        description: {type: string}
+        group_type: {type: string, enum: [permission, content]}
+        system: {type: boolean}
+        auto_generated: {type: boolean}
+    Role:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        tenant_id: {type: string, format: uuid, nullable: true, description: null = system role}
+        name: {type: string}
+        system: {type: boolean}
+        version: {type: integer}
+        actions: {type: array, items: {type: string}}
+    ActionDef:
+      type: object
+      properties:
+        action: {type: string, example: dataset.dataset.read}
+        service: {type: string}
+        resource: {type: string}
+        verb: {type: string}
+        workspace_scoped: {type: boolean}
+        description: {type: string}
+        deprecated: {type: boolean}
+    Grant:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        workspace_id: {type: string, format: uuid}
+        resource_urn: {type: string}
+        subject_type: {type: string, enum: [user, group]}
+        subject_id: {type: string}
+        level: {type: string, enum: [viewer, editor, owner]}
+        implicit: {type: boolean}
+    Decision:
+      type: object
+      properties:
+        allowed: {type: boolean}
+        reason: {type: string}
+        miss: {type: boolean}
+    Explanation:
+      type: object
+      properties:
+        allowed: {type: boolean}
+        reason: {type: string}
+        chain:
+          type: array
+          items:
+            type: object
+            properties:
+              type: {type: string, enum: [membership, role, workspace_assignment, grant, flag, scope_excluded]}
+paths:
+  /workspaces:
+    get:
+      summary: List workspaces visible to the caller (RBC-FR-002; server-side filtering)
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/cursor'
+        - {name: archived, in: query, schema: {type: string, enum: [only, with]}}
+      responses:
+        '200': {description: page of workspaces}
+    post:
+      summary: Create workspace (action rbac.workspace.create; Idempotency-Key supported)
+      responses:
+        '201': {description: created}
+        '409': {description: name already exists in tenant (case-insensitive)}
+  /workspaces/{id}:
+    get: {summary: Get workspace (visibility-filtered), responses: {'200': {description: ok}, '404': {description: not found or cross-tenant}}}
+    patch:
+      summary: Update name/description/public (rbac.workspace.update)
+      responses:
+        '200': {description: full updated resource}
+        '409': {description: WORKSPACE_ARCHIVED or name CONFLICT}
+  /workspaces/{id}/archive:
+    post: {summary: Archive (rbac.workspace.admin), responses: {'200': {description: archived}, '409': {description: already archived}}}
+  /workspaces/{id}/restore:
+    post: {summary: Restore (rbac.workspace.admin), responses: {'200': {description: restored}}}
+  /workspaces/{id}/content-groups/{group_id}:
+    put: {summary: Link content group (rbac.workspace.update; idempotent), responses: {'200': {description: linked}, '400': {description: not a content group}}}
+    delete: {summary: Unlink; cascades that workspace's grants held by the group, responses: {'200': {description: unlinked}}}
+  /groups:
+    get:
+      summary: List groups (rbac.group.list; ?type=permission|content; auto-generated hidden unless include_auto + super_admin)
+      responses: {'200': {description: page of groups}}
+    post: {summary: Create group (rbac.group.create), responses: {'201': {description: created}, '409': {description: duplicate name per type}}}
+  /groups/{id}:
+    get: {summary: Get group (rbac.group.read), responses: {'200': {description: ok}}}
+    patch: {summary: Update (system groups immutable), responses: {'200': {description: ok}, '409': {description: SYSTEM_IMMUTABLE}}}
+    delete: {summary: Delete; cascades links + grants (RBC-FR-012/BR-2), responses: {'204': {description: deleted}}}
+  /groups/{id}/members:
+    get: {summary: List members (rbac.group.read), responses: {'200': {description: page of members}}}
+  /groups/{id}/members/{user_id}:
+    put:
+      summary: Add member (rbac.group.assign; idempotent AC-9; optional body {expires_at})
+      responses: {'201': {description: created}, '200': {description: already a member (no-op)}}
+    delete:
+      summary: Remove member (last-admin protected; super_admin + X-Override-Reason overrides, audited)
+      responses: {'204': {description: removed}, '409': {description: LAST_ADMIN}}
+  /groups/{id}/members:bulk:
+    post:
+      summary: Bulk add/remove (max 500) with partial-failure report (RBC-FR-016)
+      responses: {'200': {description: per-op results}}
+  /groups/{id}/roles/{role_id}:
+    put: {summary: Bind role to permission group (rbac.group.update), responses: {'200': {description: bound}}}
+    delete: {summary: Unbind role, responses: {'204': {description: unbound}}}
+  /roles:
+    get: {summary: List roles (system + custom), responses: {'200': {description: page of roles}}}
+    post: {summary: Create custom role from catalog actions (rbac.role.create), responses: {'201': {description: created}}}
+  /roles/{id}:
+    get: {summary: Get role with actions, responses: {'200': {description: ok}}}
+    patch: {summary: Rename custom role, responses: {'200': {description: ok}, '409': {description: SYSTEM_IMMUTABLE}}}
+    delete: {summary: Delete custom role, responses: {'204': {description: deleted}, '409': {description: ROLE_IN_USE (BR-4)}}}
+  /roles/{id}/actions:
+    put:
+      summary: Replace action bindings (versioned; emits role.updated with diff; recomputes affected users)
+      responses: {'200': {description: updated role}}
+  /actions:
+    get: {summary: Action catalog with workspace_scoped flags (any authenticated), responses: {'200': {description: page of actions}}}
+  /actions/register:
+    post:
+      summary: Idempotent deploy-time registration (service identity or super_admin; RBC-FR-022)
+      responses: {'200': {description: registered count}}
+  /grants:
+    get:
+      summary: Effective access list for ?resource_urn= (direct + via_group + implicit, with provenance; RBC-FR-034)
+      parameters: [{name: resource_urn, in: query, required: true, schema: {type: string}}]
+      responses: {'200': {description: entries}}
+    post:
+      summary: Create content grant (enforces GROUP_NOT_IN_WORKSPACE integrity, RBC-FR-031)
+      responses:
+        '201': {description: created}
+        '422': {description: GROUP_NOT_IN_WORKSPACE}
+        '409': {description: duplicate grant or WORKSPACE_ARCHIVED}
+  /grants/{id}:
+    delete:
+      summary: Delete grant (last-owner protected; override as for members)
+      responses: {'204': {description: deleted}, '409': {description: LAST_ADMIN}}
+  /authz/check:
+    post:
+      summary: SQL ground-truth fallback (service identity; warms projection keys; RBC-FR-045)
+      responses: {'200': {description: Decision}}
+  /authz/explain:
+    post:
+      summary: Full decision chain for "why can user X do Y" (audit.log.read; RBC-FR-046)
+      responses: {'200': {description: Explanation}}
+  /admin/projection/rebuild:
+    post:
+      summary: Enqueue full tenant rebuild (super_admin; RBC-FR-043)
+      parameters: [{name: tenant, in: query, required: true, schema: {type: string, format: uuid}}]
+      responses: {'202': {description: operation id + users enqueued}}
+  /admin/projection/verify:
+    post:
+      summary: Compare projection vs SQL ground truth; repair drift (super_admin; AC-12)
+      parameters:
+        - {name: tenant, in: query, required: true, schema: {type: string, format: uuid}}
+        - {name: sample, in: query, schema: {type: integer}}
+        - {name: repair, in: query, schema: {type: boolean, default: true}}
+      responses: {'200': {description: drift report}}
+  /admin/tenants/{id}/seed:
+    post:
+      summary: Seed tenant (system groups + default workspace; mirrors tenant.provisioned consumer)
+      responses: {'200': {description: seeded}}

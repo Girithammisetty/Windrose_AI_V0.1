@@ -1,0 +1,23 @@
+# Pack datasets (ingestion-service file_upload, stable names for idempotency).
+# In production these tables arrive via the provider's EHR/PMS/clearinghouse
+# connectors — EDI 837 claims, EDI 835 remits, denial worklists, A/R aging
+# (RCM-FR-090, deferred until pack-service ships connector materialization).
+# This seed data is REAL rows in the same landing shape, so every downstream
+# component (semantic models, dashboards, cases, pipelines) runs against
+# genuine data from day one.
+- identity: rcm_claims
+  name: rcm-claims
+  file: data/rcm_claims.csv
+  format: csv
+- identity: rcm_remits
+  name: rcm-remits
+  file: data/rcm_remits.csv
+  format: csv
+- identity: rcm_denials
+  name: rcm-denials
+  file: data/rcm_denials.csv
+  format: csv
+- identity: rcm_ar_aging
+  name: rcm-ar-aging
+  file: data/rcm_ar_aging.csv
+  format: csv

@@ -1,0 +1,13 @@
+# tool-registry — catalog + admin API (BRD 13). Pure-Go build on distroless
+# static (MASTER-FR-072).
+FROM golang:1.26-bookworm AS build
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/tool-registry ./cmd/registry
+
+FROM gcr.io/distroless/static-debian12:nonroot
+COPY --from=build /out/tool-registry /usr/bin/tool-registry
+USER nonroot
+ENTRYPOINT ["/usr/bin/tool-registry"]

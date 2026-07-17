@@ -1,0 +1,53 @@
+[project]
+name = "eval-service"
+version = "0.1.0"
+description = "Windrose eval-service: agent quality flywheel — golden datasets, scorers, eval runs, CI gate, canary, SLOs"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "sqlalchemy[asyncio]>=2.0.30",
+    "asyncpg>=0.29",
+    "alembic>=1.13",
+    "pydantic>=2.7",
+    "pydantic-settings>=2.3",
+    "pyjwt[crypto]>=2.8",
+    "httpx>=0.27",
+    "psycopg[binary]>=3.1",
+    "duckdb>=1.1",
+    "jsonschema>=4.22",
+    "aiokafka>=0.11",
+    "redis>=5.0",
+    "windrose-common",
+]
+
+[tool.uv.sources]
+windrose-common = { path = "../../libs/py-common", editable = true }
+
+[dependency-groups]
+dev = [
+    "pytest>=8.2",
+    "pytest-asyncio>=0.23",
+    "testcontainers[postgres]>=4.5",
+    "ruff>=0.5",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+pythonpath = ["."]
+testpaths = ["tests"]
+markers = [
+    "integration: requires Docker infra (Postgres/Redis/Redpanda/OPA) and/or ai-gateway+Ollama; auto-skips when unavailable",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+ignore = ["B008"]  # FastAPI Depends() in defaults

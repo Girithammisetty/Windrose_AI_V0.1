@@ -1,0 +1,70 @@
+{
+  "pack": "chargeback-representment",
+  "version": "1.0.0",
+  "workspace_id": "019f6a75-b487-7a9e-9bb9-bbabac27e7ed",
+  "tenant_id": "019f6a75-b029-79f6-bfe9-337494ef122a",
+  "started_at": "2026-07-16T10:25:27Z",
+  "finished_at": "2026-07-16T10:25:46Z",
+  "actions": [
+    {
+      "kind": "datasets",
+      "identity": "mr_customers",
+      "action": "failed",
+      "urn": null,
+      "detail": "complete 500: {\"error\":{\"code\":\"INTERNAL\",\"message\":\"internal error\",\"trace_id\":\"019f6a75-b858-73d0-97c9-edbe6b32e649\"}}"
+    },
+    {
+      "kind": "datasets",
+      "identity": "mr_orders",
+      "action": "failed",
+      "urn": null,
+      "detail": "complete 500: {\"error\":{\"code\":\"INTERNAL\",\"message\":\"internal error\",\"trace_id\":\"019f6a75-d184-7fbe-85f1-de2a9703c962\"}}"
+    },
+    {
+      "kind": "datasets",
+      "identity": "mr_chargebacks",
+      "action": "failed",
+      "urn": null,
+      "detail": "complete 500: {\"error\":{\"code\":\"INTERNAL\",\"message\":\"internal error\",\"trace_id\":\"019f6a75-eaaa-79fe-a2b8-e3987bbe1d64\"}}"
+    }
+  ],
+  "deferred": [
+    {
+      "kind": "guardrails",
+      "reason": "Representment-domain policies (evidence packages may contain only genuine verifiable records \u2014 never fabricated or inferred evidence; no refund on an order with an open chargeback without the duplicate check; no representment filing past the acquirer deadline; block-list additions require a confirmed pattern, not a single suspicion) require guardrail-service / OPA policy materialization, which Core does not expose as a pack surface yet. The behavioral core is partially covered today by Core invariants: every pack-configured agent is proposal-mode with four-eyes approval (agent-runtime), and the agent instructions + disposition taxonomy route filings, refunds, and escalations exclusively to human analysts with the Dispute Program Manager as approver."
+    },
+    {
+      "kind": "agent_recipes",
+      "reason": "Bespoke LangGraph recipes (Representment Package Builder, CE 3.0 Qualifier, Fight/Accept Economics Router, Pre-Arbitration Advisor, Friendly-Fraud Pattern Miner) require agent-runtime graph-module registration (BRD 23 BR-12). This pack specializes the existing case-triage + analytics agents via TenantAgentConfig prompt_params + tenant-scope RAG grounding instead."
+    },
+    {
+      "kind": "connection_templates",
+      "reason": "Production read connectors (PSP/acquirer dispute APIs and webhook feeds; network dispute rails via the acquirer \u2014 Visa Resolve Online, Mastercom; pre-dispute alert rails \u2014 Verifi RDR/Order Insight, Ethoca-style alert feeds; order-management/OMS and e-commerce platforms; carrier tracking APIs for delivery-confirmation evidence; device-fingerprint/antifraud platforms for CE 3.0 elements) require customer credentials and pack-service connector materialization. The pack ships seed datasets in the exact landing shape; production connectors are configured through the product Data > Connections UI."
+    },
+    {
+      "kind": "write_adapters",
+      "reason": "Write adapters (submit representment/second presentment via the PSP/acquirer API, accept liability, issue the refund on the commerce platform, respond to pre-dispute alerts, accept or continue pre-arbitration, add a customer to the block-list) execute only behind pack-service's materialization contract and customer credentials; every such write stays proposal-mode with human approval \u2014 no autonomous filing, refund, or block-list mutation, ever."
+    },
+    {
+      "kind": "eval_sets",
+      "reason": "Golden eval sets (fight/accept triage, reason-code evidence matching, CE 3.0 qualification detection, duplicate/alert-refund detection, pre-arb economics ranking) require eval-service write APIs whose action names are not yet in the rbac canonical catalog (Core follow-up noted in rbac catalog.go)."
+    },
+    {
+      "kind": "ontology",
+      "reason": "Ontology registration (Merchant, Customer, Order, Payment, Chargeback, ReasonCode, Representment, PreArbitration, EvidencePackage, PreDisputeAlert, BlockListEntry, MonitoringProgramStatus) awaits pack-service; entity semantics are carried today by the representment_core semantic model and dataset schemas."
+    },
+    {
+      "kind": "case_schemas",
+      "reason": "Typed case schemas (chargeback_response, evidence_assembly, pre_arbitration_review, friendly_fraud_review, alert_deduplication) await case-service schema materialization; today's cases carry the same fields via display_projection + the disposition taxonomy."
+    },
+    {
+      "kind": "model_archetypes",
+      "reason": "Model archetypes (representment_win_probability, friendly_fraud_score) await experiment-service archetype APIs; the scoring capability ships as pipeline seeds instead (isolation_forest order anomaly + xgboost win-likelihood scorer) with model-governance expectations noted in grounding memories."
+    },
+    {
+      "kind": "display_labels",
+      "reason": "Display-label overlays (\"Chargeback\", \"Representment\", \"Response due\", \"CE 3.0 qualified\", \"Below fight threshold\", entity templates) require the BFF label-registry endpoints (BFF-FR-082/088) which are pack-service-tier features."
+    }
+  ],
+  "result": "failed"
+}

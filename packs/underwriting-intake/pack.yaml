@@ -1,0 +1,122 @@
+# underwriting-intake capability pack — Core-neutral edition: commercial
+# insurance underwriting submission intake & triage for P&C carriers,
+# MGAs/MGUs, wholesale brokers, and E&S markets. Installable TODAY against
+# Windrose Core's public APIs via packctl; the manifest envelope follows
+# BRD 23 (PKG-FR-001/003). Components the current Core cannot materialize
+# are declared under `deferred` — recorded in the install ledger, never
+# faked.
+pack_manifest: 1
+name: underwriting-intake
+version: 1.0.0
+publisher: { id: pub-windrose, name: "Windrose Inc." }
+description: >-
+  AI-assisted commercial underwriting submission intake and triage:
+  clearance-first duplicate blocking (first-in broker holds the market),
+  appetite-fit and completeness triage (ACORD apps, currently-valued loss
+  runs, SOV/COPE), broker needed-by deadline awareness with renewal-defense
+  prioritization, E&S specialty-market referral with documented
+  admitted-market declination, declination hygiene with risk-based reasons,
+  submission-funnel KPI semantic model and dashboards (accept-to-underwriter
+  rate, declination rate, info-request share, appetite/completeness mix,
+  deadline runway, broker-tier and premium-band mix), broker-line network
+  analytics, clearance/appetite/E&S/cyber-controls/fair-underwriting
+  grounding memories, and account-anomaly + triage-outcome training
+  pipelines.
+categories: [insurance, underwriting, commercial_lines, intake, triage]
+regulatory: [state_unfair_trade_practices, surplus_lines_diligent_search, naic_ai_bulletin, fair_underwriting]
+components:
+  datasets:
+    - { file: "data/datasets.yaml", identity: "datasets" }
+  semantic_models:
+    - { file: "semantic/underwriting_core.yaml", identity: "underwriting_core" }
+  verified_queries:
+    - { file: "queries/verified.yaml", identity: "canonical_questions" }
+  saved_queries:
+    - { file: "queries/saved.yaml", identity: "saved_queries" }
+  dashboards:
+    - { file: "dashboards/submission_intake_center.yaml", identity: "submission_intake_center" }
+    - { file: "dashboards/appetite_clearance.yaml", identity: "appetite_clearance" }
+    - { file: "dashboards/broker_funnel_performance.yaml", identity: "broker_funnel_performance" }
+  dispositions:
+    - { file: "cases/dispositions.yaml", identity: "dispositions" }
+  cases:
+    - { file: "cases/queue.yaml", identity: "submission_queue" }
+  roles:
+    - { file: "rbac/roles.yaml", identity: "roles" }
+  agent_configs:
+    - { file: "agents/configs.yaml", identity: "agent_configs" }
+  memories:
+    - { file: "memories/grounding.yaml", identity: "grounding" }
+  pipelines:
+    - { file: "pipelines/templates.yaml", identity: "pipelines" }
+deferred:
+  - kind: guardrails
+    reason: >-
+      Underwriting-domain policies (no appetite decision communicated to a
+      broker before the human determination; declination notes must carry
+      specific risk-based reasons; no E&S referral without the documented
+      admitted-market declination; unfair-discrimination pattern watch on
+      declines) require guardrail-service / OPA policy materialization,
+      which Core does not expose as a pack surface yet. The behavioral core
+      is partially covered today by Core invariants: every pack-configured
+      agent is proposal-mode with four-eyes approval (agent-runtime), and
+      the agent instructions + disposition taxonomy route final intake
+      determinations exclusively to human analysts with the Underwriting
+      Operations Manager as approver.
+  - kind: agent_recipes
+    reason: >-
+      Bespoke LangGraph recipes (Submission Clearance Checker, Appetite Fit
+      Scorer, Completeness Chaser, Renewal-Defense Deadline Sentinel)
+      require agent-runtime graph-module registration (BRD 23 BR-12). This
+      pack specializes the existing case-triage + analytics agents via
+      TenantAgentConfig prompt_params + tenant-scope RAG grounding instead.
+  - kind: connection_templates
+    reason: >-
+      Production read connectors (agency-management and broker-portal
+      systems: Applied Epic, Vertafore AMS360; submission-intake email/ACORD
+      extraction feeds; clearance systems; loss-run retrieval services;
+      D&B/experian-style firmographic enrichment; cat-modeling exposure
+      feeds) require customer credentials and pack-service connector
+      materialization. The pack ships seed datasets in the exact landing
+      shape; production connectors are configured through the product
+      Data > Connections UI.
+  - kind: write_adapters
+    reason: >-
+      Write adapters (record the clearance block/release in the clearance
+      system, send the declination letter with documented reasons, issue the
+      broker information request, open the underwriting file in the policy
+      admin system, notify the surplus-lines broker on referral) execute
+      only behind pack-service's materialization contract and customer
+      credentials; every such write stays proposal-mode with human approval
+      — no autonomous declination, referral, or broker communication, ever.
+  - kind: eval_sets
+    reason: >-
+      Golden eval sets (clearance-conflict detection, appetite-fit calls,
+      completeness gap identification, deadline-risk ranking) require
+      eval-service write APIs whose action names are not yet in the rbac
+      canonical catalog (Core follow-up noted in rbac catalog.go).
+  - kind: ontology
+    reason: >-
+      Ontology registration (Insured, Account, Submission, Broker,
+      Brokerage, AppetiteStatement, LossRun, StatementOfValues, Application,
+      ClearanceRecord, NeededByClock, DeclinationLetter) awaits
+      pack-service; entity semantics are carried today by the
+      underwriting_core semantic model and dataset schemas.
+  - kind: case_schemas
+    reason: >-
+      Typed case schemas (submission_triage, clearance_conflict_review,
+      appetite_referral, completeness_chase, renewal_defense) await
+      case-service schema materialization; today's cases carry the same
+      fields via display_projection + the disposition taxonomy.
+  - kind: model_archetypes
+    reason: >-
+      Model archetypes (appetite_fit_confidence, submission_priority_score)
+      await experiment-service archetype APIs; the scoring capability ships
+      as pipeline seeds instead (isolation_forest account-book anomaly +
+      xgboost triage-outcome scorer) with NAIC AI-bulletin model-governance
+      expectations noted in grounding memories.
+  - kind: display_labels
+    reason: >-
+      Display-label overlays ("Submission", "Clearance", "Needed-by date",
+      "Renewal defense", entity templates) require the BFF label-registry
+      endpoints (BFF-FR-082/088) which are pack-service-tier features.

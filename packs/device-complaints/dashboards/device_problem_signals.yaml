@@ -1,0 +1,70 @@
+# Device Problem Signals: the trending/signal-detection view — problem-code
+# mix, patient-harm mix, the post-rollout software-anomaly trend, the fleet
+# software-version surface, and the per-product signal grid (820.100 CAPA
+# trend triggers start here).
+name: "Device Problem Signals"
+module: insights
+semantic_model: complaints_core
+description: >-
+  Portfolio signal surveillance: complaints by device-problem code, patient
+  harm mix, the software-anomaly trend after the v4.0 rollout, device fleet
+  by software version, and the product signal grid feeding 820.100 CAPA
+  trending review.
+tags: [medtech, complaints, trending, capa, signal, pack]
+charts:
+  - name: "Complaints by device problem"
+    chart_type: vertical_bar_chart
+    description: "Complaint volume by device-problem code (alarm failure, software anomaly, breakage, ...)"
+    config:
+      x: { dimension: device_problem }
+      y: [ { measure: complaint_count, agg_fn: count } ]
+    sources: [ { measure: complaint_count } ]
+    w: 6
+    h: 4
+  - name: "Patient harm mix"
+    chart_type: pie_chart
+    description: "None vs minor vs serious vs death across the complaint book"
+    config:
+      x: { dimension: patient_harm }
+      y: [ { measure: complaint_count, agg_fn: count } ]
+    sources: [ { measure: complaint_count } ]
+    w: 6
+    h: 4
+  - name: "Software-anomaly trend"
+    chart_type: line_chart
+    description: "Software-anomaly complaints by month — the v4.0 rollout cluster"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: software_anomaly_count, agg_fn: count } ]
+    sources: [ { measure: software_anomaly_count } ]
+    w: 6
+    h: 4
+  - name: "Device fleet by software version"
+    chart_type: vertical_bar_chart
+    description: "Tracked devices by installed software version band (rollout exposure)"
+    config:
+      x: { dimension: software_version }
+      y: [ { measure: device_count, agg_fn: count } ]
+    sources: [ { measure: device_count } ]
+    w: 6
+    h: 4
+  - name: "Product signal grid"
+    chart_type: grid_chart
+    description: "Complaints, MDR filings, serious harm, CAPA escalations and fleet size by product"
+    config:
+      columns: [product_name, complaint_count, mdr_filed_count, serious_harm_count, capa_opened_count, device_count]
+      x: { dimension: product_name }
+      y:
+        - { measure: complaint_count, agg_fn: count }
+        - { measure: mdr_filed_count, agg_fn: count }
+        - { measure: serious_harm_count, agg_fn: count }
+        - { measure: capa_opened_count, agg_fn: count }
+        - { measure: device_count, agg_fn: count }
+    sources:
+      - { measure: complaint_count }
+      - { measure: mdr_filed_count }
+      - { measure: serious_harm_count }
+      - { measure: capa_opened_count }
+      - { measure: device_count }
+    w: 12
+    h: 4

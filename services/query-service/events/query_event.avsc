@@ -1,0 +1,46 @@
+{
+  "type": "record",
+  "name": "QueryEvent",
+  "namespace": "ai.windrose.query.v1",
+  "doc": "Envelope for query.events.v1 (MASTER-FR-031). Partition key = tenant_id. Event types: query.saved|updated|deleted, execution.started|succeeded|failed|cancelled|ceiling_exceeded, security.cross_tenant_denied, security.permission_denied.",
+  "fields": [
+    { "name": "event_id", "type": { "type": "string", "logicalType": "uuid" }, "doc": "uuidv7" },
+    { "name": "event_type", "type": "string" },
+    { "name": "tenant_id", "type": { "type": "string", "logicalType": "uuid" } },
+    {
+      "name": "actor",
+      "type": {
+        "type": "record",
+        "name": "Actor",
+        "fields": [
+          { "name": "type", "type": { "type": "enum", "name": "ActorType", "symbols": ["user", "service", "agent"] } },
+          { "name": "id", "type": "string" }
+        ]
+      }
+    },
+    {
+      "name": "via_agent",
+      "type": [
+        "null",
+        {
+          "type": "record",
+          "name": "ViaAgent",
+          "fields": [
+            { "name": "agent_id", "type": "string" },
+            { "name": "version", "type": "string" }
+          ]
+        }
+      ],
+      "default": null,
+      "doc": "Dual attribution for OBO actions (MASTER-FR-041)"
+    },
+    { "name": "resource_urn", "type": "string" },
+    { "name": "occurred_at", "type": { "type": "long", "logicalType": "timestamp-micros" } },
+    { "name": "trace_id", "type": "string" },
+    {
+      "name": "payload",
+      "type": "string",
+      "doc": "JSON object; per-type fields per BRD 05 §6 (e.g. execution.succeeded: actual_scan_bytes, result_rows, duration_ms, cache_hit). No PII beyond resource references (MASTER-FR-042)."
+    }
+  ]
+}

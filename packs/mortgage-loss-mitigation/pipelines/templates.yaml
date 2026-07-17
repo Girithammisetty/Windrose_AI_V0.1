@@ -1,0 +1,16 @@
+# Pipeline seeds (expressed against the real pipeline-orchestrator algorithm
+# catalog): an unsupervised distressed-loan anomaly detector (payment-shock /
+# underwater-cluster surface scan on the loan book) and a supervised workout-
+# outcome scorer trained on human dispositions (the deterministic-first
+# pre-router for intake triage). Trained models require review before
+# promotion — the Loss Mitigation Manager approves promotions.
+- identity: lm_loan_risk_isolation_forest
+  name: "Distressed-loan anomaly detector (isolation forest)"
+  algorithm: isolation_forest
+  mode: train
+  dataset: lm_loans
+- identity: lm_workout_outcome_xgboost
+  name: "Workout outcome scorer (xgboost)"
+  algorithm: xgboost
+  mode: train
+  dataset: lm_applications

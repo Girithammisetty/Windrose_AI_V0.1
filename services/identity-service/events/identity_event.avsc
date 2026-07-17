@@ -1,0 +1,30 @@
+{
+  "type": "record",
+  "name": "IdentityEvent",
+  "namespace": "ai.windrose.identity.events.v1",
+  "doc": "Master event envelope (MASTER-FR-031) for topic identity.events.v1. Partition key = tenant_id. event_type values per BRD 01 §6: tenant.created|published|provision_step_completed|provisioned|provision_failed|suspended|reactivated|deletion_started|deleted, user.invited|activated|updated|deactivated|deleted, service_account.created|rotated|revoked, agent_principal.synced, token.obo_issued, signing_key.rotated, security.cross_tenant_denied.",
+  "fields": [
+    {"name": "event_id", "type": {"type": "string", "logicalType": "uuid"}, "doc": "uuidv7; consumer dedup key (MASTER-FR-032)"},
+    {"name": "event_type", "type": "string"},
+    {"name": "tenant_id", "type": {"type": "string", "logicalType": "uuid"}},
+    {"name": "actor", "type": {
+      "type": "record", "name": "Actor",
+      "fields": [
+        {"name": "type", "type": "string", "doc": "user|agent|service|platform"},
+        {"name": "id", "type": "string"},
+        {"name": "scope", "type": ["null", "string"], "default": null, "doc": "'platform' for super-admin actions (IDN-FR-025)"}
+      ]
+    }},
+    {"name": "via_agent", "type": ["null", {
+      "type": "record", "name": "ViaAgent",
+      "fields": [
+        {"name": "agent_id", "type": "string"},
+        {"name": "version", "type": "string"}
+      ]
+    }], "default": null, "doc": "dual attribution for OBO writes (MASTER-FR-041)"},
+    {"name": "resource_urn", "type": "string", "doc": "wr:<tenant>:identity:<type>/<id> (MASTER-FR-013)"},
+    {"name": "occurred_at", "type": {"type": "long", "logicalType": "timestamp-millis"}},
+    {"name": "trace_id", "type": "string", "default": ""},
+    {"name": "payload", "type": "string", "default": "{}", "doc": "JSON payload; no PII beyond resource references (MASTER-FR-042)"}
+  ]
+}

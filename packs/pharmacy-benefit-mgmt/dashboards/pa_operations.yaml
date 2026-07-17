@@ -1,0 +1,62 @@
+# PA Operations dashboard (BRD 28 US-1/US-6): live Rx PA queue by urgency,
+# decision mix, turnaround against the CMS Part D coverage-determination
+# windows (72h standard / 24h expedited), copilot recommendation split.
+name: "PA Operations"
+module: insights
+semantic_model: pbm_pa
+description: >-
+  Rx prior-authorization operations (BRD 28): PA volume by urgency tier,
+  decision mix, turnaround hours against CMS Part D windows, monthly PA
+  volume trend, and PA-copilot recommendation mix with confidence.
+tags: [pharmacy, pbm, prior-auth, pack]
+charts:
+  - name: "PA requests by urgency"
+    chart_type: vertical_bar_chart
+    description: "PA volume by urgency tier"
+    config:
+      x: { dimension: urgency }
+      y: [ { measure: pa_request_count, agg_fn: count } ]
+    sources: [ { measure: pa_request_count } ]
+    w: 6
+    h: 4
+  - name: "PA decision mix"
+    chart_type: pie_chart
+    description: "Approved / denied / pending coverage determinations"
+    config:
+      x: { dimension: pa_status }
+      y: [ { measure: pa_request_count, agg_fn: count } ]
+    sources: [ { measure: pa_request_count } ]
+    w: 6
+    h: 4
+  - name: "Turnaround by urgency"
+    chart_type: vertical_bar_chart
+    description: "Average decision hours per urgency tier (CMS Part D window check)"
+    config:
+      x: { dimension: urgency }
+      y: [ { measure: avg_pa_turnaround_hours, agg_fn: avg } ]
+    sources: [ { measure: avg_pa_turnaround_hours } ]
+    w: 6
+    h: 4
+  - name: "PA volume trend"
+    chart_type: line_chart
+    description: "Rx PA requests by submitted month"
+    config:
+      x: { dimension: submitted_month }
+      y: [ { measure: pa_request_count, agg_fn: count } ]
+    sources: [ { measure: pa_request_count } ]
+    w: 6
+    h: 4
+  - name: "Copilot recommendation grid"
+    chart_type: grid_chart
+    description: "Recommendation mix with volumes and mean confidence"
+    config:
+      columns: [agent_recommendation, pa_request_count, avg_agent_confidence]
+      x: { dimension: agent_recommendation }
+      y:
+        - { measure: pa_request_count, agg_fn: count }
+        - { measure: avg_agent_confidence, agg_fn: avg }
+    sources:
+      - { measure: pa_request_count }
+      - { measure: avg_agent_confidence }
+    w: 12
+    h: 4

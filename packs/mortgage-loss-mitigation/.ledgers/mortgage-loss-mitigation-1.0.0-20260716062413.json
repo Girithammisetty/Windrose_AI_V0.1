@@ -1,0 +1,315 @@
+{
+  "pack": "mortgage-loss-mitigation",
+  "version": "1.0.0",
+  "workspace_id": "019f6a74-6c80-7e77-a754-362f18fb335b",
+  "tenant_id": "019f6a74-6849-7728-9207-35be40748365",
+  "started_at": "2026-07-16T10:24:03Z",
+  "finished_at": "2026-07-16T10:24:13Z",
+  "actions": [
+    {
+      "kind": "datasets",
+      "identity": "lm_applications",
+      "action": "create",
+      "urn": "wr:019f6a74-6849-7728-9207-35be40748365:dataset:dataset/019f6a74-6fad-712a-a8f8-7a440a753ee1",
+      "detail": "'lm-applications' ingested rows=26 snapshot=3125989680188333229"
+    },
+    {
+      "kind": "datasets",
+      "identity": "lm_loans",
+      "action": "create",
+      "urn": "wr:019f6a74-6849-7728-9207-35be40748365:dataset:dataset/019f6a74-713e-7fb3-9f5b-502a8c036c8e",
+      "detail": "'lm-loans' ingested rows=30 snapshot=7890486873414555090"
+    },
+    {
+      "kind": "datasets",
+      "identity": "lm_borrowers",
+      "action": "create",
+      "urn": "wr:019f6a74-6849-7728-9207-35be40748365:dataset:dataset/019f6a74-72b4-71e6-9db5-cc201414cab1",
+      "detail": "'lm-borrowers' ingested rows=12 snapshot=3309248741386697585"
+    },
+    {
+      "kind": "semantic_models",
+      "identity": "lossmit_core",
+      "action": "create",
+      "urn": "wr:019f6a74-6849-7728-9207-35be40748365:semantic:model/019f6a74-746d-7fc6-a9b8-ccf99fcf20ce",
+      "detail": "'lossmit_core' published"
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_0",
+      "action": "create",
+      "urn": "wr:019f6a74-6849-7728-9207-35be40748365:semantic:verified_query/019f6a74-7e1d-74e7-9e9e-8926d63b6ebb",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_1",
+      "action": "create",
+      "urn": "wr:019f6a74-6849-7728-9207-35be40748365:semantic:verified_query/019f6a74-7ef6-7275-928d-c31e82778611",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_2",
+      "action": "create",
+      "urn": "wr:019f6a74-6849-7728-9207-35be40748365:semantic:verified_query/019f6a74-7fdb-72d9-86bf-6bab73f1b944",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_3",
+      "action": "create",
+      "urn": "wr:019f6a74-6849-7728-9207-35be40748365:semantic:verified_query/019f6a74-810d-773d-9b80-352553f94f50",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_4",
+      "action": "create",
+      "urn": "wr:019f6a74-6849-7728-9207-35be40748365:semantic:verified_query/019f6a74-81da-77c7-bada-a03a0824bda3",
+      "detail": ""
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "lm_investor_workout_edges",
+      "action": "create",
+      "urn": "wr:019f6a74-6849-7728-9207-35be40748365:query:query/019f6a74-82a4-743a-837c-908454930686",
+      "detail": "Loss mit: investor-workout network edges"
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "lm_high_arrearage_open_queue",
+      "action": "create",
+      "urn": "wr:019f6a74-6849-7728-9207-35be40748365:query:query/019f6a74-82da-762a-a06f-057a03c9bee0",
+      "detail": "Loss mit: high-arrearage open queue"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "lossmit_command_center",
+      "action": "create",
+      "urn": "wr:019f6a74-6849-7728-9207-35be40748365:chart:dashboard/019f6a74-833d-72f9-a76e-708a750f4575",
+      "detail": "Loss Mitigation Command Center"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "lossmit_command_center",
+      "action": "verify",
+      "urn": "wr:019f6a74-6849-7728-9207-35be40748365:chart:dashboard/019f6a74-833d-72f9-a76e-708a750f4575",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "regx_clock_dual_track",
+      "action": "create",
+      "urn": "wr:019f6a74-6849-7728-9207-35be40748365:chart:dashboard/019f6a74-8574-7a77-884d-869b066ff1b5",
+      "detail": "Reg X Clock & Dual-Track Watch"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "regx_clock_dual_track",
+      "action": "verify",
+      "urn": "wr:019f6a74-6849-7728-9207-35be40748365:chart:dashboard/019f6a74-8574-7a77-884d-869b066ff1b5",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "workout_outcomes",
+      "action": "create",
+      "urn": "wr:019f6a74-6849-7728-9207-35be40748365:chart:dashboard/019f6a74-8729-7441-a0ff-e9ac87a1fedb",
+      "detail": "Workout Outcomes"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "workout_outcomes",
+      "action": "verify",
+      "urn": "wr:019f6a74-6849-7728-9207-35be40748365:chart:dashboard/019f6a74-8729-7441-a0ff-e9ac87a1fedb",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "approve_workout_offer"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "deny_with_specific_reasons"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "request_missing_documents"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "refer_foreclosure_alternatives"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "close_reinstated"
+    },
+    {
+      "kind": "cases",
+      "identity": "lossmit_queue",
+      "action": "create",
+      "urn": "wr:019f6a74-6849-7728-9207-35be40748365:dataset:dataset/019f6a74-6fad-712a-a8f8-7a440a753ee1",
+      "detail": "6 open cases (reindexed)"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Loss Mitigation Specialist'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Loss Mitigation Specialist' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Underwriting Reviewer'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Underwriting Reviewer' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'SPOC Coordinator'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'SPOC Coordinator' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Loss Mitigation Manager'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Loss Mitigation Manager' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Servicing Compliance Auditor'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Servicing Compliance Auditor' bound to permission group"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "case-triage prompt_params set"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "analytics prompt_params set"
+    },
+    {
+      "kind": "memories",
+      "identity": "grounding",
+      "action": "create",
+      "urn": null,
+      "detail": "10 grounding records written, 0 already present"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "create",
+      "urn": null,
+      "detail": "'Distressed-loan anomaly detector (isolation forest)' (isolation_forest, train)"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "create",
+      "urn": null,
+      "detail": "'Workout outcome scorer (xgboost)' (xgboost, train)"
+    }
+  ],
+  "deferred": [
+    {
+      "kind": "guardrails",
+      "reason": "Loss-mit-domain policies (no foreclosure referral or advancement while a timely complete application is pending; no outcome promised to a borrower before the human determination; denial letters must state the specific reasons and any investor requirement relied upon; appeal reviews routed to personnel independent of the original decision; fair-servicing pattern-of-denial watch) require guardrail-service / OPA policy materialization, which Core does not expose as a pack surface yet. The behavioral core is partially covered today by Core invariants: every pack-configured agent is proposal-mode with four-eyes approval (agent-runtime), and the agent instructions + disposition taxonomy route final determinations exclusively to human specialists with the Loss Mitigation Manager as approver."
+    },
+    {
+      "kind": "agent_recipes",
+      "reason": "Bespoke LangGraph recipes (Loss Mit Intake Copilot, Investor Waterfall Evaluator, Reg X Clock Sentinel, Document Chase Coordinator) require agent-runtime graph-module registration (BRD 23 BR-12). This pack specializes the existing case-triage + analytics agents via TenantAgentConfig prompt_params + tenant-scope RAG grounding instead."
+    },
+    {
+      "kind": "connection_templates",
+      "reason": "Production read connectors (servicing systems of record: Black Knight MSP, Sagent LoanServ, FICS; default-management platforms; document intake/OCR pipelines for hardship packages; GSE servicing portals and HUD/FHA reporting rails; credit and income-verification vendors) require customer credentials and pack-service connector materialization. The pack ships seed datasets in the exact landing shape; production connectors are configured through the product Data > Connections UI."
+    },
+    {
+      "kind": "write_adapters",
+      "reason": "Write adapters (send acknowledgment/decision/denial letters, book forbearance plans and trial modifications on the servicing system, place and release foreclosure-process holds, submit workout cases to GSE/FHA/VA investor portals) execute only behind pack-service's materialization contract and customer credentials; every such write stays proposal-mode with human approval \u2014 no autonomous foreclosure action, letter issuance, or investor filing, ever."
+    },
+    {
+      "kind": "eval_sets",
+      "reason": "Golden eval sets (application triage, deadline-risk ranking, waterfall option selection, denial-reason specificity, dual-track hold detection) require eval-service write APIs whose action names are not yet in the rbac canonical catalog (Core follow-up noted in rbac catalog.go)."
+    },
+    {
+      "kind": "ontology",
+      "reason": "Ontology registration (Borrower, Loan, LossMitApplication, HardshipClaim, WorkoutOffer, TrialPlan, ForbearancePlan, ForeclosureAction, DeadlineClock, DenialNotice, Appeal, Investor, SPOCAssignment) awaits pack-service; entity semantics are carried today by the lossmit_core semantic model and dataset schemas."
+    },
+    {
+      "kind": "case_schemas",
+      "reason": "Typed case schemas (lossmit_intake, document_chase, dual_track_review, denial_appeal, forbearance_exit_review) await case-service schema materialization; today's cases carry the same fields via display_projection + the disposition taxonomy."
+    },
+    {
+      "kind": "model_archetypes",
+      "reason": "Model archetypes (workout_outcome_confidence, redefault_risk_score) await experiment-service archetype APIs; the scoring capability ships as pipeline seeds instead (isolation_forest loan anomaly + xgboost workout-outcome scorer) with model-governance expectations noted in grounding memories."
+    },
+    {
+      "kind": "display_labels",
+      "reason": "Display-label overlays (\"Application\", \"Workout offer\", \"Evaluation due\", \"Dual-track hold\", entity templates) require the BFF label-registry endpoints (BFF-FR-082/088) which are pack-service-tier features."
+    }
+  ],
+  "result": "installed"
+}

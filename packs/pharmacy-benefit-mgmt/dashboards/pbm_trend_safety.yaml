@@ -1,0 +1,66 @@
+# PBM Trend & Safety dashboard (BRD 28 US-6 VPC view): plan-paid trend,
+# therapeutic-class mix, adjudication status, and DUR safety alert mix.
+# Chart families restricted to the render-verified set
+# (vertical_bar / grid / pie / line); expr_metric measures are query-surface
+# only, never charted.
+name: "PBM Trend & Safety"
+module: insights
+semantic_model: pbm_core
+description: >-
+  Top-line PBM KPIs (BRD 28): plan-paid trend by fill month, fill volumes by
+  therapeutic class and brand/generic mix, NCPDP adjudication status, and DUR
+  safety alert mix by conflict code.
+tags: [pharmacy, pbm, safety, dur, pack]
+charts:
+  - name: "Plan paid trend"
+    chart_type: line_chart
+    description: "Total plan-paid amount by fill month"
+    config:
+      x: { dimension: fill_month }
+      y: [ { measure: total_plan_paid, agg_fn: sum } ]
+    sources: [ { measure: total_plan_paid } ]
+    w: 6
+    h: 4
+  - name: "Fills by therapeutic class"
+    chart_type: vertical_bar_chart
+    description: "Rx claim volume by formulary therapeutic class"
+    config:
+      x: { dimension: therapeutic_class }
+      y: [ { measure: rx_claim_count, agg_fn: count } ]
+    sources: [ { measure: rx_claim_count } ]
+    w: 6
+    h: 4
+  - name: "Brand vs generic fills"
+    chart_type: pie_chart
+    description: "Generic dispensing mix (GDR numerator vs brand fills)"
+    config:
+      x: { dimension: brand_generic }
+      y: [ { measure: rx_claim_count, agg_fn: count } ]
+    sources: [ { measure: rx_claim_count } ]
+    w: 6
+    h: 4
+  - name: "DUR alerts by conflict code"
+    chart_type: vertical_bar_chart
+    description: "NCPDP DUR conflict code mix (DD/TD/HD/ER/LR)"
+    config:
+      x: { dimension: dur_conflict_code }
+      y: [ { measure: dur_alert_count, agg_fn: count } ]
+    sources: [ { measure: dur_alert_count } ]
+    w: 6
+    h: 4
+  - name: "DUR safety grid"
+    chart_type: grid_chart
+    description: "Alerts, clinical-critical count, and open queue by conflict code"
+    config:
+      columns: [dur_conflict_code, dur_alert_count, dur_critical_count, dur_open_count]
+      x: { dimension: dur_conflict_code }
+      y:
+        - { measure: dur_alert_count, agg_fn: count }
+        - { measure: dur_critical_count, agg_fn: count }
+        - { measure: dur_open_count, agg_fn: count }
+    sources:
+      - { measure: dur_alert_count }
+      - { measure: dur_critical_count }
+      - { measure: dur_open_count }
+    w: 12
+    h: 4

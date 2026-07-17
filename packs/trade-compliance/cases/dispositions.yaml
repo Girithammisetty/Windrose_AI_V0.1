@@ -1,0 +1,16 @@
+# Disposition taxonomy for the trade-compliance review workflow. Categories
+# are the Core's closed set {true_positive,false_positive,benign,
+# inconclusive,other} (CASE-FR-020), mapped 1:1: confirming the declared
+# classification verifies the entry as declared (true_positive);
+# reclassify_correct_entry means the declared code was a false declaration
+# (false_positive — the note carries the corrected code + reasonable-care /
+# prior-disclosure assessment); sanctions_true_hit_hold is the governed
+# external action (hold + block + report — category `other`, mirroring the
+# action-taking disposition in the reference pack); a licensing escalation
+# closes the review without a final merits call (inconclusive); clearing a
+# screening match on distinguishing evidence releases the shipment (benign).
+- { code: confirm_classification,     label: "Confirm — declared classification/origin verified correct",        category: true_positive,  requires_note: true }
+- { code: reclassify_correct_entry,   label: "Reclassify — declared code wrong, file corrected entry",           category: false_positive, requires_note: true }
+- { code: sanctions_true_hit_hold,    label: "True hit — hold shipment, block and report (sanctions/denied party)", category: other,          requires_note: true }
+- { code: escalate_licensing_review,  label: "Escalate to export/dual-use licensing review",                     category: inconclusive,   requires_note: true }
+- { code: release_false_positive,     label: "Release — screening match cleared as false positive",              category: benign,         requires_note: true }

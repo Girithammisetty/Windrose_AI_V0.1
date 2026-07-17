@@ -1,0 +1,14 @@
+# Disposition taxonomy for the benefits-adjudication workflow. Categories are
+# the Core's closed set {true_positive,false_positive,benign,inconclusive,
+# other} (CASE-FR-020). approve_benefits and deny_with_findings are the
+# eligibility outcomes (a denial requires written findings — the specific
+# reasons, policy citations, and appeal rights the claimant's notice must
+# state under due-process standards); request_verification_documents defers
+# the decision without an adverse action; refer_fraud_investigation routes to
+# program integrity WITHOUT suspending the claimant's rights on the pending
+# claim; close_withdrawn records a claimant-initiated withdrawal.
+- { code: approve_benefits,                label: "Approve benefits — eligibility confirmed",                     category: true_positive,  requires_note: true }
+- { code: deny_with_findings,              label: "Deny — written findings and appeal rights issued",             category: false_positive, requires_note: true }
+- { code: request_verification_documents,  label: "Request verification documents — decision deferred",           category: inconclusive,   requires_note: true }
+- { code: refer_fraud_investigation,       label: "Refer to program-integrity fraud investigation",               category: other,          requires_note: true }
+- { code: close_withdrawn,                 label: "Close — application or claim withdrawn by the claimant",       category: benign,         requires_note: true }

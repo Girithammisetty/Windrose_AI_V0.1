@@ -1,0 +1,64 @@
+# Verified NL<->SQL queries (four-eyes approved at install). SQL uses
+# {{dataset('<name>')}} macros — the only table references query-service's
+# tenant-namespace guard admits.
+- nl_text: "What's our accept-to-underwriter rate by line of business?"
+  sql_text: >-
+    SELECT line_of_business,
+           count(*) AS closed_submissions,
+           sum(CASE WHEN disposition = 'accept_route_to_underwriter' THEN 1 ELSE 0 END) AS accepted,
+           round(sum(CASE WHEN disposition = 'accept_route_to_underwriter' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS accept_to_underwriter_rate
+    FROM {{dataset('uw-submissions')}}
+    WHERE status = 'closed'
+    GROUP BY line_of_business
+    ORDER BY accept_to_underwriter_rate DESC
+  model: underwriting_core
+  tags: [underwriting, intake, funnel, kpi, pack]
+- nl_text: "Which open submissions are closest to the broker's needed-by date?"
+  sql_text: >-
+    SELECT submission_id, account_id, broker_name, broker_tier,
+           line_of_business, appetite_fit, completeness, priority_band,
+           severity,
+           cast(days_to_deadline AS double) AS days_to_deadline,
+           cast(age_days AS double) AS age_days
+    FROM {{dataset('uw-submissions')}}
+    WHERE status = 'open'
+    ORDER BY days_to_deadline ASC
+  model: underwriting_core
+  tags: [underwriting, deadlines, worklist, renewal_defense, pack]
+- nl_text: "Broker scorecard — submissions, accepts and declinations by broker"
+  sql_text: >-
+    SELECT broker_name, broker_tier,
+           count(*) AS submissions,
+           sum(CASE WHEN disposition = 'accept_route_to_underwriter' THEN 1 ELSE 0 END) AS accepted,
+           sum(CASE WHEN disposition = 'decline_out_of_appetite' THEN 1 ELSE 0 END) AS declined,
+           sum(CASE WHEN status = 'open' THEN 1 ELSE 0 END) AS open_in_triage
+    FROM {{dataset('uw-submissions')}}
+    GROUP BY broker_name, broker_tier
+    ORDER BY submissions DESC, accepted DESC
+  model: underwriting_core
+  tags: [underwriting, brokers, scorecard, hit_ratio, pack]
+- nl_text: "Habitual out-of-appetite brokers — who keeps sending risks outside our appetite?"
+  sql_text: >-
+    SELECT broker_name, broker_tier,
+           count(*) AS out_of_appetite_submissions,
+           sum(CASE WHEN disposition = 'decline_out_of_appetite' THEN 1 ELSE 0 END) AS declined
+    FROM {{dataset('uw-submissions')}}
+    WHERE appetite_fit = 'out_of_appetite'
+    GROUP BY broker_name, broker_tier
+    HAVING count(*) >= 2
+    ORDER BY out_of_appetite_submissions DESC
+  model: underwriting_core
+  tags: [underwriting, appetite, brokers, declination_hygiene, pack]
+- nl_text: "Completeness gaps on the open book — what documents are we waiting on?"
+  sql_text: >-
+    SELECT completeness,
+           count(*) AS open_submissions,
+           round(avg(cast(age_days AS double)), 1) AS avg_age_days,
+           round(avg(cast(days_to_deadline AS double)), 1) AS avg_deadline_runway
+    FROM {{dataset('uw-submissions')}}
+    WHERE status = 'open'
+    GROUP BY completeness
+    ORDER BY open_submissions DESC
+  model: underwriting_core
+  tags: [underwriting, completeness, loss_runs, sov, pack]

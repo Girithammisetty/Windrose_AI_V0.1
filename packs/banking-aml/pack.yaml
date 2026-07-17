@@ -1,0 +1,116 @@
+# banking-aml capability pack (BRD 30) — Core-neutral edition, and the first
+# NON-healthcare pack: the cross-industry Core-neutrality proof (BRD 30 AC-15).
+# Installable TODAY against Windrose Core's public APIs via packctl; the
+# manifest envelope follows BRD 23 (PKG-FR-001/003). Components the current
+# Core cannot materialize are declared under `deferred` with the exact BRD 30
+# requirement they trace to — recorded in the install ledger, never faked.
+pack_manifest: 1
+name: banking-aml
+version: 1.0.0
+publisher: { id: pub-windrose, name: "Windrose Inc." }
+description: >-
+  AI-assisted AML / BSA financial-crime workflow for US banks (BRD 30): alert
+  triage with typology-grounded dispositions, sanctions match adjudication,
+  SAR-recommendation queues with MLRO approval, AML KPI semantic model and
+  dashboards (false-positive rate, SAR conversion, backlog aging), party
+  relationship-network analytics, BSA/OFAC grounding memories, and
+  transaction-anomaly + alert-scoring training pipelines.
+categories: [banking, aml, financial-crime, sanctions]
+regulatory: [bsa, fincen_sar, ofac, sr_11_7, fatf]
+components:
+  datasets:
+    - { file: "data/datasets.yaml", identity: "datasets" }
+  semantic_models:
+    - { file: "semantic/aml_core.yaml", identity: "aml_core" }
+  verified_queries:
+    - { file: "queries/verified.yaml", identity: "canonical_questions" }
+  saved_queries:
+    - { file: "queries/saved.yaml", identity: "saved_queries" }
+  dashboards:
+    - { file: "dashboards/aml_command_center.yaml", identity: "aml_command_center" }
+    - { file: "dashboards/sanctions_screening.yaml", identity: "sanctions_screening" }
+    - { file: "dashboards/transaction_monitoring.yaml", identity: "transaction_monitoring" }
+  dispositions:
+    - { file: "cases/dispositions.yaml", identity: "dispositions" }
+  cases:
+    - { file: "cases/queue.yaml", identity: "alert_queue" }
+  roles:
+    - { file: "rbac/roles.yaml", identity: "roles" }
+  agent_configs:
+    - { file: "agents/configs.yaml", identity: "agent_configs" }
+  memories:
+    - { file: "memories/grounding.yaml", identity: "grounding" }
+  pipelines:
+    - { file: "pipelines/templates.yaml", identity: "pipelines" }
+# NOTE on graph analytics: NOT deferred. Related-party network expansion
+# (AML-FR-030 peer_comparison / US-3 network graph) ships Core-supported today
+# via the aml-relationship-edges dataset + the party_network_edges saved query
+# (parent/child/n edge list — the network-chart source pattern).
+deferred:
+  - kind: guardrails
+    reason: >-
+      AML-FR-110 + BR-1/BR-2 policies (tipping_off_strong, sar_confidentiality
+      zero-leak, AML_AUTONOMOUS_FILING_FORBIDDEN publish gate, OFAC 50% Rule
+      depth limit BR-7) require guardrail-service / OPA policy materialization,
+      which Core does not expose as a pack surface yet. The behavioral core is
+      partially covered today by Core invariants: every pack-configured agent
+      is proposal-mode with four-eyes approval (agent-runtime), and the agent
+      instructions + disposition taxonomy route SAR decisions exclusively to
+      the MLRO with explicit never-tip-off language.
+  - kind: agent_recipes
+    reason: >-
+      AML-FR-030..090 bespoke LangGraph recipes (Alert Triage Copilot,
+      Sanctions Match Adjudicator, SAR Narrative Drafter, CTR Aggregator,
+      CDD/EDD Copilot, Adverse Media Screener, Peer-Group Anomaly Detector)
+      require agent-runtime graph-module registration (BRD 23 BR-12). This
+      pack specializes the existing case-triage + analytics agents via
+      TenantAgentConfig prompt_params + tenant-scope RAG grounding instead.
+  - kind: connection_templates
+    reason: >-
+      AML-FR-100 read connectors (core banking: FIS/Fiserv/Jack Henry/Temenos;
+      transaction monitoring: Actimize/SAS AML/Oracle FSA/Napier/Feedzai;
+      sanctions data: OFAC SDN/EU/UN/HMT via World-Check/Dow Jones; adverse
+      media; beneficial ownership; SWIFT/Fedwire/ACH; FinCEN 314(a)) require
+      customer credentials and pack-service connector materialization. The
+      pack ships seed datasets in the exact landing shape; production
+      connectors are configured through the product Data > Connections UI.
+  - kind: write_adapters
+    reason: >-
+      AML-FR-100 write adapters (case status to AML platform, SAR + CTR filing
+      to FinCEN BSA e-filing, risk-rating update, OFAC blocked-property
+      freeze, adverse-media acknowledgment, GRC remediation status) execute
+      only behind pack-service's materialization contract and customer
+      BSA-E credentials; per BR-1 every such write stays proposal-mode with
+      human approval — no autonomous SAR/CTR filing, ever.
+  - kind: eval_sets
+    reason: >-
+      BRD 30 §4 golden eval sets (alert triage, sanctions adjudication, SAR
+      narrative, CDD risk rating, peer anomaly — 5 sets, AC-2 85% agreement
+      gate) require eval-service write APIs whose action names are not yet in
+      the rbac canonical catalog (Core follow-up noted in rbac catalog.go).
+  - kind: ontology
+    reason: >-
+      AML-FR-010 ontology registration (Customer, BeneficialOwner, Account,
+      Transaction, Wire/SWIFTMessage, Alert, Case, SAR, CTR, SanctionsList,
+      SanctionsMatch, WatchlistEntity, AdverseMediaEvent, RiskRating,
+      TypologyPattern, RegulatoryFiling) awaits pack-service; entity semantics
+      are carried today by the aml_core semantic model and dataset schemas.
+  - kind: case_schemas
+    reason: >-
+      AML-FR-120 typed case schemas (alert_triage, sanctions_match_adjudication,
+      sar_case, ctr_review, cdd_edd_review, adverse_media_review,
+      peer_anomaly_investigation, regulatory_finding_remediation) await
+      case-service schema materialization; today's cases carry the same
+      fields via display_projection + the disposition taxonomy.
+  - kind: model_archetypes
+    reason: >-
+      BRD 30 §4 model archetypes (alert_disposition_confidence,
+      customer_risk_rating_v1) await experiment-service archetype APIs; the
+      alert-scoring capability ships as pipeline seeds instead
+      (isolation_forest anomaly detector + xgboost alert-disposition scorer)
+      with SR 11-7 model-risk documentation noted in grounding memories (BR-8).
+  - kind: display_labels
+    reason: >-
+      BRD 30 §4 display-label overlays ("Alert", "Sanctions hit", "SAR case",
+      "Escalate to L2", entity templates) require the BFF label-registry
+      endpoints (BFF-FR-082/088) which are pack-service-tier features.

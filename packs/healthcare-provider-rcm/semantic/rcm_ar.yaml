@@ -1,0 +1,50 @@
+# Semantic model `rcm_ar` — the A/R follow-up half of RCM-FR-020 (BRD 26
+# US-3/US-4): open balances by aging bucket, payer, and balance type, plus the
+# AR-prioritizer score surface (RCM-FR-060). days_outstanding and
+# followup_priority_score are always populated, so avg casts safely.
+name: rcm_ar
+description: >-
+  Provider A/R aging model (BRD 26): open insurance and patient balances by
+  aging bucket (0-30 through 120_plus), payer, and service line, with
+  days-outstanding and the AR-prioritizer follow-up score (RCM-FR-060).
+definition:
+  entities:
+    - name: ar_items
+      dataset: rcm_ar_aging
+      table: main.rcm_ar_aging
+      primary_key: [ar_id]
+      dataset_version_policy: { policy: latest }
+  dimensions:
+    - { name: aging_bucket, entity: ar_items, type: categorical, column: aging_bucket }
+    - { name: over_90, entity: ar_items, type: categorical, column: over_90 }
+    - { name: ar_payer_name, entity: ar_items, type: categorical, column: payer_name }
+    - { name: ar_payer_type, entity: ar_items, type: categorical, column: payer_type }
+    - { name: ar_service_line, entity: ar_items, type: categorical, column: service_line }
+    - { name: balance_type, entity: ar_items, type: categorical, column: balance_type }
+    - { name: last_action, entity: ar_items, type: categorical, column: last_action }
+    - { name: as_of_month, entity: ar_items, type: categorical, column: as_of_month }
+  measures:
+    - { name: ar_item_count, entity: ar_items, agg: count,
+        description: "Open A/R items on the follow-up worklist" }
+    - { name: ar_over_90_count, entity: ar_items, agg: count,
+        filters: "over_90 = 'yes'",
+        description: "A/R items aged beyond 90 days" }
+    - { name: insurance_ar_count, entity: ar_items, agg: count,
+        filters: "balance_type = 'insurance'",
+        description: "A/R items awaiting payer payment" }
+    - { name: patient_ar_count, entity: ar_items, agg: count,
+        filters: "balance_type = 'patient'",
+        description: "A/R items that are patient responsibility" }
+    - { name: total_ar_balance, entity: ar_items, agg: sum,
+        expr: "cast(balance_amount as double)", format: decimal,
+        description: "Total open A/R dollars" }
+    - { name: avg_days_outstanding, entity: ar_items, agg: avg,
+        expr: "cast(days_outstanding as double)", format: decimal,
+        description: "RCM-FR-020 days_in_ar over the open worklist" }
+    - { name: avg_priority_score, entity: ar_items, agg: avg,
+        expr: "cast(followup_priority_score as double)", format: decimal,
+        description: "Mean AR-prioritizer score (RCM-FR-060: collectability x amount x payer latency)" }
+    - { name: pct_ar_over_90,
+        expr_metric: "ar_over_90_count / nullif(ar_item_count, 0)",
+        format: percent,
+        description: "Share of A/R items aged beyond 90 days (aging-risk KPI)" }

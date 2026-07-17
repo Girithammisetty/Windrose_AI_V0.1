@@ -1,0 +1,69 @@
+# Counterfeit & IP Claims: claim-basis mix, trigger sources, deadline runway
+# on the open book, and the counterfeit-takedown intake trend — the view a
+# brand-protection lead and an IP claims reviewer walk first.
+name: "Counterfeit & IP Claims"
+module: insights
+semantic_model: seller_vetting_core
+description: >-
+  Counterfeit and IP enforcement posture: claims by legal basis, trigger-
+  source mix (brand complaints, test buys, detectors, buyer reports, KYB
+  screens), response-deadline runway on the open book, and the counterfeit
+  takedown intake trend.
+tags: [marketplace, counterfeit, ip_enforcement, dmca, pack]
+charts:
+  - name: "Claims by legal basis"
+    chart_type: vertical_bar_chart
+    description: "Reviews split by claim basis (trademark, copyright, authenticity, safety, KYB mismatch)"
+    config:
+      x: { dimension: claim_basis }
+      y: [ { measure: review_count, agg_fn: count } ]
+    sources: [ { measure: review_count } ]
+    w: 6
+    h: 4
+  - name: "Trigger-source mix"
+    chart_type: pie_chart
+    description: "What starts a review: brand complaint vs test buy vs ML detector vs buyer reports vs KYB screen"
+    config:
+      x: { dimension: trigger_source }
+      y: [ { measure: review_count, agg_fn: count } ]
+    sources: [ { measure: review_count } ]
+    w: 6
+    h: 4
+  - name: "Deadline runway (open book)"
+    chart_type: vertical_bar_chart
+    description: "Open reviews by days remaining to the response/takedown deadline"
+    config:
+      x: { dimension: deadline_bucket }
+      y: [ { measure: open_review_count, agg_fn: count } ]
+    sources: [ { measure: open_review_count } ]
+    w: 6
+    h: 4
+  - name: "Counterfeit takedown intake trend"
+    chart_type: line_chart
+    description: "Counterfeit-takedown reviews filed by month"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: counterfeit_review_count, agg_fn: count } ]
+    sources: [ { measure: counterfeit_review_count } ]
+    w: 6
+    h: 4
+  - name: "Claim-basis outcome grid"
+    chart_type: grid_chart
+    description: "Volume, enforcement, claim rejections, evidence requests and GMV at risk by claim basis"
+    config:
+      columns: [claim_basis, review_count, enforced_count, claim_rejected_count, evidence_requested_count, total_gmv_at_risk]
+      x: { dimension: claim_basis }
+      y:
+        - { measure: review_count, agg_fn: count }
+        - { measure: enforced_count, agg_fn: count }
+        - { measure: claim_rejected_count, agg_fn: count }
+        - { measure: evidence_requested_count, agg_fn: count }
+        - { measure: total_gmv_at_risk, agg_fn: sum }
+    sources:
+      - { measure: review_count }
+      - { measure: enforced_count }
+      - { measure: claim_rejected_count }
+      - { measure: evidence_requested_count }
+      - { measure: total_gmv_at_risk }
+    w: 12
+    h: 4

@@ -1,0 +1,22 @@
+# Pack datasets (ingestion-service file_upload, stable names for idempotency).
+# In production these tables arrive via the customer's SoR connectors
+# (INS-FR-060 — deferred until pack-service ships connector materialization);
+# this seed data is REAL rows in the same shape those connectors land, so every
+# downstream component (semantic model, dashboards, cases, pipelines) runs
+# against genuine data from day one.
+- identity: payer_claims
+  name: payer-claims
+  file: data/payer_claims.csv
+  format: csv
+- identity: payer_denials
+  name: payer-denials
+  file: data/payer_denials.csv
+  format: csv
+- identity: payer_appeals
+  name: payer-appeals
+  file: data/payer_appeals.csv
+  format: csv
+- identity: prior_auth_requests
+  name: payer-prior-auth-requests
+  file: data/prior_auth_requests.csv
+  format: csv

@@ -1,0 +1,131 @@
+# PBM role catalog (BRD 28 RX-FR-100) as tenant CUSTOM roles composing the
+# Core's closed action catalog (rbac never mints new verbs; packctl also
+# creates a same-named permission group and binds the role so it's
+# assignable). BRD personas mapped: pa_pharmacist, formulary_manager,
+# rebate analyst (data steward slice), clinical_pharmacist_reviewer ->
+# Clinical Director, pbm_compliance_officer.
+- name: "PA Pharmacist"
+  actions:
+    - case.case.read
+    - case.case.list
+    - case.case.update
+    - case.disposition.read
+    - case.disposition.create
+    - ai.proposal.read
+    - ai.proposal.list
+    - ai.proposal.approve
+    - ai.agent_session.read
+    - ai.agent_session.create
+    - ai.agent_session.execute
+    - memory.memory.read
+    - chart.dashboard.read
+    - chart.chart.read
+    - semantic.model.read
+    - semantic.compile.execute
+    - query.execution.read
+    - query.execution.execute
+    - dataset.dataset.read
+    - notification.inbox.read
+- name: "Formulary Manager"
+  actions:
+    - case.case.read
+    - case.case.list
+    - case.disposition.read
+    - dataset.dataset.read
+    - dataset.dataset.list
+    - dataset.profile.read
+    - query.query.read
+    - query.query.create
+    - query.query.execute
+    - query.execution.read
+    - query.execution.execute
+    - query.execution.export
+    - chart.dashboard.read
+    - chart.dashboard.list
+    - chart.dashboard.create
+    - chart.dashboard.update
+    - chart.chart.read
+    - chart.chart.list
+    - chart.chart.create
+    - chart.chart.update
+    - semantic.model.read
+    - semantic.model.list
+    - semantic.measure.read
+    - semantic.compile.execute
+    - memory.memory.read
+    - notification.inbox.read
+- name: "Rebate Analyst"
+  actions:
+    - dataset.dataset.read
+    - dataset.dataset.list
+    - dataset.dataset.export
+    - dataset.profile.read
+    - dataset.lineage.read
+    - query.query.read
+    - query.query.create
+    - query.query.execute
+    - query.execution.read
+    - query.execution.execute
+    - query.execution.export
+    - chart.dashboard.read
+    - chart.dashboard.list
+    - chart.chart.read
+    - chart.chart.list
+    - semantic.model.read
+    - semantic.model.list
+    - semantic.measure.read
+    - semantic.compile.execute
+    - usage.report.read
+    - usage.report.export
+    - notification.inbox.read
+- name: "Clinical Director"
+  actions:
+    - case.case.read
+    - case.case.list
+    - case.case.update
+    - case.case.assign
+    - case.disposition.read
+    - case.disposition.create
+    - case.disposition.update
+    - case.disposition.approve
+    - case.bulk.approve
+    - ai.proposal.read
+    - ai.proposal.list
+    - ai.proposal.approve
+    - ai.agent_session.read
+    - ai.agent_session.create
+    - ai.agent_session.execute
+    - memory.memory.read
+    - chart.dashboard.read
+    - chart.chart.read
+    - semantic.model.read
+    - semantic.compile.execute
+    - query.execution.read
+    - query.execution.execute
+    - dataset.dataset.read
+    - experiment.experiment.read
+    - experiment.experiment.list
+    - experiment.promotion.read
+    - experiment.promotion.approve
+    - pipeline.template.read
+    - pipeline.template.list
+    - eval.run.read
+    - eval.trends.read
+    - notification.inbox.read
+- name: "PBM Compliance Officer"
+  actions:
+    - audit.log.read
+    - audit.log.list
+    - audit.log.export
+    - case.case.read
+    - case.case.list
+    - case.disposition.read
+    - ai.proposal.read
+    - ai.proposal.list
+    - chart.dashboard.read
+    - chart.chart.read
+    - semantic.model.read
+    - dataset.dataset.read
+    - dataset.lineage.read
+    - usage.report.read
+    - notification.inbox.read

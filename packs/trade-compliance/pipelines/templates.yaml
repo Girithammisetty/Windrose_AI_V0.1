@@ -1,0 +1,16 @@
+# Pipeline seeds (expressed against the real pipeline-orchestrator algorithm
+# catalog): an unsupervised shipment-anomaly detector (valuation outliers,
+# transshipment-suspect lane shifts) and a supervised review-outcome scorer
+# trained on human dispositions (the deterministic-first pre-router for
+# review-queue triage). Trained models require review before promotion — the
+# Trade Compliance Manager approves promotions.
+- identity: tc_shipment_anomaly_isolation_forest
+  name: "Shipment anomaly detector (isolation forest)"
+  algorithm: isolation_forest
+  mode: train
+  dataset: tc_shipments
+- identity: tc_review_outcome_xgboost
+  name: "Review outcome scorer (xgboost)"
+  algorithm: xgboost
+  mode: train
+  dataset: tc_review_items

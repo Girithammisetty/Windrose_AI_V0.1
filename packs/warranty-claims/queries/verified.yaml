@@ -1,0 +1,68 @@
+# Verified NL<->SQL queries (four-eyes approved at install). SQL uses
+# {{dataset('<name>')}} macros — the only table references query-service's
+# tenant-namespace guard admits.
+- nl_text: "What's our claim approval rate by claim type?"
+  sql_text: >-
+    SELECT claim_type,
+           count(*) AS closed_claims,
+           sum(CASE WHEN disposition = 'approve_pay_claim' THEN 1 ELSE 0 END) AS approved,
+           sum(CASE WHEN disposition = 'deny_policy_exclusion' THEN 1 ELSE 0 END) AS denied,
+           round(sum(CASE WHEN disposition = 'approve_pay_claim' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS approval_rate
+    FROM {{dataset('wa-claims')}}
+    WHERE status = 'closed'
+    GROUP BY claim_type
+    ORDER BY approval_rate DESC
+  model: warranty_core
+  tags: [warranty, outcomes, kpi, pack]
+- nl_text: "Which open warranty claims are closest to the payment-decision deadline?"
+  sql_text: >-
+    SELECT claim_id, dealer_id, unit_id, claim_type, component_system,
+           severity, in_warranty,
+           cast(days_to_deadline AS double) AS days_to_deadline,
+           cast(age_days AS double) AS age_days,
+           cast(claim_amount AS double) AS claim_amount
+    FROM {{dataset('wa-claims')}}
+    WHERE status = 'open'
+    ORDER BY days_to_deadline ASC
+  model: warranty_core
+  tags: [warranty, deadlines, backlog, pack]
+- nl_text: "Dealer claim-padding watch — which dealers show heavy claim activity, labor-op stacking, denials and audit escalations?"
+  sql_text: >-
+    SELECT dealer_id,
+           count(*) AS claim_count,
+           sum(CASE WHEN labor_op_band = 'three_plus_ops' THEN 1 ELSE 0 END) AS stacked_labor_claims,
+           sum(CASE WHEN disposition = 'deny_policy_exclusion' THEN 1 ELSE 0 END) AS denials,
+           sum(CASE WHEN disposition = 'escalate_dealer_audit' THEN 1 ELSE 0 END) AS audit_escalations,
+           sum(cast(claim_amount AS double)) AS total_claimed
+    FROM {{dataset('wa-claims')}}
+    GROUP BY dealer_id
+    HAVING count(*) >= 2
+    ORDER BY stacked_labor_claims DESC, total_claimed DESC
+  model: warranty_core
+  tags: [warranty, dealer_audit, claim_padding, pack]
+- nl_text: "Component failure hotspots — claim counts and dollars by component system and failure mode"
+  sql_text: >-
+    SELECT component_system, failure_mode,
+           count(*) AS claim_count,
+           round(avg(cast(age_days AS double)), 1) AS avg_age_days,
+           sum(cast(claim_amount AS double)) AS total_claimed
+    FROM {{dataset('wa-claims')}}
+    GROUP BY component_system, failure_mode
+    ORDER BY claim_count DESC, total_claimed DESC
+  model: warranty_core
+  tags: [warranty, early_warning, failure_signals, pack]
+- nl_text: "Supplier cost recovery — dollars recovered versus dollars claimed by component system"
+  sql_text: >-
+    SELECT component_system,
+           count(*) AS claim_count,
+           sum(CASE WHEN disposition = 'close_supplier_recovery' THEN 1 ELSE 0 END) AS recovered_claims,
+           sum(cast(claim_amount AS double)) AS total_claimed,
+           sum(cast(recovery_amount AS double)) AS recovered,
+           round(sum(cast(recovery_amount AS double)) * 1.0
+                 / nullif(sum(cast(claim_amount AS double)), 0), 4) AS recovery_rate
+    FROM {{dataset('wa-claims')}}
+    GROUP BY component_system
+    ORDER BY recovered DESC
+  model: warranty_core
+  tags: [warranty, supplier_recovery, chargebacks, pack]

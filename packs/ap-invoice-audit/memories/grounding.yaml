@@ -1,0 +1,134 @@
+# Tenant-scope RAG grounding records (memory-service). This is the AP
+# payment-controls / invoice-fraud domain knowledge the triage copilot
+# retrieves when reasoning about an exception. Every record is factual
+# methodological or control-practice reference material; figures are stated
+# qualitatively where an exact number would depend on the tenant's policy.
+- content: >-
+    Three-way match is the anchor AP control: the invoice is paid only when
+    it agrees with the purchase order (what was ordered, at what price) and
+    the goods receipt (what actually arrived) within configured tolerances.
+    A po_gap means no PO covers the invoice, a receipt_gap means goods or
+    services were never receipted, a price_gap means the invoice price
+    exceeds the PO price beyond tolerance. Service invoices often run on a
+    two-way match (PO + invoice) because there is no physical receipt,
+    which is why non-PO and services-only spend is the weakest control path
+    and the preferred surface for invoice fraud.
+  tags: [three_way_match, controls, po, goods_receipt]
+  confidence: 0.97
+- content: >-
+    Duplicate-payment root causes: the same vendor existing under multiple
+    vendor-master records (each copy passes exact-match dedupe),
+    resubmission of one invoice through multiple channels (email, portal,
+    paper) so each copy enters as a distinct document, and OCR variance on
+    invoice numbers — confusable characters (letter O vs digit 0, I vs 1,
+    B vs 8) make a rescan look like a new invoice number. Exact-match
+    duplicate checks miss all three; effective screening fuzzy-matches on
+    vendor + amount + date windows and normalizes invoice numbers for
+    OCR-confusable characters before comparison.
+  tags: [duplicates, vendor_master, ocr, dedupe]
+  confidence: 0.95
+- content: >-
+    Business email compromise (BEC) / vendor-impersonation banking-change
+    fraud: the attacker impersonates a known vendor and requests a change
+    to remittance bank details, typically with urgency and timed close to
+    a payment run so verification is skipped. Red flags: lookalike sender
+    domains (one character off), reply-to mismatches, a new contact person,
+    pressure to bypass procedure, and changes requested by email alone.
+    The control is out-of-band verification: call the vendor at the
+    known-good phone number already on the vendor master — NEVER at any
+    number or address supplied in the change request itself — and hold any
+    payment to the new account until verification completes. Law-enforcement
+    reporting has consistently ranked BEC among the largest fraud loss
+    categories for businesses.
+  tags: [bec, banking_change, out_of_band_verification, fraud]
+  confidence: 0.96
+- content: >-
+    Shell / fictitious-vendor indicators: a vendor created shortly before
+    its first invoice, services-only billing (nothing to receipt), a
+    PO-box-only or residential remittance address, an address or bank
+    account colliding with an employee's, no verifiable online footprint,
+    round-dollar amounts, invoice numbers running sequentially from 0001
+    (the fraudster's only customer is you), and repeated master-data
+    changes soon after onboarding. Any single indicator is weak; clusters
+    warrant an investigations handoff and a payment hold. Segregating
+    vendor-master maintenance from payment approval is the structural
+    control that makes employee-created shells harder.
+  tags: [shell_vendor, fictitious_vendor, indicators, segregation_of_duties]
+  confidence: 0.94
+- content: >-
+    Benford's-law screening: in many naturally occurring payment
+    populations, leading digits follow a logarithmic distribution (1 is the
+    most common first digit, 9 the least). Fabricated or manipulated
+    amounts — and amounts engineered to sit just under approval thresholds
+    — distort that distribution, so first-digit and first-two-digit tests
+    are a standard forensic screen over AP populations. Benford deviations
+    are a targeting signal for audit sampling, never proof of fraud, and
+    the test is unreliable on small samples or assigned/clustered number
+    ranges (e.g., fixed-price recurring billing).
+  tags: [benfords_law, forensic_analytics, screening]
+  confidence: 0.92
+- content: >-
+    Split invoicing (threshold splitting): breaking one purchase into
+    several invoices so each stays under a delegated approval limit and
+    avoids the scrutiny of the higher tier — e.g., multiple same-week
+    invoices from one vendor each just under the single-approver ceiling.
+    Detection aggregates spend by vendor over rolling windows and looks
+    for amounts clustered just below configured thresholds. The response is
+    to treat the string as one engagement, re-route the aggregate to the
+    approval tier it should have received, and review the requester's
+    other activity — splitting is also how purchase-authority abuse and
+    kickback schemes stay under the radar.
+  tags: [split_invoicing, approval_thresholds, purchase_authority]
+  confidence: 0.95
+- content: >-
+    Early-payment discount economics: terms like 2/10 net 30 (2% discount
+    if paid within 10 days, full amount due in 30) are worth roughly 36%
+    annualized — the buyer earns 2% for paying 20 days early — so captured
+    discounts usually dominate short-term financing costs, while missing
+    the window forfeits that return and late payment beyond net terms can
+    add fees and damage vendor pricing. Implication for exception handling:
+    a hold placed for review has a real dollar cost per day on
+    discount-bearing invoices, so deadline runway on the exception queue is
+    an economic metric, not just a hygiene metric; blocks should be scoped
+    to the payment actually at risk.
+  tags: [early_payment_discount, working_capital, deadlines]
+  confidence: 0.9
+- content: >-
+    SOX relevance of AP controls: disbursement and vendor-master controls
+    are part of internal control over financial reporting (ICFR) that
+    management must assess (and, for accelerated filers, the external
+    auditor attests to) under the Sarbanes-Oxley Act. Examiners and
+    auditors test segregation of duties (vendor-master maintenance vs
+    invoice entry vs payment approval), approval-threshold enforcement,
+    three-way-match configuration and tolerance overrides, and the
+    evidence trail behind manual releases of blocked payments. A payment
+    released over a control exception without documented, approver-signed
+    rationale is a classic control deficiency.
+  tags: [sox, icfr, segregation_of_duties, audit_evidence]
+  confidence: 0.93
+- content: >-
+    Recovery-audit practice: post-payment statement audits reconcile the
+    AP ledger against vendor statements to surface duplicate payments,
+    unapplied credits and rebates, pricing and currency errors, and missed
+    discounts; specialist recovery-audit firms commonly work on
+    contingency over multi-year lookback windows. Recoverable errors are
+    typically a small fraction of total spend but material in absolute
+    dollars at enterprise volume, and every recovered class of error is a
+    control gap to fix upstream — the recovery finding should feed back
+    into dedupe rules, tolerance settings, and vendor-master hygiene.
+  tags: [recovery_audit, statement_audit, duplicate_recovery]
+  confidence: 0.9
+- content: >-
+    Vendor onboarding compliance and AI governance: US payers collect IRS
+    Form W-9 and verify the vendor's TIN before payment (supporting 1099
+    information reporting; an unverifiable TIN can trigger backup
+    withholding obligations), and screen vendors against OFAC sanctions
+    lists — paying a sanctioned party is a strict-liability exposure, so
+    unscreened vendors should not be payable. For AI-assisted dispositions,
+    every block, release, and escalation must preserve a provenance chain
+    (data version, model version, prompt hash, reviewer identity,
+    timestamp) with a human approver of record; auditors test the file
+    behind the decision, and a pattern of unreviewed automated releases is
+    itself a control finding.
+  tags: [w9_tin, 1099, ofac_sanctions, ai_governance, provenance]
+  confidence: 0.93

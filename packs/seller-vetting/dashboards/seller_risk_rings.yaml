@@ -1,0 +1,69 @@
+# Seller Risk & Rings: the listing/seller risk surface feeding review intake —
+# deep-discount pricing bands, KYB verification posture, and linked-account
+# concentrations by GMV tier.
+name: "Seller Risk & Rings"
+module: insights
+semantic_model: seller_vetting_core
+description: >-
+  Seller-side risk surface: listing price-vs-MSRP bands, KYB verification
+  mix on the seller book, deep-discount listing concentration by category,
+  listing intake trend, and a seller risk grid (linked accounts, unverified
+  KYB, deep-discount exposure) by GMV tier.
+tags: [marketplace, seller_risk, kyb, rings, pack]
+charts:
+  - name: "Listings by price-vs-MSRP band"
+    chart_type: vertical_bar_chart
+    description: "Listing book split by pricing band — deep discount is the counterfeit signal band"
+    config:
+      x: { dimension: price_vs_msrp }
+      y: [ { measure: listing_count, agg_fn: count } ]
+    sources: [ { measure: listing_count } ]
+    w: 6
+    h: 4
+  - name: "Seller KYB verification mix"
+    chart_type: pie_chart
+    description: "Sellers verified vs unverified vs banking-name mismatch (INFORM-style verification posture)"
+    config:
+      x: { dimension: kyb_verified }
+      y: [ { measure: seller_count, agg_fn: count } ]
+    sources: [ { measure: seller_count } ]
+    w: 6
+    h: 4
+  - name: "Deep-discount listings by category"
+    chart_type: vertical_bar_chart
+    description: "Where deep-discount (counterfeit-signal) listings concentrate"
+    config:
+      x: { dimension: listing_category }
+      y: [ { measure: deep_discount_listing_count, agg_fn: count } ]
+    sources: [ { measure: deep_discount_listing_count } ]
+    w: 6
+    h: 4
+  - name: "Listing intake by month"
+    chart_type: line_chart
+    description: "New listings by listing month (vetting surface growth)"
+    config:
+      x: { dimension: listing_month }
+      y: [ { measure: listing_count, agg_fn: count } ]
+    sources: [ { measure: listing_count } ]
+    w: 6
+    h: 4
+  - name: "Seller risk grid by GMV tier"
+    chart_type: grid_chart
+    description: "Sellers, linked-account and unverified-KYB counts, listing volume and deep-discount exposure by GMV tier"
+    config:
+      columns: [gmv_tier, seller_count, linked_account_seller_count, kyb_unverified_seller_count, listing_count, deep_discount_listing_count]
+      x: { dimension: gmv_tier }
+      y:
+        - { measure: seller_count, agg_fn: count }
+        - { measure: linked_account_seller_count, agg_fn: count }
+        - { measure: kyb_unverified_seller_count, agg_fn: count }
+        - { measure: listing_count, agg_fn: count }
+        - { measure: deep_discount_listing_count, agg_fn: count }
+    sources:
+      - { measure: seller_count }
+      - { measure: linked_account_seller_count }
+      - { measure: kyb_unverified_seller_count }
+      - { measure: listing_count }
+      - { measure: deep_discount_listing_count }
+    w: 12
+    h: 4

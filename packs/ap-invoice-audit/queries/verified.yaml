@@ -1,0 +1,63 @@
+# Verified NL<->SQL queries (four-eyes approved at install). SQL uses
+# {{dataset('<name>')}} macros — the only table references query-service's
+# tenant-namespace guard admits.
+- nl_text: "What's our payment block rate by exception type?"
+  sql_text: >-
+    SELECT exception_type,
+           count(*) AS closed_exceptions,
+           sum(CASE WHEN disposition = 'block_payment_confirmed_error' THEN 1 ELSE 0 END) AS blocked,
+           round(sum(CASE WHEN disposition = 'block_payment_confirmed_error' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS block_rate
+    FROM {{dataset('ap-exceptions')}}
+    WHERE status = 'closed'
+    GROUP BY exception_type
+    ORDER BY block_rate DESC
+  model: ap_audit_core
+  tags: [ap, exceptions, block_rate, kpi, pack]
+- nl_text: "Which open exceptions are closest to the next payment-run deadline?"
+  sql_text: >-
+    SELECT exception_id, invoice_id, exception_type, fraud_indicator, severity,
+           cast(days_to_deadline AS double) AS days_to_deadline,
+           cast(age_days AS double) AS age_days,
+           cast(invoice_amount AS double) AS invoice_amount
+    FROM {{dataset('ap-exceptions')}}
+    WHERE status = 'open'
+    ORDER BY days_to_deadline ASC
+  model: ap_audit_core
+  tags: [ap, exceptions, deadlines, payment_run, backlog, pack]
+- nl_text: "Recovered dollars by exception type and month"
+  sql_text: >-
+    SELECT exception_type, filed_month,
+           count(*) AS exceptions,
+           sum(cast(recovered_amount AS double)) AS recovered,
+           sum(cast(invoice_amount AS double)) AS exposure
+    FROM {{dataset('ap-exceptions')}}
+    WHERE status = 'closed'
+    GROUP BY exception_type, filed_month
+    ORDER BY recovered DESC
+  model: ap_audit_core
+  tags: [ap, recovery, duplicates, kpi, pack]
+- nl_text: "Fraud-indicator exposure on the open book — dollars at risk before the payment run"
+  sql_text: >-
+    SELECT fraud_indicator,
+           count(*) AS open_exceptions,
+           sum(cast(invoice_amount AS double)) AS exposure,
+           round(avg(cast(days_to_deadline AS double)), 1) AS avg_days_to_deadline
+    FROM {{dataset('ap-exceptions')}}
+    WHERE status = 'open'
+    GROUP BY fraud_indicator
+    ORDER BY exposure DESC
+  model: ap_audit_core
+  tags: [ap, fraud, bec, shell_vendor, exposure, pack]
+- nl_text: "Duplicate-invoice share of exception intake by month"
+  sql_text: >-
+    SELECT filed_month,
+           count(*) AS exceptions,
+           sum(CASE WHEN exception_type = 'duplicate_invoice' THEN 1 ELSE 0 END) AS duplicates,
+           round(sum(CASE WHEN exception_type = 'duplicate_invoice' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS duplicate_share
+    FROM {{dataset('ap-exceptions')}}
+    GROUP BY filed_month
+    ORDER BY filed_month ASC
+  model: ap_audit_core
+  tags: [ap, duplicates, trend, kpi, pack]

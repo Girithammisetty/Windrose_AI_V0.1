@@ -1,0 +1,98 @@
+# Tenant-scope RAG grounding records (memory-service). This is the PBM domain
+# knowledge the triage copilot retrieves when reasoning about a case — NCPDP
+# DUR conflict-code semantics, CMS Part D coverage-determination SLAs, GDR
+# benchmarks, rebate rules, opioid safety edits. Every record is factual
+# domain reference material (BRD 28 §3.6 guardrail knowledge carried as
+# grounding until guardrail-service ships).
+- content: >-
+    NCPDP DUR conflict code DD means "drug-drug interaction." A DD alert at
+    severity level 1 is clinical-critical (e.g. duplicate anticoagulation:
+    warfarin plus apixaban) and must surface to the reviewing pharmacist; the
+    expected actions are prescriber contact (dur_intervene) or a documented
+    override with clinical justification (dur_override). Level 3-4 minor
+    interactions are suppressed to reduce alert fatigue, configurable per plan.
+  tags: [ncpdp, dur, ddi, safety]
+  confidence: 0.95
+- content: >-
+    NCPDP DUR conflict code TD means "therapeutic duplication" (two agents
+    from the same or overlapping class, e.g. a vitamin K antagonist plus a
+    DOAC, or semaglutide plus tirzepatide). TD on anticoagulants or opioids is
+    treated as clinical-critical; TD on GLP-1 agents usually reflects a
+    therapy switch and is resolved by confirming the prior agent was
+    discontinued before overriding.
+  tags: [ncpdp, dur, duplication]
+  confidence: 0.95
+- content: >-
+    NCPDP DUR conflict codes HD ("high dose") and ER ("early refill"): HD on
+    opioids fires when cumulative morphine milligram equivalents exceed 90
+    MME/day across claims — CDC opioid guideline threshold; never override HD
+    opioid alerts without prescriber confirmation. ER fires when a refill is
+    attempted before ~75-80% of days supply has elapsed; repeated ER on
+    Schedule II opioids is a diversion signal and routes to pharmacist
+    intervention rather than override.
+  tags: [ncpdp, dur, opioids, safety]
+  confidence: 0.95
+- content: >-
+    NCPDP claim reject code 75 means "prior authorization required" — the
+    claim pays once a PA is approved; route the member's prescriber to the
+    ePA channel. Reject 76 means "plan limitations exceeded" (quantity or
+    days-supply limit, e.g. GLP-1 quantity limits). Reject 88 means "DUR
+    reject" — the claim was stopped at point of sale by a DUR edit and needs
+    pharmacist review before it can be re-billed with an override code.
+  tags: [ncpdp, rejects, adjudication]
+  confidence: 0.95
+- content: >-
+    CMS Part D coverage-determination SLAs (42 CFR 423.568/423.570): a
+    standard coverage determination (including an Rx PA) must be decided
+    within 72 hours of receipt; an expedited request within 24 hours. A
+    pending expedited PA older than 12 hours is at-risk and should be worked
+    first; an SLA breach is a compliance reportable and auto-forwards to the
+    Part D IRE.
+  tags: [cms, part_d, prior_auth, sla]
+  confidence: 0.98
+- content: >-
+    An AI-assisted adverse determination (Rx PA denial) must be reviewed and
+    decided by a licensed pharmacist or the plan's medical director before
+    issuance; the deciding clinician is identified in the case record. The
+    copilot drafts rationale and proposes verdicts but never decides denials
+    (BRD 28 BR-1). Controlled-substance (Schedule II-V) PAs are additionally
+    never auto-approved and preserve the DEA EPCS audit trail (BR-2).
+  tags: [cms, ai_governance, controlled_substances, denials]
+  confidence: 0.98
+- content: >-
+    Generic dispensing rate (GDR) benchmark: well-managed commercial and
+    Part D books run GDR >= 90%; every 1-point GDR improvement reduces gross
+    drug spend roughly 1-2%. DAW code 1 (prescriber writes "dispense as
+    written" on a multi-source brand) and DAW 2 (member requests brand) are
+    the main controllable GDR leakage points — target them with prescriber
+    and member outreach before formulary changes.
+  tags: [gdr, kpi, benchmark, daw]
+  confidence: 0.9
+- content: >-
+    Manufacturer rebates are contractually owed on rebate-eligible brand
+    claims (rebate_expected) and invoiced quarterly; capture below ~95% of
+    expected signals invoice disputes, missed NDC-level terms, or claims
+    excluded by the manufacturer. Under rebate-delinking rules and
+    transparency requirements, rebates must be reported at point of sale or
+    passed through per contract — rebate retention cannot depend on formulary
+    placement decisions that disadvantage lower-net-cost alternatives.
+  tags: [rebates, delinking, transparency]
+  confidence: 0.85
+- content: >-
+    MTM eligibility is a hard CMS rule (42 CFR 423.153(d)): a Part D plan
+    must enroll members with 2+ (plan may set up to 3) chronic conditions,
+    8+ (plan may set 2-8) Part D drugs, and projected annual Part D drug
+    spend above the CMS threshold. Eligibility is computed from claims, never
+    assumed; the annual Comprehensive Medication Review (CMR) completion rate
+    is a Star Ratings measure (BRD 28 BR-6).
+  tags: [cms, mtm, part_d, star_ratings]
+  confidence: 0.9
+- content: >-
+    Step therapy on GLP-1 receptor agonists (GPI class 272700): plan UM
+    criteria require documented trial of metformin (and typically one
+    additional oral agent) before a GLP-1 is approved for type 2 diabetes;
+    a PA with step_therapy_met = no is denied for step_therapy_not_met
+    unless the prescriber documents intolerance or contraindication.
+    Weight-loss-only indications follow a separate, stricter criteria set.
+  tags: [step_therapy, glp1, formulary, um_criteria]
+  confidence: 0.9

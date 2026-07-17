@@ -1,0 +1,13 @@
+applicant_id,applicant_name,state,prior_orders_band,dispute_history,common_name
+AP-3001,James Whitcombe,TX,one_two,no,no
+AP-3002,Latoya Brennan,GA,none,no,no
+AP-3003,Miguel Santana,CA,three_plus,yes,no
+AP-3004,Chen Wei,WA,none,no,yes
+AP-3005,Aaron Feldman,NY,one_two,no,no
+AP-3006,Rosa Delgado,AZ,none,no,no
+AP-3007,David Johnson,OH,one_two,yes,yes
+AP-3008,Priya Natarajan,NJ,none,no,no
+AP-3009,Tyler Brooks,FL,three_plus,no,no
+AP-3010,Hannah Okafor,IL,none,no,no
+AP-3011,Marcus Reed,PA,one_two,no,no
+AP-3012,Sofia Petrov,CO,none,no,no

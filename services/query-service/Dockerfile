@@ -1,0 +1,16 @@
+# query-service — CGO build (DuckDB engine) on a distroless glibc base
+# (MASTER-FR-072).
+FROM golang:1.26-bookworm AS build
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=1 go build -trimpath -ldflags="-s -w" -o /out/query-service ./cmd/server
+
+# distroless/base carries glibc (required by the cgo DuckDB driver);
+# static-debian would not.
+FROM gcr.io/distroless/base-debian12:nonroot
+COPY --from=build /out/query-service /usr/bin/query-service
+ENV RESULTS_ROOT=/var/lib/query-service
+USER nonroot
+ENTRYPOINT ["/usr/bin/query-service"]

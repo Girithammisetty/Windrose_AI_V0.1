@@ -1,0 +1,97 @@
+openapi: 3.0.3
+info:
+  title: experiment-service
+  version: "0.1.0"
+  description: >
+    System of record for ML experiments, runs (mirrored from MLflow via webhooks +
+    reconciliation), registered models, and governed stage promotion. All reads are
+    served from the Postgres mirror — MLflow is never on the request path.
+servers:
+  - url: /api/v1
+security:
+  - bearerAuth: []
+components:
+  securitySchemes:
+    bearerAuth: {type: http, scheme: bearer, bearerFormat: JWT}
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: {type: string}
+            message: {type: string}
+            trace_id: {type: string}
+            details: {}
+    Page:
+      type: object
+      properties:
+        next_cursor: {type: string, nullable: true}
+        has_more: {type: boolean}
+paths:
+  /experiments:
+    post:
+      summary: Create an experiment (creates the MLflow experiment synchronously — EXP-FR-001)
+      responses:
+        "201": {description: created}
+        "409": {description: name conflict}
+        "422": {description: pipeline-URN validation failed}
+        "503": {description: MLflow unavailable (DEPENDENCY_UNAVAILABLE)}
+    get:
+      summary: List experiments (cursor-paginated)
+      responses: {"200": {description: ok}}
+  /experiments/list_archived:
+    get: {summary: List archived experiments, responses: {"200": {description: ok}}}
+  /experiments/{experiment_id}:
+    get: {summary: Get experiment, responses: {"200": {description: ok}, "404": {description: not found}}}
+    patch: {summary: Update name/description/note/tags, responses: {"200": {description: ok}}}
+    delete: {summary: Soft-archive (mirrors MLflow tag), responses: {"200": {description: ok}}}
+  /experiments/{experiment_id}/restore:
+    patch: {summary: Restore archived experiment (Copy-of de-dup), responses: {"200": {description: ok}}}
+  /experiments/{experiment_id}/runs:
+    get: {summary: List runs of an experiment, responses: {"200": {description: ok}}}
+  /experiments/{experiment_id}/runs/best:
+    get: {summary: Single best run by metric (index-served — EXP-FR-051), responses: {"200": {description: ok}, "404": {description: not found}}}
+  /experiments/{experiment_id}/runs/{run_id}/register:
+    post:
+      summary: Register a finished run as a model version at stage none (EXP-FR-031)
+      responses: {"201": {description: created}, "422": {description: RUN_NOT_FINISHED / MODEL_TYPE_MISMATCH}}
+  /runs:
+    get: {summary: "Cross-experiment run search — EXP-FR-050. filter[experiment_id] accepts a comma-separated id set (IN, <=200) for bff dataloader batching; metric[key][op], param[key], filter[status|algorithm|tag], sort. Tenant-scoped via RLS.", responses: {"200": {description: ok}, "422": {description: too many predicates / ids}}}
+  /runs/compare:
+    post: {summary: Server-side comparison matrix (EXP-FR-020), responses: {"200": {description: ok}, "422": {description: <2 or >20 runs}, "404": {description: a run not visible}}}
+  /runs/{run_id}:
+    get: {summary: "Run detail (?include_hidden) — served from mirror, EXP-FR-005", responses: {"200": {description: ok}, "404": {description: not found}}}
+    patch: {summary: Update name/note/tags, responses: {"200": {description: ok}}}
+    delete: {summary: Soft-delete run (tombstones MLflow run), responses: {"200": {description: ok}}}
+  /runs/{run_id}/note:
+    get: {summary: Get run note, responses: {"200": {description: ok}, "404": {description: no note}}}
+    post: {summary: Create/replace run note, responses: {"201": {description: created}}}
+    patch: {summary: Update run note, responses: {"200": {description: ok}}}
+    delete: {summary: Delete run note, responses: {"200": {description: ok}}}
+  /runs/{run_id}/metric-history:
+    get: {summary: Metric time-series (EXP-FR-021), responses: {"200": {description: ok}}}
+  /runs/{run_id}/artifacts:
+    get: {summary: Mirrored artifacts index, responses: {"200": {description: ok}}}
+  /runs/{run_id}/artifacts/url:
+    get: {summary: Short-lived signed artifact URL (EXP-FR-014), responses: {"200": {description: ok}, "404": {description: not found}}}
+  /models:
+    get: {summary: "List registered models — EXP-FR-035. filter[stage]=production, filter[workspace_id], and filter[id] (comma-separated id set, IN, <=200, for bff dataloader batching). Tenant-scoped via RLS.", responses: {"200": {description: ok}, "422": {description: too many ids}}}
+  /models/{model_id}:
+    get: {summary: Model + versions, responses: {"200": {description: ok}, "404": {description: not found}}}
+  /models/{model_id}/versions/{version}:
+    get: {summary: Model version (schemas/flavor/stage), responses: {"200": {description: ok}}}
+  /models/{model_id}/versions/{version}/promote:
+    post: {summary: "Start a governed promotion (202, approval gate) — EXP-FR-033", responses: {"202": {description: accepted}, "409": {description: pending conflict}, "422": {description: guard failed}}}
+  /models/{model_id}/versions/{version}/promotions:
+    get: {summary: Promotion history, responses: {"200": {description: ok}}}
+  /models/{model_id}/versions/{version}/card:
+    get: {summary: "Merged model card (?format=markdown) — EXP-FR-040", responses: {"200": {description: ok}}}
+    patch: {summary: Edit the card overlay (versioned), responses: {"200": {description: ok}}}
+  /promotions/{promotion_id}/decision:
+    post: {summary: "Approve/reject/edit a promotion (four-eyes) — EXP-FR-033/BR-6", responses: {"200": {description: ok}, "403": {description: SELF_APPROVAL_FORBIDDEN}, "409": {description: already decided}}}
+  /internal/mlflow/webhook:
+    post: {summary: MLflow webhook ingest (HMAC + delivery-id dedup — EXP-FR-010/011), responses: {"204": {description: accepted}, "401": {description: bad signature}}}
+  /internal/reconcile:
+    post: {summary: Manual reconciliation sweep (SPIFFE — EXP-FR-013), responses: {"200": {description: ok}, "403": {description: forbidden}}}

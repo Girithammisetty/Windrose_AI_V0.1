@@ -1,0 +1,90 @@
+# Investigation role catalog (INV-FR shared role library, BRD 31 §3 role_catalog).
+# Abstract, regulation-neutral investigation tiers — consumer packs (payer-fwa-siu,
+# banking-aml) layer their vertical roles on top; these are the shared base.
+- name: "Investigator"
+  actions:
+    - case.case.read
+    - case.case.list
+    - case.case.update
+    - case.disposition.read
+    - case.disposition.create
+    - ai.proposal.read
+    - ai.proposal.list
+    - ai.agent_session.read
+    - ai.agent_session.create
+    - ai.agent_session.execute
+    - memory.memory.read
+    - chart.dashboard.read
+    - chart.chart.read
+    - semantic.model.read
+    - semantic.compile.execute
+    - query.query.read
+    - query.execution.read
+    - query.execution.execute
+    - dataset.dataset.read
+    - dataset.lineage.read
+    - notification.inbox.read
+- name: "Investigation Supervisor"
+  actions:
+    - case.case.read
+    - case.case.list
+    - case.case.update
+    - case.case.assign
+    - case.case.execute
+    - case.disposition.read
+    - case.disposition.create
+    - case.disposition.update
+    - case.disposition.approve
+    - case.bulk.execute
+    - case.bulk.approve
+    - ai.proposal.read
+    - ai.proposal.list
+    - ai.proposal.approve
+    - ai.agent_session.read
+    - ai.agent_session.create
+    - ai.agent_session.execute
+    - memory.memory.read
+    - chart.dashboard.read
+    - chart.dashboard.list
+    - chart.chart.read
+    - semantic.model.read
+    - semantic.compile.execute
+    - query.query.read
+    - query.execution.read
+    - query.execution.execute
+    - dataset.dataset.read
+    - dataset.lineage.read
+    - usage.report.read
+    - notification.inbox.read
+- name: "Evidence Custodian"
+  actions:
+    - case.case.read
+    - case.case.list
+    - case.disposition.read
+    - dataset.dataset.read
+    - dataset.dataset.list
+    - dataset.lineage.read
+    - dataset.profile.read
+    - audit.log.read
+    - audit.log.list
+    - audit.log.export
+    - query.execution.read
+    - notification.inbox.read
+- name: "Investigation Quality Reviewer"
+  actions:
+    - case.case.read
+    - case.case.list
+    - case.disposition.read
+    - ai.proposal.read
+    - ai.proposal.list
+    - eval.run.read
+    - eval.trends.read
+    - experiment.model.read
+    - experiment.model.list
+    - experiment.promotion.read
+    - experiment.promotion.approve
+    - chart.dashboard.read
+    - semantic.model.read
+    - audit.log.read
+    - audit.log.list
+    - notification.inbox.read

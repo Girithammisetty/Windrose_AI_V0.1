@@ -1,0 +1,11 @@
+# Pipeline seeds (BRD 29 §4 model archetype rehospitalization_30d_risk,
+# expressed against the real pipeline-orchestrator algorithm catalog): a
+# 30-day rehospitalization risk classifier trained on the episode dataset
+# (readmitted_30d label; NFR target AUC >= 0.75 on held-out validation).
+# The referral_acceptance_score archetype is deferred — see pack.yaml.
+# Per BR-7, model outputs feed care-team prioritization only.
+- identity: rehospitalization_risk_model
+  name: "Rehospitalization 30-day risk (random_forest)"
+  algorithm: random_forest
+  mode: train
+  dataset: pac_episodes

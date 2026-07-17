@@ -1,0 +1,30 @@
+# Saved queries (query-service) — includes the dealer->component edge source
+# (parent/child/n) for network-family charts: which dealers concentrate their
+# claim dollars on which component systems (the claim-padding concentration
+# view an audit lead walks first).
+- identity: warranty_dealer_component_edges
+  name: "Warranty: dealer-component network edges"
+  description: >-
+    Dealer -> component-system edge list (parent/child/n) from the warranty
+    claim book — network-chart source for spotting claim concentration
+    (one dealer, one component system fanning wide is the classic
+    labor-op-stacking signature; one component, many dealers is an
+    early-warning field-failure signal).
+  sql: >-
+    SELECT dealer_id AS parent, component_system AS child,
+           count(*) AS n
+    FROM {{dataset('wa-claims')}}
+    GROUP BY dealer_id, component_system
+  tags: [warranty, network, dealers, pack]
+- identity: high_dollar_open_claims
+  name: "Warranty: high-dollar open queue"
+  description: "Open warranty claims ranked by dollar exposure — the analyst ranked-queue seed (deadline x dollar x severity, not FIFO)."
+  sql: >-
+    SELECT claim_id, dealer_id, unit_id, claim_type, component_system,
+           failure_mode, severity, in_warranty,
+           cast(days_to_deadline AS double) AS days_to_deadline,
+           cast(claim_amount AS double) AS claim_amount
+    FROM {{dataset('wa-claims')}}
+    WHERE status = 'open'
+    ORDER BY claim_amount DESC
+  tags: [warranty, queue, backlog, pack]

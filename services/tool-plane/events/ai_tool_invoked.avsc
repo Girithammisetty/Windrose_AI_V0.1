@@ -1,0 +1,23 @@
+{
+  "type": "record",
+  "name": "ToolInvoked",
+  "namespace": "ai.windrose.tool_plane",
+  "doc": "ai.tool_invoked.v1 — one record per enforcement attempt (allow/deny/error). Carries the args DIGEST (SHA-256 canonical JSON) and affected URN list, never raw argument values (BR-3, MASTER-FR-042). Rides the platform master envelope; this schema documents the envelope payload.",
+  "fields": [
+    {"name": "invocation_id", "type": "string", "doc": "uuidv7"},
+    {"name": "tenant_id", "type": "string"},
+    {"name": "agent_id", "type": "string"},
+    {"name": "agent_version", "type": "string"},
+    {"name": "obo_sub", "type": ["null", "string"], "default": null},
+    {"name": "tool_id", "type": "string"},
+    {"name": "tool_version", "type": "string"},
+    {"name": "tier", "type": "string"},
+    {"name": "decision", "type": {"type": "enum", "name": "Decision", "symbols": ["allowed", "denied_policy", "denied_rate", "denied_schema", "killed", "stubbed", "proposal_required"]}},
+    {"name": "error_code", "type": ["null", "string"], "default": null},
+    {"name": "args_digest", "type": "string", "doc": "SHA-256 of canonical-JSON args"},
+    {"name": "affected_urns", "type": {"type": "array", "items": "string"}, "default": []},
+    {"name": "latency_ms", "type": "int"},
+    {"name": "backend_ms", "type": ["null", "int"], "default": null},
+    {"name": "trace_id", "type": "string"}
+  ]
+}

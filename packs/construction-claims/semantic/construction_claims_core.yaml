@@ -1,0 +1,156 @@
+# Semantic model `construction_claims_core` — owner/GC/CM claims-operations
+# KPI catalog (approval/rejection/negotiated rates, claimed-vs-approved
+# ratio, deadline runway, backlog aging, schedule-impact mix), expressed in
+# the Core semantic grammar (agg whitelist, equality measure filters, derived
+# expr_metric with nullif; join_paths left/many_to_one, acyclic chain).
+#
+# entity.table is main.<safe_relation(dataset name)>; `dataset:` refs are
+# rebound to live dataset URNs by packctl at install. Amount columns ingest
+# as bronze strings, so numeric measures cast(... as double) (the proven
+# claims_core pattern).
+name: construction_claims_core
+description: >-
+  Construction claim and change-order adjudication KPI model for owners,
+  GCs, and CMs: claim volumes and backlog aging, disposition outcome mix,
+  approval/rejection/negotiated rates, claimed-vs-approved quantum ratio,
+  notice timeliness and deadline runway, schedule-impact exposure — claims
+  joined through the contract book to the subcontractor/supplier party
+  register (claims -> contracts -> parties chain).
+definition:
+  entities:
+    - name: claims
+      dataset: cc_claims
+      table: main.cc_claims
+      primary_key: [claim_id]
+      dataset_version_policy: { policy: latest }
+    - name: contracts
+      dataset: cc_contracts
+      table: main.cc_contracts
+      primary_key: [contract_id]
+      dataset_version_policy: { policy: latest }
+    - name: parties
+      dataset: cc_parties
+      table: main.cc_parties
+      primary_key: [party_id]
+      dataset_version_policy: { policy: latest }
+  join_paths:
+    - name: claims_contracts
+      from_entity: claims
+      to_entity: contracts
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: contract_id, to_column: contract_id }]
+    - name: contracts_parties
+      from_entity: contracts
+      to_entity: parties
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: party_id, to_column: party_id }]
+  dimensions:
+    - { name: claim_type, entity: claims, type: categorical, column: claim_type }
+    - { name: entitlement_basis, entity: claims, type: categorical, column: entitlement_basis }
+    - { name: notice_timely, entity: claims, type: categorical, column: notice_timely }
+    - { name: schedule_impact, entity: claims, type: categorical, column: schedule_impact }
+    - { name: severity, entity: claims, type: categorical, column: severity }
+    - { name: claim_status, entity: claims, type: categorical, column: status }
+    - { name: claim_disposition, entity: claims, type: categorical, column: disposition }
+    - { name: deadline_bucket, entity: claims, type: categorical, column: deadline_bucket }
+    - { name: filed_month, entity: claims, type: categorical, column: filed_month }
+    - { name: project, entity: contracts, type: categorical, column: project }
+    - { name: contract_type, entity: contracts, type: categorical, column: contract_type }
+    - { name: value_band, entity: contracts, type: categorical, column: value_band }
+    - { name: start_year, entity: contracts, type: categorical, column: start_year }
+    - { name: retention_band, entity: contracts, type: categorical, column: retention_band }
+    - { name: contract_claim_month, entity: contracts, type: categorical, column: claim_month }
+    - { name: party_type, entity: parties, type: categorical, column: party_type }
+    - { name: trade, entity: parties, type: categorical, column: trade }
+    - { name: prequal_tier, entity: parties, type: categorical, column: prequal_tier }
+    - { name: prior_claims_band, entity: parties, type: categorical, column: prior_claims_band }
+    - { name: surety_backed, entity: parties, type: categorical, column: surety_backed }
+  measures:
+    - { name: claim_count, entity: claims, agg: count,
+        description: "Number of claims and change-order requests" }
+    - { name: open_claim_count, entity: claims, agg: count,
+        filters: "status = 'open'",
+        description: "Claims still open (adjudication backlog)" }
+    - { name: closed_claim_count, entity: claims, agg: count,
+        filters: "status = 'closed'",
+        description: "Claims closed with a final determination" }
+    - { name: approved_count, entity: claims, agg: count,
+        filters: "disposition = 'approved'",
+        description: "Claims approved — entitlement and quantum substantiated" }
+    - { name: rejected_count, entity: claims, agg: count,
+        filters: "disposition = 'rejected_no_entitlement'",
+        description: "Claims rejected — no contractual entitlement established" }
+    - { name: negotiated_count, entity: claims, agg: count,
+        filters: "disposition = 'negotiated_partial'",
+        description: "Claims settled at a negotiated partial-merit amount" }
+    - { name: withdrawn_count, entity: claims, agg: count,
+        filters: "disposition = 'withdrawn'",
+        description: "Claims withdrawn or otherwise resolved by the claimant" }
+    - { name: delay_claim_count, entity: claims, agg: count,
+        filters: "claim_type = 'delay_claim'",
+        description: "Schedule delay claims (critical-path analysis surface)" }
+    - { name: change_order_count, entity: claims, agg: count,
+        filters: "claim_type = 'change_order_request'",
+        description: "Change-order requests (scope/price/time adjustments)" }
+    - { name: dsc_claim_count, entity: claims, agg: count,
+        filters: "claim_type = 'differing_site_conditions'",
+        description: "Differing-site-conditions claims (Type I/II)" }
+    - { name: major_schedule_impact_count, entity: claims, agg: count,
+        filters: "schedule_impact = 'days_30_plus'",
+        description: "Claims asserting 30+ days of schedule impact" }
+    - { name: late_notice_count, entity: claims, agg: count,
+        filters: "notice_timely = 'no'",
+        description: "Claims filed outside the contractual notice window" }
+    - { name: avg_claim_age_days, entity: claims, agg: avg,
+        expr: "cast(age_days as double)", format: decimal,
+        description: "Average claim age in days (cycle time / backlog aging)" }
+    - { name: total_claimed_amount, entity: claims, agg: sum,
+        expr: "cast(claimed_amount as double)", format: decimal,
+        description: "Total dollars claimed against the program" }
+    - { name: total_approved_amount, entity: claims, agg: sum,
+        expr: "cast(approved_amount as double)", format: decimal,
+        description: "Total dollars approved in determinations and settlements" }
+    - { name: avg_claimed_amount, entity: claims, agg: avg,
+        expr: "cast(claimed_amount as double)", format: decimal,
+        description: "Average claimed amount per claim" }
+    - { name: contract_count, entity: contracts, agg: count,
+        description: "Number of contracts on the book" }
+    - { name: gmp_contract_count, entity: contracts, agg: count,
+        filters: "contract_type = 'gmp'",
+        description: "Guaranteed-maximum-price contracts" }
+    - { name: unit_price_contract_count, entity: contracts, agg: count,
+        filters: "contract_type = 'unit_price'",
+        description: "Unit-price contracts (quantity-variation claim surface)" }
+    - { name: party_count, entity: parties, agg: count,
+        description: "Number of parties in the register" }
+    - { name: subcontractor_count, entity: parties, agg: count,
+        filters: "party_type = 'subcontractor'",
+        description: "Subcontractors in the party register" }
+    - { name: surety_backed_party_count, entity: parties, agg: count,
+        filters: "surety_backed = 'yes'",
+        description: "Parties with performance/payment bonds in place" }
+    - { name: repeat_claimant_party_count, entity: parties, agg: count,
+        filters: "prior_claims_band = '3_plus'",
+        description: "Parties with 3+ prior claims (claims-conduct watch)" }
+    - { name: approval_rate,
+        expr_metric: "approved_count / nullif(closed_claim_count, 0)",
+        format: percent,
+        description: "Claims approved over all closed determinations" }
+    - { name: rejection_rate,
+        expr_metric: "rejected_count / nullif(closed_claim_count, 0)",
+        format: percent,
+        description: "Claims rejected (no entitlement) over all closed determinations" }
+    - { name: negotiated_share,
+        expr_metric: "negotiated_count / nullif(closed_claim_count, 0)",
+        format: percent,
+        description: "Claims settled at partial merit over all closed determinations" }
+    - { name: approved_to_claimed_ratio,
+        expr_metric: "total_approved_amount / nullif(total_claimed_amount, 0)",
+        format: percent,
+        description: "Dollars approved over dollars claimed (quantum discipline)" }
+    - { name: delay_claim_share,
+        expr_metric: "delay_claim_count / nullif(claim_count, 0)",
+        format: percent,
+        description: "Share of claim volume asserting schedule delay" }

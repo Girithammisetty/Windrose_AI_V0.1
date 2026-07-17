@@ -1,0 +1,25 @@
+# Pack datasets (ingestion-service file_upload, stable names for idempotency).
+# In production these tables arrive via the tenant's ERP/P2P connectors
+# (SAP/Oracle/Coupa/Ariba — deferred until pack-service ships connector
+# materialization); this seed data is REAL rows in the same landing shape,
+# encoding genuine AP exception and fraud patterns so every downstream
+# component runs against real signal from day one: a vendor banking-change
+# request landing two days before a large payment run (BEC signature), a
+# near-duplicate invoice pair whose numbers differ by one OCR character
+# (O vs 0), a new services-only vendor with an employee-address collision
+# and sequential invoice numbers (shell suspect), a string of consulting
+# invoices each $50 under the $5,000 single-approver threshold (split
+# invoicing), a 12% price variance vs PO on raw materials, and a
+# missing-receipt exception where the goods verifiably arrived.
+- identity: ap_exceptions
+  name: ap-exceptions
+  file: data/ap_exceptions.csv
+  format: csv
+- identity: ap_invoices
+  name: ap-invoices
+  file: data/ap_invoices.csv
+  format: csv
+- identity: ap_vendors
+  name: ap-vendors
+  file: data/ap_vendors.csv
+  format: csv

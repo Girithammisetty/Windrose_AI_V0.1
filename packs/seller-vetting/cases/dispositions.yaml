@@ -1,0 +1,15 @@
+# Disposition taxonomy for the seller-vetting / IP-enforcement workflow.
+# Categories are the Core's closed set {true_positive,false_positive,benign,
+# inconclusive,other} (CASE-FR-020). remove_listing_enforce is the confirmed
+# counterfeit/IP/safety enforcement; reject_claim_insufficient protects
+# lawful resellers from unsupported brand claims (the note records why the
+# evidence failed — the 512(f)/claim-abuse defense file);
+# suspend_seller_network is the linked-account ring action (the note must
+# name the shared attributes); request_authenticity_evidence pauses for
+# invoices/test-buy results; reinstate_seller_cleared closes onboarding
+# verifications and plan-of-action reinstatements.
+- { code: remove_listing_enforce,        label: "Remove listing — counterfeit/IP/safety violation confirmed", category: true_positive,  requires_note: true }
+- { code: reject_claim_insufficient,     label: "Reject claim — insufficient evidence of infringement",        category: false_positive, requires_note: true }
+- { code: suspend_seller_network,        label: "Suspend seller network — linked-account ring confirmed",      category: other,          requires_note: true }
+- { code: request_authenticity_evidence, label: "Request authenticity evidence — invoices / test buy",         category: inconclusive,   requires_note: true }
+- { code: reinstate_seller_cleared,      label: "Clear or reinstate seller — verification passed",             category: benign,         requires_note: true }

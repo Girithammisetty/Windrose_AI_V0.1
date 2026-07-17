@@ -1,0 +1,59 @@
+# Revenue Leakage dashboard (CMM-FR-120 #2, US-6, CMM-FR-071): held billing
+# candidates by missing-artifact reason, decision mix, monthly expected-revenue
+# trend, per-program billing summary. The CFO drills from the leakage bar to
+# the exact held candidate in the monthly billing review queue.
+name: "Revenue Leakage"
+module: insights
+semantic_model: care_mgmt_core
+description: >-
+  Care-management billing leakage (BRD 25): billing-candidate decision mix,
+  held candidates grouped by missing artifact (missing time, no consent,
+  consent revoked, care plan overdue, RPM 16-day, TCM window, mutual
+  exclusion), expected revenue by service month, and program-level summary.
+tags: [healthcare, provider, care-management, billing, revenue, pack]
+charts:
+  - name: "Billing candidates by decision"
+    chart_type: pie_chart
+    description: "Bill vs hold decision mix at the documentation-completeness gate"
+    config:
+      x: { dimension: decision }
+      y: [ { measure: billing_candidate_count, agg_fn: count } ]
+    sources: [ { measure: billing_candidate_count } ]
+    w: 6
+    h: 4
+  - name: "Held candidates by missing artifact"
+    chart_type: vertical_bar_chart
+    description: "Why bills are held: the exact missing artifact per CMM-FR-071"
+    config:
+      x: { dimension: hold_reason }
+      y: [ { measure: held_count, agg_fn: count } ]
+    sources: [ { measure: held_count } ]
+    w: 6
+    h: 4
+  - name: "Expected revenue by service month"
+    chart_type: line_chart
+    description: "Expected CMS reimbursement trend across service months"
+    config:
+      x: { dimension: service_month }
+      y: [ { measure: total_expected_revenue, agg_fn: sum } ]
+    sources: [ { measure: total_expected_revenue } ]
+    w: 6
+    h: 4
+  - name: "Program billing summary"
+    chart_type: grid_chart
+    description: "Candidates, billed, held, and expected revenue per program family (Program P&L precursor, CMM-FR-120 #6)"
+    config:
+      columns: [program_code, billing_candidate_count, billed_count, held_count, total_expected_revenue]
+      x: { dimension: program_code }
+      y:
+        - { measure: billing_candidate_count, agg_fn: count }
+        - { measure: billed_count, agg_fn: count }
+        - { measure: held_count, agg_fn: count }
+        - { measure: total_expected_revenue, agg_fn: sum }
+    sources:
+      - { measure: billing_candidate_count }
+      - { measure: billed_count }
+      - { measure: held_count }
+      - { measure: total_expected_revenue }
+    w: 12
+    h: 4

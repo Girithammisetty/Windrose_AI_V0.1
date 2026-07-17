@@ -1,0 +1,138 @@
+# Tenant-scope RAG grounding records (memory-service). This is the
+# submission-clearance / appetite / completeness / market-practice domain
+# knowledge the triage copilot retrieves when reasoning about a submission.
+# Every record is well-established market practice or regulatory reference
+# material; where exact figures vary by state or program, the record stays
+# qualitative rather than inventing numbers.
+- content: >-
+    Submission clearance ("blocking") practice: when the same risk arrives
+    from multiple brokers, the market is generally held by the broker whose
+    complete submission was received first — the first-in rule. Carriers and
+    wholesalers log received date/time at clearance and block later
+    duplicates on the same named insured and line. The block can be
+    displaced by a broker-of-record (BOR) letter signed by the insured,
+    which typically carries a short rescission window during which the
+    incumbent broker may contest. Clearance therefore runs before appetite
+    or completeness review — working a blocked submission wastes cycle time
+    and creates broker-relations disputes.
+  tags: [clearance, blocking, first_in, broker_of_record, intake]
+  confidence: 0.95
+- content: >-
+    Appetite statements and declination hygiene: carriers publish appetite
+    statements (target classes, lines, segments, geographies, exclusions) so
+    brokers can pre-qualify submissions. Out-of-appetite submissions are
+    declined with specific, documented, risk-based reasons — several states
+    require insurers to provide written reasons for declination for certain
+    lines, and regulators expect declination files to show consistent,
+    non-discriminatory reasoning. Persistent mis-targeting by a broker is
+    handled by resending the current appetite statement and adjusting the
+    broker relationship, not by silent non-response, which damages hit-ratio
+    data and broker trust.
+  tags: [appetite, declination, documentation, market_conduct]
+  confidence: 0.9
+- content: >-
+    Quote-to-bind funnel economics: industry studies of commercial-lines
+    distribution consistently find that speed to first touch is a leading
+    driver of quote and bind ratios — brokers place business with the
+    markets that respond first, and a submission that sits untouched past
+    the broker's needed-by date is effectively lost regardless of appetite
+    fit. Intake queues are therefore ranked by deadline runway, priority
+    band, and premium potential rather than FIFO, and renewal-defense
+    submissions (defending an expiring account) get expedited handling
+    because the incumbent's non-response is the most common cause of a lost
+    renewal.
+  tags: [funnel, hit_ratio, speed_to_first_touch, renewal_defense]
+  confidence: 0.85
+- content: >-
+    Submission completeness standards: a workable commercial submission
+    includes completed ACORD applications (the ACORD 125 commercial
+    application plus line-specific supplements), currently-valued loss runs
+    covering roughly the last 3-5 years from prior carriers, and for
+    property risks a statement of values (SOV) with COPE detail
+    (construction, occupancy, protection, exposure) per location. Workers
+    compensation additionally needs payroll by class code and experience
+    modification data. Loss runs must be "currently valued" (recently
+    produced) because open-claim reserves move; many states require prior
+    carriers to furnish loss runs to the insured on request within a set
+    period.
+  tags: [completeness, acord, loss_runs, sov, cope]
+  confidence: 0.9
+- content: >-
+    Excess & surplus lines (E&S) referral: risks the admitted market
+    declines — distressed classes, adverse loss history, cat-exposed
+    schedules beyond admitted capacity, novel exposures — may be placed with
+    nonadmitted (surplus lines) insurers, which have freedom of rate and
+    form. Placement must go through a licensed surplus lines broker, and
+    most states require a diligent-search showing the risk was declined by
+    admitted insurers (the number and documentation requirements vary by
+    state; some states have export lists exempting listed classes). Under
+    the federal Nonadmitted and Reinsurance Reform Act, surplus lines
+    placement is regulated by the insured's home state. The admitted-market
+    declination must be documented before referral.
+  tags: [surplus_lines, es_market, diligent_search, referral]
+  confidence: 0.9
+- content: >-
+    Broker tiering practice: carriers segment producing brokers into service
+    tiers using hit ratio (quotes to submissions and binds to quotes),
+    submission quality/completeness, premium volume, retention, and book
+    loss ratio. Higher tiers earn faster service standards, broader
+    submission consideration, and dedicated underwriter access; habitually
+    low-quality or mis-targeted flow is managed down. Tiering is a
+    distribution-management practice and must not be used to evade
+    fair-underwriting obligations on any individual risk — every submission
+    still gets a risk-based decision.
+  tags: [broker_tiering, distribution, hit_ratio, service_standards]
+  confidence: 0.85
+- content: >-
+    Cyber underwriting minimum controls: since the ransomware loss wave that
+    began around 2020, cyber markets broadly require attested minimum
+    security controls before quoting — multi-factor authentication (MFA) on
+    remote access, email, and privileged accounts; endpoint detection and
+    response (EDR); tested offline/immutable backups; patching cadence; and
+    privileged-access management. Applications carry ransomware
+    supplementals, and a missing or negative MFA attestation commonly
+    results in declination, ransomware sublimits, or coinsurance rather
+    than full terms. A cyber submission without the controls attestation is
+    not appetite-callable — the supplemental is requested first.
+  tags: [cyber, minimum_controls, mfa, edr, ransomware]
+  confidence: 0.9
+- content: >-
+    Moral-hazard red flags at intake: coverage sought immediately after a
+    known or likely loss, mid-term shopping right after a carrier inspection
+    or non-renewal notice, insured values inconsistent with financials or
+    prior schedules, frequent carrier changes (several carriers in a few
+    years), gaps in coverage history, prior cancellations or non-renewals
+    for misrepresentation or non-payment, and financial distress signals.
+    These flags raise scrutiny and drive verification (loss runs, prior
+    carrier confirmation, inspection) — they are never by themselves a
+    lawful or sufficient reason to decline, and each risk is still judged on
+    its documented, risk-based merits.
+  tags: [moral_hazard, red_flags, verification, intake]
+  confidence: 0.85
+- content: >-
+    Fair underwriting and unfair discrimination: state unfair trade
+    practices acts (following the NAIC model) prohibit unfair discrimination
+    between individuals of the same class and essentially the same hazard in
+    rates, terms, or availability. Underwriting and declination reasons must
+    be risk-based, documented, and consistently applied; protected
+    characteristics are never permissible factors. Where consumer-report or
+    credit-based information is used in underwriting, adverse decisions can
+    trigger adverse-action notice obligations — declination files should
+    contain reasons that could be stated to the applicant and to an
+    examiner.
+  tags: [fair_underwriting, unfair_discrimination, market_conduct, adverse_action]
+  confidence: 0.9
+- content: >-
+    AI governance in underwriting: the NAIC Model Bulletin on the Use of
+    Artificial Intelligence Systems by Insurers (adopted December 2023, and
+    since adopted by a large number of state regulators) expects insurers
+    using AI in underwriting to maintain a written AI governance program —
+    risk-based oversight, human accountability for decisions, testing for
+    unfair discrimination, vendor/model due diligence, and documentation
+    sufficient for regulators to reconstruct how an AI-assisted decision was
+    made. Every AI-assisted triage disposition should preserve a provenance
+    chain (data version, model version, prompt, reviewer identity,
+    timestamp), and outcomes remain subject to existing unfair trade
+    practices and unfair discrimination law.
+  tags: [ai_governance, naic_bulletin, provenance, model_governance]
+  confidence: 0.9

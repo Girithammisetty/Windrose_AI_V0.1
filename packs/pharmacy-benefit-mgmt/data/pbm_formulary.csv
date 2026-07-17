@@ -1,0 +1,13 @@
+formulary_row_id,gpi_class,therapeutic_class,preferred_tier,pa_required,step_therapy,quantity_limit,preferred_agent,specialty_flag
+FRM-001,394000,HMG-CoA reductase inhibitors,1,no,no,no,atorvastatin,no
+FRM-002,272500,Biguanides,1,no,no,no,metformin,no
+FRM-003,272700,GLP-1 receptor agonists,3,yes,yes,yes,semaglutide,no
+FRM-004,361000,ACE inhibitors,1,no,no,no,lisinopril,no
+FRM-005,664000,TNF-alpha inhibitors,5,yes,yes,no,adalimumab-adaz,yes
+FRM-006,651000,Opioid analgesic combinations,2,yes,no,yes,oxycodone-acetaminophen,no
+FRM-007,271000,Long-acting insulins,2,no,no,no,insulin glargine,no
+FRM-008,833700,Direct oral anticoagulants,2,yes,no,no,apixaban,no
+FRM-009,443000,Short-acting beta agonists,2,no,no,yes,albuterol HFA,no
+FRM-010,492700,Proton pump inhibitors,1,no,yes,no,omeprazole,no
+FRM-011,581600,SSRI antidepressants,1,no,no,no,sertraline,no
+FRM-012,832000,Vitamin K antagonists,1,no,no,no,warfarin,no

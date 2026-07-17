@@ -1,0 +1,68 @@
+# MRB Dispositions & Cycle Time: disposition-deadline runway, containment
+# posture, and the critical-characteristic watch — the compliance view an
+# AS9100 / ISO 13485 auditor walks first.
+name: "MRB Dispositions & Cycle Time"
+module: insights
+semantic_model: mrb_core
+description: >-
+  MRB throughput and compliance posture: open backlog by spec class,
+  containment status mix, disposition-deadline runway buckets on the open
+  book, and the critical-characteristic nonconformance trend.
+tags: [manufacturing, quality, mrb, deadlines, compliance, pack]
+charts:
+  - name: "Open NCs by spec class"
+    chart_type: vertical_bar_chart
+    description: "Open backlog split by critical characteristic vs major vs minor"
+    config:
+      x: { dimension: spec_class }
+      y: [ { measure: open_nc_count, agg_fn: count } ]
+    sources: [ { measure: open_nc_count } ]
+    w: 6
+    h: 4
+  - name: "Containment status mix"
+    chart_type: pie_chart
+    description: "Quarantined vs customer hold vs released vs not required"
+    config:
+      x: { dimension: containment }
+      y: [ { measure: nc_count, agg_fn: count } ]
+    sources: [ { measure: nc_count } ]
+    w: 6
+    h: 4
+  - name: "Deadline runway (open book)"
+    chart_type: vertical_bar_chart
+    description: "Open NCs by days remaining to the MRB disposition deadline"
+    config:
+      x: { dimension: deadline_bucket }
+      y: [ { measure: open_nc_count, agg_fn: count } ]
+    sources: [ { measure: open_nc_count } ]
+    w: 6
+    h: 4
+  - name: "Critical-characteristic NC trend"
+    chart_type: line_chart
+    description: "Nonconformances on critical characteristics filed by month"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: critical_char_count, agg_fn: count } ]
+    sources: [ { measure: critical_char_count } ]
+    w: 6
+    h: 4
+  - name: "Spec-class disposition grid"
+    chart_type: grid_chart
+    description: "Volume, open backlog, quarantine, use-as-is concessions and cost impact by spec class"
+    config:
+      columns: [spec_class, nc_count, open_nc_count, quarantined_count, use_as_is_count, total_cost_impact]
+      x: { dimension: spec_class }
+      y:
+        - { measure: nc_count, agg_fn: count }
+        - { measure: open_nc_count, agg_fn: count }
+        - { measure: quarantined_count, agg_fn: count }
+        - { measure: use_as_is_count, agg_fn: count }
+        - { measure: total_cost_impact, agg_fn: sum }
+    sources:
+      - { measure: nc_count }
+      - { measure: open_nc_count }
+      - { measure: quarantined_count }
+      - { measure: use_as_is_count }
+      - { measure: total_cost_impact }
+    w: 12
+    h: 4

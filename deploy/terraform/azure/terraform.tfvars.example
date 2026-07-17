@@ -1,0 +1,74 @@
+########################################################################
+# Copy to terraform.tfvars and edit. Do NOT commit real secrets.
+# Auth comes from the environment (az login / OIDC) — never put creds here.
+########################################################################
+
+subscription_id = "00000000-0000-0000-0000-000000000000"
+location        = "eastus"
+name_prefix     = "windrose"
+environment     = "prod"
+
+tags = {
+  owner   = "platform-team"
+  costctr = "ml-platform"
+}
+
+# ---- Networking (defaults are usually fine) ----
+# vnet_address_space      = ["10.40.0.0/16"]
+# aks_subnet_cidr         = "10.40.0.0/20"
+# postgres_subnet_cidr    = "10.40.16.0/24"
+# privatelink_subnet_cidr = "10.40.17.0/24"
+
+# ---- AKS ----
+aks_node_vm_size   = "Standard_D4s_v5"
+aks_node_count     = 3
+aks_node_min_count = 2
+aks_node_max_count = 6
+# aks_kubernetes_version = "1.29"
+
+# ---- PostgreSQL Flexible Server ----
+postgres_sku_name   = "GP_Standard_D4s_v3"
+postgres_version    = "16"
+postgres_storage_mb = 131072
+
+# ---- Redis ----
+redis_sku_name = "Standard"
+redis_capacity = 1
+
+# ---- Event Hubs (Kafka) ----
+eventhubs_sku               = "Standard"
+eventhubs_capacity          = 1
+eventhubs_partition_count   = 4
+eventhubs_message_retention = 7
+
+# ---- Storage ----
+storage_replication_type = "ZRS"
+
+# ---- Container registry (optional) ----
+create_acr = false
+# acr_sku  = "Standard"
+
+########################################################################
+# SECRETS — fill in LATER. Leave empty on the first apply; endpoint
+# secrets (POSTGRES_HOST, REDIS_URL, KAFKA_BOOTSTRAP, OBJECTSTORE_*) are
+# computed by Terraform. Prefer passing these via TF_VAR_secrets in CI or a
+# separate, git-ignored secrets.auto.tfvars rather than this file.
+#
+# secrets = {
+#   POSTGRES_ADMIN_PASSWORD = "..."   # omit to auto-generate
+#   JWT_SIGNING_KEY_PEM     = "-----BEGIN PRIVATE KEY-----\n..."
+#   JWT_JWKS                = "{\"keys\":[...]}"
+#   KEYCLOAK_ADMIN_USER     = "admin"
+#   KEYCLOAK_ADMIN_PASSWORD = "..."
+#   SMTP_HOST               = "smtp.sendgrid.net"
+#   SMTP_PORT               = "587"
+#   SMTP_USER               = "apikey"
+#   SMTP_PASSWORD           = "..."
+#   OPENAI_API_KEY          = "..."
+#   ANTHROPIC_API_KEY       = "..."
+#   CLICKHOUSE_URL          = "https://..."
+#   CLICKHOUSE_PASSWORD     = "..."
+#   VAULT_ADDR              = "https://vault..."
+#   VAULT_TOKEN             = "..."
+# }
+secrets = {}

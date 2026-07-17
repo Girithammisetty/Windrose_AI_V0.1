@@ -1,0 +1,120 @@
+openapi: 3.0.3
+info:
+  title: audit-service API
+  version: "1.0.0"
+  description: >
+    Immutable system of record for the Windrose platform (BRD 18). Admin-only
+    search over the append-only ClickHouse audit store, dual-attribution
+    queries, per-tenant-per-day hash-chain verification, WORM export listing and
+    compliance evidence packs. All endpoints require an RS256 JWT and are gated
+    by the OPA sidecar; every call is itself audited.
+servers:
+  - url: /api/v1
+security:
+  - bearerAuth: []
+paths:
+  /audit/search:
+    get:
+      summary: Filtered audit search (AUD-FR-030). Set Accept text/csv or application/x-ndjson to stream an export (AUD-FR-032).
+      parameters:
+        - { name: from, in: query, required: true, schema: { type: string, format: date-time }, description: "range start (mandatory, ≤ 92 days)" }
+        - { name: to, in: query, required: true, schema: { type: string, format: date-time } }
+        - { name: actor_id, in: query, schema: { type: string } }
+        - { name: actor_type, in: query, schema: { type: string, enum: [user, service, agent] } }
+        - { name: via_agent_id, in: query, schema: { type: string } }
+        - { name: resource_urn, in: query, schema: { type: string } }
+        - { name: resource_match, in: query, schema: { type: string, enum: [exact, prefix] } }
+        - { name: action, in: query, schema: { type: string } }
+        - { name: event_type, in: query, schema: { type: string } }
+        - { name: trace_id, in: query, schema: { type: string } }
+        - { name: include_autonomous, in: query, schema: { type: boolean } }
+        - { name: limit, in: query, schema: { type: integer, maximum: 200, default: 50 } }
+        - { name: cursor, in: query, schema: { type: string } }
+        - { name: tenant_id, in: query, schema: { type: string }, description: "platform break-glass only (audit.breakglass scope)" }
+      responses:
+        "200": { description: page of audit records }
+        "400": { description: VALIDATION_FAILED (missing/oversized range) }
+        "403": { description: PERMISSION_DENIED }
+  /audit/agent-activity:
+    get:
+      summary: Dual-attribution convenience — what agent X did on behalf of user Y (AUD-FR-031).
+      parameters:
+        - { name: agent_id, in: query, required: true, schema: { type: string } }
+        - { name: obo_user_id, in: query, schema: { type: string } }
+        - { name: include_autonomous, in: query, schema: { type: boolean } }
+        - { name: from, in: query, schema: { type: string, format: date-time } }
+        - { name: to, in: query, schema: { type: string, format: date-time } }
+      responses:
+        "200": { description: matching audit records }
+  /audit/events/{event_id}:
+    get:
+      summary: Single record incl. chain position + seal status (AUD-FR-033).
+      parameters:
+        - { name: event_id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: record }
+        "404": { description: NOT_FOUND (also cross-tenant, MASTER-FR-003) }
+  /audit/verify:
+    post:
+      summary: Recompute + verify the hash chain for a tenant/day (AUD-FR-051).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tenant_id, date]
+              properties:
+                tenant_id: { type: string }
+                date: { type: string, example: "2026-07-08" }
+      responses:
+        "200": { description: "{valid, events_checked, chain_head, manifest_match, first_mismatch_seq?}" }
+        "404": { description: NOT_FOUND (no such tenant/day) }
+  /exports:
+    get:
+      summary: List sealed WORM batches with signed download URLs (AUD-FR-023).
+      parameters:
+        - { name: date, in: query, schema: { type: string } }
+      responses:
+        "200": { description: sealed manifests }
+  /compliance/soc2-pack:
+    post:
+      summary: Async SOC 2 evidence pack (AUD-FR-060) → 202 {operation_id}.
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, required: [from, to], properties: { from: { type: string, format: date-time }, to: { type: string, format: date-time } } }
+      responses:
+        "202": { description: operation accepted }
+  /compliance/ai-decision-log:
+    post:
+      summary: Async EU AI Act agent-decision log (AUD-FR-061) → 202 {operation_id}.
+      parameters:
+        - { name: agent_id, in: query, schema: { type: string } }
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, required: [from, to], properties: { from: { type: string, format: date-time }, to: { type: string, format: date-time }, agent_id: { type: string } } }
+      responses:
+        "202": { description: operation accepted }
+  /operations/{id}:
+    get:
+      summary: Async job status + signed result URL (MASTER-FR-027).
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: "{operation_id, status, result_url?}" }
+        "404": { description: NOT_FOUND }
+  /admin/dlq/redrive:
+    post:
+      summary: Redrive a DLQ topic after the producer is fixed (AUD-FR-006). Platform operator only.
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, required: [topic], properties: { topic: { type: string }, max: { type: integer } } }
+      responses:
+        "200": { description: "{redriven, topic}" }
+        "403": { description: PERMISSION_DENIED }
+components:
+  securitySchemes:
+    bearerAuth: { type: http, scheme: bearer, bearerFormat: JWT }

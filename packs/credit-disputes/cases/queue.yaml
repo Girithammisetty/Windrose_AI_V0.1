@@ -1,0 +1,71 @@
+# Seeded reinvestigation queue: the OPEN disputes from the seed dataset
+# become cases so an investigator logging in sees a real, pattern-diverse
+# worklist on day one — an ACDV on day 26 of 30, a 605B block request with an
+# FTC report, a data-matches-but-litigation-history "not mine", a duplicate
+# collection tradeline across two collectors, an obsolete 7+ year charge-off,
+# and a serial disputer's sixth round on the same accurate tradeline.
+# due_days=3 keeps triage inside the 605B 4-business-day block clock and the
+# day-26 ACDV runway on the tightest rows.
+dataset: cr_disputes
+due_days: 3
+rows:
+  - row_pk: CR-5101
+    severity: high
+    display_projection:
+      dispute_id: CR-5101
+      consumer: "Theo Brandt (P-3006)"
+      dispute_reason: wrong_balance
+      channel: e_oscar_acdv
+      tradeline: "TL-6012 (Meridian Bank Card)"
+      days_to_deadline: "4"
+      note: "e-OSCAR ACDV on day 26 of the CRA's 30-day reinvestigation window — the furnisher response must reach the CRA inside the remaining 4 days or the item risks deletion by default. Consumer disputes the balance on TL-6012 (delinquent, late_30_59); pull the servicing ledger, verify the reported balance against the system of record, and answer the ACDV with the verified figure — do not verify by merely re-reading the reported field"
+  - row_pk: CR-5102
+    severity: high
+    display_projection:
+      dispute_id: CR-5102
+      consumer: "Devon Castillo (P-3002)"
+      dispute_reason: identity_theft
+      channel: direct
+      tradeline: "TL-6003 (Meridian Bank Card)"
+      days_to_deadline: "2"
+      note: "FCRA 605B block request with a valid FTC identity theft report and proof of identity attached — the block clock is 4 business days, 2 remaining. TL-6003 was opened 2025-2026 and went 60-89 days delinquent while the consumer holds a clean long-tenure student loan (TL-6004); no address or device match to the application. Block the tradeline, notify the furnisher, and flag for the identity-theft review track"
+  - row_pk: CR-5103
+    severity: high
+    display_projection:
+      dispute_id: CR-5103
+      consumer: "Ingrid Halvorsen (P-3003)"
+      dispute_reason: not_mine
+      channel: direct
+      tradeline: "TL-6005 (Cobalt Card Services)"
+      days_to_deadline: "15"
+      note: "'Not mine' on TL-6005 (delinquent card, late_90_plus) where name/SSN/DOB all match the furnisher's system — but the consumer has FCRA litigation history, and courts have found that data matching alone is not a reasonable investigation. Pull the original application, signature/device evidence, and payment history before verifying; a bare ACDV-style match-and-verify here is exactly the pattern that draws furnisher-accuracy claims"
+  - row_pk: CR-5104
+    severity: medium
+    display_projection:
+      dispute_id: CR-5104
+      consumer: "Sam Okafor (P-3004)"
+      dispute_reason: duplicate_tradeline
+      channel: direct
+      tradeline: "TL-6008 (Harborline Collections)"
+      days_to_deadline: "22"
+      note: "Same underlying debt reported by two collectors: TL-6007 (Redrock Recovery Group) and TL-6008 (Harborline Collections) — identical balance band, delinquency profile and 2022-2024 origin on one consumer. Only the collector that currently owns the debt may report it; confirm the chain of assignment and delete the stale duplicate. Deleting the wrong one re-creates the injury"
+  - row_pk: CR-5105
+    severity: medium
+    display_projection:
+      dispute_id: CR-5105
+      consumer: "Rosa Delgado (P-3005)"
+      dispute_reason: obsolete_info
+      channel: direct
+      tradeline: "TL-6010 (Cobalt Card Services)"
+      days_to_deadline: "25"
+      note: "Charge-off on TL-6010 opened pre-2016 and still reporting — most adverse items must come off after 7 years, with the charge-off period running from 180 days after the delinquency that led to it (the commencement-of-delinquency rule), not from the charge-off date. Establish the original delinquency date from the servicing record; if the period has run, delete as obsolete and confirm suppression at every CRA furnished to"
+  - row_pk: CR-5106
+    severity: medium
+    display_projection:
+      dispute_id: CR-5106
+      consumer: "Alicia Merchant (P-3001)"
+      dispute_reason: not_mine
+      channel: direct
+      tradeline: "TL-6001 (Meridian Bank Card)"
+      days_to_deadline: "12"
+      note: "Sixth dispute round on TL-6001 — three rounds in the last four months alone (CR-4103 and CR-4109 verified accurate, CR-4114 closed frivolous with notice), consumer prior-dispute band over_5, tradeline current and clean. A frivolous/irrelevant determination is permitted when a dispute is resubmitted with nothing new, but it requires the 5-business-day notice with reasons — check first whether THIS round adds any new information before closing it"

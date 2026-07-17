@@ -1,0 +1,30 @@
+# Saved queries (query-service) — includes the supplier->part-family edge
+# source (parent/child/n) for network-family charts: supplier quality
+# clustering (one supplier feeding many part families = concentration risk;
+# many suppliers on one family = second-source depth) from the lot book.
+- identity: supplier_part_family_edges
+  name: "MRB: supplier-part-family network edges"
+  description: >-
+    Supplier -> part-family edge list (parent/child/n) from the
+    manufacturing lot book — network-chart source for spotting supplier
+    concentration risk (one supplier feeding many part families) and
+    second-source depth (how many suppliers stand behind each family the
+    nonconformance trends point at).
+  sql: >-
+    SELECT supplier_id AS parent, part_family AS child,
+           count(*) AS n
+    FROM {{dataset('nc-lots')}}
+    GROUP BY supplier_id, part_family
+  tags: [mrb, network, suppliers, part_families, pack]
+- identity: high_cost_open_ncs
+  name: "MRB: high-cost open nonconformance queue"
+  description: "Open nonconformances ranked by estimated cost-of-quality exposure — the MRB ranked-queue seed (deadline x cost x spec class, not FIFO)."
+  sql: >-
+    SELECT nc_id, lot_id, nc_type, detection_point, spec_class, severity,
+           containment,
+           cast(days_to_deadline AS double) AS days_to_deadline,
+           cast(est_cost_impact AS double) AS est_cost_impact
+    FROM {{dataset('nc-nonconformances')}}
+    WHERE status = 'open'
+    ORDER BY est_cost_impact DESC
+  tags: [mrb, queue, backlog, cost_of_quality, pack]

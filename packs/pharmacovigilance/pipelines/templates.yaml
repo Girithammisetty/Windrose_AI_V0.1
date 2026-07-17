@@ -1,0 +1,17 @@
+# Pipeline seeds (expressed against the real pipeline-orchestrator algorithm
+# catalog): an unsupervised event-anomaly detector over the coded event book
+# (the quantitative signal-screening seed) and a supervised case-priority
+# scorer trained on human reporting decisions (the intake pre-router).
+# Trained models require review before promotion — the Safety Officer
+# approves promotions; model documentation expectations are captured in the
+# grounding memories (GxP/CSV posture).
+- identity: pv_event_anomaly_isolation_forest
+  name: "Event signal anomaly detector (isolation forest)"
+  algorithm: isolation_forest
+  mode: train
+  dataset: pv_events
+- identity: pv_case_priority_xgboost
+  name: "Case reporting-priority scorer (xgboost)"
+  algorithm: xgboost
+  mode: train
+  dataset: pv_cases

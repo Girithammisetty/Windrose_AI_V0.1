@@ -1,0 +1,69 @@
+# Party Risk & Recovery: who is claiming and what it costs — claimed-dollar
+# concentration by party type and trade, quantum discipline by contract
+# type, and prequalification-tier exposure (claims joined through the
+# contract book to the party register).
+name: "Party Risk & Recovery"
+module: insights
+semantic_model: construction_claims_core
+description: >-
+  Counterparty view of the claim book: claimed dollars by party type,
+  claim volume by trade and prequalification tier, approved dollars by
+  contract delivery type, and the party-type recovery grid.
+tags: [construction, claims, parties, recovery, pack]
+charts:
+  - name: "Claimed dollars by party type"
+    chart_type: vertical_bar_chart
+    description: "Claim exposure by counterparty class (subcontractor, GC, supplier)"
+    config:
+      x: { dimension: party_type }
+      y: [ { measure: total_claimed_amount, agg_fn: sum } ]
+    sources: [ { measure: total_claimed_amount } ]
+    w: 6
+    h: 4
+  - name: "Claims by trade"
+    chart_type: pie_chart
+    description: "Claim volume by claiming party's trade (earthwork, steel, mechanical, ...)"
+    config:
+      x: { dimension: trade }
+      y: [ { measure: claim_count, agg_fn: count } ]
+    sources: [ { measure: claim_count } ]
+    w: 6
+    h: 4
+  - name: "Approved dollars by contract type"
+    chart_type: vertical_bar_chart
+    description: "Where determinations pay out — lump sum vs GMP vs unit price"
+    config:
+      x: { dimension: contract_type }
+      y: [ { measure: total_approved_amount, agg_fn: sum } ]
+    sources: [ { measure: total_approved_amount } ]
+    w: 6
+    h: 4
+  - name: "Claims by prequalification tier"
+    chart_type: vertical_bar_chart
+    description: "Claim volume by the claiming party's prequal tier (vetting signal)"
+    config:
+      x: { dimension: prequal_tier }
+      y: [ { measure: claim_count, agg_fn: count } ]
+    sources: [ { measure: claim_count } ]
+    w: 6
+    h: 4
+  - name: "Party-type recovery grid"
+    chart_type: grid_chart
+    description: "Claims, approvals, negotiated settlements, claimed and approved dollars by party type"
+    config:
+      columns: [party_type, claim_count, approved_count, negotiated_count, total_claimed_amount, total_approved_amount]
+      x: { dimension: party_type }
+      y:
+        - { measure: claim_count, agg_fn: count }
+        - { measure: approved_count, agg_fn: count }
+        - { measure: negotiated_count, agg_fn: count }
+        - { measure: total_claimed_amount, agg_fn: sum }
+        - { measure: total_approved_amount, agg_fn: sum }
+    sources:
+      - { measure: claim_count }
+      - { measure: approved_count }
+      - { measure: negotiated_count }
+      - { measure: total_claimed_amount }
+      - { measure: total_approved_amount }
+    w: 12
+    h: 4

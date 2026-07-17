@@ -1,0 +1,67 @@
+# SIU Command Center (BRD 27 US-4/US-6): pipeline, recovery dollars, source
+# quality — the SIU director's daily view. Chart families restricted to the
+# render-verified set (vertical_bar / grid / pie / line); expr_metric
+# measures (hit rate etc.) are served by verified queries, never charted.
+name: "SIU Command Center"
+module: insights
+semantic_model: siu_operations
+description: >-
+  SIU pipeline KPIs (BRD 27 FWA-FR-020): leads by typology and status, dollar
+  exposure by priority, recovered dollars over time, and per-source lead
+  quality (confirmed vs false positive).
+tags: [insurance, payer, fwa, siu, pack]
+charts:
+  - name: "Leads by FWA typology"
+    chart_type: vertical_bar_chart
+    description: "Lead volume by typology (upcoding, unbundling, phantom, impossible day)"
+    config:
+      x: { dimension: fwa_typology }
+      y: [ { measure: lead_count, agg_fn: count } ]
+    sources: [ { measure: lead_count } ]
+    w: 6
+    h: 4
+  - name: "Lead pipeline status"
+    chart_type: pie_chart
+    description: "New / triage / open investigation / referred / closed mix"
+    config:
+      x: { dimension: lead_status }
+      y: [ { measure: lead_count, agg_fn: count } ]
+    sources: [ { measure: lead_count } ]
+    w: 6
+    h: 4
+  - name: "Recovered dollars by month"
+    chart_type: line_chart
+    description: "FWA-FR-020 fwa_recovery_$ trend"
+    config:
+      x: { dimension: recovery_month }
+      y: [ { measure: total_recovered, agg_fn: sum } ]
+    sources: [ { measure: total_recovered } ]
+    w: 6
+    h: 4
+  - name: "Exposure by lead priority"
+    chart_type: vertical_bar_chart
+    description: "Dollar exposure concentrated in critical/high leads"
+    config:
+      x: { dimension: priority }
+      y: [ { measure: total_exposure, agg_fn: sum } ]
+    sources: [ { measure: total_exposure } ]
+    w: 6
+    h: 4
+  - name: "Lead source quality grid"
+    chart_type: grid_chart
+    description: "Per-source lead volume, confirmed vs false-positive counts, exposure"
+    config:
+      columns: [lead_source, lead_count, confirmed_lead_count, false_positive_lead_count, total_exposure]
+      x: { dimension: lead_source }
+      y:
+        - { measure: lead_count, agg_fn: count }
+        - { measure: confirmed_lead_count, agg_fn: count }
+        - { measure: false_positive_lead_count, agg_fn: count }
+        - { measure: total_exposure, agg_fn: sum }
+    sources:
+      - { measure: lead_count }
+      - { measure: confirmed_lead_count }
+      - { measure: false_positive_lead_count }
+      - { measure: total_exposure }
+    w: 12
+    h: 4

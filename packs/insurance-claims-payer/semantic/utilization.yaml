@@ -1,0 +1,48 @@
+# Semantic model `payer_utilization` — the PA half of INS-FR-020 (BRD 24's
+# second shipped model). turnaround_hours is hours-to-decision for decided PAs
+# and hours-elapsed for pending ones (always populated, so avg casts safely).
+name: payer_utilization
+description: >-
+  Prior-authorization utilization model (BRD 24): PA volumes, approval/denial
+  splits, turnaround against the CMS-4201-F windows, agent recommendation mix.
+definition:
+  entities:
+    - name: pa_requests
+      dataset: prior_auth_requests
+      table: main.payer_prior_auth_requests
+      primary_key: [par_id]
+      dataset_version_policy: { policy: latest }
+  dimensions:
+    - { name: urgency, entity: pa_requests, type: categorical, column: urgency }
+    - { name: pa_status, entity: pa_requests, type: categorical, column: status }
+    - { name: pa_product_type, entity: pa_requests, type: categorical, column: product_type }
+    - { name: pa_member_state, entity: pa_requests, type: categorical, column: member_state }
+    - { name: submitted_month, entity: pa_requests, type: categorical, column: submitted_month }
+    - { name: agent_recommendation, entity: pa_requests, type: categorical, column: agent_recommendation }
+    - { name: requested_cpt, entity: pa_requests, type: categorical, column: cpt_code }
+  measures:
+    - { name: pa_request_count, entity: pa_requests, agg: count,
+        description: "Prior-auth requests" }
+    - { name: pa_approved_count, entity: pa_requests, agg: count,
+        filters: "status = 'approved'",
+        description: "PAs approved" }
+    - { name: pa_denied_count, entity: pa_requests, agg: count,
+        filters: "status = 'denied'",
+        description: "PAs denied" }
+    - { name: pa_pending_count, entity: pa_requests, agg: count,
+        filters: "status = 'pending'",
+        description: "PAs pending decision" }
+    - { name: avg_turnaround_hours, entity: pa_requests, agg: avg,
+        expr: "cast(turnaround_hours as double)", format: decimal,
+        description: "Average hours to decision (elapsed for pending)" }
+    - { name: avg_agent_confidence, entity: pa_requests, agg: avg,
+        expr: "cast(agent_confidence as double)", format: decimal,
+        description: "Mean PA-agent confidence" }
+    - { name: pa_denial_rate,
+        expr_metric: "pa_denied_count / nullif(pa_request_count, 0)",
+        format: percent,
+        description: "INS-FR-020 denial_rate_pa" }
+    - { name: pa_approval_rate,
+        expr_metric: "pa_approved_count / nullif(pa_request_count, 0)",
+        format: percent,
+        description: "PA approval rate" }

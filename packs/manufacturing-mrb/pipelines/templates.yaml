@@ -1,0 +1,17 @@
+# Pipeline seeds (expressed against the real pipeline-orchestrator algorithm
+# catalog): an unsupervised lot-anomaly detector (which supplier/part-family/
+# program lots look unlike the rest of the book — the containment-sweep and
+# incoming-inspection targeting surface) and a supervised disposition-outcome
+# scorer trained on human MRB dispositions (the deterministic-first
+# pre-router for NC intake triage). Trained models require review before
+# promotion — the Quality Manager approves promotions.
+- identity: nc_lot_anomaly_isolation_forest
+  name: "Manufacturing lot anomaly detector (isolation forest)"
+  algorithm: isolation_forest
+  mode: train
+  dataset: nc_lots
+- identity: nc_disposition_outcome_xgboost
+  name: "NC disposition outcome scorer (xgboost)"
+  algorithm: xgboost
+  mode: train
+  dataset: nc_nonconformances

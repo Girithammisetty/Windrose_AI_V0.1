@@ -1,0 +1,70 @@
+# Determinations Command Center: determination mix by program, backlog aging,
+# human disposition outcome mix, intake trend. Chart families restricted to
+# the render-verified set (vertical_bar / grid / pie / line); expr_metric
+# measures (rates) are query/NL surfaces, never charted directly.
+name: "Determinations Command Center"
+module: insights
+semantic_model: benefits_core
+description: >-
+  Top-line adjudication operations KPIs: determination volumes by program,
+  backlog aging by severity, human disposition outcome mix, and the monthly
+  determination intake trend across unemployment, SNAP, Medicaid
+  eligibility, TANF, and state disability.
+tags: [government, benefits, eligibility, pack]
+charts:
+  - name: "Determinations by program"
+    chart_type: vertical_bar_chart
+    description: "Determination volume by benefit program (UI, SNAP, Medicaid, TANF, state disability)"
+    config:
+      x: { dimension: program }
+      y: [ { measure: determination_count, agg_fn: count } ]
+    sources: [ { measure: determination_count } ]
+    w: 6
+    h: 4
+  - name: "Backlog aging by severity"
+    chart_type: vertical_bar_chart
+    description: "Average determination age in days by severity (cycle-time watch)"
+    config:
+      x: { dimension: severity }
+      y: [ { measure: avg_determination_age_days, agg_fn: avg } ]
+    sources: [ { measure: avg_determination_age_days } ]
+    w: 6
+    h: 4
+  - name: "Disposition outcome mix"
+    chart_type: pie_chart
+    description: "Approve vs deny-with-findings vs verification request vs fraud referral vs withdrawn vs pending"
+    config:
+      x: { dimension: determination_disposition }
+      y: [ { measure: determination_count, agg_fn: count } ]
+    sources: [ { measure: determination_count } ]
+    w: 6
+    h: 4
+  - name: "Determination intake by month"
+    chart_type: line_chart
+    description: "Determinations opened per month (filed month trend)"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: determination_count, agg_fn: count } ]
+    sources: [ { measure: determination_count } ]
+    w: 6
+    h: 4
+  - name: "Program worklist grid"
+    chart_type: grid_chart
+    description: "Determinations, open backlog, closures, approvals and denials by program"
+    config:
+      columns: [program, determination_count, open_determination_count, closed_determination_count, approved_count, denied_count]
+      x: { dimension: program }
+      y:
+        - { measure: determination_count, agg_fn: count }
+        - { measure: open_determination_count, agg_fn: count }
+        - { measure: closed_determination_count, agg_fn: count }
+        - { measure: approved_count, agg_fn: count }
+        - { measure: denied_count, agg_fn: count }
+    sources:
+      - { measure: determination_count }
+      - { measure: open_determination_count }
+      - { measure: closed_determination_count }
+      - { measure: approved_count }
+      - { measure: denied_count }
+    w: 12
+    h: 4

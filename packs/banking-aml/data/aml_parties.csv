@@ -1,0 +1,13 @@
+party_id,party_name,party_type,sic_code,declared_business,party_jurisdiction,risk_rating,kyc_status,pep_flag,onboard_month,expected_monthly_volume
+P-1001,Riverside Convenience LLC,business,5411,convenience_store,US,medium,verified,no,2024-03,45000.00
+P-1002,Marina Bay Trading FZE,business,5199,general_trading,AE,high,verified,no,2025-01,120000.00
+P-1003,Cascadia Shell Holdings LLC,business,6719,holding_company,US,high,edd_open,no,2025-02,80000.00
+P-1004,Baltic Import Export OU,business,5199,import_export,EE,high,verified,no,2025-02,95000.00
+P-1005,Viktor Petrov,individual,na,retired,US,high,edd_open,no,2023-08,6000.00
+P-1006,Amara Okafor,individual,na,student,US,low,verified,no,2024-09,1200.00
+P-1007,Golden Lotus Restaurant Inc,business,5812,restaurant,US,low,verified,no,2022-05,38000.00
+P-1008,Hassan Al-Rashid,individual,na,consultant,US,medium,verified,yes,2024-11,25000.00
+P-1009,Sunrise Wholesale Flowers Inc,business,5992,florist,US,medium,verified,no,2023-04,30000.00
+P-1010,Quick Cash Services LLC,business,6099,money_service_business,US,high,edd_open,no,2025-05,200000.00
+P-1011,Nordwind Logistics GmbH,business,4731,freight_forwarding,DE,medium,verified,no,2024-06,150000.00
+P-1012,Elena Marquez,individual,na,sole_proprietor,MX,medium,refresh_due,no,2024-02,8000.00

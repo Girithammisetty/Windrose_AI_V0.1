@@ -1,0 +1,142 @@
+# Tenant-scope RAG grounding records (memory-service). This is the Carmack /
+# bill-of-lading / FMCSA domain knowledge the triage copilot retrieves when
+# reasoning about a cargo claim, safety event, or carrier-vetting item.
+# Every record is factual regulatory or operational reference material;
+# numbers appear only where well-established, otherwise stated qualitatively.
+- content: >-
+    Carmack Amendment (49 U.S.C. 14706): an interstate motor carrier is
+    liable for the actual loss or injury to the property it transports,
+    without the claimant needing to prove negligence. Burden-shifting
+    framework: the shipper makes a prima facie case by showing (1) delivery
+    to the carrier in good condition, (2) arrival damaged, short, or not at
+    all, and (3) the amount of damages. The burden then shifts to the
+    carrier, which must show BOTH that it was free from negligence AND that
+    the loss was caused by one of the excepted causes: act of God, the
+    public enemy, act or default of the shipper, public authority, or the
+    inherent vice or nature of the goods.
+  tags: [carmack, liability, burden_shifting, cargo_claims]
+  confidence: 0.95
+- content: >-
+    Cargo claim time limits (49 U.S.C. 14706(e), reflected in standard
+    bill-of-lading terms): a carrier may not set a period of less than 9
+    months for filing a cargo claim, and not less than 2 years for bringing
+    a civil action, with the 2-year suit period running from the carrier's
+    written disallowance (declination) of the claim. The standard uniform
+    bill of lading adopts these minimums, so in ordinary practice a claim
+    not filed within 9 months of delivery (or of the expected delivery date
+    for non-delivery) is time-barred, and suit must follow within 2 years
+    of the written denial. Recovery claims against an upstream/responsible
+    carrier run on the same bill-of-lading clocks — calendar them at intake.
+  tags: [carmack, deadlines, filing_window, bill_of_lading]
+  confidence: 0.95
+- content: >-
+    Claims-processing regulations (49 CFR Part 370) for carriers and
+    brokers handling loss-and-damage claims: a proper claim must be in
+    writing (or electronic), identify the shipment, assert carrier
+    liability, and claim a specified or determinable amount. The carrier
+    must acknowledge receipt of a claim within 30 days and must pay,
+    decline, or make a firm compromise settlement offer within 120 days of
+    receipt; if it cannot dispose of the claim within 120 days it must tell
+    the claimant why and provide status updates at 60-day intervals. A
+    declination should state the documented findings and the defense relied
+    upon.
+  tags: [cfr49_part370, claims_processing, acknowledgment, deadlines]
+  confidence: 0.9
+- content: >-
+    Released-value / limitation-of-liability doctrine (49 U.S.C. 14706(c)):
+    a carrier may limit its cargo liability to a value declared or released
+    by the shipper in exchange for a lower rate, provided the shipper had a
+    fair opportunity to choose between liability levels and the limitation
+    is properly incorporated in the rate/bill-of-lading terms. Practical
+    rule: before valuing any claim, check the bill of lading, rate
+    confirmation, and governing rules tariff for a released rate,
+    per-pound limitation, or declared-value entry — a structurally sound
+    claim may still be capped well below invoice value.
+  tags: [released_value, limitation_of_liability, valuation, bill_of_lading]
+  confidence: 0.92
+- content: >-
+    Reefer (temperature-excursion) claim documentation: the decision file
+    should contain the reefer unit download (setpoint, return-air and
+    supply-air temperatures, alarm and defrost events, continuous vs
+    start-stop mode), the origin pre-cool record and origin product pulping
+    temperatures, the bill-of-lading temperature instruction, and
+    destination pulping at rejection. Produce claims frequently turn on
+    origin condition — product loaded warm or already deteriorating
+    supports an inherent-vice / act-of-shipper defense, while a download
+    showing the unit off, mis-set, or alarming supports carrier liability.
+    Prompt inspection and salvage/mitigation are expected on perishables.
+  tags: [reefer, temperature, evidence, produce, inherent_vice]
+  confidence: 0.9
+- content: >-
+    FMCSA Compliance, Safety, Accountability (CSA) program: carrier
+    on-road performance is grouped into BASICs — Unsafe Driving, Crash
+    Indicator, Hours-of-Service Compliance, Vehicle Maintenance, Controlled
+    Substances/Alcohol, Hazardous Materials Compliance, and Driver Fitness
+    — used to prioritize interventions. FMCSA also operates a Crash
+    Preventability Determination Program under which certain crash types
+    can be reviewed and, if found not preventable, treated differently in
+    the carrier's safety measurement. Internal fleet practice mirrors this:
+    each recorded crash or camera event gets a documented preventability
+    determination based on the actual evidence, separate from fault or
+    liability.
+  tags: [fmcsa, csa, basics, preventability, safety]
+  confidence: 0.92
+- content: >-
+    Double-brokering and carrier identity-theft red flags: authority
+    granted only recently (new MC/DOT registration), sudden changes to
+    banking, factoring, or remit-to details — especially mid-load; contact
+    numbers that are VOIP-only or differ from FMCSA registration data;
+    references that are unreachable or "blocked"; email domains that
+    imitate a legitimate carrier's name; rate acceptance well below market;
+    and reluctance to confirm truck, driver, and location details.
+    Response practice: freeze payment, re-verify identity against FMCSA
+    registration data using independently sourced contact information
+    (direct callback, never the number in the suspicious email), confirm
+    physical possession of the freight, and escalate to fraud
+    investigation before any release of funds.
+  tags: [double_brokering, identity_theft, fraud, red_flags, vetting]
+  confidence: 0.9
+- content: >-
+    Broker/3PL carrier due-diligence practice: verify operating authority
+    is active and matches the entity being dispatched, confirm insurance
+    coverage with a certificate obtained from the producer (not the
+    carrier), review safety data and any out-of-service or unfit
+    indicators, and watch for "reincarnated" carriers — new authorities
+    created to shed a bad safety history. Brokers face negligent-selection
+    exposure when a poorly vetted carrier causes a loss, so the vetting
+    file should show what was checked, when, and by whom; high-value or
+    theft-prone commodities (electronics, beverages/alcohol, pharma) on
+    known hot lanes warrant enhanced verification and secured parking
+    requirements.
+  tags: [broker_due_diligence, negligent_selection, vetting, hot_lanes]
+  confidence: 0.88
+- content: >-
+    Telematics/camera safety-event review and litigation exposure:
+    coaching best practice is evidence-first (review the actual video and
+    sensor data before any determination), timely, consistent across
+    drivers, and documented to completion. Safety-event reviews, coaching
+    records, and telematics alerts are discoverable in crash litigation;
+    plaintiffs' counsel build punitive ("nuclear verdict") narratives from
+    ignored alerts, skipped coaching, or inconsistent discipline — so an
+    unreviewed flagged event is worse than a reviewed one closed as
+    non-preventable with findings. A disputed event from a long-tenured,
+    clean-record driver still gets the same evidence-first review; tenure
+    is context, not proof.
+  tags: [telematics, coaching, discoverability, nuclear_verdict, safety]
+  confidence: 0.88
+- content: >-
+    Cargo-claim evidence standards and AI governance: a defensible claim
+    file carries the signed POD with exceptions noted at delivery, seal
+    records (an intact origin seal on a shipper-load-and-count move points
+    at an origin short-count rather than transit loss; a broken or
+    mismatched seal points at pilferage), photos, weight/scale tickets,
+    temperature logs where applicable, the police report for theft, and
+    evidence the claimant mitigated damages (salvage, prompt notice —
+    concealed damage should be reported promptly after discovery). Every
+    AI-assisted determination must preserve a provenance chain (data
+    version, model version, prompt, reviewer identity, timestamp), and
+    adverse determinations must reflect documented findings a claimant or
+    driver can be told — decision files are exam- and discovery-facing
+    records.
+  tags: [evidence, seals, pod, mitigation, governance, provenance]
+  confidence: 0.9

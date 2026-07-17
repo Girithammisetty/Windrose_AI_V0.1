@@ -1,0 +1,67 @@
+# Regulatory Clock & Provisional Credit: Reg E / Reg Z deadline runway and
+# provisional-credit exposure — the compliance view an examiner walks first.
+name: "Regulatory Clock & Provisional Credit"
+module: insights
+semantic_model: disputes_core
+description: >-
+  Reg E / Reg Z compliance posture: open disputes by regulatory regime,
+  provisional-credit status mix, deadline runway buckets on the open book,
+  and the fraud-claim intake trend.
+tags: [banking, disputes, reg_e, compliance, pack]
+charts:
+  - name: "Open disputes by regulatory regime"
+    chart_type: vertical_bar_chart
+    description: "Open backlog split by Reg E (debit) vs Reg Z (credit) vs non-reg"
+    config:
+      x: { dimension: reg_flag }
+      y: [ { measure: open_dispute_count, agg_fn: count } ]
+    sources: [ { measure: open_dispute_count } ]
+    w: 6
+    h: 4
+  - name: "Provisional credit status mix"
+    chart_type: pie_chart
+    description: "Provisional credit issued vs due vs reversed vs not required"
+    config:
+      x: { dimension: provisional_credit }
+      y: [ { measure: dispute_count, agg_fn: count } ]
+    sources: [ { measure: dispute_count } ]
+    w: 6
+    h: 4
+  - name: "Deadline runway (open book)"
+    chart_type: vertical_bar_chart
+    description: "Open disputes by days remaining to the next regulatory deadline"
+    config:
+      x: { dimension: deadline_bucket }
+      y: [ { measure: open_dispute_count, agg_fn: count } ]
+    sources: [ { measure: open_dispute_count } ]
+    w: 6
+    h: 4
+  - name: "Fraud-claim intake trend"
+    chart_type: line_chart
+    description: "Unauthorized-transaction disputes filed by month"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: fraud_dispute_count, agg_fn: count } ]
+    sources: [ { measure: fraud_dispute_count } ]
+    w: 6
+    h: 4
+  - name: "Regulatory regime grid"
+    chart_type: grid_chart
+    description: "Volume, open backlog, provisional credit and exposure by regime"
+    config:
+      columns: [reg_flag, dispute_count, open_dispute_count, provisional_credit_issued_count, provisional_credit_due_count, total_disputed_amount]
+      x: { dimension: reg_flag }
+      y:
+        - { measure: dispute_count, agg_fn: count }
+        - { measure: open_dispute_count, agg_fn: count }
+        - { measure: provisional_credit_issued_count, agg_fn: count }
+        - { measure: provisional_credit_due_count, agg_fn: count }
+        - { measure: total_disputed_amount, agg_fn: sum }
+    sources:
+      - { measure: dispute_count }
+      - { measure: open_dispute_count }
+      - { measure: provisional_credit_issued_count }
+      - { measure: provisional_credit_due_count }
+      - { measure: total_disputed_amount }
+    w: 12
+    h: 4

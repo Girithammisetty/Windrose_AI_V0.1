@@ -1,0 +1,41 @@
+{
+  "type": "record",
+  "name": "DatasetEventEnvelope",
+  "namespace": "ai.windrose.dataset.events.v1",
+  "doc": "Envelope for every event on dataset.events.v1 (MASTER-FR-031). Partition key = tenant_id. event_type values: dataset.created|updated|deleted|deleted_with_consumers|restored|deprecated|version_created|schema_changed|profile_completed|profile_failed|version_expired, lineage.edge_created, security.cross_tenant_denied, ai.tool_invoked.v1.",
+  "fields": [
+    { "name": "event_id", "type": "string", "doc": "uuidv7" },
+    { "name": "event_type", "type": "string" },
+    { "name": "tenant_id", "type": "string" },
+    {
+      "name": "actor",
+      "type": {
+        "type": "record",
+        "name": "Actor",
+        "fields": [
+          { "name": "type", "type": { "type": "enum", "name": "ActorType", "symbols": ["user", "service", "agent"] } },
+          { "name": "id", "type": "string" }
+        ]
+      }
+    },
+    {
+      "name": "via_agent",
+      "type": [
+        "null",
+        {
+          "type": "record",
+          "name": "ViaAgent",
+          "fields": [
+            { "name": "agent_id", "type": "string" },
+            { "name": "version", "type": ["null", "string"], "default": null }
+          ]
+        }
+      ],
+      "default": null
+    },
+    { "name": "resource_urn", "type": "string" },
+    { "name": "occurred_at", "type": "string", "doc": "ISO-8601 UTC" },
+    { "name": "trace_id", "type": ["null", "string"], "default": null },
+    { "name": "payload", "type": "string", "doc": "JSON-encoded event payload; per-event schemas evolve backward-compatibly" }
+  ]
+}

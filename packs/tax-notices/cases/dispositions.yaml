@@ -1,0 +1,12 @@
+# Disposition taxonomy for the tax-notice resolution workflow. Categories are
+# the Core's closed set {true_positive,false_positive,benign,inconclusive,
+# other} (CASE-FR-020). abate_penalty_resolved is the "we were right" outcome
+# (agency error or reasonable cause won — the note captures the facts the
+# abatement request cited); pay_assessment_valid is the "agency was right"
+# outcome; file_amended_return fixes our own filing; the clarification and
+# duplicate codes keep the queue honest about non-determinations.
+- { code: abate_penalty_resolved,        label: "Abated/withdrawn — agency error or reasonable cause won",  category: true_positive,  requires_note: true }
+- { code: pay_assessment_valid,          label: "Pay — notice correct, assessment valid",                   category: false_positive, requires_note: true }
+- { code: file_amended_return,           label: "File amended return — correct our filing",                 category: other,          requires_note: true }
+- { code: request_agency_clarification,  label: "Request agency clarification — facts unresolved",          category: inconclusive,   requires_note: true }
+- { code: close_duplicate_notice,        label: "Close — duplicate of an already-resolved liability",       category: benign,         requires_note: true }

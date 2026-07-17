@@ -1,0 +1,46 @@
+{{- /*
+One Ingress per service with ingress: public (ui-web, bff-graphql). className +
+annotations are cloud-specific (values-<cloud>.yaml). Host mapping from
+.Values.ingress.hosts.<name>.
+*/}}
+{{- $root := . -}}
+{{- if .Values.ingress.enabled }}
+{{- range $svc := .Values.services }}
+{{- if eq (default "internal" $svc.ingress) "public" }}
+{{- $h := index $root.Values.ingress.hosts $svc.name }}
+{{- if $h }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $svc.name }}
+  labels:
+    {{- include "windrose.labels" $root | nindent 4 }}
+    {{- include "windrose.selectorLabels" (dict "svc" $svc "root" $root) | nindent 4 }}
+  {{- with $root.Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with $root.Values.ingress.className }}
+  ingressClassName: {{ . }}
+  {{- end }}
+  {{- with $root.Values.ingress.tls }}
+  tls:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  rules:
+    - host: {{ $h.host | quote }}
+      http:
+        paths:
+          - path: {{ default "/" $h.path }}
+            pathType: {{ default "Prefix" $h.pathType }}
+            backend:
+              service:
+                name: {{ $svc.name }}
+                port:
+                  number: {{ $svc.port }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

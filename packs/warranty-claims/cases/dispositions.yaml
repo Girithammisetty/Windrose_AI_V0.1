@@ -1,0 +1,15 @@
+# Disposition taxonomy for the warranty-claim adjudication workflow.
+# Categories are the Core's closed set {true_positive,false_positive,benign,
+# inconclusive,other} (CASE-FR-020). approve_pay_claim confirms a valid
+# covered failure; deny_policy_exclusion records a claim outside coverage
+# (with dealer-communicable findings — the note feeds the denial notice);
+# adjust_partial_pay trims unsupported labor ops or applies the goodwill
+# cost-share matrix; escalate_dealer_audit routes suspected claim padding to
+# the audit program (a statistical outlier is a signal, not proof);
+# close_supplier_recovery pays the dealer and recovers the cost from the
+# responsible supplier via warranty chargeback.
+- { code: approve_pay_claim,       label: "Approve — pay claim in full (covered failure confirmed)",       category: true_positive,  requires_note: true }
+- { code: deny_policy_exclusion,   label: "Deny — policy exclusion or evidence gap",                       category: false_positive, requires_note: true }
+- { code: adjust_partial_pay,      label: "Adjust — partial payment (trimmed ops / goodwill cost-share)",  category: other,          requires_note: true }
+- { code: escalate_dealer_audit,   label: "Escalate to dealer audit (suspected claim padding)",            category: inconclusive,   requires_note: true }
+- { code: close_supplier_recovery, label: "Close — cost recovered from supplier (warranty chargeback)",    category: benign,         requires_note: true }

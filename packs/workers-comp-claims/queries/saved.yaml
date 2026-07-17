@@ -1,0 +1,30 @@
+# Saved queries (query-service) — includes the provider->claim edge source
+# (parent/child/n) for network-family charts: bill-review provider clusters
+# (one provider fanning across many claims) surface visually from the
+# medical-bill book.
+- identity: wc_provider_claim_edges
+  name: "WC: provider-claim network edges"
+  description: >-
+    Provider -> claim edge list (parent/child/n) from the medical-bill book —
+    network-chart source for spotting bill-review provider clusters (one
+    provider billing across many claims, e.g. a pain-management mill) and
+    multi-provider treatment fans on a single claim.
+  sql: >-
+    SELECT provider_name AS parent, claim_id AS child,
+           count(*) AS n
+    FROM {{dataset('wc-medical-bills')}}
+    GROUP BY provider_name, claim_id
+  tags: [workers_comp, network, providers, bill_review, pack]
+- identity: wc_high_exposure_open_claims
+  name: "WC: high-exposure open claims"
+  description: "Open claims ranked by incurred reserve — the adjuster ranked-queue seed (deadline x reserve x severity, not FIFO)."
+  sql: >-
+    SELECT claim_id, employer_id, jurisdiction_state, injury_type, claim_type,
+           severity, litigation_flag,
+           cast(days_to_deadline AS double) AS days_to_deadline,
+           cast(incurred_reserve AS double) AS incurred_reserve,
+           cast(paid_to_date AS double) AS paid_to_date
+    FROM {{dataset('wc-claims')}}
+    WHERE status = 'open'
+    ORDER BY incurred_reserve DESC
+  tags: [workers_comp, queue, reserves, backlog, pack]

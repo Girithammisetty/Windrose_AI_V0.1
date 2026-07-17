@@ -1,0 +1,166 @@
+openapi: 3.0.3
+info:
+  title: case-service API
+  version: "1.0.0"
+  description: >
+    Claims-triage service (BRD 08). Row-reference triage cases, lifecycle state
+    machine, SLA timers, dispositions, custom fields, comments/timeline, bulk
+    operations, OpenSearch-backed list/search, and copilot proposal application.
+    Inherits the master BRD: RS256 JWT (MASTER-FR-010), OPA authz (012), error
+    envelope (024), cursor pagination (022), Idempotency-Key (025), events (030).
+servers:
+  - url: /api/v1
+security:
+  - bearerAuth: []
+components:
+  securitySchemes:
+    bearerAuth: { type: http, scheme: bearer, bearerFormat: JWT }
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: { type: string }
+            message: { type: string }
+            details: {}
+            trace_id: { type: string }
+    Case:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        workspace_id: { type: string, format: uuid }
+        case_number: { type: integer, format: int64 }
+        status: { type: string, enum: [draft, in_progress, resolved, unassigned, closed] }
+        severity: { type: string, enum: [low, medium, high, critical] }
+        assigned_to_id: { type: string, format: uuid, nullable: true }
+        dataset_urn: { type: string }
+        dataset_version: { type: string }
+        row_pk: { type: string }
+        dedup_key: { type: string }
+        display_projection: { type: object, additionalProperties: { type: string } }
+        projection_truncated: { type: boolean }
+        source_query_urns: { type: array, items: { type: string } }
+        due_date: { type: string, format: date-time }
+        custom_fields: { type: object }
+        disposition_id: { type: string, format: uuid, nullable: true }
+        resolution_note: { type: string }
+        snapshot_ref: { type: string }
+        recurrence_of: { type: string, format: uuid, nullable: true }
+        case_version: { type: integer }
+  parameters:
+    IfMatch:
+      name: If-Match
+      in: header
+      schema: { type: string }
+      description: Expected case_version for optimistic concurrency (§5).
+paths:
+  /cases:
+    post:
+      summary: Create 1..500 cases from query/inference rows (dedup-aware, CASE-FR-002/005)
+      parameters:
+        - { name: Idempotency-Key, in: header, schema: { type: string } }
+        - { name: allow_overdue, in: query, schema: { type: boolean } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [dataset_urn, due_date, rows]
+              properties:
+                query_urn: { type: string }
+                dashboard_urn: { type: string }
+                dataset_urn: { type: string }
+                dataset_version: { type: string }
+                due_date: { type: string, format: date-time }
+                assigned_to_id: { type: string, format: uuid }
+                severity: { type: string }
+                description: { type: string }
+                custom_fields: { type: object }
+                rows:
+                  type: array
+                  maxItems: 500
+                  items:
+                    type: object
+                    properties:
+                      row_pk: { type: string }
+                      display_projection: { type: object, additionalProperties: { type: string } }
+      responses:
+        "201":
+          description: created + deduplicated (X-Case-Deduplicated header on merges)
+        "422": { description: validation / BATCH_TOO_LARGE, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+    get:
+      summary: List/search/facets from OpenSearch (CASE-FR-042)
+      parameters:
+        - { name: q, in: query, schema: { type: string } }
+        - { name: "filter[status]", in: query, schema: { type: string }, description: "incl. pseudo open|closed" }
+        - { name: "filter[assignee]", in: query, schema: { type: string }, description: "id or 'me'" }
+        - { name: "filter[severity]", in: query, schema: { type: string } }
+        - { name: "filter[disposition_category]", in: query, schema: { type: string } }
+        - { name: "filter[query_urn]", in: query, schema: { type: string } }
+        - { name: "filter[due]", in: query, schema: { type: string, enum: [overdue, today, week] } }
+        - { name: facets, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer } }
+        - { name: cursor, in: query, schema: { type: string } }
+      responses:
+        "200": { description: page + facets + meta.projection_lag_ms }
+        "503": { description: SEARCH_UNAVAILABLE (OpenSearch down, BR-10) }
+  /cases/{id}:
+    get:
+      summary: Read a case from Postgres, optional live-row hydration (CASE-FR-001, BR-5)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: with_row, in: query, schema: { type: boolean } }
+      responses:
+        "200": { description: case (row/row_error when with_row=true), content: { application/json: { schema: { $ref: "#/components/schemas/Case" } } } }
+        "404": { description: not found / cross-tenant (AC-13) }
+    patch:
+      summary: Update description/due_date/severity/custom_fields (If-Match, §5)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { $ref: "#/components/parameters/IfMatch" }
+      responses:
+        "200": { description: updated case }
+        "409": { description: stale case_version }
+  /cases/{id}/assign: { post: { summary: "unassigned→draft / reassign (CASE-FR-011)", responses: { "200": { description: case }, "409": { description: INVALID_TRANSITION } } } }
+  /cases/{id}/unassign: { post: { summary: "→unassigned (CASE-FR-011)", responses: { "200": { description: case } } } }
+  /cases/{id}/start: { post: { summary: "draft→in_progress", responses: { "200": { description: case } } } }
+  /cases/{id}/resolve:
+    post:
+      summary: "in_progress→resolved with disposition (CASE-FR-020); emits case.disposition_applied (learning-loop signal)"
+      responses: { "200": { description: case }, "422": { description: DISPOSITION_NOTE_REQUIRED } }
+  /cases/{id}/reopen: { post: { summary: "resolved→in_progress ≤30d (CASE-FR-014)", responses: { "200": { description: case } } } }
+  /cases/{id}/close: { post: { summary: "resolved→closed; archives snapshot (CASE-FR-006)", responses: { "200": { description: case } } } }
+  /cases/{id}/escalate: { post: { summary: "bump severity + notify (CASE-FR-015)", responses: { "200": { description: case } } } }
+  /cases/{id}/apply-proposal:
+    post:
+      summary: "Apply an approved copilot proposal (CASE-FR-051); dual attribution; idempotent by proposal_urn"
+      responses:
+        "200": { description: case }
+        "422": { description: PROPOSAL_FIELD_NOT_ALLOWED }
+  /cases/{id}/timeline: { get: { summary: "Merged event+comment timeline (CASE-FR-025)", responses: { "200": { description: page } } } }
+  /cases/{id}/comments: { post: { summary: "Add a comment (CASE-FR-024)", responses: { "201": { description: comment } } } }
+  /cases/bulk:
+    post:
+      summary: "Bulk assign/unassign/resolve/set_severity/add_comment (≤500 ids, partial failure) (CASE-FR-030/031)"
+      responses:
+        "200": { description: "{succeeded, failed}" }
+        "422": { description: "BATCH_TOO_LARGE or all-failed" }
+  /cases/export: { post: { summary: "Async CSV export (CASE-FR-044)", responses: { "202": { description: "{operation_id}" } } } }
+  /cases/form: { get: { summary: "Form fields (defaults + custom) (CASE-FR-022)", responses: { "200": { description: fields } } } }
+  /comments/{cid}:
+    patch: { summary: "Edit comment (author ≤15m)", responses: { "200": { description: comment } } }
+    delete: { summary: "Delete comment (author ≤15m)", responses: { "204": { description: deleted } } }
+  /dispositions:
+    get: { summary: "List dispositions", responses: { "200": { description: list } } }
+    post: { summary: "Create disposition (CASE-FR-020)", responses: { "201": { description: disposition } } }
+  /dispositions/{id}: { patch: { summary: "Update disposition", responses: { "200": { description: disposition } } } }
+  /case-fields:
+    get: { summary: "List custom fields", responses: { "200": { description: list } } }
+    post: { summary: "Create custom field (CASE-FR-022)", responses: { "201": { description: field } } }
+  /case-fields/{id}: { delete: { summary: "Delete field (BR-8, ?orphan=true)", responses: { "204": { description: deleted }, "409": { description: FIELD_IN_USE } } } }
+  /sla-policy: { put: { summary: "Upsert workspace SLA policy (CASE-FR-012)", responses: { "200": { description: policy } } } }
+  /operations/{id}: { get: { summary: "Async operation status", responses: { "200": { description: operation } } } }
+  /admin/reindex: { post: { summary: "Rebuild tenant index + swap alias (CASE-FR-043)", responses: { "200": { description: "{reindexed}" } } } }

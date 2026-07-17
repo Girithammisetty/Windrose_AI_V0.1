@@ -1,0 +1,151 @@
+# Tenant-scope RAG grounding records (memory-service). This is the network-
+# rule / dispute-operations domain knowledge the chargeback-response copilot
+# retrieves when reasoning about whether and how to fight a chargeback.
+# Every record is factual methodological or network-rule reference material;
+# where exact figures vary by network, acquirer contract, or program year,
+# the guidance is stated qualitatively.
+- content: >-
+    Representment (second presentment) flow: the issuer files a chargeback;
+    the acquirer debits the merchant and forwards the case; the merchant may
+    accept liability or fight by submitting a representment with compelling
+    evidence matched to the reason code. If the issuer rejects the
+    representment it may escalate to pre-arbitration and then network
+    arbitration. Response windows are the controlling clock: network rules
+    allow roughly 20-45 days depending on network and cycle, and acquirers
+    and PSPs set internal merchant deadlines EARLIER than the network window
+    to leave processing time — a strong case submitted after the acquirer
+    deadline is a lost case. Always confirm the acquirer's stated due date
+    rather than assuming the network maximum.
+  tags: [representment, second_presentment, deadlines, workflow]
+  confidence: 0.92
+- content: >-
+    Visa Compelling Evidence 3.0 (effective April 2023) for reason code 10.4
+    CNP fraud: the merchant can shift liability back to the issuer by
+    showing two or more prior undisputed transactions on the same payment
+    credential, 120-365 days before the disputed transaction, that share
+    qualifying data elements with it (such as device ID/fingerprint, IP
+    address, shipping address, and account login ID) — element combinations
+    must meet Visa's matching rules. Pre-screen every 10.4 chargeback for CE
+    3.0 qualification before deciding fight/accept: a qualified package is
+    the strongest fraud-dispute response available, and the same data
+    shared pre-dispute (Order Insight) can prevent the chargeback entirely.
+  tags: [visa, ce30, compelling_evidence, cnp, fraud]
+  confidence: 0.9
+- content: >-
+    Visa merchant monitoring programs: VDMP (Visa Dispute Monitoring
+    Program) tracks each merchant's monthly dispute count and
+    dispute-to-sales-transaction ratio, and VFMP (Visa Fraud Monitoring
+    Program) tracks reported fraud dollars against sales volume. Standard
+    identification thresholds are on the order of a 0.9% ratio with minimum
+    monthly counts, with lower "early warning" tiers (fraud-ratio early
+    warning around the 0.65% range) and stricter "excessive" tiers;
+    enrollment brings remediation plans, escalating non-compliance
+    assessments, and ultimately termination risk. Winning representments
+    does NOT reduce these ratios — disputes count when received — so
+    program headroom is managed by PREVENTION (alerts, CE 3.0 pre-dispute
+    data sharing, descriptor clarity, friendly-fraud block-lists), not by
+    fighting harder.
+  tags: [visa, vdmp, vfmp, monitoring_programs, thresholds]
+  confidence: 0.85
+- content: >-
+    Mastercard Excessive Chargeback Program: acquirers must monitor
+    merchants' monthly chargeback-to-transaction ratios (expressed in basis
+    points) and counts; merchants exceeding the program thresholds are
+    classified as Excessive Chargeback Merchants (ECM), with a higher
+    High Excessive Chargeback Merchant (HECM) tier, and acquirers face
+    escalating assessments the longer a merchant remains above threshold.
+    Exact basis-point thresholds and fee schedules are set by Mastercard's
+    current program rules — treat them as acquirer-confirmed inputs, and
+    manage headroom through prevention and pre-dispute resolution rather
+    than post-facto representment wins.
+  tags: [mastercard, ecm, hecm, monitoring_programs, thresholds]
+  confidence: 0.85
+- content: >-
+    Compelling evidence is reason-code specific. Not received (Visa 13.1,
+    MC 4853 goods/services claims): carrier delivery confirmation with
+    signed proof of delivery to the AVS-matched shipping address, or
+    pickup/geolocation evidence. Digital goods: usage, download, login, and
+    IP/device logs showing consumption after purchase. Not as described /
+    defective (13.3) and cancelled-services claims: proof the goods matched
+    the listing, correspondence, and evidence the refund/cancellation
+    policy was clearly disclosed and accepted at checkout — undisclosed
+    policies lose. Credit not processed (MC 4860): the posted credit or its
+    ARN. Duplicate processing (12.6.1 / MC 4834): distinct receipts,
+    invoices, or authorization codes proving two genuine transactions — or
+    the refund already issued for the true duplicate. Generic evidence
+    dumped without mapping to the reason code is the most common
+    self-inflicted representment loss.
+  tags: [compelling_evidence, reason_codes, evidence_standards]
+  confidence: 0.9
+- content: >-
+    Pre-arbitration economics: after a merchant wins at second presentment
+    the issuer may escalate to pre-arbitration with new information, and
+    from there to network arbitration where the network rules on the file
+    and the losing party bears filing/review fees that commonly run to
+    several hundred dollars, in addition to the disputed amount. Continue
+    past pre-arbitration only when the ticket is large, the evidence is
+    strong and directly responsive to the issuer's new material, and the
+    expected win probability covers the fee-at-risk; otherwise accept at
+    pre-arb — a disciplined program treats arbitration as a rare,
+    big-ticket instrument, not a default posture.
+  tags: [pre_arbitration, arbitration, economics, escalation]
+  confidence: 0.88
+- content: >-
+    First-party ("friendly") fraud handling: industry loss studies
+    consistently attribute a large share of CNP fraud-coded chargebacks to
+    first-party misuse — the cardholder or a household member made or
+    received the purchase. Signals: repeat chargebacks relative to order
+    history, delivery confirmation and device/IP/login match contradicting
+    a "no authorization" claim, and claims concentrated on digital or
+    resellable goods. Response: fight qualifying claims with the pattern
+    evidence, feed confirmed offenders to a block-list/deny-list so they
+    cannot reorder, and prefer prevention (clear billing descriptors,
+    proactive customer service, easy self-service refunds on low-ticket
+    items) — preventing a friendly-fraud chargeback is worth more than
+    winning one, because won disputes still count toward monitoring
+    ratios. Each claim is still assessed on its own evidence.
+  tags: [friendly_fraud, first_party, block_list, prevention]
+  confidence: 0.87
+- content: >-
+    Pre-dispute resolution rails: Verifi (Visa) offers Order Insight (share
+    order data with the issuer at inquiry time) and RDR (Rapid Dispute
+    Resolution — rules-based automatic refunds that resolve disputes before
+    they become chargebacks); Ethoca (Mastercard) provides issuer-sourced
+    fraud and dispute alerts the merchant can refund against. These rails
+    stop the chargeback and its fees, but treatment in monitoring-program
+    metrics differs by rail and program — confirm with the acquirer rather
+    than assuming alert-resolved items are excluded. Operational hard rule:
+    reconcile alert-driven refunds against incoming chargebacks so the same
+    order is never refunded twice — a refund plus a lost chargeback is a
+    double loss, and a chargeback on an already-credited order is answered
+    with the credit evidence, not another refund.
+  tags: [rdr, ethoca, verifi, pre_dispute, alerts, deduplication]
+  confidence: 0.88
+- content: >-
+    Fight economics: every chargeback carries fixed costs regardless of
+    outcome — acquirer/PSP chargeback fees (commonly in the tens of
+    dollars, contract-dependent), evidence-assembly labor, and potential
+    escalation fees — and a winning representment recovers the transaction
+    amount but generally not those fees. A governed program therefore sets
+    an explicit economics threshold: below it, accept liability even when
+    the merchant is right (and log the pattern for prevention); above it,
+    fight when evidence strength supports a credible win probability.
+    Track the threshold as policy, review it against realized win rates
+    and fee schedules, and audit accepted-liability items so the threshold
+    doesn't silently absorb fixable fraud or process defects.
+  tags: [fight_economics, fees, thresholds, policy]
+  confidence: 0.88
+- content: >-
+    Evidence integrity and AI governance: a representment package is a
+    formal statement to the network — it must contain only genuine,
+    verifiable records (order data, carrier tracking, logs, posted
+    credits); fabricated or misleading evidence exposes the merchant to
+    network penalties, acquirer offboarding, and legal risk. Every
+    AI-assisted fight/accept decision must preserve a provenance chain
+    (data version, model version, prompt hash, reviewer identity,
+    timestamp), the human reviewer approves before any filing or refund,
+    and decision files are retained to survive acquirer, PSP, and network
+    program audits. Systematic auto-accepting or auto-fighting without
+    review is a governance failure in both directions.
+  tags: [governance, provenance, evidence_integrity, audit]
+  confidence: 0.9

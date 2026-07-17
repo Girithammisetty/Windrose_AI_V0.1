@@ -1,0 +1,20 @@
+# Pipeline seeds (BRD 30 §4 pipeline templates + model archetypes, expressed
+# against the real pipeline-orchestrator algorithm catalog): an unsupervised
+# transaction-anomaly detector (the nightly peer-anomaly scan seed,
+# AML-FR-090) and a supervised alert-disposition scorer trained on human
+# dispositions (the alert_disposition_confidence archetype seed, AML-FR-030
+# deterministic-first pre-router). The Argo scan-cadence workflows and
+# quarterly distillation runs are deferred — they require pack-service /
+# BRD 12 distillation endpoints not yet shipped in Core. Per BR-8 (SR 11-7),
+# trained models require model-risk validation before promotion — the Model
+# Risk Validator role reviews runs; the MLRO approves promotions.
+- identity: txn_anomaly_isolation_forest
+  name: "Transaction anomaly detector (isolation forest)"
+  algorithm: isolation_forest
+  mode: train
+  dataset: aml_transactions
+- identity: alert_disposition_xgboost
+  name: "Alert disposition scorer (xgboost)"
+  algorithm: xgboost
+  mode: train
+  dataset: aml_alerts

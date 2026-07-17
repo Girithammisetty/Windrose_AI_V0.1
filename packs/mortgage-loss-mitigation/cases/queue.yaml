@@ -1,0 +1,70 @@
+# Seeded loss-mitigation evaluation queue: the OPEN applications from the
+# seed dataset become cases so a specialist logging in sees a real,
+# pattern-diverse worklist on day one — a day-27 Reg X clock, a dual-tracking
+# hold, a disaster-forbearance exit, an incomplete doc chase, a denial appeal
+# with new evidence, and a repeat modification after a broken trial plan.
+# due_days=4 keeps triage inside the 30-day evaluation clock on the tightest
+# rows (APP-9001 has 3 days of runway).
+dataset: lm_applications
+due_days: 4
+rows:
+  - row_pk: APP-9001
+    severity: high
+    display_projection:
+      app_id: APP-9001
+      borrower: "Devon Carter (B-3002)"
+      request_type: modification
+      investor: gse
+      arrearage_amount: "9310.00"
+      days_to_deadline: "3"
+      note: "Day 27 of the Reg X 30-day evaluation clock (12 CFR 1024.41(c)) — written decision due in 3 days. Complete application on loan L-6002 (OH, 2021+ vintage, over-6% rate, 95-105 LTV), 90 days delinquent, $9,310 arrears; borrower unemployed after plant closure. Prior application APP-8006 closed request_missing_documents in April — this refiling is complete. GSE loan: evaluate for ALL available options in the investor-prescribed waterfall order, not just the requested modification"
+  - row_pk: APP-9002
+    severity: high
+    display_projection:
+      app_id: APP-9002
+      borrower: "Wes Bouchard (B-3008)"
+      request_type: modification
+      investor: portfolio
+      arrearage_amount: "21300.00"
+      days_to_deadline: "16"
+      note: "DUAL-TRACKING RISK: loan L-6015 (AZ, portfolio, $331,000 UPB) is 120+ days delinquent with a foreclosure referral queued — but this COMPLETE application was received before any first filing, so 12 CFR 1024.41(f)(2) bars the first foreclosure notice or filing while it is pending. Hold the referral and confirm the hold is logged. Self-employed income reduction; borrower contact recency over 30 days — SPOC continuity-of-contact outreach (1024.40) required. Evaluation decision due in 16 days"
+  - row_pk: APP-9003
+    severity: medium
+    display_projection:
+      app_id: APP-9003
+      borrower: "Tanya Osei (B-3009)"
+      request_type: forbearance
+      investor: gse
+      arrearage_amount: "5120.00"
+      days_to_deadline: "21"
+      note: "Disaster-forbearance exit review: borrower exiting the hurricane forbearance on L-6018 (LA, GSE, escrowed), 60 days delinquent from the forborne payments, $5,120 arrears. Evaluate a payment-deferral-style option per the GSE waterfall before any modification — her other LA loan L-6014 completed the same disaster forbearance cleanly (APP-8003, approved March). Borrower currently unemployed: verify income before any payment-based option"
+  - row_pk: APP-9004
+    severity: medium
+    display_projection:
+      app_id: APP-9004
+      borrower: "Marisol Vega (B-3003)"
+      request_type: modification
+      investor: fha
+      arrearage_amount: "7230.00"
+      days_to_deadline: "18"
+      note: "Incomplete application — 3 documents missing: self-employed profit-and-loss statement, two months of business bank statements, signed 4506-C. Medical hardship on L-6004 (TX, FHA); the 5-business-day acknowledgment notice (1024.41(b)(2)) listed the missing items and two follow-up attempts are logged. FHA waterfall needs the full package; 18 days to the stated reasonable-date target before an incompleteness determination — her other loan L-6024 closed via approved short sale (APP-8013), so retention appetite is documented"
+  - row_pk: APP-9005
+    severity: medium
+    display_projection:
+      app_id: APP-9005
+      borrower: "Renata Silva (B-3007)"
+      request_type: modification
+      investor: va
+      arrearage_amount: "11080.00"
+      days_to_deadline: "24"
+      note: "Denial appeal (12 CFR 1024.41(h)): the APP-8011 modification denial on L-6013 (NJ, VA) is appealed with NEW income evidence — a post-divorce support order plus a second-job paystub. Appeal review must be conducted by personnel not involved in the APP-8011 evaluation; decision due within 30 days (24 remaining). If the new income verifies, re-run the VA waterfall evaluation with the updated figures and document the delta from the original denial reasons"
+  - row_pk: APP-9006
+    severity: high
+    display_projection:
+      app_id: APP-9006
+      borrower: "June Palmer (B-3005)"
+      request_type: modification
+      investor: fha
+      arrearage_amount: "17800.00"
+      days_to_deadline: "5"
+      note: "Repeat modification after prior default: borrower (two-plus prior loss-mit events, prior bankruptcy) broke the March trial plan (APP-8012) on L-6009 (MI, FHA, over-6% rate); now 120+ days delinquent with $17,800 arrears, and her other loan L-6008 was denied a short sale in June (APP-8020). Check FHA re-eligibility rules for repeat assistance before evaluating; decision due in 5 days — if denied, the notice must state the specific reasons and appeal rights attach"

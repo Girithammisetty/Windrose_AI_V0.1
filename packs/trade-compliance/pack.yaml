@@ -1,0 +1,125 @@
+# trade-compliance capability pack — Core-neutral edition: customs / trade
+# compliance decisioning for the importer and broker side (importers, customs
+# brokers, freight forwarders, trade-compliance teams). Installable TODAY
+# against Windrose Core's public APIs via packctl; the manifest envelope
+# follows BRD 23 (PKG-FR-001/003). Components the current Core cannot
+# materialize are declared under `deferred` — recorded in the install ledger,
+# never faked.
+pack_manifest: 1
+name: trade-compliance
+version: 1.0.0
+publisher: { id: pub-windrose, name: "Windrose Inc." }
+description: >-
+  AI-assisted customs and trade-compliance decisioning for US importers,
+  customs brokers, and freight forwarders: HS classification review with
+  GRI-ordered reasoning and reasonable-care awareness (19 USC 1484),
+  denied-party screening adjudication (OFAC SDN, BIS Entity List, 50% rule)
+  with evidence-based match clearing, export/dual-use license-determination
+  escalation, origin/transshipment verification, trade-compliance KPI
+  semantic model and dashboards (classification correction rate, screening
+  false-positive rate, true hits, duty-risk mix, deadline runway, entered
+  value by lane/mode), importer-lane sourcing network analytics, customs +
+  sanctions grounding memories, and shipment-anomaly + review-outcome
+  training pipelines.
+categories: [trade, customs, imports, sanctions, compliance]
+regulatory: [cbp, htsus, ofac_sdn, bis_entity_list, ear]
+components:
+  datasets:
+    - { file: "data/datasets.yaml", identity: "datasets" }
+  semantic_models:
+    - { file: "semantic/trade_core.yaml", identity: "trade_core" }
+  verified_queries:
+    - { file: "queries/verified.yaml", identity: "canonical_questions" }
+  saved_queries:
+    - { file: "queries/saved.yaml", identity: "saved_queries" }
+  dashboards:
+    - { file: "dashboards/trade_command_center.yaml", identity: "trade_command_center" }
+    - { file: "dashboards/screening_sanctions.yaml", identity: "screening_sanctions" }
+    - { file: "dashboards/classification_duty_risk.yaml", identity: "classification_duty_risk" }
+  dispositions:
+    - { file: "cases/dispositions.yaml", identity: "dispositions" }
+  cases:
+    - { file: "cases/queue.yaml", identity: "review_queue" }
+  roles:
+    - { file: "rbac/roles.yaml", identity: "roles" }
+  agent_configs:
+    - { file: "agents/configs.yaml", identity: "agent_configs" }
+  memories:
+    - { file: "memories/grounding.yaml", identity: "grounding" }
+  pipelines:
+    - { file: "pipelines/templates.yaml", identity: "pipelines" }
+deferred:
+  - kind: guardrails
+    reason: >-
+      Trade-domain policies (no release while a plausible denied-party match
+      is unresolved; a sanctions hold can only be lifted with manager
+      approval and a documented distinguishing rationale; corrected entries
+      and prior disclosures never filed without human sign-off; screening
+      thresholds cannot be tuned down without an adjudication-history
+      review) require guardrail-service / OPA policy materialization, which
+      Core does not expose as a pack surface yet. The behavioral core is
+      partially covered today by Core invariants: every pack-configured
+      agent is proposal-mode with four-eyes approval (agent-runtime), and
+      the agent instructions + disposition taxonomy route holds, releases,
+      and corrected entries exclusively to human analysts with the Trade
+      Compliance Manager as approver.
+  - kind: agent_recipes
+    reason: >-
+      Bespoke LangGraph recipes (Classification Copilot with GRI-ordered
+      heading analysis, Screening Match Adjudicator, License Determination
+      Assistant, Origin Verification Sentinel) require agent-runtime
+      graph-module registration (BRD 23 BR-12). This pack specializes the
+      existing case-triage + analytics agents via TenantAgentConfig
+      prompt_params + tenant-scope RAG grounding instead.
+  - kind: connection_templates
+    reason: >-
+      Production read connectors (broker/ABI entry feeds and ACE reports;
+      TMS/forwarding systems such as CargoWise-class platforms; ERP purchase
+      and supplier masters; denied-party screening vendors' consolidated
+      list feeds; carrier manifests) require customer credentials and
+      pack-service connector materialization. The pack ships seed datasets
+      in the exact landing shape; production connectors are configured
+      through the product Data > Connections UI.
+  - kind: write_adapters
+    reason: >-
+      Write adapters (file post-summary corrections / corrected entries via
+      the broker, transmit hold/release instructions to the forwarder or
+      broker system, draft prior-disclosure and voluntary self-disclosure
+      packages for CBP/OFAC/BIS, submit license applications) execute only
+      behind pack-service's materialization contract and customer
+      credentials; every such write stays proposal-mode with human
+      approval — no autonomous holds, releases, filings, or disclosures,
+      ever.
+  - kind: eval_sets
+    reason: >-
+      Golden eval sets (HS classification review, screening match
+      adjudication, origin/transshipment risk ranking, license-determination
+      escalation) require eval-service write APIs whose action names are not
+      yet in the rbac canonical catalog (Core follow-up noted in rbac
+      catalog.go).
+  - kind: ontology
+    reason: >-
+      Ontology registration (Shipment, EntryLine, HsCode, OriginClaim,
+      TradingPartner, ScreeningAlert, WatchListEntry, LicenseDetermination,
+      DutyExposure, PriorDisclosure, DeadlineClock) awaits pack-service;
+      entity semantics are carried today by the trade_core semantic model
+      and dataset schemas.
+  - kind: case_schemas
+    reason: >-
+      Typed case schemas (hs_classification_review, screening_adjudication,
+      origin_verification, license_determination, prior_disclosure_review)
+      await case-service schema materialization; today's cases carry the
+      same fields via display_projection + the disposition taxonomy.
+  - kind: model_archetypes
+    reason: >-
+      Model archetypes (classification_confidence, screening_match_risk)
+      await experiment-service archetype APIs; the scoring capability ships
+      as pipeline seeds instead (isolation_forest shipment anomaly + xgboost
+      review-outcome scorer) with model-governance expectations noted in
+      grounding memories.
+  - kind: display_labels
+    reason: >-
+      Display-label overlays ("Review item", "Screening alert", "Corrected
+      entry due", "Hold pending adjudication", entity templates) require the
+      BFF label-registry endpoints (BFF-FR-082/088) which are
+      pack-service-tier features.

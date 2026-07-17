@@ -1,0 +1,17 @@
+# Pipeline seeds (expressed against the real pipeline-orchestrator algorithm
+# catalog): an unsupervised contract-book anomaly detector (unusual
+# claim-frequency / value-band / retention combinations that flag
+# claim-prone contracts) and a supervised claim-outcome scorer trained on
+# human determinations (the deterministic-first pre-router for intake
+# triage). Trained models require review before promotion — the Claims
+# Review Board Manager approves promotions.
+- identity: cc_contract_anomaly_isolation_forest
+  name: "Contract-book anomaly detector (isolation forest)"
+  algorithm: isolation_forest
+  mode: train
+  dataset: cc_contracts
+- identity: cc_claim_outcome_xgboost
+  name: "Claim outcome scorer (xgboost)"
+  algorithm: xgboost
+  mode: train
+  dataset: cc_claims

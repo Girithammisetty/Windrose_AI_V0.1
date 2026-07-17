@@ -1,0 +1,13 @@
+provider_npi,provider_specialty,peer_group,state,claim_line_count,total_billed,total_paid,avg_units_per_line,em_level5_share,max_visits_single_day,peer_deviation_sigma,leie_status,sanction_count,outlier_flag
+1811223344,primary_care,primary_care_small_ny,NY,412,162340.00,74830.00,1.0,0.94,31,4.6,clear,0,outlier
+1922334455,psychiatry,behavioral_solo_fl,FL,388,612480.00,571200.00,24.8,0.02,29,5.8,clear,1,outlier
+1731425869,clinical_lab,independent_lab_tx,TX,1240,98450.00,27600.00,1.1,0.00,112,3.9,clear,0,outlier
+1546372819,home_health,home_health_fl,FL,296,84120.00,57940.00,1.0,0.00,18,4.2,clear,0,outlier
+1497586920,dme,dme_supplier_tx,TX,154,196400.00,137400.00,1.0,0.00,9,3.1,excluded,2,outlier
+1659483726,primary_care,primary_care_small_ny,NY,520,148200.00,96400.00,1.0,0.08,22,0.4,clear,0,normal
+1592837465,primary_care,primary_care_small_ny,NY,455,131700.00,85900.00,1.0,0.11,24,0.6,clear,0,normal
+1873645291,cardiology,cardiology_group_ca,CA,610,412300.00,268900.00,1.0,0.12,26,0.7,clear,0,normal
+1264859373,orthopedics,ortho_group_tx,TX,340,821400.00,534600.00,1.0,0.10,19,0.9,clear,0,normal
+1385960718,physical_therapy,pt_clinic_ca,CA,780,109300.00,80100.00,2.1,0.00,34,1.2,clear,0,normal
+1608794231,psychiatry,behavioral_solo_fl,FL,402,182300.00,161400.00,1.0,0.00,10,0.5,clear,0,normal
+1719283746,clinical_lab,independent_lab_tx,TX,1180,71200.00,21900.00,1.0,0.00,98,0.3,clear,0,normal

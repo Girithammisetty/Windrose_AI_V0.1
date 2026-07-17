@@ -1,0 +1,40 @@
+# Azure (AKS) overrides. Cloud-specific only — everything else comes from values.yaml.
+# Infra endpoints below are PLACEHOLDERS; the CD workflow overrides them with
+# Terraform outputs (deploy/terraform/azure).
+
+global:
+  # Azure Container Registry.
+  registry: windroseprod.azurecr.io
+
+serviceAccount:
+  create: true
+  annotations:
+    # AAD Workload Identity: bind the SA to a user-assigned managed identity.
+    azure.workload.identity/client-id: 00000000-0000-0000-0000-000000000000  # PLACEHOLDER
+
+ingress:
+  className: azure-application-gateway
+  annotations:
+    kubernetes.io/ingress.class: azure/application-gateway
+    appgw.ingress.kubernetes.io/ssl-redirect: "true"
+    # appgw.ingress.kubernetes.io/appgw-ssl-certificate: windrose-cert   # PLACEHOLDER
+
+storageClass: managed-csi
+
+externalSecrets:
+  enabled: true
+  secretStoreRef:
+    name: windrose-azure-secrets
+    kind: ClusterSecretStore   # backed by Azure Key Vault
+  remoteKeyPrefix: windrose/prod
+
+config:
+  ICEBERG_WAREHOUSE: abfs://windrose-warehouse@windroseprod.dfs.core.windows.net/
+  OBJECTSTORE_REGION_HINT: eastus
+  # POSTGRES_HOST / REDIS_URL / KAFKA_BOOTSTRAP etc. come from windrose-secrets
+  # (Azure Key Vault) — not set here.
+  #
+  # BYO observability backend (opt-in — uncomment + point at your own collector):
+  # WINDROSE_OTEL_ENABLED: "true"
+  # OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector.observability.svc:4317   # in-cluster collector
+  # OTEL_EXPORTER_OTLP_ENDPOINT: <your-azure-monitor-otlp-endpoint>:4317 # or a vendor OTLP/gRPC endpoint

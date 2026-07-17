@@ -1,0 +1,15 @@
+# Disposition taxonomy for the FCRA reinvestigation workflow. Categories are
+# the Core's closed set {true_positive,false_positive,benign,inconclusive,
+# other} (CASE-FR-020). correct_tradeline is the accuracy-error-confirmed
+# outcome (furnish the correction to every CRA reported to);
+# verify_accurate_as_reported closes the reinvestigation with the reporting
+# unchanged; delete_unverifiable covers both unverifiable and obsolete items
+# (suppress from the file); escalate_identity_theft_review hands off to the
+# 605B block track; close_frivolous_documented is the FCRA-permitted
+# frivolous/irrelevant determination — requires_note captures the notice
+# with reasons the consumer must receive.
+- { code: correct_tradeline,               label: "Correct tradeline — furnish correction to all CRAs",        category: true_positive,  requires_note: true }
+- { code: verify_accurate_as_reported,     label: "Verify accurate as reported — reporting unchanged",         category: false_positive, requires_note: true }
+- { code: delete_unverifiable,             label: "Delete tradeline — unverifiable or obsolete",               category: other,          requires_note: true }
+- { code: escalate_identity_theft_review,  label: "Escalate to identity-theft review (605B block track)",      category: inconclusive,   requires_note: true }
+- { code: close_frivolous_documented,      label: "Close frivolous/irrelevant — documented notice with reasons", category: benign,         requires_note: true }

@@ -1,0 +1,155 @@
+# Semantic model `seller_vetting_core` — marketplace trust-and-safety KPI
+# catalog (enforcement rate, claim-rejection rate, evidence-request share,
+# reinstatement rate, ring-detection share, review aging, GMV at risk),
+# expressed in the Core semantic grammar (agg whitelist, equality measure
+# filters, derived expr_metric with nullif; join_paths left/many_to_one,
+# acyclic chain reviews -> listings -> sellers).
+#
+# entity.table is main.<safe_relation(dataset name)>; `dataset:` refs are
+# rebound to live dataset URNs by packctl at install. Numeric columns ingest
+# as bronze strings, so numeric measures cast(... as double) (the proven
+# claims_core pattern).
+name: seller_vetting_core
+description: >-
+  Marketplace seller-vetting and counterfeit/IP-enforcement KPI model:
+  review volumes and backlog aging, disposition outcome mix, enforcement and
+  claim-rejection rates, deadline runway on the open book, GMV at risk, and
+  the listing/seller risk surface (deep-discount and image-reuse signals,
+  KYB verification, linked-account rings) — reviews joined to listings
+  joined to the seller book.
+definition:
+  entities:
+    - name: reviews
+      dataset: sv_reviews
+      table: main.sv_reviews
+      primary_key: [review_id]
+      dataset_version_policy: { policy: latest }
+    - name: listings
+      dataset: sv_listings
+      table: main.sv_listings
+      primary_key: [listing_id]
+      dataset_version_policy: { policy: latest }
+    - name: sellers
+      dataset: sv_sellers
+      table: main.sv_sellers
+      primary_key: [seller_id]
+      dataset_version_policy: { policy: latest }
+  join_paths:
+    - name: reviews_listings
+      from_entity: reviews
+      to_entity: listings
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: listing_id, to_column: listing_id }]
+    - name: listings_sellers
+      from_entity: listings
+      to_entity: sellers
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: seller_id, to_column: seller_id }]
+  dimensions:
+    - { name: review_type, entity: reviews, type: categorical, column: review_type }
+    - { name: trigger_source, entity: reviews, type: categorical, column: trigger_source }
+    - { name: product_vertical, entity: reviews, type: categorical, column: product_vertical }
+    - { name: claim_basis, entity: reviews, type: categorical, column: claim_basis }
+    - { name: severity, entity: reviews, type: categorical, column: severity }
+    - { name: review_status, entity: reviews, type: categorical, column: status }
+    - { name: review_disposition, entity: reviews, type: categorical, column: disposition }
+    - { name: deadline_bucket, entity: reviews, type: categorical, column: deadline_bucket }
+    - { name: filed_month, entity: reviews, type: categorical, column: filed_month }
+    - { name: listing_category, entity: listings, type: categorical, column: category }
+    - { name: price_vs_msrp, entity: listings, type: categorical, column: price_vs_msrp }
+    - { name: fulfillment, entity: listings, type: categorical, column: fulfillment }
+    - { name: image_reuse, entity: listings, type: categorical, column: image_reuse }
+    - { name: buyer_complaint_band, entity: listings, type: categorical, column: buyer_complaint_band }
+    - { name: listing_month, entity: listings, type: categorical, column: listing_month }
+    - { name: seller_country, entity: sellers, type: categorical, column: country }
+    - { name: account_age_bucket, entity: sellers, type: categorical, column: account_age_bucket }
+    - { name: gmv_tier, entity: sellers, type: categorical, column: gmv_tier }
+    - { name: prior_violations, entity: sellers, type: categorical, column: prior_violations }
+    - { name: kyb_verified, entity: sellers, type: categorical, column: kyb_verified }
+    - { name: linked_accounts, entity: sellers, type: categorical, column: linked_accounts }
+  measures:
+    - { name: review_count, entity: reviews, agg: count,
+        description: "Number of seller-vetting / enforcement reviews" }
+    - { name: open_review_count, entity: reviews, agg: count,
+        filters: "status = 'open'",
+        description: "Reviews still open (adjudication backlog)" }
+    - { name: closed_review_count, entity: reviews, agg: count,
+        filters: "status = 'closed'",
+        description: "Reviews closed with a final human disposition" }
+    - { name: enforced_count, entity: reviews, agg: count,
+        filters: "disposition = 'remove_listing_enforce'",
+        description: "Reviews closed with listing removal / enforcement" }
+    - { name: claim_rejected_count, entity: reviews, agg: count,
+        filters: "disposition = 'reject_claim_insufficient'",
+        description: "Claims rejected — insufficient evidence of infringement (false/abusive claim watch)" }
+    - { name: evidence_requested_count, entity: reviews, agg: count,
+        filters: "disposition = 'request_authenticity_evidence'",
+        description: "Reviews resolved by requesting authenticity evidence (invoices / test buy)" }
+    - { name: ring_suspension_count, entity: reviews, agg: count,
+        filters: "disposition = 'suspend_seller_network'",
+        description: "Reviews closed by suspending a linked-account seller network" }
+    - { name: reinstated_count, entity: reviews, agg: count,
+        filters: "disposition = 'reinstate_seller_cleared'",
+        description: "Reviews closed by clearing or reinstating the seller" }
+    - { name: counterfeit_review_count, entity: reviews, agg: count,
+        filters: "review_type = 'counterfeit_takedown'",
+        description: "Counterfeit-takedown reviews (authenticity/safety enforcement surface)" }
+    - { name: test_buy_review_count, entity: reviews, agg: count,
+        filters: "trigger_source = 'test_buy'",
+        description: "Reviews triggered by a test-buy program purchase" }
+    - { name: avg_review_age_days, entity: reviews, agg: avg,
+        expr: "cast(age_days as double)", format: decimal,
+        description: "Average review age in days (cycle time / backlog aging)" }
+    - { name: avg_deadline_runway_days, entity: reviews, agg: avg,
+        expr: "cast(days_to_deadline as double)", format: decimal,
+        description: "Average days to the response/takedown deadline (meaningful on the OPEN book — closed rows carry 0)" }
+    - { name: total_gmv_at_risk, entity: reviews, agg: sum,
+        expr: "cast(gmv_at_risk as double)", format: decimal,
+        description: "Total listing GMV at risk across reviews" }
+    - { name: listing_count, entity: listings, agg: count,
+        description: "Number of marketplace listings under governance" }
+    - { name: deep_discount_listing_count, entity: listings, agg: count,
+        filters: "price_vs_msrp = 'deep_discount'",
+        description: "Listings priced at a deep discount to MSRP (counterfeit risk signal)" }
+    - { name: image_reuse_listing_count, entity: listings, agg: count,
+        filters: "image_reuse = 'yes'",
+        description: "Listings reusing stock or copied imagery (counterfeit risk signal)" }
+    - { name: seller_fulfilled_listing_count, entity: listings, agg: count,
+        filters: "fulfillment = 'seller'",
+        description: "Seller-fulfilled listings (weaker platform custody of the goods)" }
+    - { name: avg_list_price, entity: listings, agg: avg,
+        expr: "cast(list_price as double)", format: decimal,
+        description: "Average listing price" }
+    - { name: seller_count, entity: sellers, agg: count,
+        description: "Number of sellers on the marketplace book" }
+    - { name: kyb_unverified_seller_count, entity: sellers, agg: count,
+        filters: "kyb_verified = 'no'",
+        description: "Sellers with KYB verification not completed" }
+    - { name: kyb_mismatch_seller_count, entity: sellers, agg: count,
+        filters: "kyb_verified = 'mismatch'",
+        description: "Sellers whose payout banking name mismatches the registered entity (INFORM-style verification failure)" }
+    - { name: linked_account_seller_count, entity: sellers, agg: count,
+        filters: "linked_accounts = 'yes'",
+        description: "Sellers sharing banking/address/device attributes with other accounts (ring watch)" }
+    - { name: enforcement_rate,
+        expr_metric: "enforced_count / nullif(closed_review_count, 0)",
+        format: percent,
+        description: "Listing removals / enforcement actions over all closures" }
+    - { name: claim_rejection_rate,
+        expr_metric: "claim_rejected_count / nullif(closed_review_count, 0)",
+        format: percent,
+        description: "Claims rejected for insufficient evidence over all closures (brand-claim quality watch)" }
+    - { name: evidence_request_share,
+        expr_metric: "evidence_requested_count / nullif(closed_review_count, 0)",
+        format: percent,
+        description: "Closures resolved by an authenticity-evidence request over all closures" }
+    - { name: reinstatement_rate,
+        expr_metric: "reinstated_count / nullif(closed_review_count, 0)",
+        format: percent,
+        description: "Sellers cleared or reinstated over all closures" }
+    - { name: ring_detection_share,
+        expr_metric: "ring_suspension_count / nullif(closed_review_count, 0)",
+        format: percent,
+        description: "Linked-account network suspensions over all closures" }

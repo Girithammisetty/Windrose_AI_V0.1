@@ -1,0 +1,105 @@
+# Semantic model `pac_episodes` — PAC-FR-020 post-acute KPI catalog (episode +
+# assessment half), expressed in the Core semantic grammar (SEM-FR-004: agg
+# whitelist, measure filters, derived expr_metric with nullif; join_paths
+# left/many_to_one, acyclic).
+#
+# entity.table is main.<safe_relation(dataset name)> — the physical relation
+# query-service materializes; `dataset:` refs are rebound to live dataset URNs
+# by packctl at install. Numeric columns ingest as bronze strings, so numeric
+# measures cast(... as double) (the proven claims_core pattern). p50 measures
+# from the BRD (oasis_completion_time_p50, mds_completion_time_p50) are
+# expressed as avg — the agg whitelist has no percentile.
+name: pac_episodes
+description: >-
+  Post-acute episode + assessment KPI model (BRD 29 PAC-FR-020): 30-day
+  rehospitalization rate, PDGM comorbidity capture rate, length of stay,
+  OASIS/MDS completion time, CERT audit pass rate — across HHA, SNF, and
+  hospice care settings.
+definition:
+  entities:
+    - name: episodes
+      dataset: pac_episodes
+      table: main.pac_episodes
+      primary_key: [episode_id]
+      dataset_version_policy: { policy: latest }
+    - name: assessments
+      dataset: pac_assessments
+      table: main.pac_assessments
+      primary_key: [assessment_id]
+      dataset_version_policy: { policy: latest }
+  join_paths:
+    - name: assessments_episodes
+      from_entity: assessments
+      to_entity: episodes
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: episode_id, to_column: episode_id }]
+  dimensions:
+    - { name: care_setting, entity: episodes, type: categorical, column: care_setting }
+    - { name: facility, entity: episodes, type: categorical, column: facility }
+    - { name: admit_month, entity: episodes, type: categorical, column: admit_month }
+    - { name: primary_dx_code, entity: episodes, type: categorical, column: primary_dx_code }
+    - { name: primary_dx_desc, entity: episodes, type: categorical, column: primary_dx_desc }
+    - { name: payment_model, entity: episodes, type: categorical, column: payment_model }
+    - { name: case_mix_group, entity: episodes, type: categorical, column: case_mix_group }
+    - { name: functional_level, entity: episodes, type: categorical, column: functional_level }
+    - { name: comorbidity_adjusted, entity: episodes, type: categorical, column: comorbidity_adjusted }
+    - { name: episode_status, entity: episodes, type: categorical, column: episode_status }
+    - { name: discharge_disposition, entity: episodes, type: categorical, column: discharge_disposition }
+    - { name: readmitted_30d, entity: episodes, type: categorical, column: readmitted_30d }
+    - { name: assessment_type, entity: assessments, type: categorical, column: assessment_type }
+    - { name: assessment_month, entity: assessments, type: categorical, column: assessment_month }
+    - { name: drafted_by_copilot, entity: assessments, type: categorical, column: drafted_by_copilot }
+    - { name: reviewer_role, entity: assessments, type: categorical, column: reviewer_role }
+    - { name: audit_result, entity: assessments, type: categorical, column: audit_result }
+  measures:
+    - { name: episode_count, entity: episodes, agg: count,
+        description: "Number of post-acute episodes" }
+    - { name: readmitted_episode_count, entity: episodes, agg: count,
+        filters: "readmitted_30d = 'yes'",
+        description: "Episodes with a 30-day acute readmission" }
+    - { name: comorbidity_adjusted_count, entity: episodes, agg: count,
+        filters: "comorbidity_adjusted = 'yes'",
+        description: "Episodes carrying a PDGM/PDPM comorbidity adjustment" }
+    - { name: active_episode_count, entity: episodes, agg: count,
+        filters: "episode_status = 'active'",
+        description: "Episodes currently on service" }
+    - { name: avg_los_days, entity: episodes, agg: avg,
+        expr: "cast(los_days as double)", format: decimal,
+        description: "Average length of stay in days" }
+    - { name: total_expected_reimbursement, entity: episodes, agg: sum,
+        expr: "cast(expected_reimbursement as double)", format: decimal,
+        description: "Total expected case-mix reimbursement" }
+    - { name: avg_readmission_risk, entity: episodes, agg: avg,
+        expr: "cast(readmission_risk_score as double)", format: decimal,
+        description: "Mean 30-day rehospitalization risk score" }
+    - { name: assessment_count, entity: assessments, agg: count,
+        description: "OASIS / MDS / hospice-certification assessments" }
+    - { name: copilot_drafted_count, entity: assessments, agg: count,
+        filters: "drafted_by_copilot = 'yes'",
+        description: "Assessments drafted by a copilot then human-finalized" }
+    - { name: audit_pass_count, entity: assessments, agg: count,
+        filters: "audit_result = 'pass'",
+        description: "Assessments passing CERT-style medical review" }
+    - { name: avg_completion_minutes, entity: assessments, agg: avg,
+        expr: "cast(completion_minutes as double)", format: decimal,
+        description: "PAC-FR-020 oasis/mds_completion_time (avg minutes)" }
+    - { name: total_revenue_impact, entity: assessments, agg: sum,
+        expr: "cast(revenue_impact as double)", format: decimal,
+        description: "Reimbursement recovered via flagged comorbidity codes" }
+    - { name: rehospitalization_30d_rate,
+        expr_metric: "readmitted_episode_count / nullif(episode_count, 0)",
+        format: percent,
+        description: "PAC-FR-020 rehospitalization_30d_rate" }
+    - { name: pdgm_comorbidity_capture_rate,
+        expr_metric: "comorbidity_adjusted_count / nullif(episode_count, 0)",
+        format: percent,
+        description: "PAC-FR-020 pdgm_comorbidity_capture_rate (target >= 30%)" }
+    - { name: cert_audit_pass_rate,
+        expr_metric: "audit_pass_count / nullif(assessment_count, 0)",
+        format: percent,
+        description: "PAC-FR-020 cert_audit_pass_rate" }
+    - { name: copilot_draft_share,
+        expr_metric: "copilot_drafted_count / nullif(assessment_count, 0)",
+        format: percent,
+        description: "Share of assessments drafted by copilot before review" }

@@ -1,0 +1,26 @@
+# Pack datasets (ingestion-service file_upload, stable names for idempotency).
+# In production these tables arrive via the manufacturer's QMS/ERP/MES and
+# CMM-result connectors (deferred until pack-service ships connector
+# materialization); this seed data is REAL rows in the same landing shape,
+# encoding genuine nonconformance patterns so every downstream component runs
+# against real signal from day one: a dimensional NC on a critical
+# characteristic of a serialized flight part (use-as-is needs customer
+# approval — quarantined), a repeat casting-porosity trail from a red-scorecard
+# repeat-SCAR foundry (return + SCAR), an in-process solder-void PCB batch
+# (rework + re-verify), a foreign-object-debris find at final inspection
+# driving containment across three adjacent harness lots, a documentation-only
+# NC (raw-material cert missing, parts conforming — release path), and a
+# three-month customer-return cracking trend on one molded med-device part
+# family (quarantine + escape-notification assessment).
+- identity: nc_nonconformances
+  name: nc-nonconformances
+  file: data/nc_nonconformances.csv
+  format: csv
+- identity: nc_lots
+  name: nc-lots
+  file: data/nc_lots.csv
+  format: csv
+- identity: nc_suppliers
+  name: nc-suppliers
+  file: data/nc_suppliers.csv
+  format: csv

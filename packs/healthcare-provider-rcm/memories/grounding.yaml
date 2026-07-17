@@ -1,0 +1,90 @@
+# Tenant-scope RAG grounding records (memory-service). This is the provider
+# revenue-cycle domain knowledge the triage copilot retrieves when reasoning
+# about a denial or underpayment case — CARC/RARC semantics, HFMA MAP-key
+# benchmarks, appeal-timeline rules, and NCCI/E-M coding rules from BRD 26.
+# Every record is factual domain reference material.
+- content: >-
+    CARC CO-45 means "charge exceeds fee schedule/maximum allowable or
+    contracted/legislated fee arrangement." On in-network remits it is the
+    normal contractual adjustment, NOT a denial. When the CO-45 adjustment is
+    larger than the payer contract allows — paid amount below the contracted
+    expected amount — the line is an underpayment and a dispute citing the
+    fee-schedule clause should be drafted (RCM-FR-050).
+  tags: [carc, remittance, underpayment]
+  confidence: 0.95
+- content: >-
+    CARC CO-97 means "the benefit for this service is included in the
+    payment/allowance for another service/procedure already adjudicated" —
+    an NCCI bundling denial (often with RARC M15). Check the NCCI edit pair:
+    if the procedures are distinct (separate site, session, or injury),
+    modifier 59/XU or 25 may apply and a corrected resubmit can succeed;
+    overriding an NCCI edit requires a documented reason and is audited
+    (BRD 26 BR-3).
+  tags: [carc, ncci, bundling, denials]
+  confidence: 0.95
+- content: >-
+    CARC CO-197 means "precertification/authorization/notification absent."
+    These denials are administrative: if the service was medically necessary
+    and the payer permits retro-authorization, first-level appeals routinely
+    overturn CO-197 — first verify whether an authorization was actually on
+    file before the service date, because payers misapply this code.
+  tags: [carc, prior_auth, denials, appeals]
+  confidence: 0.95
+- content: >-
+    CARC CO-16 means "claim lacks information or has submission/billing
+    errors," qualified by the RARC: N290 = missing/invalid rendering provider
+    identifier, M127 = missing patient medical record documentation. CO-16 is
+    not a true clinical denial — correct the claim and resubmit within the
+    timely-filing window rather than appealing.
+  tags: [carc, rarc, documentation, resubmission]
+  confidence: 0.95
+- content: >-
+    CARC CO-29 means "the time limit for filing has expired." Timely-filing
+    denials are rarely overturnable; appeal only with proof of timely original
+    submission, such as a clearinghouse acceptance report or certified EDI 837
+    transmission log. Otherwise write off and fix the upstream lag.
+  tags: [carc, timely_filing, denials]
+  confidence: 0.9
+- content: >-
+    CARC PR-1 means "deductible amount" — patient responsibility, not a payer
+    denial. PR-group adjustments route to patient collections, not appeals.
+    Patient payment plans must respect state maximum APR and affordability
+    rules, and TILA/FDCPA disclosure requirements (BRD 26 BR-6); No Surprises
+    Act limits balance billing for out-of-network emergency and ancillary
+    care.
+  tags: [carc, patient_responsibility, collections, no_surprises_act]
+  confidence: 0.9
+- content: >-
+    HFMA MAP-key style benchmarks for provider revenue cycle: clean-claim
+    rate at or above 95%, initial denial rate below 5% of claims, days in A/R
+    below 30 for high performers (40-50 is typical), net collection rate at
+    or above 96%, and A/R over 90 days below 15-20% of total A/R. Use these
+    to judge whether a tenant KPI needs intervention (BRD 26 RCM-FR-020).
+  tags: [benchmarks, hfma, kpi]
+  confidence: 0.9
+- content: >-
+    Appeal and dispute timelines: Medicare Part B redetermination requests
+    are due within 120 days of the remittance date; commercial payer appeal
+    windows are contract-specific, typically 90-180 days. Underpayment
+    disputes are bounded by the payer-contract term — disputes older than the
+    contract limit are time_barred and must not be proposed (BRD 26 BR-5).
+  tags: [appeals, deadlines, underpayment]
+  confidence: 0.95
+- content: >-
+    E/M office-visit leveling (99213 / 99214 / 99215) follows the 2021 CPT
+    E/M guidelines by default: level is selected by medical decision-making
+    OR total time on the date of the encounter (BRD 26 BR-2). Downcoding or
+    diagnosis-mismatch denials (CARC CO-11) on E/M visits are contested with
+    MDM evidence: number/complexity of problems addressed, data reviewed, and
+    risk.
+  tags: [coding, em_leveling, cpt]
+  confidence: 0.9
+- content: >-
+    Modifier 25 (significant, separately identifiable E/M on the same day as
+    a procedure) and modifier 59 (distinct procedural service) are the
+    audited NCCI-override modifiers. Appending them without documented
+    justification is a top RAC/MAC audit trigger — every override must cite
+    the chart evidence supporting distinctness (BRD 26 BR-3, RAC audit
+    posture RCM-FR-110).
+  tags: [coding, modifiers, ncci, audit]
+  confidence: 0.9

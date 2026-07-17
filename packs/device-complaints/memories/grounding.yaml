@@ -1,0 +1,120 @@
+# Tenant-scope RAG grounding records (memory-service). This is the 21 CFR
+# 803 / 820 / EU MDR vigilance domain knowledge the triage copilot retrieves
+# when reasoning about a complaint. Every record is factual regulatory or
+# methodological reference material; where an exact figure is not certain it
+# is stated qualitatively.
+- content: >-
+    MDR 30-day reports (21 CFR 803, manufacturers): a manufacturer must
+    submit an MDR to FDA within 30 calendar days of becoming aware of
+    information reasonably suggesting that a marketed device may have caused
+    or contributed to a death or serious injury, OR that the device
+    malfunctioned and the malfunction would be likely to cause or contribute
+    to a death or serious injury if it were to recur. The malfunction prong
+    does not require any harm to have occurred in the reported event.
+  tags: [mdr, part_803, deadlines, thirty_day, malfunction]
+  confidence: 0.97
+- content: >-
+    MDR 5-work-day reports (21 CFR 803): a manufacturer must report within 5
+    work days when it becomes aware that a reportable event necessitates
+    remedial action to prevent an unreasonable risk of substantial harm to
+    the public health, or when FDA has made a written request for reports of
+    a particular type of event. The 5-day clock is the tightest clock in the
+    complaint-handling workflow and typically accompanies field-action
+    deliberations.
+  tags: [mdr, part_803, deadlines, five_day, remedial_action]
+  confidence: 0.95
+- content: >-
+    Becoming aware (21 CFR 803 definitions): for 30-day reports, the
+    manufacturer becomes aware — and day zero starts — when ANY employee
+    obtains information reasonably suggesting a reportable event, not when
+    the complaint reaches the quality or regulatory unit. For 5-work-day
+    remedial-action reports, awareness runs from when personnel with
+    management or supervisory responsibilities, or whose duties relate to
+    MDR evaluation, become aware. Intake routing delays never extend the
+    clock, which is why complaint intake SLAs are measured in days.
+  tags: [mdr, becoming_aware, day_zero, intake]
+  confidence: 0.92
+- content: >-
+    Complaint files (21 CFR 820.198): complaints must be received, reviewed,
+    and evaluated by a formally designated unit; EVERY complaint must be
+    evaluated to determine whether it represents an event that must be
+    reported under Part 803, and MDR-related complaints get a prompt review
+    and investigation. When no investigation is made, the file must record
+    the reason and the name of the individual responsible for that decision.
+    Investigation records must include the device, the dates, the results,
+    and any reply to the complainant.
+  tags: [part_820, complaint_files, reportability_evaluation, records]
+  confidence: 0.95
+- content: >-
+    Death reportability presumption: FDA's MDR decision-tree guidance treats
+    reported deaths with a presumption toward reportability — if the
+    manufacturer's investigation cannot establish that the device did NOT
+    cause or contribute to the death, the MDR should be filed. Causality
+    need not be confirmed; "caused or contributed" includes events where the
+    device may have been a factor, including through failure, malfunction,
+    improper design, inadequate labeling, or use error. File on the
+    available information and supplement later rather than hold for a
+    conclusive root cause.
+  tags: [mdr, death, presumption, decision_tree, causality]
+  confidence: 0.9
+- content: >-
+    CAPA linkage (21 CFR 820.100): corrective and preventive action
+    procedures must analyze quality data sources — including complaints,
+    service records, and returned product — to identify existing and
+    potential causes of nonconforming product, applying appropriate
+    statistical methodology where needed. Complaint TRENDS (repeat
+    device-problem codes on one product, a cluster after a design, software,
+    or supplier change) trigger CAPA even when each individual complaint is
+    closed; opening a CAPA never substitutes for, or delays, an MDR
+    reportability decision on the individual events.
+  tags: [part_820, capa, trending, quality_data]
+  confidence: 0.94
+- content: >-
+    UDI (unique device identification): marketed devices carry a UDI with a
+    device identifier (model/version level) and production identifiers (lot,
+    serial number, expiration, manufacture date as applicable). Recording
+    UDI, lot, and software version in complaint and MDR records is what
+    makes fleet-level trending, recall scoping, and field-action targeting
+    possible — a complaint that cannot be tied to a lot or version band
+    cannot support signal detection.
+  tags: [udi, traceability, lot, software_version]
+  confidence: 0.92
+- content: >-
+    EU MDR vigilance parallel (Regulation (EU) 2017/745): manufacturers
+    report serious incidents to the competent authority no later than 15
+    days after awareness, with shorter windows for deaths or serious
+    deteriorations in health and for serious public-health threats. Field
+    safety corrective actions require a field safety notice to users, and
+    trend reporting obligations cover statistically significant increases in
+    non-serious incidents. A complaint-handling unit serving both markets
+    must run the FDA and EU clocks in parallel from the same
+    becoming-aware date.
+  tags: [eu_mdr, vigilance, serious_incident, fsca, deadlines]
+  confidence: 0.9
+- content: >-
+    Trending and signal detection on device-problem codes: post-market
+    surveillance codes complaints against a harmonized device-problem
+    taxonomy (the IMDRF adverse-event terminology; FDA product problem
+    codes) and monitors complaint rates per problem code by product, lot,
+    region, and software version. Classic signals: the same problem code
+    recurring on one product (a third occurrence is a common trending
+    threshold), a cluster appearing immediately after a version rollout or
+    supplier change, and repeat complaints on the same serialized device.
+    Confirmed signals escalate to CAPA, and to health-hazard evaluation and
+    recall/field-action deliberation when patient risk is indicated —
+    recall decisions also change the MDR posture (remedial action can
+    trigger 5-day reporting).
+  tags: [trending, signal_detection, imdrf, device_problem_codes, recall]
+  confidence: 0.9
+- content: >-
+    Records and AI governance in a GxP complaint process: complaint files
+    and MDR decision records are inspection targets (FDA reviews complaint
+    handling and MDR decision rationale during QSIT inspections), so every
+    AI-assisted reportability recommendation must preserve a provenance
+    chain — data version, model version, prompt hash, the human reviewer's
+    identity, and timestamps — and the documented reportability rationale
+    must be human-owned and reconstructable. Systematic under-reporting
+    (pattern-level "not reportable" bias) is a program-level compliance
+    failure even when individual files look defensible.
+  tags: [gxp, governance, provenance, inspection, recordkeeping]
+  confidence: 0.9

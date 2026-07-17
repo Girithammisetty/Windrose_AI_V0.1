@@ -1,0 +1,133 @@
+# Semantic model `care_mgmt_core` — CMM-FR-020/021 governed KPI catalog,
+# expressed in the Core semantic grammar (agg whitelist, measure filters,
+# derived expr_metric with nullif; join_paths left/many_to_one, acyclic).
+#
+# entity.table is main.<safe_relation(dataset name)>; `dataset:` refs are
+# rebound to live dataset URNs by packctl at install. All ingested columns are
+# bronze strings, so numeric measures cast(... as double).
+name: care_mgmt_core
+description: >-
+  Medicare care-management KPI model (BRD 25 CMM-FR-020): enrollment funnel and
+  enrollment_rate, care-manager throughput, billing-candidate decisions with
+  revenue and documentation_completeness_rate, TCM contact/readmission rates —
+  dimensions per CMM-FR-021 (program_code, cpt_code, service_month, plan_type,
+  qmb/fqhc flags, condition_group, apcm_tier, care_manager role).
+definition:
+  entities:
+    - name: patients
+      dataset: care_patients
+      table: main.care_patients
+      primary_key: [patient_id]
+      dataset_version_policy: { policy: latest }
+    - name: activities
+      dataset: care_activities
+      table: main.care_activities
+      primary_key: [activity_id]
+      dataset_version_policy: { policy: latest }
+    - name: billing
+      dataset: care_billing_candidates
+      table: main.care_billing_candidates
+      primary_key: [candidate_id]
+      dataset_version_policy: { policy: latest }
+  join_paths:
+    - name: activities_patients
+      from_entity: activities
+      to_entity: patients
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: patient_id, to_column: patient_id }]
+    - name: billing_patients
+      from_entity: billing
+      to_entity: patients
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: patient_id, to_column: patient_id }]
+  dimensions:
+    - { name: plan_type, entity: patients, type: categorical, column: plan_type }
+    - { name: qmb_flag, entity: patients, type: categorical, column: qmb_flag }
+    - { name: fqhc_flag, entity: patients, type: categorical, column: fqhc_flag }
+    - { name: provider_specialty, entity: patients, type: categorical, column: provider_specialty }
+    - { name: condition_group, entity: patients, type: categorical, column: condition_group }
+    - { name: enrolled_program, entity: patients, type: categorical, column: program_code }
+    - { name: enrollment_status, entity: patients, type: categorical, column: enrollment_status }
+    - { name: panel_month, entity: patients, type: categorical, column: panel_month }
+    - { name: apcm_tier, entity: patients, type: categorical, column: apcm_tier }
+    - { name: tcm_contact_2bd, entity: patients, type: categorical, column: tcm_contact_2bd }
+    - { name: recent_discharge, entity: patients, type: categorical, column: recent_discharge_flag }
+    - { name: care_manager_id, entity: activities, type: categorical, column: care_manager_id }
+    - { name: care_manager_role, entity: activities, type: categorical, column: care_manager_role }
+    - { name: activity_type, entity: activities, type: categorical, column: activity_type }
+    - { name: activity_month, entity: activities, type: categorical, column: activity_month }
+    - { name: activity_program, entity: activities, type: categorical, column: program_code }
+    - { name: program_code, entity: billing, type: categorical, column: program_code }
+    - { name: cpt_code, entity: billing, type: categorical, column: cpt_code }
+    - { name: service_month, entity: billing, type: categorical, column: service_month }
+    - { name: decision, entity: billing, type: categorical, column: decision }
+    - { name: hold_reason, entity: billing, type: categorical, column: hold_reason }
+    - { name: audit_package_status, entity: billing, type: categorical, column: audit_package_status }
+  measures:
+    - { name: eligible_patients, entity: patients, agg: count,
+        description: "CMM-FR-020 eligible_patients: Medicare panel patients eligible for a care-management program" }
+    - { name: enrolled_patients, entity: patients, agg: count,
+        filters: "enrollment_status = 'active'",
+        description: "CMM-FR-020 enrolled_patients: patients with active consent (enrolled)" }
+    - { name: discharged_patients, entity: patients, agg: count,
+        filters: "recent_discharge_flag = 'yes'",
+        description: "Patients with a recent inpatient discharge (TCM denominator)" }
+    - { name: tcm_contacted_2bd_count, entity: patients, agg: count,
+        filters: "tcm_contact_2bd = 'yes'",
+        description: "Discharged patients contacted within 2 business days (CMS TCM rule)" }
+    - { name: readmitted_count, entity: patients, agg: count,
+        filters: "readmitted_30d = 'yes'",
+        description: "Discharged patients readmitted within 30 days" }
+    - { name: avg_chronic_conditions, entity: patients, agg: avg,
+        expr: "cast(chronic_condition_count as double)", format: decimal,
+        description: "Mean chronic-condition count per patient" }
+    - { name: activity_count, entity: activities, agg: count,
+        description: "Care coordination activities logged" }
+    - { name: total_activity_minutes, entity: activities, agg: sum,
+        expr: "cast(duration_min as double)", format: decimal,
+        description: "Total time-tracked care-coordination minutes" }
+    - { name: avg_activity_minutes, entity: activities, agg: avg,
+        expr: "cast(duration_min as double)", format: decimal,
+        description: "CMM-FR-020 care_manager_avg_minutes_per_patient proxy: mean minutes per activity" }
+    - { name: care_manager_active_patients, entity: activities, agg: count_distinct,
+        expr: "patient_id",
+        description: "CMM-FR-020 care_manager_active_patients: distinct patients touched" }
+    - { name: billing_candidate_count, entity: billing, agg: count,
+        description: "BillingCandidate proposals created (CMM-FR-050)" }
+    - { name: billed_count, entity: billing, agg: count,
+        filters: "decision = 'bill'",
+        description: "Billing candidates approved to bill" }
+    - { name: held_count, entity: billing, agg: count,
+        filters: "decision = 'hold'",
+        description: "Billing candidates held at the documentation-completeness gate (CMM-FR-071)" }
+    - { name: audit_complete_count, entity: billing, agg: count,
+        filters: "audit_package_status = 'complete'",
+        description: "Candidates with a complete RAC audit package (CMM-FR-137)" }
+    - { name: total_expected_revenue, entity: billing, agg: sum,
+        expr: "cast(expected_reimbursement as double)", format: decimal,
+        description: "Expected CMS reimbursement across billing candidates" }
+    - { name: avg_billed_time, entity: billing, agg: avg,
+        expr: "cast(total_time_min as double)", format: decimal,
+        description: "Mean time-tracked minutes per billing candidate" }
+    - { name: enrollment_rate,
+        expr_metric: "enrolled_patients / nullif(eligible_patients, 0)",
+        format: percent,
+        description: "CMM-FR-020 enrollment_rate: enrolled over eligible" }
+    - { name: documentation_completeness_rate,
+        expr_metric: "billed_count / nullif(billing_candidate_count, 0)",
+        format: percent,
+        description: "CMM-FR-020 documentation_completeness_rate: billed over candidates created" }
+    - { name: rac_audit_completeness_rate,
+        expr_metric: "audit_complete_count / nullif(billing_candidate_count, 0)",
+        format: percent,
+        description: "CMM-FR-020 rac_audit_completeness_rate" }
+    - { name: tcm_2day_contact_rate,
+        expr_metric: "tcm_contacted_2bd_count / nullif(discharged_patients, 0)",
+        format: percent,
+        description: "CMM-FR-020 tcm_2day_contact_rate" }
+    - { name: readmission_rate_30d,
+        expr_metric: "readmitted_count / nullif(discharged_patients, 0)",
+        format: percent,
+        description: "CMM-FR-020 readmission_rate_30d" }

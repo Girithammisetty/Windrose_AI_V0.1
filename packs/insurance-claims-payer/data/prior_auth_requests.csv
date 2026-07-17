@@ -1,0 +1,13 @@
+par_id,member_id,provider_npi,requested_service,cpt_code,icd10_code,urgency,submitted_month,status,turnaround_hours,product_type,member_state,agent_recommendation,agent_confidence
+PAR-7001,M-4431,1234568198,MRI lumbar spine,72148,M51.26,standard,2026-04,approved,52,PPO,NY,approve,0.95
+PAR-7002,M-4432,1234568206,Knee arthroscopy,29881,M23.205,standard,2026-04,approved,88,HMO,TX,approve,0.91
+PAR-7003,M-4433,1234568214,Infliximab infusion,J1745,M06.9,standard,2026-04,denied,120,EPO,FL,escalate_md,0.62
+PAR-7004,M-4434,1234568222,Cardiac catheterization,93458,I25.10,urgent,2026-05,approved,18,MEDICARE_ADVANTAGE,CA,approve,0.97
+PAR-7005,M-4435,1234568230,Total knee replacement,27447,M17.11,standard,2026-05,approved,140,PPO,FL,approve,0.89
+PAR-7006,M-4436,1234568248,CT abdomen pelvis,74177,R10.9,urgent,2026-05,approved,24,HMO,NY,approve,0.93
+PAR-7007,M-4437,1234568255,Spinal fusion cervical,22551,M50.30,standard,2026-05,denied,155,PPO,CA,escalate_md,0.55
+PAR-7008,M-4438,1234568263,Chemotherapy administration,96413,C50.911,urgent,2026-06,approved,20,PPO,TX,approve,0.96
+PAR-7009,M-4439,1234568271,Epidural steroid injection,64483,M54.16,standard,2026-06,approved,96,MEDICARE_ADVANTAGE,NY,approve,0.90
+PAR-7010,M-4440,1234568289,Sleep study polysomnography,95810,G47.33,standard,2026-06,pending,36,HMO,FL,approve,0.88
+PAR-7011,M-4441,1234568297,Hip replacement,27130,M16.11,standard,2026-06,approved,132,PPO,CA,approve,0.92
+PAR-7012,M-4442,1234568305,Brain MRI with contrast,70553,G43.909,urgent,2026-06,pending,12,HMO,NY,escalate_md,0.58

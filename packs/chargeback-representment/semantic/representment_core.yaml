@@ -1,0 +1,157 @@
+# Semantic model `representment_core` — merchant chargeback-response KPI
+# catalog (fight rate, representment win rate, net recovery, accept-liability
+# share, friendly-fraud share, response-deadline runway), expressed in the
+# Core semantic grammar (agg whitelist, equality measure filters, derived
+# expr_metric with nullif; join_paths left/many_to_one, acyclic chain).
+#
+# entity.table is main.<safe_relation(dataset name)>; `dataset:` refs are
+# rebound to live dataset URNs by packctl at install. Amount columns ingest
+# as bronze strings, so numeric measures cast(... as double) (the proven
+# claims_core pattern).
+name: representment_core
+description: >-
+  Merchant/PSP chargeback representment KPI model (Visa/Mastercard reason
+  codes, second presentment, pre-arbitration): incoming chargeback volumes
+  and response-deadline runway, fight-vs-accept decision mix, representment
+  win rates and recovered dollars, evidence-strength effectiveness, and
+  friendly-fraud exposure — chargebacks joined through the order book to the
+  customer file.
+definition:
+  entities:
+    - name: chargebacks
+      dataset: mr_chargebacks
+      table: main.mr_chargebacks
+      primary_key: [chargeback_id]
+      dataset_version_policy: { policy: latest }
+    - name: orders
+      dataset: mr_orders
+      table: main.mr_orders
+      primary_key: [order_id]
+      dataset_version_policy: { policy: latest }
+    - name: customers
+      dataset: mr_customers
+      table: main.mr_customers
+      primary_key: [customer_id]
+      dataset_version_policy: { policy: latest }
+  join_paths:
+    - name: chargebacks_orders
+      from_entity: chargebacks
+      to_entity: orders
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: order_id, to_column: order_id }]
+    - name: orders_customers
+      from_entity: orders
+      to_entity: customers
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: customer_id, to_column: customer_id }]
+  dimensions:
+    - { name: network, entity: chargebacks, type: categorical, column: network }
+    - { name: reason_code, entity: chargebacks, type: categorical, column: reason_code }
+    - { name: reason_family, entity: chargebacks, type: categorical, column: reason_family }
+    - { name: evidence_strength, entity: chargebacks, type: categorical, column: evidence_strength }
+    - { name: fight_economics, entity: chargebacks, type: categorical, column: fight_economics }
+    - { name: first_party_suspect, entity: chargebacks, type: categorical, column: first_party_suspect }
+    - { name: severity, entity: chargebacks, type: categorical, column: severity }
+    - { name: chargeback_status, entity: chargebacks, type: categorical, column: status }
+    - { name: chargeback_disposition, entity: chargebacks, type: categorical, column: disposition }
+    - { name: represented, entity: chargebacks, type: categorical, column: represented }
+    - { name: outcome, entity: chargebacks, type: categorical, column: outcome }
+    - { name: deadline_bucket, entity: chargebacks, type: categorical, column: deadline_bucket }
+    - { name: filed_month, entity: chargebacks, type: categorical, column: filed_month }
+    - { name: product_category, entity: orders, type: categorical, column: product_category }
+    - { name: order_channel, entity: orders, type: categorical, column: channel }
+    - { name: avs_cvv_match, entity: orders, type: categorical, column: avs_cvv_match }
+    - { name: delivery_confirmation, entity: orders, type: categorical, column: delivery_confirmation }
+    - { name: device_match, entity: orders, type: categorical, column: device_match }
+    - { name: order_month, entity: orders, type: categorical, column: order_month }
+    - { name: ltv_band, entity: orders, type: categorical, column: ltv_band }
+    - { name: tenure_band, entity: customers, type: categorical, column: tenure_band }
+    - { name: order_count_band, entity: customers, type: categorical, column: order_count_band }
+    - { name: prior_chargebacks_band, entity: customers, type: categorical, column: prior_chargebacks_band }
+    - { name: loyalty_tier, entity: customers, type: categorical, column: loyalty_tier }
+  measures:
+    - { name: chargeback_count, entity: chargebacks, agg: count,
+        description: "Number of incoming chargebacks" }
+    - { name: open_chargeback_count, entity: chargebacks, agg: count,
+        filters: "status = 'open'",
+        description: "Chargebacks awaiting a fight/accept decision (response backlog)" }
+    - { name: closed_chargeback_count, entity: chargebacks, agg: count,
+        filters: "status = 'closed'",
+        description: "Chargebacks closed with a final fight/accept decision" }
+    - { name: represented_count, entity: chargebacks, agg: count,
+        filters: "represented = 'yes'",
+        description: "Chargebacks fought via second presentment (representment filed)" }
+    - { name: won_count, entity: chargebacks, agg: count,
+        filters: "outcome = 'won'",
+        description: "Representments won — chargeback reversed, funds recovered" }
+    - { name: lost_count, entity: chargebacks, agg: count,
+        filters: "outcome = 'lost'",
+        description: "Representments lost at second presentment or pre-arbitration" }
+    - { name: accepted_liability_count, entity: chargebacks, agg: count,
+        filters: "disposition = 'accept_liability_refund'",
+        description: "Chargebacks where liability was accepted (fight uneconomical or evidence weak)" }
+    - { name: friendly_fraud_flag_count, entity: chargebacks, agg: count,
+        filters: "disposition = 'flag_friendly_fraud_pattern'",
+        description: "Chargebacks fought AND flagged as a first-party (friendly-fraud) pattern" }
+    - { name: fraud_family_count, entity: chargebacks, agg: count,
+        filters: "reason_family = 'fraud'",
+        description: "Fraud-family chargebacks (Visa 10.4 / Mastercard 4837) — the monitoring-program numerator" }
+    - { name: first_party_suspect_count, entity: chargebacks, agg: count,
+        filters: "first_party_suspect = 'yes'",
+        description: "Chargebacks with first-party (friendly-fraud) indicators" }
+    - { name: strong_evidence_count, entity: chargebacks, agg: count,
+        filters: "evidence_strength = 'strong'",
+        description: "Chargebacks with strong compelling evidence on file" }
+    - { name: below_threshold_count, entity: chargebacks, agg: count,
+        filters: "fight_economics = 'below_threshold'",
+        description: "Chargebacks below the fight-economics threshold (fees exceed expected recovery)" }
+    - { name: avg_chargeback_age_days, entity: chargebacks, agg: avg,
+        expr: "cast(age_days as double)", format: decimal,
+        description: "Average chargeback age in days (response cycle time / backlog aging)" }
+    - { name: total_chargeback_amount, entity: chargebacks, agg: sum,
+        expr: "cast(amount as double)", format: decimal,
+        description: "Total dollars under chargeback" }
+    - { name: avg_chargeback_amount, entity: chargebacks, agg: avg,
+        expr: "cast(amount as double)", format: decimal,
+        description: "Average chargeback amount" }
+    - { name: total_recovered_amount, entity: chargebacks, agg: sum,
+        expr: "cast(recovered_amount as double)", format: decimal,
+        description: "Total dollars recovered via winning representments" }
+    - { name: order_count, entity: orders, agg: count,
+        description: "Number of orders in the order book" }
+    - { name: delivery_confirmed_order_count, entity: orders, agg: count,
+        filters: "delivery_confirmation = 'yes'",
+        description: "Orders with carrier delivery confirmation (13.1 compelling evidence)" }
+    - { name: device_match_order_count, entity: orders, agg: count,
+        filters: "device_match = 'yes'",
+        description: "Orders whose device fingerprint matches the customer's prior profile (CE 3.0 element)" }
+    - { name: avg_order_amount, entity: orders, agg: avg,
+        expr: "cast(amount as double)", format: decimal,
+        description: "Average order amount" }
+    - { name: customer_count, entity: customers, agg: count,
+        description: "Number of customers on the file" }
+    - { name: repeat_offender_customer_count, entity: customers, agg: count,
+        filters: "prior_chargebacks_band = '3_plus'",
+        description: "Customers with 3+ prior chargebacks (block-list / prevention candidates)" }
+    - { name: fight_rate,
+        expr_metric: "represented_count / nullif(closed_chargeback_count, 0)",
+        format: percent,
+        description: "Chargebacks fought via representment over all closed decisions" }
+    - { name: win_rate,
+        expr_metric: "won_count / nullif(represented_count, 0)",
+        format: percent,
+        description: "Representments won over representments filed (fight effectiveness)" }
+    - { name: net_recovery_rate,
+        expr_metric: "total_recovered_amount / nullif(total_chargeback_amount, 0)",
+        format: percent,
+        description: "Dollars recovered over dollars under chargeback" }
+    - { name: accept_liability_share,
+        expr_metric: "accepted_liability_count / nullif(closed_chargeback_count, 0)",
+        format: percent,
+        description: "Closed chargebacks where liability was accepted over all closures" }
+    - { name: friendly_fraud_share,
+        expr_metric: "first_party_suspect_count / nullif(chargeback_count, 0)",
+        format: percent,
+        description: "Share of chargeback volume carrying first-party fraud indicators" }

@@ -1,0 +1,17 @@
+# Pipeline seeds (expressed against the real pipeline-orchestrator algorithm
+# catalog): an unsupervised account-anomaly detector (registration gaps,
+# filing-history outliers, jurisdictions drifting toward nexus exposure) and
+# a supervised notice-outcome scorer trained on human dispositions (the
+# deterministic-first pre-router for notice triage: abate vs pay vs amend).
+# Trained models require review before promotion — the Tax Compliance
+# Manager approves promotions.
+- identity: tx_account_anomaly_isolation_forest
+  name: "Tax account anomaly detector (isolation forest)"
+  algorithm: isolation_forest
+  mode: train
+  dataset: tx_accounts
+- identity: tx_notice_outcome_xgboost
+  name: "Notice outcome scorer (xgboost)"
+  algorithm: xgboost
+  mode: train
+  dataset: tx_notices

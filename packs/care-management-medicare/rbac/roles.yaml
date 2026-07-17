@@ -1,0 +1,188 @@
+# Care-management role catalog (CMM-FR-140) as tenant CUSTOM roles composing
+# the Core's closed action catalog (rbac never mints new verbs; packctl also
+# creates a same-named permission group and binds the role so it's
+# assignable). Six of the BRD's ten persona seeds — the ones today's Core
+# action catalog can express: care_manager_rn, care_manager_lpn, clinician_md,
+# director_care_coordination, practice_cfo, compliance_officer.
+- name: "Care Manager RN"
+  actions:
+    - case.case.read
+    - case.case.list
+    - case.case.update
+    - case.disposition.read
+    - case.disposition.create
+    - ai.proposal.read
+    - ai.proposal.list
+    - ai.proposal.approve
+    - ai.agent_session.read
+    - ai.agent_session.list
+    - ai.agent_session.create
+    - ai.agent_session.execute
+    - memory.memory.read
+    - chart.dashboard.read
+    - chart.dashboard.list
+    - chart.chart.read
+    - semantic.model.read
+    - semantic.compile.execute
+    - query.execution.read
+    - query.execution.execute
+    - dataset.dataset.read
+    - notification.inbox.read
+- name: "Care Manager LPN"
+  actions:
+    - case.case.read
+    - case.case.list
+    - case.case.update
+    - case.disposition.read
+    - case.disposition.create
+    - ai.proposal.read
+    - ai.proposal.list
+    - ai.proposal.approve
+    - ai.agent_session.read
+    - ai.agent_session.create
+    - ai.agent_session.execute
+    - memory.memory.read
+    - chart.dashboard.read
+    - chart.chart.read
+    - semantic.model.read
+    - semantic.compile.execute
+    - query.execution.read
+    - dataset.dataset.read
+    - notification.inbox.read
+- name: "Clinician MD Reviewer"
+  actions:
+    - case.case.read
+    - case.case.list
+    - case.case.update
+    - case.case.assign
+    - case.disposition.read
+    - case.disposition.create
+    - case.disposition.update
+    - case.disposition.approve
+    - case.bulk.approve
+    - ai.proposal.read
+    - ai.proposal.list
+    - ai.proposal.approve
+    - ai.agent_session.read
+    - ai.agent_session.create
+    - ai.agent_session.execute
+    - memory.memory.read
+    - chart.dashboard.read
+    - chart.chart.read
+    - semantic.model.read
+    - semantic.compile.execute
+    - query.execution.read
+    - query.execution.execute
+    - dataset.dataset.read
+    - experiment.promotion.read
+    - experiment.promotion.approve
+    - notification.inbox.read
+- name: "Director of Care Coordination"
+  actions:
+    - case.case.read
+    - case.case.list
+    - case.case.create
+    - case.case.update
+    - case.case.assign
+    - case.case.execute
+    - case.disposition.read
+    - case.disposition.create
+    - case.disposition.update
+    - case.disposition.approve
+    - case.bulk.execute
+    - case.bulk.approve
+    - ai.proposal.read
+    - ai.proposal.list
+    - ai.proposal.approve
+    - ai.agent_session.read
+    - ai.agent_session.list
+    - ai.agent_session.create
+    - ai.agent_session.execute
+    - memory.memory.read
+    - chart.dashboard.read
+    - chart.dashboard.list
+    - chart.dashboard.create
+    - chart.dashboard.update
+    - chart.chart.read
+    - chart.chart.list
+    - chart.chart.create
+    - chart.chart.update
+    - semantic.model.read
+    - semantic.model.list
+    - semantic.measure.read
+    - semantic.compile.execute
+    - query.query.read
+    - query.query.list
+    - query.query.create
+    - query.query.execute
+    - query.execution.read
+    - query.execution.list
+    - query.execution.execute
+    - query.execution.export
+    - dataset.dataset.read
+    - dataset.dataset.list
+    - dataset.profile.read
+    - usage.report.read
+    - usage.report.list
+    - pipeline.template.read
+    - pipeline.template.list
+    - pipeline.run.read
+    - pipeline.run.list
+    - experiment.experiment.read
+    - experiment.experiment.list
+    - experiment.run.read
+    - experiment.run.list
+    - notification.inbox.read
+- name: "Practice CFO"
+  actions:
+    - case.case.read
+    - case.case.list
+    - case.disposition.read
+    - case.disposition.approve
+    - case.bulk.approve
+    - ai.proposal.read
+    - ai.proposal.list
+    - ai.proposal.approve
+    - chart.dashboard.read
+    - chart.dashboard.list
+    - chart.dashboard.export
+    - chart.chart.read
+    - chart.chart.list
+    - semantic.model.read
+    - semantic.model.list
+    - semantic.measure.read
+    - semantic.compile.execute
+    - query.query.read
+    - query.query.list
+    - query.query.create
+    - query.query.execute
+    - query.execution.read
+    - query.execution.list
+    - query.execution.execute
+    - query.execution.export
+    - dataset.dataset.read
+    - dataset.dataset.list
+    - dataset.dataset.export
+    - usage.report.read
+    - usage.report.list
+    - usage.report.export
+    - notification.inbox.read
+- name: "Compliance Officer"
+  actions:
+    - audit.log.read
+    - audit.log.list
+    - audit.log.export
+    - case.case.read
+    - case.case.list
+    - case.disposition.read
+    - ai.proposal.read
+    - ai.proposal.list
+    - chart.dashboard.read
+    - chart.chart.read
+    - semantic.model.read
+    - dataset.dataset.read
+    - dataset.dataset.export
+    - dataset.lineage.read
+    - query.execution.read
+    - usage.report.read
+    - notification.inbox.read

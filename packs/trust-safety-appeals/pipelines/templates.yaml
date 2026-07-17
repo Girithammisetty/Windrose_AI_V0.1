@@ -1,0 +1,17 @@
+# Pipeline seeds (expressed against the real pipeline-orchestrator algorithm
+# catalog): an unsupervised enforcement-anomaly detector (mass-report burst /
+# brigading and classifier-drift surface scan over the enforcement book) and
+# a supervised appeal-outcome scorer trained on human dispositions (the
+# deterministic-first pre-router for appeal triage). Trained models require
+# review before promotion — the Appeals Operations Manager approves
+# promotions.
+- identity: ts_enforcement_anomaly_isolation_forest
+  name: "Enforcement decision anomaly detector (isolation forest)"
+  algorithm: isolation_forest
+  mode: train
+  dataset: ts_enforcements
+- identity: ts_appeal_outcome_xgboost
+  name: "Appeal outcome scorer (xgboost)"
+  algorithm: xgboost
+  mode: train
+  dataset: ts_appeals

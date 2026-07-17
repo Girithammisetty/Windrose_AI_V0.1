@@ -1,0 +1,51 @@
+# Verified NL<->SQL queries (BRD 25 Appendix canonical questions; four-eyes
+# approved at install). SQL uses {{dataset('<name>')}} macros — the only table
+# references query-service's tenant-namespace guard admits.
+- nl_text: "How many patients are eligible for CCM but not yet enrolled?"
+  sql_text: >-
+    SELECT enrollment_status, count(*) AS patients
+    FROM {{dataset('care-patients')}}
+    WHERE program_code = 'ccm' AND enrollment_status <> 'active'
+    GROUP BY enrollment_status
+    ORDER BY patients DESC
+  model: care_mgmt_core
+  tags: [enrollment, ccm, pack]
+- nl_text: "What's our revenue leakage this month, grouped by reason?"
+  sql_text: >-
+    SELECT service_month, hold_reason,
+           count(*) AS held_candidates,
+           round(sum(cast(expected_reimbursement AS double)), 2) AS leaked_dollars
+    FROM {{dataset('care-billing-candidates')}}
+    WHERE decision = 'hold'
+    GROUP BY service_month, hold_reason
+    ORDER BY service_month DESC, leaked_dollars DESC
+  model: care_mgmt_core
+  tags: [revenue-leakage, billing, pack]
+- nl_text: "Show me RPM patients under 16 days of readings this cycle."
+  sql_text: >-
+    SELECT patient_id, reading_month, device_type, device_vendor,
+           cast(reading_days AS double) AS reading_days
+    FROM {{dataset('care-rpm-readings')}}
+    WHERE meets_16day_flag = 'no'
+    ORDER BY reading_month DESC, reading_days ASC
+  model: rpm_readings
+  tags: [rpm, 16-day-rule, pack]
+- nl_text: "Which care managers touch the most patients and log the most minutes per month?"
+  sql_text: >-
+    SELECT care_manager_id, care_manager_role, activity_month,
+           count(DISTINCT patient_id) AS patients_touched,
+           sum(cast(duration_min AS double)) AS total_minutes
+    FROM {{dataset('care-activities')}}
+    GROUP BY care_manager_id, care_manager_role, activity_month
+    ORDER BY total_minutes DESC
+  model: care_mgmt_core
+  tags: [throughput, care-managers, pack]
+- nl_text: "APCM tier distribution — how many patients qualify for G0556 vs G0557 vs G0558?"
+  sql_text: >-
+    SELECT apcm_tier, count(*) AS patients
+    FROM {{dataset('care-patients')}}
+    WHERE apcm_tier <> 'none'
+    GROUP BY apcm_tier
+    ORDER BY apcm_tier
+  model: care_mgmt_core
+  tags: [apcm, "2025", pack]

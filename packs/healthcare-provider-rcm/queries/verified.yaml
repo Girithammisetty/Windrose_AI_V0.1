@@ -1,0 +1,58 @@
+# Verified NL<->SQL queries (BRD 26 US-4 KPI drill-downs; SEM-FR-040
+# four-eyes approved at install). SQL uses {{dataset('<name>')}} macros — the
+# only table references query-service's tenant-namespace guard admits.
+- nl_text: "What's our clean-claim rate by payer?"
+  sql_text: >-
+    SELECT payer_name,
+           count(*) AS claims,
+           sum(CASE WHEN clean_claim = 'yes' THEN 1 ELSE 0 END) AS clean_claims,
+           round(sum(CASE WHEN clean_claim = 'yes' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS clean_claim_rate
+    FROM {{dataset('rcm-claims')}}
+    GROUP BY payer_name
+    ORDER BY clean_claim_rate ASC
+  model: rcm_claims
+  tags: [clean-claim, kpi, pack]
+- nl_text: "What's our denial rate by payer type?"
+  sql_text: >-
+    SELECT payer_type,
+           count(*) AS claims,
+           sum(CASE WHEN status = 'denied' THEN 1 ELSE 0 END) AS denied,
+           round(sum(CASE WHEN status = 'denied' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS denial_rate
+    FROM {{dataset('rcm-claims')}}
+    GROUP BY payer_type
+    ORDER BY denial_rate DESC
+  model: rcm_claims
+  tags: [denials, kpi, pack]
+- nl_text: "Average days in A/R by payer"
+  sql_text: >-
+    SELECT payer_name,
+           count(*) AS claims,
+           round(avg(cast(days_to_payment AS double)), 1) AS avg_days_in_ar
+    FROM {{dataset('rcm-claims')}}
+    GROUP BY payer_name
+    ORDER BY avg_days_in_ar DESC
+  model: rcm_claims
+  tags: [days-in-ar, kpi, pack]
+- nl_text: "Top denial reason codes by denied dollars"
+  sql_text: >-
+    SELECT carc_code, denial_reason_text,
+           count(*) AS denials,
+           round(sum(cast(denied_amount AS double)), 2) AS denied_dollars
+    FROM {{dataset('rcm-denials')}}
+    GROUP BY carc_code, denial_reason_text
+    ORDER BY denied_dollars DESC
+  model: rcm_claims
+  tags: [denials, carc, pack]
+- nl_text: "How much A/R is aged over 90 days, by payer?"
+  sql_text: >-
+    SELECT payer_name,
+           count(*) AS items,
+           round(sum(cast(balance_amount AS double)), 2) AS balance_over_90
+    FROM {{dataset('rcm-ar-aging')}}
+    WHERE over_90 = 'yes'
+    GROUP BY payer_name
+    ORDER BY balance_over_90 DESC
+  model: rcm_ar
+  tags: [ar, aging, pack]

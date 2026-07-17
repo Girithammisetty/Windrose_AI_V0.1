@@ -1,0 +1,418 @@
+openapi: 3.0.3
+info:
+  title: semantic-service
+  version: 0.1.0
+  description: >
+    Windrose governed semantic layer: per-workspace semantic models
+    (entities/dimensions/measures/join paths), verified NL<->SQL queries with an
+    approval workflow, and the metric compile API (metrics + dimensions +
+    filters + time grain -> safe parameterized SQL). Spec:
+    docs/brd/06_semantic_service_BRD.md inheriting docs/brd/00_MASTER_BRD.md.
+servers:
+  - url: /api/v1
+security:
+  - bearerAuth: []
+paths:
+  /models:
+    post:
+      summary: Create a semantic model (+ draft version 1)
+      parameters: [{$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody:
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ModelCreate'}
+      responses:
+        '201': {description: created, content: {application/json: {schema: {$ref: '#/components/schemas/ModelEnvelope'}}}}
+        '409': {$ref: '#/components/responses/Conflict'}
+        '422': {$ref: '#/components/responses/Validation'}
+    get:
+      summary: List models (cursor pagination; filter[workspace_id])
+      parameters:
+        - {name: 'filter[workspace_id]', in: query, schema: {type: string}}
+        - {$ref: '#/components/parameters/Limit'}
+        - {$ref: '#/components/parameters/Cursor'}
+      responses:
+        '200': {description: page, content: {application/json: {schema: {$ref: '#/components/schemas/Page'}}}}
+  /models/{modelId}:
+    get:
+      summary: Get a model
+      parameters: [{$ref: '#/components/parameters/ModelId'}]
+      responses:
+        '200': {description: ok}
+        '404': {$ref: '#/components/responses/NotFound'}
+    patch:
+      summary: Rename / edit description
+      parameters: [{$ref: '#/components/parameters/ModelId'}]
+      responses: {'200': {description: ok}, '404': {$ref: '#/components/responses/NotFound'}, '409': {$ref: '#/components/responses/Conflict'}}
+    delete:
+      summary: Soft-delete a model
+      parameters: [{$ref: '#/components/parameters/ModelId'}]
+      responses: {'204': {description: deleted}, '404': {$ref: '#/components/responses/NotFound'}}
+  /models/{modelId}/versions:
+    get:
+      summary: List versions
+      parameters: [{$ref: '#/components/parameters/ModelId'}]
+      responses: {'200': {description: page}}
+    post:
+      summary: Open a new draft seeded from the published definition
+      parameters: [{$ref: '#/components/parameters/ModelId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      responses: {'201': {description: draft}, '409': {description: an open version already exists}}
+  /models/{modelId}/versions/{versionNo}:
+    get:
+      summary: Get a version (immutable outside draft)
+      parameters: [{$ref: '#/components/parameters/ModelId'}, {$ref: '#/components/parameters/VersionNo'}]
+      responses: {'200': {description: ok}, '404': {$ref: '#/components/responses/NotFound'}}
+    patch:
+      summary: Replace the DRAFT definition (SEM-FR-006 save-time validation)
+      parameters: [{$ref: '#/components/parameters/ModelId'}, {$ref: '#/components/parameters/VersionNo'}]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [definition]
+              properties: {definition: {$ref: '#/components/schemas/Definition'}}
+      responses:
+        '200': {description: ok}
+        '409': {description: not a draft}
+        '422': {description: EXPRESSION_NOT_ALLOWED / VALIDATION_FAILED / LIMIT_EXCEEDED}
+  /models/{modelId}/versions/{versionNo}/submit:
+    post:
+      summary: draft -> in_review (full validation gate)
+      parameters: [{$ref: '#/components/parameters/ModelId'}, {$ref: '#/components/parameters/VersionNo'}]
+      responses: {'200': {description: in_review}, '409': {description: illegal transition}, '422': {description: validation problems}}
+  /models/{modelId}/versions/{versionNo}/approve:
+    post:
+      summary: in_review -> published (approver != author; advisory lock; prior published -> superseded)
+      parameters: [{$ref: '#/components/parameters/ModelId'}, {$ref: '#/components/parameters/VersionNo'}]
+      responses: {'200': {description: published, headers: {}}, '403': {description: author-approver}, '409': {description: state conflict}}
+  /models/{modelId}/versions/{versionNo}/reject:
+    post:
+      summary: in_review -> rejected (decision note required)
+      parameters: [{$ref: '#/components/parameters/ModelId'}, {$ref: '#/components/parameters/VersionNo'}]
+      responses: {'200': {description: rejected}, '403': {description: author-approver}, '422': {description: note required}}
+  /models/{modelId}/definition:
+    get:
+      summary: Full definition (published by default, ?version= for history; ETag)
+      parameters:
+        - {$ref: '#/components/parameters/ModelId'}
+        - {name: version, in: query, schema: {type: integer}}
+      responses: {'200': {description: ok}, '409': {description: MODEL_NOT_PUBLISHED}}
+  /models/{modelId}/bootstrap:
+    post:
+      summary: Bootstrap draft dims/measures from V1 chart configs + saved queries (SEM-FR-060)
+      parameters: [{$ref: '#/components/parameters/ModelId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sources:
+                  type: object
+                  properties:
+                    chart_configs: {type: array, items: {$ref: '#/components/schemas/ChartArtifact'}}
+                    saved_queries: {type: array, items: {$ref: '#/components/schemas/SavedQueryArtifact'}}
+      responses:
+        '202': {description: operation accepted (report inline; also at /operations/{id})}
+        '409': {description: open version is in_review}
+  /operations/{operationId}:
+    get:
+      summary: Bootstrap operation status + report (MASTER-FR-027)
+      parameters: [{name: operationId, in: path, required: true, schema: {type: string}}]
+      responses: {'200': {description: ok}, '404': {$ref: '#/components/responses/NotFound'}}
+  /compile:
+    post:
+      summary: 'THE compile API: metrics+dimensions+filters+time grain -> safe SQL'
+      description: >
+        Safety rules (SEM-FR-022): agg whitelist via model deref; per-engine
+        identifier quoting; column allowlisting; filters exit ONLY as bind
+        params; name fields regex-gated; limit<=50000, dims<=8, metrics<=20.
+        Deterministic per (request, model version, dialect) — BR-7.
+        ?validate=true adds a query-service dry-run. Drafts compile only with
+        X-Draft-Version + semantic.model.write (BR-2).
+      parameters:
+        - {name: validate, in: query, schema: {type: boolean, default: false}}
+        - {name: X-Draft-Version, in: header, schema: {type: integer}}
+      requestBody:
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CompileRequest'}
+      responses:
+        '200': {description: compiled, content: {application/json: {schema: {$ref: '#/components/schemas/CompileResponse'}}}}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {description: MODEL_NOT_PUBLISHED / MODEL_UNHEALTHY}
+        '422': {description: UNKNOWN_METRIC / UNKNOWN_DIMENSION / UNKNOWN_GRAIN / AMBIGUOUS_JOIN_PATH / LIMIT_EXCEEDED / VALIDATION_FAILED}
+  /compile/chart:
+    post:
+      summary: Chart-shape helper mapping V1 chart configs onto compile (SEM-FR-026)
+      description: >
+        pie/bar/stacked-bar/line/scatter map to compile; sankey/grid and
+        raw-mode scatter return passthrough:true (BR-13). Byte-identical SQL
+        with /compile for the equivalent request (SEM-FR-081).
+      requestBody:
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ChartCompileRequest'}
+      responses:
+        '200': {description: compiled or passthrough}
+        '422': {description: unknown chart_type / UNKNOWN_METRIC}
+  /verified-queries:
+    post:
+      summary: Create a verified query (draft; SQL must classify read-only)
+      parameters: [{$ref: '#/components/parameters/IdempotencyKey'}]
+      responses: {'201': {description: draft}, '422': {description: read-only violation}}
+    get:
+      summary: List (filter[workspace_id], filter[status]; cursor pagination)
+      responses: {'200': {description: page}}
+  /verified-queries/candidates:
+    post:
+      summary: Harvested candidates from agent runs (SEM-FR-042; provenance agent_run_urn)
+      responses: {'201': {description: draft with provenance}}
+  /verified-queries/search:
+    get:
+      summary: Semantic search over APPROVED pairs (pgvector; hard tenant+workspace filter)
+      parameters:
+        - {name: q, in: query, required: true, schema: {type: string}}
+        - {name: workspace_id, in: query, required: true, schema: {type: string}}
+        - {name: top_k, in: query, schema: {type: integer, maximum: 10, default: 5}}
+      responses: {'200': {description: ranked results with similarity scores}}
+  /verified-queries/{vqId}:
+    get: {summary: Get, responses: {'200': {description: ok}, '404': {$ref: '#/components/responses/NotFound'}}}
+    patch: {summary: Edit (draft/rejected only), responses: {'200': {description: ok}, '409': {$ref: '#/components/responses/Conflict'}}}
+  /verified-queries/{vqId}/submit:
+    post: {summary: draft -> pending_review, responses: {'200': {description: ok}}}
+  /verified-queries/{vqId}/approve:
+    post: {summary: pending_review -> approved (approver != author), responses: {'200': {description: ok}, '403': {description: author-approver}}}
+  /verified-queries/{vqId}/reject:
+    post: {summary: pending_review -> rejected, responses: {'200': {description: ok}}}
+  /verified-queries/{vqId}/archive:
+    post: {summary: any -> archived (terminal; excluded from search), responses: {'200': {description: ok}}}
+  /tools:
+    get:
+      summary: MCP tool catalog with JSON-Schema I/O (registered in tool-registry)
+      responses: {'200': {description: tool descriptors}}
+  /tools/get_metrics:
+    post: {summary: 'MCP read tool: governed measures', responses: {'200': {description: ok}}}
+  /tools/get_dimensions:
+    post: {summary: 'MCP read tool: dimensions (+sample_values from profiles)', responses: {'200': {description: ok}}}
+  /tools/compile_metric_sql:
+    post: {summary: 'MCP tool: compile with validate=true + agent limit ceiling', responses: {'200': {description: ok}}}
+  /tools/search_verified_queries:
+    post: {summary: 'MCP read tool: verified-query semantic search', responses: {'200': {description: ok}}}
+components:
+  securitySchemes:
+    bearerAuth: {type: http, scheme: bearer, bearerFormat: JWT}
+  parameters:
+    ModelId: {name: modelId, in: path, required: true, schema: {type: string}}
+    VersionNo: {name: versionNo, in: path, required: true, schema: {type: integer}}
+    Limit: {name: limit, in: query, schema: {type: integer, default: 50, maximum: 200}}
+    Cursor: {name: cursor, in: query, schema: {type: string}}
+    IdempotencyKey: {name: Idempotency-Key, in: header, schema: {type: string}}
+  responses:
+    NotFound: {description: 'NOT_FOUND (incl. cross-tenant, MASTER-FR-003)'}
+    Conflict: {description: CONFLICT}
+    Validation: {description: VALIDATION_FAILED with per-field details}
+  schemas:
+    ErrorEnvelope:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: {type: string}
+            message: {type: string}
+            details: {}
+            trace_id: {type: string}
+    Page:
+      type: object
+      properties:
+        data: {type: array, items: {}}
+        page:
+          type: object
+          properties:
+            next_cursor: {type: [string, 'null']}
+            has_more: {type: boolean}
+    ModelCreate:
+      type: object
+      required: [workspace_id, name]
+      properties:
+        workspace_id: {type: string}
+        name: {type: string}
+        description: {type: string}
+        definition: {$ref: '#/components/schemas/Definition'}
+    ModelEnvelope:
+      type: object
+      properties: {data: {type: object}}
+    Definition:
+      type: object
+      properties:
+        entities:
+          type: array
+          items:
+            type: object
+            required: [name, dataset_urn, table]
+            properties:
+              name: {type: string, pattern: '^[a-z][a-z0-9_]{0,62}$'}
+              dataset_urn: {type: string}
+              table: {type: string, description: dotted physical table}
+              primary_key: {type: array, items: {type: string}}
+              dataset_version_policy:
+                type: object
+                properties:
+                  policy: {type: string, enum: [latest, pinned]}
+                  version_no: {type: integer}
+        dimensions:
+          type: array
+          items:
+            type: object
+            required: [name, entity]
+            properties:
+              name: {type: string}
+              entity: {type: string}
+              column: {type: string}
+              expr: {type: string, description: restricted grammar (SEM-FR-006)}
+              type: {type: string, enum: [categorical, time, numeric, boolean, geo]}
+              time_grains: {type: array, items: {type: string, enum: [hour, day, week, month, quarter, year]}}
+              synonyms: {type: array, items: {type: string}}
+              deprecated: {type: boolean}
+              successor: {type: string}
+              origin: {type: string, enum: [manual, bootstrap]}
+        measures:
+          type: array
+          items:
+            type: object
+            required: [name]
+            properties:
+              name: {type: string}
+              entity: {type: string}
+              agg: {type: string, enum: [sum, avg, min, max, count, count_distinct, first]}
+              expr: {type: string}
+              expr_metric: {type: string, description: derived measure over other measures}
+              filters: {type: string, description: measure-level condition}
+              format: {type: string}
+              synonyms: {type: array, items: {type: string}}
+              deprecated: {type: boolean}
+              successor: {type: string}
+              origin: {type: string, enum: [manual, bootstrap]}
+        join_paths:
+          type: array
+          items:
+            type: object
+            required: [name, from_entity, to_entity, join_type, 'on', cardinality]
+            properties:
+              name: {type: string}
+              from_entity: {type: string}
+              to_entity: {type: string}
+              join_type: {type: string, enum: [left, inner]}
+              'on':
+                type: array
+                items:
+                  type: object
+                  properties:
+                    from_column: {type: string}
+                    to_column: {type: string}
+              cardinality: {type: string, enum: [many_to_one, one_to_one]}
+    CompileRequest:
+      type: object
+      required: [model, metrics]
+      properties:
+        model: {type: string, description: model id (uuid) or name (+workspace_id)}
+        workspace_id: {type: string}
+        dialect: {type: string, enum: [trino, duckdb, athena, bigquery, synapse], default: trino}
+        metrics: {type: array, items: {type: string}, minItems: 1, maxItems: 20}
+        dimensions:
+          type: array
+          maxItems: 8
+          items:
+            oneOf:
+              - {type: string}
+              - type: object
+                properties:
+                  name: {type: string}
+                  grain: {type: string, enum: [hour, day, week, month, quarter, year]}
+        filters:
+          type: array
+          items:
+            type: object
+            properties:
+              dimension: {type: string}
+              op: {type: string, enum: ['=', '!=', '>', '>=', '<', '<=', IN, NOT IN, BETWEEN, LIKE, IS NULL, IS NOT NULL]}
+              values: {type: array, items: {type: [string, number, boolean]}}
+        time_range:
+          type: object
+          properties:
+            dimension: {type: string}
+            start: {type: string}
+            end: {type: string}
+            relative: {type: string, example: last_12_months}
+        order_by: {type: array, items: {}}
+        having: {type: array, items: {type: object}}
+        limit: {type: integer, maximum: 50000}
+        join_paths: {type: array, items: {type: string}}
+        order_within_group: {type: string}
+    CompileResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            sql: {type: string}
+            params:
+              type: array
+              items:
+                type: object
+                properties:
+                  type: {type: string}
+                  value: {}
+            engine_dialect: {type: string}
+            output_schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  name: {type: string}
+                  type: {type: string}
+                  role: {type: string, enum: [dimension, measure]}
+            provenance: {type: object}
+            warnings: {type: array, items: {type: string}}
+            validation: {type: object, description: present when ?validate=true}
+    ChartCompileRequest:
+      type: object
+      required: [model, chart_type]
+      properties:
+        model: {type: string}
+        workspace_id: {type: string}
+        dialect: {type: string}
+        chart_type: {type: string, enum: [pie_chart, vertical_bar_chart, vertical_stackedbar_chart, line_chart, scatter_plot, sankey_chart, grid_chart]}
+        x: {type: string}
+        y:
+          type: array
+          items:
+            oneOf:
+              - {type: string, description: column (V1 shape)}
+              - type: object
+                properties:
+                  measure: {type: string}
+                  column: {type: string}
+                  aggregate_type: {type: string}
+        dataseries: {type: string}
+        meta:
+          type: object
+          description: V1 meta (aggregate.type/checked, ySeries[col].aggregateType)
+        filters: {type: array}
+        limit: {type: integer}
+    ChartArtifact:
+      type: object
+      properties:
+        id: {type: string}
+        chart_type: {type: string}
+        dataset_urn: {type: string}
+        config: {type: object, description: 'V1 config: x, y, dataseries'}
+        meta: {type: object}
+    SavedQueryArtifact:
+      type: object
+      properties:
+        id: {type: string}
+        dataset_urn: {type: string}
+        sql: {type: string}

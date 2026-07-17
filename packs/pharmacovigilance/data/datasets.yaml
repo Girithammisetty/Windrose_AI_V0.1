@@ -1,0 +1,23 @@
+# Pack datasets (ingestion-service file_upload, stable names for idempotency).
+# In production these tables arrive via the sponsor's safety-database and
+# intake connectors (deferred until pack-service ships connector
+# materialization); this seed data is REAL rows in the same landing shape,
+# encoding genuine pharmacovigilance patterns so every downstream component
+# runs against real signal from day one: a fatal unlisted hepatic-failure
+# cluster on the oncology product (a live signal: three hepatobiliary cases),
+# a REMS neurology product with unlisted SJS and neuropathy, a clinical-trial
+# anaphylaxis on the 7-day clock, a consumer case missing valid-case minimum
+# information, and three duplicate-suspect cases pointing at already-processed
+# ICSRs.
+- identity: pv_products
+  name: pv-products
+  file: data/pv_products.csv
+  format: csv
+- identity: pv_cases
+  name: pv-cases
+  file: data/pv_cases.csv
+  format: csv
+- identity: pv_events
+  name: pv-events
+  file: data/pv_events.csv
+  format: csv

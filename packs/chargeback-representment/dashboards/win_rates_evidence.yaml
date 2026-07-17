@@ -1,0 +1,68 @@
+# Win Rates & Evidence: representment effectiveness by reason code and
+# network, evidence-strength coverage, and the monthly recovery trend — the
+# view the dispute program lives in.
+name: "Win Rates & Evidence"
+module: insights
+semantic_model: representment_core
+description: >-
+  Representment effectiveness: wins by reason code, evidence-strength mix on
+  the chargeback book, recovered dollars by network, monthly recovery trend,
+  and the evidence-to-outcome grid.
+tags: [payments, chargebacks, representment, evidence, pack]
+charts:
+  - name: "Representments won by reason code"
+    chart_type: vertical_bar_chart
+    description: "Winning reason codes — where compelling evidence holds up at second presentment"
+    config:
+      x: { dimension: reason_code }
+      y: [ { measure: won_count, agg_fn: count } ]
+    sources: [ { measure: won_count } ]
+    w: 6
+    h: 4
+  - name: "Evidence strength mix"
+    chart_type: pie_chart
+    description: "Strong vs partial vs weak vs pending evidence across the chargeback book"
+    config:
+      x: { dimension: evidence_strength }
+      y: [ { measure: chargeback_count, agg_fn: count } ]
+    sources: [ { measure: chargeback_count } ]
+    w: 6
+    h: 4
+  - name: "Recovered dollars by network"
+    chart_type: vertical_bar_chart
+    description: "Representment recoveries split by card network"
+    config:
+      x: { dimension: network }
+      y: [ { measure: total_recovered_amount, agg_fn: sum } ]
+    sources: [ { measure: total_recovered_amount } ]
+    w: 6
+    h: 4
+  - name: "Recovery trend by month"
+    chart_type: line_chart
+    description: "Dollars recovered via winning representments by filed month"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: total_recovered_amount, agg_fn: sum } ]
+    sources: [ { measure: total_recovered_amount } ]
+    w: 6
+    h: 4
+  - name: "Evidence effectiveness grid"
+    chart_type: grid_chart
+    description: "Volume, representments, wins, losses and recovered dollars by evidence strength"
+    config:
+      columns: [evidence_strength, chargeback_count, represented_count, won_count, lost_count, total_recovered_amount]
+      x: { dimension: evidence_strength }
+      y:
+        - { measure: chargeback_count, agg_fn: count }
+        - { measure: represented_count, agg_fn: count }
+        - { measure: won_count, agg_fn: count }
+        - { measure: lost_count, agg_fn: count }
+        - { measure: total_recovered_amount, agg_fn: sum }
+    sources:
+      - { measure: chargeback_count }
+      - { measure: represented_count }
+      - { measure: won_count }
+      - { measure: lost_count }
+      - { measure: total_recovered_amount }
+    w: 12
+    h: 4

@@ -1,0 +1,30 @@
+# Saved queries (query-service) — includes the entity->jurisdiction edge
+# source (parent/child/n) for network-family charts: the nexus-footprint map
+# from the registered account book (which legal entities touch which
+# jurisdictions, and how many accounts each relationship carries).
+- identity: tx_nexus_footprint_edges
+  name: "Tax notices: entity-jurisdiction nexus edges"
+  description: >-
+    Legal entity -> jurisdiction edge list (parent/child/n) from the
+    registered tax-account book — network-chart source for visualizing the
+    nexus footprint (multi-state entities fan out; jurisdictions that touch
+    many entities cluster) and for spotting where a new registration
+    (economic nexus) extends the map.
+  sql: >-
+    SELECT entity_id AS parent, jurisdiction AS child,
+           count(*) AS n
+    FROM {{dataset('tx-accounts')}}
+    GROUP BY entity_id, jurisdiction
+  tags: [tax_notices, nexus, network, jurisdictions, pack]
+- identity: tx_high_exposure_open_notices
+  name: "Tax notices: high-exposure open queue"
+  description: "Open notices ranked by assessed-dollar exposure — the analyst ranked-queue seed (deadline x dollar x severity, not FIFO)."
+  sql: >-
+    SELECT notice_id, account_id, notice_type, jurisdiction_level, tax_type,
+           root_cause, severity,
+           cast(days_to_deadline AS double) AS days_to_deadline,
+           cast(assessed_amount AS double) AS assessed_amount
+    FROM {{dataset('tx-notices')}}
+    WHERE status = 'open'
+    ORDER BY assessed_amount DESC
+  tags: [tax_notices, queue, exposure, backlog, pack]

@@ -1,0 +1,315 @@
+{
+  "pack": "trucking-claims",
+  "version": "1.0.0",
+  "workspace_id": "019f6a74-0cb8-72f5-b6d9-3def85626d0f",
+  "tenant_id": "019f6a74-0870-7937-8d9a-8d43fca3b661",
+  "started_at": "2026-07-16T10:23:38Z",
+  "finished_at": "2026-07-16T10:23:46Z",
+  "actions": [
+    {
+      "kind": "datasets",
+      "identity": "tl_claims",
+      "action": "create",
+      "urn": "wr:019f6a74-0870-7937-8d9a-8d43fca3b661:dataset:dataset/019f6a74-1013-74d3-b5ac-4505d69937b8",
+      "detail": "'tl-claims' ingested rows=26 snapshot=5704733340071842957"
+    },
+    {
+      "kind": "datasets",
+      "identity": "tl_shipments",
+      "action": "create",
+      "urn": "wr:019f6a74-0870-7937-8d9a-8d43fca3b661:dataset:dataset/019f6a74-1169-7d64-9292-85e6c758567d",
+      "detail": "'tl-shipments' ingested rows=30 snapshot=6858604710582017245"
+    },
+    {
+      "kind": "datasets",
+      "identity": "tl_carriers",
+      "action": "create",
+      "urn": "wr:019f6a74-0870-7937-8d9a-8d43fca3b661:dataset:dataset/019f6a74-12b6-7f89-bb21-fd4b5ac52384",
+      "detail": "'tl-carriers' ingested rows=12 snapshot=5851263437642399034"
+    },
+    {
+      "kind": "semantic_models",
+      "identity": "trucking_claims_core",
+      "action": "create",
+      "urn": "wr:019f6a74-0870-7937-8d9a-8d43fca3b661:semantic:model/019f6a74-13e0-7da7-aef6-0fc526387d95",
+      "detail": "'trucking_claims_core' published"
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_0",
+      "action": "create",
+      "urn": "wr:019f6a74-0870-7937-8d9a-8d43fca3b661:semantic:verified_query/019f6a74-1525-7e11-bd72-ebf147d588cd",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_1",
+      "action": "create",
+      "urn": "wr:019f6a74-0870-7937-8d9a-8d43fca3b661:semantic:verified_query/019f6a74-15ec-7cf3-a6bf-0141de760322",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_2",
+      "action": "create",
+      "urn": "wr:019f6a74-0870-7937-8d9a-8d43fca3b661:semantic:verified_query/019f6a74-16d4-7020-92ef-5473e9341716",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_3",
+      "action": "create",
+      "urn": "wr:019f6a74-0870-7937-8d9a-8d43fca3b661:semantic:verified_query/019f6a74-17b3-7011-b1a6-b83086ff56e4",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_4",
+      "action": "create",
+      "urn": "wr:019f6a74-0870-7937-8d9a-8d43fca3b661:semantic:verified_query/019f6a74-188c-7c70-b11c-b97aceff2075",
+      "detail": ""
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "carrier_lane_edges",
+      "action": "create",
+      "urn": "wr:019f6a74-0870-7937-8d9a-8d43fca3b661:query:query/019f6a74-1984-7eff-b3d7-eafb65953e83",
+      "detail": "Claims: carrier-lane network edges"
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "high_exposure_open_claims",
+      "action": "create",
+      "urn": "wr:019f6a74-0870-7937-8d9a-8d43fca3b661:query:query/019f6a74-19df-79a8-a572-296b5e557c80",
+      "detail": "Claims: high-exposure open queue"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "claims_safety_command_center",
+      "action": "create",
+      "urn": "wr:019f6a74-0870-7937-8d9a-8d43fca3b661:chart:dashboard/019f6a74-1a4c-7874-8779-4700a019fc15",
+      "detail": "Claims & Safety Command Center"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "claims_safety_command_center",
+      "action": "verify",
+      "urn": "wr:019f6a74-0870-7937-8d9a-8d43fca3b661:chart:dashboard/019f6a74-1a4c-7874-8779-4700a019fc15",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "cargo_claims_recovery",
+      "action": "create",
+      "urn": "wr:019f6a74-0870-7937-8d9a-8d43fca3b661:chart:dashboard/019f6a74-1c61-78c2-aff8-aca66b2a72de",
+      "detail": "Cargo Claims & Recovery"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "cargo_claims_recovery",
+      "action": "verify",
+      "urn": "wr:019f6a74-0870-7937-8d9a-8d43fca3b661:chart:dashboard/019f6a74-1c61-78c2-aff8-aca66b2a72de",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "carrier_risk_watch",
+      "action": "create",
+      "urn": "wr:019f6a74-0870-7937-8d9a-8d43fca3b661:chart:dashboard/019f6a74-1ea7-7d81-b009-cb9740e355e0",
+      "detail": "Carrier Risk Watch"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "carrier_risk_watch",
+      "action": "verify",
+      "urn": "wr:019f6a74-0870-7937-8d9a-8d43fca3b661:chart:dashboard/019f6a74-1ea7-7d81-b009-cb9740e355e0",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "accept_pay_claim"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "deny_claim_documented"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "file_carrier_recovery"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "escalate_fraud_investigation"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "close_coaching_completed"
+    },
+    {
+      "kind": "cases",
+      "identity": "claims_safety_queue",
+      "action": "create",
+      "urn": "wr:019f6a74-0870-7937-8d9a-8d43fca3b661:dataset:dataset/019f6a74-1013-74d3-b5ac-4505d69937b8",
+      "detail": "6 open cases (reindexed)"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Claims Analyst'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Claims Analyst' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Carrier Compliance Analyst'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Carrier Compliance Analyst' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Safety Review Specialist'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Safety Review Specialist' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Claims & Safety Manager'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Claims & Safety Manager' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Fleet Compliance Auditor'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Fleet Compliance Auditor' bound to permission group"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "case-triage prompt_params set"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "analytics prompt_params set"
+    },
+    {
+      "kind": "memories",
+      "identity": "grounding",
+      "action": "create",
+      "urn": null,
+      "detail": "10 grounding records written, 0 already present"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "create",
+      "urn": null,
+      "detail": "'Shipment anomaly detector (isolation forest)' (isolation_forest, train)"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "create",
+      "urn": null,
+      "detail": "'Claim outcome scorer (xgboost)' (xgboost, train)"
+    }
+  ],
+  "deferred": [
+    {
+      "kind": "guardrails",
+      "reason": "Claims-and-safety-domain policies (no claim payment, denial, or recovery filing communicated before the human determination; denial letters must cite the documented investigation findings and the applicable bill-of-lading defense; no preventability determination recorded without the event evidence attached; suspected double-broker loads freeze carrier payment pending verification) require guardrail-service / OPA policy materialization, which Core does not expose as a pack surface yet. The behavioral core is partially covered today by Core invariants: every pack-configured agent is proposal-mode with four-eyes approval (agent-runtime), and the agent instructions + disposition taxonomy route final determinations exclusively to human analysts with the Claims & Safety Manager as approver."
+    },
+    {
+      "kind": "agent_recipes",
+      "reason": "Bespoke LangGraph recipes (Cargo Claim Intake Copilot, Carrier Recovery Builder, Double-Broker Fraud Screener, Filing-Deadline Sentinel, Preventability Review Assistant) require agent-runtime graph-module registration (BRD 23 BR-12). This pack specializes the existing case-triage + analytics agents via TenantAgentConfig prompt_params + tenant-scope RAG grounding instead."
+    },
+    {
+      "kind": "connection_templates",
+      "reason": "Production read connectors (TMS platforms: McLeod/TMW/MercuryGate-class systems; telematics and video-safety platforms: ELD, forward-camera, harsh-event feeds; FMCSA registration/safety data services; load-board and carrier-identity monitoring; reefer telematics/temperature-download providers; claims mailboxes/EDI) require customer credentials and pack-service connector materialization. The pack ships seed datasets in the exact landing shape; production connectors are configured through the product Data > Connections UI."
+    },
+    {
+      "kind": "write_adapters",
+      "reason": "Write adapters (issue claim payment or settlement in the TMS/AP system, send acknowledgment/denial letters, file recovery claims against upstream carriers, suspend a carrier in the carrier-management system, assign driver coaching in the telematics platform) execute only behind pack-service's materialization contract and customer credentials; every such write stays proposal-mode with human approval \u2014 no autonomous claim payment, carrier suspension, or coaching assignment, ever."
+    },
+    {
+      "kind": "eval_sets",
+      "reason": "Golden eval sets (OS&D claim triage, Carmack liability-band assignment, deadline-risk ranking, double-broker red-flag detection, preventability recommendation quality) require eval-service write APIs whose action names are not yet in the rbac canonical catalog (Core follow-up noted in rbac catalog.go)."
+    },
+    {
+      "kind": "ontology",
+      "reason": "Ontology registration (Shipper, Consignee, Carrier, Driver, Shipment, Lane, BillOfLading, Claim, SafetyEvent, RecoveryClaim, SealRecord, TemperatureLog, PreventabilityDetermination, CoachingRecord) awaits pack-service; entity semantics are carried today by the trucking_claims_core semantic model and dataset schemas."
+    },
+    {
+      "kind": "case_schemas",
+      "reason": "Typed case schemas (cargo_osd_claim, reefer_excursion_review, safety_event_review, carrier_fraud_vetting, recovery_filing) await case-service schema materialization; today's cases carry the same fields via display_projection + the disposition taxonomy."
+    },
+    {
+      "kind": "model_archetypes",
+      "reason": "Model archetypes (claim_outcome_confidence, carrier_fraud_risk_score, preventability_likelihood) await experiment-service archetype APIs; the scoring capability ships as pipeline seeds instead (isolation_forest shipment anomaly + xgboost claim-outcome scorer) with model-governance expectations noted in grounding memories."
+    },
+    {
+      "kind": "display_labels",
+      "reason": "Display-label overlays (\"Claim\", \"Safety event\", \"Filing deadline at risk\", \"Carrier on watch\", entity templates) require the BFF label-registry endpoints (BFF-FR-082/088) which are pack-service-tier features."
+    }
+  ],
+  "result": "installed"
+}

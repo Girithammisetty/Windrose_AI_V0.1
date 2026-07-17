@@ -1,0 +1,427 @@
+{
+  "pack": "banking-aml",
+  "version": "1.0.0",
+  "workspace_id": "019f6462-7388-7b52-a1bd-882b060c29cd",
+  "tenant_id": "019f6462-6b63-7a87-a307-5fda2e2e2ac1",
+  "started_at": "2026-07-15T06:15:45Z",
+  "finished_at": "2026-07-15T06:15:49Z",
+  "actions": [
+    {
+      "kind": "dispositions",
+      "identity": "lifecycle_dispositions",
+      "action": "noop",
+      "urn": null,
+      "detail": "inv_dismissed"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "lifecycle_dispositions",
+      "action": "noop",
+      "urn": null,
+      "detail": "inv_handed_off"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "lifecycle_dispositions",
+      "action": "noop",
+      "urn": null,
+      "detail": "inv_needs_deeper"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "lifecycle_dispositions",
+      "action": "noop",
+      "urn": null,
+      "detail": "inv_evidence_incomplete"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "lifecycle_dispositions",
+      "action": "noop",
+      "urn": null,
+      "detail": "inv_confirmed"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "lifecycle_dispositions",
+      "action": "noop",
+      "urn": null,
+      "detail": "inv_referred_external"
+    },
+    {
+      "kind": "roles",
+      "identity": "investigation_roles",
+      "action": "noop",
+      "urn": null,
+      "detail": "role 'Investigator'"
+    },
+    {
+      "kind": "roles",
+      "identity": "investigation_roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Investigator' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "investigation_roles",
+      "action": "noop",
+      "urn": null,
+      "detail": "role 'Investigation Supervisor'"
+    },
+    {
+      "kind": "roles",
+      "identity": "investigation_roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Investigation Supervisor' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "investigation_roles",
+      "action": "noop",
+      "urn": null,
+      "detail": "role 'Evidence Custodian'"
+    },
+    {
+      "kind": "roles",
+      "identity": "investigation_roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Evidence Custodian' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "investigation_roles",
+      "action": "noop",
+      "urn": null,
+      "detail": "role 'Investigation Quality Reviewer'"
+    },
+    {
+      "kind": "roles",
+      "identity": "investigation_roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Investigation Quality Reviewer' bound to permission group"
+    },
+    {
+      "kind": "memories",
+      "identity": "methodology",
+      "action": "noop",
+      "urn": null,
+      "detail": "0 grounding records written, 8 already present"
+    },
+    {
+      "kind": "datasets",
+      "identity": "aml_parties",
+      "action": "noop",
+      "urn": "wr:019f6462-6b63-7a87-a307-5fda2e2e2ac1:dataset:dataset/019f6462-819a-7144-956a-2f7605b0d709",
+      "detail": "dataset 'aml-parties' exists"
+    },
+    {
+      "kind": "datasets",
+      "identity": "aml_transactions",
+      "action": "noop",
+      "urn": "wr:019f6462-6b63-7a87-a307-5fda2e2e2ac1:dataset:dataset/019f6462-8315-7c4c-896f-8ee1114c6e11",
+      "detail": "dataset 'aml-transactions' exists"
+    },
+    {
+      "kind": "datasets",
+      "identity": "aml_alerts",
+      "action": "noop",
+      "urn": "wr:019f6462-6b63-7a87-a307-5fda2e2e2ac1:dataset:dataset/019f6462-845b-72b7-9f91-7f61a834fefc",
+      "detail": "dataset 'aml-alerts' exists"
+    },
+    {
+      "kind": "datasets",
+      "identity": "aml_relationship_edges",
+      "action": "noop",
+      "urn": "wr:019f6462-6b63-7a87-a307-5fda2e2e2ac1:dataset:dataset/019f6462-85aa-7971-a798-deb72cf78235",
+      "detail": "dataset 'aml-relationship-edges' exists"
+    },
+    {
+      "kind": "semantic_models",
+      "identity": "aml_core",
+      "action": "noop",
+      "urn": null,
+      "detail": "'aml_core' already published"
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_0",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_1",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_2",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_3",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_4",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "party_network_edges",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "high_value_open_alerts",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "dashboards",
+      "identity": "aml_command_center",
+      "action": "noop",
+      "urn": "wr:019f6462-6b63-7a87-a307-5fda2e2e2ac1:chart:dashboard/019f6462-8d57-743a-9f05-17ee92e2b8a1",
+      "detail": "'AML Command Center' exists"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "aml_command_center",
+      "action": "verify",
+      "urn": "wr:019f6462-6b63-7a87-a307-5fda2e2e2ac1:chart:dashboard/019f6462-8d57-743a-9f05-17ee92e2b8a1",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "sanctions_screening",
+      "action": "noop",
+      "urn": "wr:019f6462-6b63-7a87-a307-5fda2e2e2ac1:chart:dashboard/019f6462-8f9e-7105-9bac-8a9d13688547",
+      "detail": "'Sanctions & Screening' exists"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "sanctions_screening",
+      "action": "verify",
+      "urn": "wr:019f6462-6b63-7a87-a307-5fda2e2e2ac1:chart:dashboard/019f6462-8f9e-7105-9bac-8a9d13688547",
+      "detail": "4/4 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "transaction_monitoring",
+      "action": "noop",
+      "urn": "wr:019f6462-6b63-7a87-a307-5fda2e2e2ac1:chart:dashboard/019f6462-9175-70c7-a7e9-9448a12b9519",
+      "detail": "'Transaction Monitoring' exists"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "transaction_monitoring",
+      "action": "verify",
+      "urn": "wr:019f6462-6b63-7a87-a307-5fda2e2e2ac1:chart:dashboard/019f6462-9175-70c7-a7e9-9448a12b9519",
+      "detail": "4/4 charts resolve data"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "noop",
+      "urn": null,
+      "detail": "clear_false_positive"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "noop",
+      "urn": null,
+      "detail": "escalate_l2"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "noop",
+      "urn": null,
+      "detail": "recommend_sar"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "noop",
+      "urn": null,
+      "detail": "sanctions_true_hit"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "noop",
+      "urn": null,
+      "detail": "edd_required"
+    },
+    {
+      "kind": "cases",
+      "identity": "alert_queue",
+      "action": "create",
+      "urn": "wr:019f6462-6b63-7a87-a307-5fda2e2e2ac1:dataset:dataset/019f6462-845b-72b7-9f91-7f61a834fefc",
+      "detail": "0 open cases (reindexed)"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "noop",
+      "urn": null,
+      "detail": "role 'AML Analyst L1'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'AML Analyst L1' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "noop",
+      "urn": null,
+      "detail": "role 'AML Investigator L2'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'AML Investigator L2' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "noop",
+      "urn": null,
+      "detail": "role 'MLRO'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'MLRO' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "noop",
+      "urn": null,
+      "detail": "role 'Sanctions Analyst'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Sanctions Analyst' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "noop",
+      "urn": null,
+      "detail": "role 'Model Risk Validator'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Model Risk Validator' bound to permission group"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "case-triage prompt_params set"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "analytics prompt_params set"
+    },
+    {
+      "kind": "memories",
+      "identity": "grounding",
+      "action": "noop",
+      "urn": null,
+      "detail": "0 grounding records written, 10 already present"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "noop",
+      "urn": null,
+      "detail": "Transaction anomaly detector (isolation forest)"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "noop",
+      "urn": null,
+      "detail": "Alert disposition scorer (xgboost)"
+    }
+  ],
+  "deferred": [
+    {
+      "kind": "guardrails",
+      "reason": "AML-FR-110 + BR-1/BR-2 policies (tipping_off_strong, sar_confidentiality zero-leak, AML_AUTONOMOUS_FILING_FORBIDDEN publish gate, OFAC 50% Rule depth limit BR-7) require guardrail-service / OPA policy materialization, which Core does not expose as a pack surface yet. The behavioral core is partially covered today by Core invariants: every pack-configured agent is proposal-mode with four-eyes approval (agent-runtime), and the agent instructions + disposition taxonomy route SAR decisions exclusively to the MLRO with explicit never-tip-off language."
+    },
+    {
+      "kind": "agent_recipes",
+      "reason": "AML-FR-030..090 bespoke LangGraph recipes (Alert Triage Copilot, Sanctions Match Adjudicator, SAR Narrative Drafter, CTR Aggregator, CDD/EDD Copilot, Adverse Media Screener, Peer-Group Anomaly Detector) require agent-runtime graph-module registration (BRD 23 BR-12). This pack specializes the existing case-triage + analytics agents via TenantAgentConfig prompt_params + tenant-scope RAG grounding instead."
+    },
+    {
+      "kind": "connection_templates",
+      "reason": "AML-FR-100 read connectors (core banking: FIS/Fiserv/Jack Henry/Temenos; transaction monitoring: Actimize/SAS AML/Oracle FSA/Napier/Feedzai; sanctions data: OFAC SDN/EU/UN/HMT via World-Check/Dow Jones; adverse media; beneficial ownership; SWIFT/Fedwire/ACH; FinCEN 314(a)) require customer credentials and pack-service connector materialization. The pack ships seed datasets in the exact landing shape; production connectors are configured through the product Data > Connections UI."
+    },
+    {
+      "kind": "write_adapters",
+      "reason": "AML-FR-100 write adapters (case status to AML platform, SAR + CTR filing to FinCEN BSA e-filing, risk-rating update, OFAC blocked-property freeze, adverse-media acknowledgment, GRC remediation status) execute only behind pack-service's materialization contract and customer BSA-E credentials; per BR-1 every such write stays proposal-mode with human approval \u2014 no autonomous SAR/CTR filing, ever."
+    },
+    {
+      "kind": "eval_sets",
+      "reason": "BRD 30 \u00a74 golden eval sets (alert triage, sanctions adjudication, SAR narrative, CDD risk rating, peer anomaly \u2014 5 sets, AC-2 85% agreement gate) require eval-service write APIs whose action names are not yet in the rbac canonical catalog (Core follow-up noted in rbac catalog.go)."
+    },
+    {
+      "kind": "ontology",
+      "reason": "AML-FR-010 ontology registration (Customer, BeneficialOwner, Account, Transaction, Wire/SWIFTMessage, Alert, Case, SAR, CTR, SanctionsList, SanctionsMatch, WatchlistEntity, AdverseMediaEvent, RiskRating, TypologyPattern, RegulatoryFiling) awaits pack-service; entity semantics are carried today by the aml_core semantic model and dataset schemas."
+    },
+    {
+      "kind": "case_schemas",
+      "reason": "AML-FR-120 typed case schemas (alert_triage, sanctions_match_adjudication, sar_case, ctr_review, cdd_edd_review, adverse_media_review, peer_anomaly_investigation, regulatory_finding_remediation) await case-service schema materialization; today's cases carry the same fields via display_projection + the disposition taxonomy."
+    },
+    {
+      "kind": "model_archetypes",
+      "reason": "BRD 30 \u00a74 model archetypes (alert_disposition_confidence, customer_risk_rating_v1) await experiment-service archetype APIs; the alert-scoring capability ships as pipeline seeds instead (isolation_forest anomaly detector + xgboost alert-disposition scorer) with SR 11-7 model-risk documentation noted in grounding memories (BR-8)."
+    },
+    {
+      "kind": "display_labels",
+      "reason": "BRD 30 \u00a74 display-label overlays (\"Alert\", \"Sanctions hit\", \"SAR case\", \"Escalate to L2\", entity templates) require the BFF label-registry endpoints (BFF-FR-082/088) which are pack-service-tier features."
+    }
+  ],
+  "result": "installed"
+}

@@ -1,0 +1,12 @@
+{
+  "type": "record",
+  "name": "MemoryQuarantined",
+  "namespace": "windrose.memory.events.v1",
+  "doc": "Payload of memory.quarantined (MEM-FR-010 step 2, BR-7).",
+  "fields": [
+    {"name": "memory_id", "type": ["null", "string"], "default": null},
+    {"name": "classifier_score", "type": ["null", "double"], "default": null},
+    {"name": "run_id", "type": ["null", "string"], "default": null},
+    {"name": "reason", "type": "string", "default": "injection_screening"}
+  ]
+}

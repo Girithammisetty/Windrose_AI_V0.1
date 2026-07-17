@@ -1,0 +1,2 @@
+SELECT "o"."region" AS "region", sum(CASE WHEN "o"."status" = 'completed' THEN "o"."order_total" END) AS "completed_revenue", count(*) AS "order_count" FROM {{dataset('ds_orders')}} "o" WHERE "o"."region" LIKE $1 AND "o"."status" != $2 GROUP BY 1 HAVING count(*) > $3 ORDER BY 2 DESC LIMIT 50
+-- params: [{"type": "string", "value": "A%"}, {"type": "string", "value": "cancelled"}, {"type": "integer", "value": 10}]

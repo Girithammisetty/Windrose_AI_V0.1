@@ -1,0 +1,31 @@
+tradeline_id,consumer_id,creditor_name,account_status,balance_band,delinquency_history,opened_year,furnisher_system
+TL-6001,P-3001,Meridian Bank Card,current,1k_5k,clean,2019_2021,card_platform
+TL-6002,P-3001,Lakeview Auto Finance,current,5k_20k,clean,2022_2024,auto_loan_servicing
+TL-6003,P-3002,Meridian Bank Card,delinquent,1k_5k,late_60_89,2025_2026,card_platform
+TL-6004,P-3002,Brightpath Student Loans,current,5k_20k,clean,2016_2018,student_loan_servicing
+TL-6005,P-3003,Cobalt Card Services,delinquent,under_1k,late_90_plus,2022_2024,card_platform
+TL-6006,P-3003,Hearthstone Mortgage,current,over_20k,clean,2016_2018,mortgage_servicing
+TL-6007,P-3004,Redrock Recovery Group,in_collection,under_1k,late_90_plus,2022_2024,collections_platform
+TL-6008,P-3004,Harborline Collections,in_collection,under_1k,late_90_plus,2022_2024,collections_platform
+TL-6009,P-3004,Meridian Bank Card,current,1k_5k,clean,2019_2021,card_platform
+TL-6010,P-3005,Cobalt Card Services,charged_off,1k_5k,late_90_plus,pre_2016,card_platform
+TL-6011,P-3005,Lakeview Auto Finance,paid_closed,zero,clean,2016_2018,auto_loan_servicing
+TL-6012,P-3006,Meridian Bank Card,delinquent,1k_5k,late_30_59,2019_2021,card_platform
+TL-6013,P-3006,Brightpath Student Loans,current,5k_20k,clean,2016_2018,student_loan_servicing
+TL-6014,P-3007,Hearthstone Mortgage,current,over_20k,clean,2019_2021,mortgage_servicing
+TL-6015,P-3007,Cobalt Card Services,current,under_1k,clean,2022_2024,card_platform
+TL-6016,P-3008,Redrock Recovery Group,in_collection,1k_5k,late_90_plus,2019_2021,collections_platform
+TL-6017,P-3008,Lakeview Auto Finance,current,5k_20k,late_30_59,2022_2024,auto_loan_servicing
+TL-6018,P-3009,Meridian Bank Card,current,1k_5k,clean,2016_2018,card_platform
+TL-6019,P-3009,Summit Ridge Card Co,paid_closed,zero,late_60_89,2019_2021,card_platform
+TL-6020,P-3010,Brightpath Student Loans,delinquent,5k_20k,late_60_89,2019_2021,student_loan_servicing
+TL-6021,P-3010,Cobalt Card Services,current,under_1k,clean,2025_2026,card_platform
+TL-6022,P-3010,Harborline Collections,in_collection,under_1k,late_90_plus,2022_2024,collections_platform
+TL-6023,P-3011,Hearthstone Mortgage,current,over_20k,clean,2022_2024,mortgage_servicing
+TL-6024,P-3011,Meridian Bank Card,current,1k_5k,clean,2019_2021,card_platform
+TL-6025,P-3012,Summit Ridge Card Co,paid_closed,zero,clean,2016_2018,card_platform
+TL-6026,P-3012,Lakeview Auto Finance,current,5k_20k,clean,2022_2024,auto_loan_servicing
+TL-6027,P-3005,Hearthstone Mortgage,paid_closed,zero,clean,pre_2016,mortgage_servicing
+TL-6028,P-3007,Brightpath Student Loans,paid_closed,zero,clean,pre_2016,student_loan_servicing
+TL-6029,P-3002,Cobalt Card Services,current,under_1k,clean,2019_2021,card_platform
+TL-6030,P-3011,Redrock Recovery Group,in_collection,under_1k,late_90_plus,2025_2026,collections_platform

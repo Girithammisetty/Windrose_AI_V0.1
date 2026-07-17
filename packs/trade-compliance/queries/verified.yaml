@@ -1,0 +1,65 @@
+# Verified NL<->SQL queries (four-eyes approved at install). SQL uses
+# {{dataset('<name>')}} macros — the only table references query-service's
+# tenant-namespace guard admits.
+- nl_text: "What's our classification correction rate by declared HS chapter?"
+  sql_text: >-
+    SELECT declared_hs_chapter,
+           count(*) AS closed_reviews,
+           sum(CASE WHEN disposition = 'reclassify_correct_entry' THEN 1 ELSE 0 END) AS corrected_entries,
+           round(sum(CASE WHEN disposition = 'reclassify_correct_entry' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS correction_rate
+    FROM {{dataset('tc-review-items')}}
+    WHERE status = 'closed' AND item_type = 'hs_classification'
+    GROUP BY declared_hs_chapter
+    ORDER BY correction_rate DESC
+  model: trade_core
+  tags: [classification, hts, corrections, kpi, pack]
+- nl_text: "Which open review items are closest to their action deadline?"
+  sql_text: >-
+    SELECT review_id, shipment_id, item_type, product_category,
+           declared_hs_chapter, screening_list, severity, duty_risk,
+           cast(days_to_deadline AS double) AS days_to_deadline,
+           cast(age_days AS double) AS age_days
+    FROM {{dataset('tc-review-items')}}
+    WHERE status = 'open'
+    ORDER BY days_to_deadline ASC
+  model: trade_core
+  tags: [deadlines, backlog, queue, pack]
+- nl_text: "Screening false-positive rate, true hits, and average match score by list"
+  sql_text: >-
+    SELECT screening_list,
+           count(*) AS closed_alerts,
+           sum(CASE WHEN disposition = 'release_false_positive' THEN 1 ELSE 0 END) AS false_positives,
+           sum(CASE WHEN disposition = 'sanctions_true_hit_hold' THEN 1 ELSE 0 END) AS true_hits,
+           round(sum(CASE WHEN disposition = 'release_false_positive' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS false_positive_rate,
+           round(avg(cast(match_score AS double)), 3) AS avg_match_score
+    FROM {{dataset('tc-review-items')}}
+    WHERE status = 'closed' AND item_type = 'screening_alert'
+    GROUP BY screening_list
+    ORDER BY closed_alerts DESC
+  model: trade_core
+  tags: [screening, sanctions, sdn, entity_list, kpi, pack]
+- nl_text: "Entered value and shipment count by lane and mode"
+  sql_text: >-
+    SELECT lane, mode,
+           count(*) AS shipments,
+           sum(cast(value AS double)) AS entered_value,
+           round(avg(cast(value AS double)), 2) AS avg_entered_value
+    FROM {{dataset('tc-shipments')}}
+    GROUP BY lane, mode
+    ORDER BY entered_value DESC
+  model: trade_core
+  tags: [shipments, lanes, valuation, pack]
+- nl_text: "High duty-risk review items by product category and origin country"
+  sql_text: >-
+    SELECT product_category, origin_country,
+           count(*) AS review_items,
+           sum(CASE WHEN status = 'open' THEN 1 ELSE 0 END) AS open_items,
+           sum(CASE WHEN disposition = 'reclassify_correct_entry' THEN 1 ELSE 0 END) AS corrected_entries
+    FROM {{dataset('tc-review-items')}}
+    WHERE duty_risk = 'high'
+    GROUP BY product_category, origin_country
+    ORDER BY review_items DESC
+  model: trade_core
+  tags: [duty_risk, classification, origin, pack]

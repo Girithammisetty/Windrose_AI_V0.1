@@ -1,0 +1,50 @@
+# Verified NL<->SQL queries (BRD 24 Appendix; SEM-FR-040 four-eyes approved at
+# install). SQL uses {{dataset('<name>')}} macros — the only table references
+# query-service's tenant-namespace guard admits.
+- nl_text: "What's our denial rate by product type?"
+  sql_text: >-
+    SELECT product_type,
+           count(*) AS claims,
+           sum(CASE WHEN status = 'denied' THEN 1 ELSE 0 END) AS denied,
+           round(sum(CASE WHEN status = 'denied' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS denial_rate
+    FROM {{dataset('payer-claims')}}
+    GROUP BY product_type
+  model: payer_claims
+  tags: [denials, kpi, pack]
+- nl_text: "Which procedure codes have the highest appeal overturn rate?"
+  sql_text: >-
+    SELECT cpt_code,
+           count(*) AS appeals,
+           sum(CASE WHEN status = 'overturned' THEN 1 ELSE 0 END) AS overturned
+    FROM {{dataset('payer-appeals')}}
+    GROUP BY cpt_code
+    ORDER BY overturned DESC
+  model: payer_claims
+  tags: [appeals, overturns, pack]
+- nl_text: "Top denial reason codes by count"
+  sql_text: >-
+    SELECT denial_reason_code, denial_reason_text, count(*) AS denials
+    FROM {{dataset('payer-denials')}}
+    GROUP BY denial_reason_code, denial_reason_text
+    ORDER BY denials DESC
+  model: payer_claims
+  tags: [denials, pack]
+- nl_text: "PA turnaround by urgency tier against the CMS windows"
+  sql_text: >-
+    SELECT urgency,
+           count(*) AS requests,
+           round(avg(cast(turnaround_hours AS double)), 1) AS avg_hours
+    FROM {{dataset('payer-prior-auth-requests')}}
+    GROUP BY urgency
+  model: payer_utilization
+  tags: [prior-auth, sla, pack]
+- nl_text: "Members with denied claims by state"
+  sql_text: >-
+    SELECT member_state, count(*) AS denied_claims
+    FROM {{dataset('payer-claims')}}
+    WHERE status = 'denied'
+    GROUP BY member_state
+    ORDER BY denied_claims DESC
+  model: payer_claims
+  tags: [denials, geography, pack]

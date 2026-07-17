@@ -1,0 +1,24 @@
+# Pack datasets (ingestion-service file_upload, stable names for idempotency).
+# In production these tables arrive via the merchant's PSP/acquirer dispute
+# API, order-management system, and pre-dispute alert feeds (deferred until
+# pack-service ships connector materialization); this seed data is REAL rows
+# in the same landing shape, encoding genuine merchant-side chargeback
+# patterns so every downstream component runs against real signal from day
+# one: a CE 3.0-qualified CNP fraud claim (three prior undisputed orders on
+# the same device), a not-received claim with signed delivery confirmation, a
+# weak not-as-described apparel claim where accepting is cheaper than
+# fighting, a serial friendly-fraudster's fourth chargeback, an issuer
+# pre-arbitration on a big-ticket representment win, and a duplicate
+# chargeback on an order already refunded through a pre-dispute alert.
+- identity: mr_customers
+  name: mr-customers
+  file: data/mr_customers.csv
+  format: csv
+- identity: mr_orders
+  name: mr-orders
+  file: data/mr_orders.csv
+  format: csv
+- identity: mr_chargebacks
+  name: mr-chargebacks
+  file: data/mr_chargebacks.csv
+  format: csv

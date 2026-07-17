@@ -1,0 +1,55 @@
+# Readmission Watch dashboard (BRD 29 US-7 / BR-7): the facility
+# administrator's 30-day rehospitalization view — risk is for care-team
+# prioritization, never care denial or discharge decisions.
+name: "Readmission Watch"
+module: insights
+semantic_model: pac_episodes
+description: >-
+  30-day rehospitalization monitoring (BRD 29 US-7): readmissions by primary
+  diagnosis and care setting, mean risk score trend by admit month, and the
+  risk grid the care team works from.
+tags: [post-acute, readmissions, risk, pack]
+charts:
+  - name: "30-day readmissions by primary diagnosis"
+    chart_type: vertical_bar_chart
+    description: "Readmitted episodes by ICD-10 primary diagnosis"
+    config:
+      x: { dimension: primary_dx_code }
+      y: [ { measure: readmitted_episode_count, agg_fn: count } ]
+    sources: [ { measure: readmitted_episode_count } ]
+    w: 6
+    h: 4
+  - name: "Readmissions by care setting"
+    chart_type: pie_chart
+    description: "Where 30-day readmissions originate"
+    config:
+      x: { dimension: care_setting }
+      y: [ { measure: readmitted_episode_count, agg_fn: count } ]
+    sources: [ { measure: readmitted_episode_count } ]
+    w: 6
+    h: 4
+  - name: "Average readmission risk by admit month"
+    chart_type: line_chart
+    description: "Mean model risk score trend across admission cohorts"
+    config:
+      x: { dimension: admit_month }
+      y: [ { measure: avg_readmission_risk, agg_fn: avg } ]
+    sources: [ { measure: avg_readmission_risk } ]
+    w: 6
+    h: 4
+  - name: "Risk watch grid"
+    chart_type: grid_chart
+    description: "Episodes, readmissions, and mean risk by care setting"
+    config:
+      columns: [care_setting, episode_count, readmitted_episode_count, avg_readmission_risk]
+      x: { dimension: care_setting }
+      y:
+        - { measure: episode_count, agg_fn: count }
+        - { measure: readmitted_episode_count, agg_fn: count }
+        - { measure: avg_readmission_risk, agg_fn: avg }
+    sources:
+      - { measure: episode_count }
+      - { measure: readmitted_episode_count }
+      - { measure: avg_readmission_risk }
+    w: 6
+    h: 4

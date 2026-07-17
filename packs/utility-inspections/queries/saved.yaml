@@ -1,0 +1,29 @@
+# Saved queries (query-service) — includes the asset->finding-type edge
+# source (parent/child/n) for network-family charts: repeat-offender asset
+# clustering and defect-family fans from the findings book.
+- identity: asset_finding_edges
+  name: "Inspections: asset-finding-type network edges"
+  description: >-
+    Asset -> finding-type edge list (parent/child/n) from the inspection
+    findings book — network-chart source for spotting repeat-offender assets
+    (one asset, many findings), defect families that concentrate on an asset
+    class, and the splice/segment recurrence pattern that should trigger
+    escalation instead of another monitor decision.
+  sql: >-
+    SELECT asset_id AS parent, finding_type AS child,
+           count(*) AS n
+    FROM {{dataset('ui-findings')}}
+    GROUP BY asset_id, finding_type
+  tags: [inspections, network, repeat_findings, pack]
+- identity: high_cost_open_findings
+  name: "Inspections: high-exposure open queue"
+  description: "Open findings ranked by estimated repair cost — the analyst ranked-queue seed (deadline x risk zone x cost, not FIFO)."
+  sql: >-
+    SELECT finding_id, asset_id, finding_type, detection_source, risk_zone,
+           priority, severity,
+           cast(days_to_deadline AS double) AS days_to_deadline,
+           cast(est_repair_cost AS double) AS est_repair_cost
+    FROM {{dataset('ui-findings')}}
+    WHERE status = 'open'
+    ORDER BY est_repair_cost DESC
+  tags: [inspections, queue, backlog, pack]

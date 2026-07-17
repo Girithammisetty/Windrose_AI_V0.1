@@ -1,0 +1,17 @@
+# Pipeline seeds (expressed against the real pipeline-orchestrator algorithm
+# catalog): an unsupervised account-book anomaly screen (valuation
+# inconsistencies, odd TIV/loss-history/industry combinations — the
+# moral-hazard surface scan) and a supervised submission-triage scorer
+# trained on human dispositions (the deterministic-first pre-router for
+# intake triage). Trained models require review before promotion — the
+# Underwriting Operations Manager approves promotions.
+- identity: uw_account_anomaly_isolation_forest
+  name: "Account book anomaly screen (isolation forest)"
+  algorithm: isolation_forest
+  mode: train
+  dataset: uw_accounts
+- identity: uw_submission_triage_xgboost
+  name: "Submission triage outcome scorer (xgboost)"
+  algorithm: xgboost
+  mode: train
+  dataset: uw_submissions

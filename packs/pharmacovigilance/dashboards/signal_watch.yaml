@@ -1,0 +1,65 @@
+# Signal Watch: the medical-review view — MedDRA event surfaces, unlisted
+# (unexpected) term pressure by product, event outcome mix.
+name: "Signal Watch"
+module: insights
+semantic_model: pv_core
+description: >-
+  Portfolio signal surveillance: coded events by system organ class, event
+  outcome mix, serious-case trend, and the unlisted-term pressure grid by
+  product (the qualitative front end of signal detection).
+tags: [pharma, pharmacovigilance, signal, meddra, pack]
+charts:
+  - name: "Events by system organ class"
+    chart_type: vertical_bar_chart
+    description: "MedDRA-coded events by SOC"
+    config:
+      x: { dimension: soc }
+      y: [ { measure: event_count, agg_fn: count } ]
+    sources: [ { measure: event_count } ]
+    w: 6
+    h: 4
+  - name: "Event outcome mix"
+    chart_type: pie_chart
+    description: "Recovered vs recovering vs not recovered vs fatal vs unknown"
+    config:
+      x: { dimension: event_outcome }
+      y: [ { measure: event_count, agg_fn: count } ]
+    sources: [ { measure: event_count } ]
+    w: 6
+    h: 4
+  - name: "Serious case trend"
+    chart_type: line_chart
+    description: "Serious ICSRs by received month"
+    config:
+      x: { dimension: received_month }
+      y: [ { measure: serious_case_count, agg_fn: count } ]
+    sources: [ { measure: serious_case_count } ]
+    w: 6
+    h: 4
+  - name: "Unlisted events by preferred term"
+    chart_type: vertical_bar_chart
+    description: "Unexpected (unlisted) reaction terms — where signal is accumulating"
+    config:
+      x: { dimension: event_pt }
+      y: [ { measure: unlisted_event_count, agg_fn: count } ]
+    sources: [ { measure: unlisted_event_count } ]
+    w: 6
+    h: 4
+  - name: "Product signal grid"
+    chart_type: grid_chart
+    description: "Events, unlisted events, severe events and fatal cases by product"
+    config:
+      columns: [product_name, event_count, unlisted_event_count, severe_event_count, fatal_case_count]
+      x: { dimension: product_name }
+      y:
+        - { measure: event_count, agg_fn: count }
+        - { measure: unlisted_event_count, agg_fn: count }
+        - { measure: severe_event_count, agg_fn: count }
+        - { measure: fatal_case_count, agg_fn: count }
+    sources:
+      - { measure: event_count }
+      - { measure: unlisted_event_count }
+      - { measure: severe_event_count }
+      - { measure: fatal_case_count }
+    w: 12
+    h: 4

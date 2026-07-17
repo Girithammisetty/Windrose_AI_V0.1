@@ -1,0 +1,13 @@
+dealer_id,dealer_name,region,volume_tier,audit_score_tier,claims_per_unit_tier,certified
+D-3001,Prairie Ridge Equipment,plains,high,good,typical,yes
+D-3002,Bluegrass Tractor & Implement,southeast,medium,good,low,yes
+D-3003,Cascade Machinery,west,high,good,typical,yes
+D-3004,Iron Bend Power Systems,midwest,medium,watch,elevated,yes
+D-3005,Gulfline Equipment Co,southwest,medium,good,typical,no
+D-3006,Northstar Ag & Turf,midwest,low,good,low,yes
+D-3007,Keystone Valley Machinery,northeast,medium,watch,typical,yes
+D-3008,Redrock Implement,southwest,low,good,typical,no
+D-3009,Harborline Equipment,northeast,high,good,typical,yes
+D-3010,Sierra Summit Machinery,west,low,poor,elevated,no
+D-3011,Delta Farm Power,southeast,medium,good,low,yes
+D-3012,Lakeshore Equipment Works,midwest,high,good,typical,yes

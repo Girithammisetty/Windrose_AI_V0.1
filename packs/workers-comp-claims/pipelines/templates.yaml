@@ -1,0 +1,16 @@
+# Pipeline seeds (expressed against the real pipeline-orchestrator algorithm
+# catalog): an unsupervised medical-bill anomaly detector (fee-schedule
+# outlier / provider-cluster surface scan) and a supervised compensability-
+# outcome scorer trained on human dispositions (the deterministic-first
+# pre-router for FNOL triage). Trained models require review before
+# promotion — the WC Claims Manager approves promotions.
+- identity: wc_bill_anomaly_isolation_forest
+  name: "Medical bill anomaly detector (isolation forest)"
+  algorithm: isolation_forest
+  mode: train
+  dataset: wc_medical_bills
+- identity: wc_compensability_outcome_xgboost
+  name: "Compensability outcome scorer (xgboost)"
+  algorithm: xgboost
+  mode: train
+  dataset: wc_claims

@@ -1,0 +1,24 @@
+{
+  "type": "record",
+  "name": "ExperimentEventEnvelope",
+  "namespace": "windrose.experiment.events.v1",
+  "doc": "Master event envelope (MASTER-FR-031) for experiment.events.v1. Partition key = tenant_id.",
+  "fields": [
+    {"name": "event_id", "type": "string", "doc": "uuidv7"},
+    {"name": "event_type", "type": "string",
+     "doc": "experiment.created|updated|archived|restored, run.mirrored, run.status_changed, run.metrics_updated, model.created, model_version.created, model_version.promotion_requested, model_version.promoted, model_version.promotion_rejected, model_version.promotion_expired, model_version.archived, model_card.updated, experiment.mirror.reconciled"},
+    {"name": "tenant_id", "type": "string"},
+    {"name": "actor", "type": {
+      "type": "record", "name": "Actor",
+      "fields": [{"name": "type", "type": "string"}, {"name": "id", "type": "string"}]
+    }},
+    {"name": "via_agent", "type": ["null", {
+      "type": "record", "name": "ViaAgent",
+      "fields": [{"name": "agent_id", "type": "string"}, {"name": "version", "type": ["null", "string"], "default": null}]
+    }], "default": null},
+    {"name": "resource_urn", "type": "string"},
+    {"name": "occurred_at", "type": "string", "doc": "ISO-8601 UTC"},
+    {"name": "trace_id", "type": ["null", "string"], "default": null},
+    {"name": "payload", "type": "string", "doc": "JSON-encoded event-specific payload (see BRD §6)"}
+  ]
+}

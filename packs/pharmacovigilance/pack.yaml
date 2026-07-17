@@ -1,0 +1,115 @@
+# pharmacovigilance capability pack — Core-neutral edition: adverse-event
+# (ICSR) case processing for pharma/biotech safety departments. Installable
+# TODAY against Windrose Core's public APIs via packctl; the manifest
+# envelope follows BRD 23 (PKG-FR-001/003). Components the current Core
+# cannot materialize are declared under `deferred` — recorded in the install
+# ledger, never faked.
+pack_manifest: 1
+name: pharmacovigilance
+version: 1.0.0
+publisher: { id: pub-windrose, name: "Windrose Inc." }
+description: >-
+  AI-assisted pharmacovigilance case processing (FDA 21 CFR 314.80/312.32,
+  ICH E2A/E2D, EU GVP): ICSR intake triage with valid-case and duplicate
+  checks, seriousness/expectedness/causality-grounded reporting proposals
+  with QPPV approval, expedited (15-day/7-day) deadline tracking, PV
+  operations KPI semantic model and dashboards (serious-case rate, expedited
+  conversion, deadline runway, unlisted-term signal pressure),
+  product-event signal network analytics, regulatory grounding memories,
+  and event-anomaly + case-priority training pipelines.
+categories: [pharma, pharmacovigilance, drug-safety, icsr]
+regulatory: [fda_21cfr314, fda_21cfr312, ich_e2a, ich_e2d, eu_gvp, meddra]
+components:
+  datasets:
+    - { file: "data/datasets.yaml", identity: "datasets" }
+  semantic_models:
+    - { file: "semantic/pv_core.yaml", identity: "pv_core" }
+  verified_queries:
+    - { file: "queries/verified.yaml", identity: "canonical_questions" }
+  saved_queries:
+    - { file: "queries/saved.yaml", identity: "saved_queries" }
+  dashboards:
+    - { file: "dashboards/pv_case_operations.yaml", identity: "pv_case_operations" }
+    - { file: "dashboards/signal_watch.yaml", identity: "signal_watch" }
+    - { file: "dashboards/regulatory_reporting.yaml", identity: "regulatory_reporting" }
+  dispositions:
+    - { file: "cases/dispositions.yaml", identity: "dispositions" }
+  cases:
+    - { file: "cases/queue.yaml", identity: "icsr_queue" }
+  roles:
+    - { file: "rbac/roles.yaml", identity: "roles" }
+  agent_configs:
+    - { file: "agents/configs.yaml", identity: "agent_configs" }
+  memories:
+    - { file: "memories/grounding.yaml", identity: "grounding" }
+  pipelines:
+    - { file: "pipelines/templates.yaml", identity: "pipelines" }
+deferred:
+  - kind: guardrails
+    reason: >-
+      PV-domain policies (no autonomous regulatory submission; conservative
+      seriousness/expectedness when arguable; patient-identifier
+      minimization in analyst-facing surfaces; late-case escalation) require
+      guardrail-service / OPA policy materialization, which Core does not
+      expose as a pack surface yet. The behavioral core is partially covered
+      today by Core invariants: every pack-configured agent is proposal-mode
+      with four-eyes approval (agent-runtime), and the agent instructions +
+      disposition taxonomy route submission decisions exclusively to the
+      Safety Officer (QPPV-equivalent).
+  - kind: agent_recipes
+    reason: >-
+      Bespoke LangGraph recipes (Intake Validity Checker, Duplicate
+      Detector, MedDRA Coding Assistant, Narrative Drafter, Signal
+      Evaluation Copilot) require agent-runtime graph-module registration
+      (BRD 23 BR-12). This pack specializes the existing case-triage +
+      analytics agents via TenantAgentConfig prompt_params + tenant-scope
+      RAG grounding instead.
+  - kind: connection_templates
+    reason: >-
+      Production read connectors (safety databases: Oracle Argus, ArisGlobal
+      LifeSphere, Veeva Vault Safety; intake channels: call center, medical
+      information, E2B(R3) gateways, literature monitoring services; MedDRA
+      dictionary subscription) require customer credentials and pack-service
+      connector materialization. The pack ships seed datasets in the exact
+      landing shape; production connectors are configured through the
+      product Data > Connections UI.
+  - kind: write_adapters
+    reason: >-
+      Write adapters (E2B(R3) submission to FDA FAERS and EudraVigilance,
+      case status write-back to the safety database, follow-up letter
+      dispatch) execute only behind pack-service's materialization contract
+      and customer gateway credentials; every such write stays proposal-mode
+      with Safety Officer approval — no autonomous regulatory submission,
+      ever.
+  - kind: eval_sets
+    reason: >-
+      Golden eval sets (validity determination, seriousness classification,
+      expectedness vs RSI, duplicate detection, expedited-vs-periodic
+      routing) require eval-service write APIs whose action names are not
+      yet in the rbac canonical catalog (Core follow-up noted in rbac
+      catalog.go).
+  - kind: ontology
+    reason: >-
+      Ontology registration (Case/ICSR, AdverseEvent, Product,
+      ActiveSubstance, Reporter, Patient, RegulatoryClock, ExpeditedReport,
+      PeriodicReport, Signal, RSIVersion) awaits pack-service; entity
+      semantics are carried today by the pv_core semantic model and dataset
+      schemas.
+  - kind: case_schemas
+    reason: >-
+      Typed case schemas (icsr_intake, medical_review, duplicate_review,
+      signal_evaluation, late_case_investigation) await case-service schema
+      materialization; today's cases carry the same fields via
+      display_projection + the disposition taxonomy.
+  - kind: model_archetypes
+    reason: >-
+      Model archetypes (case_priority_score, seriousness_classifier_v1)
+      await experiment-service archetype APIs; the scoring capability ships
+      as pipeline seeds instead (isolation_forest event anomaly + xgboost
+      case-priority scorer) with GxP model-documentation expectations noted
+      in grounding memories.
+  - kind: display_labels
+    reason: >-
+      Display-label overlays ("ICSR", "SUSAR", "15-day clock", "Signal
+      cluster", entity templates) require the BFF label-registry endpoints
+      (BFF-FR-082/088) which are pack-service-tier features.

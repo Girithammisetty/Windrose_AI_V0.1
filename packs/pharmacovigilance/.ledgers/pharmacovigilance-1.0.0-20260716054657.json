@@ -1,0 +1,315 @@
+{
+  "pack": "pharmacovigilance",
+  "version": "1.0.0",
+  "workspace_id": "019f6a51-ed51-77c8-a331-a7ddd5f1b751",
+  "tenant_id": "019f6a51-e8f1-790c-97a4-28c234c5e652",
+  "started_at": "2026-07-16T09:46:53Z",
+  "finished_at": "2026-07-16T09:46:57Z",
+  "actions": [
+    {
+      "kind": "datasets",
+      "identity": "pv_products",
+      "action": "noop",
+      "urn": "wr:019f6a51-e8f1-790c-97a4-28c234c5e652:dataset:dataset/019f6a51-f091-7c70-8415-d2c1f121f474",
+      "detail": "dataset 'pv-products' exists"
+    },
+    {
+      "kind": "datasets",
+      "identity": "pv_cases",
+      "action": "noop",
+      "urn": "wr:019f6a51-e8f1-790c-97a4-28c234c5e652:dataset:dataset/019f6a51-f1a4-7083-bdac-0664d642fd1f",
+      "detail": "dataset 'pv-cases' exists"
+    },
+    {
+      "kind": "datasets",
+      "identity": "pv_events",
+      "action": "noop",
+      "urn": "wr:019f6a51-e8f1-790c-97a4-28c234c5e652:dataset:dataset/019f6a51-f2be-7ab8-baa6-9b2f069c372b",
+      "detail": "dataset 'pv-events' exists"
+    },
+    {
+      "kind": "semantic_models",
+      "identity": "pv_core",
+      "action": "noop",
+      "urn": null,
+      "detail": "'pv_core' already published"
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_0",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_1",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_2",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_3",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_4",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "product_event_edges",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "priority_open_cases",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "dashboards",
+      "identity": "pv_case_operations",
+      "action": "noop",
+      "urn": "wr:019f6a51-e8f1-790c-97a4-28c234c5e652:chart:dashboard/019f6a52-0299-77c8-9ee2-ace9c401fd17",
+      "detail": "'PV Case Operations' exists"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "pv_case_operations",
+      "action": "verify",
+      "urn": "wr:019f6a51-e8f1-790c-97a4-28c234c5e652:chart:dashboard/019f6a52-0299-77c8-9ee2-ace9c401fd17",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "signal_watch",
+      "action": "noop",
+      "urn": "wr:019f6a51-e8f1-790c-97a4-28c234c5e652:chart:dashboard/019f6a52-0471-7631-859b-b567bc1153d2",
+      "detail": "'Signal Watch' exists"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "signal_watch",
+      "action": "verify",
+      "urn": "wr:019f6a51-e8f1-790c-97a4-28c234c5e652:chart:dashboard/019f6a52-0471-7631-859b-b567bc1153d2",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "regulatory_reporting",
+      "action": "noop",
+      "urn": "wr:019f6a51-e8f1-790c-97a4-28c234c5e652:chart:dashboard/019f6a52-0655-7e6f-af0e-3d55adb60a06",
+      "detail": "'Regulatory Reporting' exists"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "regulatory_reporting",
+      "action": "verify",
+      "urn": "wr:019f6a51-e8f1-790c-97a4-28c234c5e652:chart:dashboard/019f6a52-0655-7e6f-af0e-3d55adb60a06",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "noop",
+      "urn": null,
+      "detail": "submit_expedited_report"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "noop",
+      "urn": null,
+      "detail": "include_periodic_report"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "noop",
+      "urn": null,
+      "detail": "non_reportable_invalid"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "noop",
+      "urn": null,
+      "detail": "request_followup_info"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "noop",
+      "urn": null,
+      "detail": "nullify_duplicate"
+    },
+    {
+      "kind": "cases",
+      "identity": "icsr_queue",
+      "action": "create",
+      "urn": "wr:019f6a51-e8f1-790c-97a4-28c234c5e652:dataset:dataset/019f6a51-f1a4-7083-bdac-0664d642fd1f",
+      "detail": "0 open cases (reindexed)"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "noop",
+      "urn": null,
+      "detail": "role 'PV Intake Specialist'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'PV Intake Specialist' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "noop",
+      "urn": null,
+      "detail": "role 'PV Medical Reviewer'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'PV Medical Reviewer' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "noop",
+      "urn": null,
+      "detail": "role 'PV Safety Officer'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'PV Safety Officer' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "noop",
+      "urn": null,
+      "detail": "role 'PV Signal Analyst'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'PV Signal Analyst' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "noop",
+      "urn": null,
+      "detail": "role 'PV Quality Auditor'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'PV Quality Auditor' bound to permission group"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "case-triage prompt_params set"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "analytics prompt_params set"
+    },
+    {
+      "kind": "memories",
+      "identity": "grounding",
+      "action": "noop",
+      "urn": null,
+      "detail": "0 grounding records written, 10 already present"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "noop",
+      "urn": null,
+      "detail": "Event signal anomaly detector (isolation forest)"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "noop",
+      "urn": null,
+      "detail": "Case reporting-priority scorer (xgboost)"
+    }
+  ],
+  "deferred": [
+    {
+      "kind": "guardrails",
+      "reason": "PV-domain policies (no autonomous regulatory submission; conservative seriousness/expectedness when arguable; patient-identifier minimization in analyst-facing surfaces; late-case escalation) require guardrail-service / OPA policy materialization, which Core does not expose as a pack surface yet. The behavioral core is partially covered today by Core invariants: every pack-configured agent is proposal-mode with four-eyes approval (agent-runtime), and the agent instructions + disposition taxonomy route submission decisions exclusively to the Safety Officer (QPPV-equivalent)."
+    },
+    {
+      "kind": "agent_recipes",
+      "reason": "Bespoke LangGraph recipes (Intake Validity Checker, Duplicate Detector, MedDRA Coding Assistant, Narrative Drafter, Signal Evaluation Copilot) require agent-runtime graph-module registration (BRD 23 BR-12). This pack specializes the existing case-triage + analytics agents via TenantAgentConfig prompt_params + tenant-scope RAG grounding instead."
+    },
+    {
+      "kind": "connection_templates",
+      "reason": "Production read connectors (safety databases: Oracle Argus, ArisGlobal LifeSphere, Veeva Vault Safety; intake channels: call center, medical information, E2B(R3) gateways, literature monitoring services; MedDRA dictionary subscription) require customer credentials and pack-service connector materialization. The pack ships seed datasets in the exact landing shape; production connectors are configured through the product Data > Connections UI."
+    },
+    {
+      "kind": "write_adapters",
+      "reason": "Write adapters (E2B(R3) submission to FDA FAERS and EudraVigilance, case status write-back to the safety database, follow-up letter dispatch) execute only behind pack-service's materialization contract and customer gateway credentials; every such write stays proposal-mode with Safety Officer approval \u2014 no autonomous regulatory submission, ever."
+    },
+    {
+      "kind": "eval_sets",
+      "reason": "Golden eval sets (validity determination, seriousness classification, expectedness vs RSI, duplicate detection, expedited-vs-periodic routing) require eval-service write APIs whose action names are not yet in the rbac canonical catalog (Core follow-up noted in rbac catalog.go)."
+    },
+    {
+      "kind": "ontology",
+      "reason": "Ontology registration (Case/ICSR, AdverseEvent, Product, ActiveSubstance, Reporter, Patient, RegulatoryClock, ExpeditedReport, PeriodicReport, Signal, RSIVersion) awaits pack-service; entity semantics are carried today by the pv_core semantic model and dataset schemas."
+    },
+    {
+      "kind": "case_schemas",
+      "reason": "Typed case schemas (icsr_intake, medical_review, duplicate_review, signal_evaluation, late_case_investigation) await case-service schema materialization; today's cases carry the same fields via display_projection + the disposition taxonomy."
+    },
+    {
+      "kind": "model_archetypes",
+      "reason": "Model archetypes (case_priority_score, seriousness_classifier_v1) await experiment-service archetype APIs; the scoring capability ships as pipeline seeds instead (isolation_forest event anomaly + xgboost case-priority scorer) with GxP model-documentation expectations noted in grounding memories."
+    },
+    {
+      "kind": "display_labels",
+      "reason": "Display-label overlays (\"ICSR\", \"SUSAR\", \"15-day clock\", \"Signal cluster\", entity templates) require the BFF label-registry endpoints (BFF-FR-082/088) which are pack-service-tier features."
+    }
+  ],
+  "result": "installed"
+}

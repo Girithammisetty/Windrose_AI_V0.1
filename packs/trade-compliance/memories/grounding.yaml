@@ -1,0 +1,139 @@
+# Tenant-scope RAG grounding records (memory-service). This is the customs /
+# sanctions / export-control domain knowledge the triage copilot retrieves
+# when reasoning about a review item. Every record is factual regulatory or
+# methodological reference material; where a precise figure is uncertain the
+# statement stays qualitative.
+- content: >-
+    HTS structure and classification method: the Harmonized Tariff Schedule
+    is organized into sections and chapters (chapters 1-97 harmonized
+    internationally, with 98/99 reserved for US special provisions), 4-digit
+    headings, 6-digit international subheadings, and US 8-digit rate lines
+    plus 10-digit statistical suffixes. Classification follows the General
+    Rules of Interpretation (GRI) applied strictly IN ORDER: GRI 1 —
+    classification is determined by the terms of the headings and any
+    relative section or chapter notes, and only when those do not settle it
+    do the later rules apply; GRI 2 covers incomplete/unassembled goods and
+    mixtures; GRI 3 resolves goods classifiable under multiple headings
+    (most specific description, then essential character, then last in
+    numerical order); GRI 6 applies the same rules at subheading level. A
+    product description that contradicts the declared heading is a
+    classification red flag regardless of duty outcome.
+  tags: [hts, classification, gri, method]
+  confidence: 0.95
+- content: >-
+    Reasonable care (19 USC 1484): the importer of record is legally
+    responsible for using reasonable care in classifying and valuing
+    merchandise, declaring origin, and providing the information necessary
+    for CBP to assess duties and determine admissibility — filing through a
+    licensed customs broker does not transfer this responsibility. Evidence
+    of reasonable care includes documented classification analyses, binding
+    rulings requested for uncertain items, internal review procedures, and
+    acting on prior CBP corrections; repeating an entry practice that was
+    already corrected is strong evidence of its absence.
+  tags: [reasonable_care, cbp, importer_obligations]
+  confidence: 0.95
+- content: >-
+    Prior disclosure (19 USC 1592): penalties for entry violations
+    (misclassification, undervaluation, misdeclared origin) scale with
+    culpability — negligence, gross negligence, fraud. A valid prior
+    disclosure, made before or without knowledge that a formal investigation
+    has commenced and accompanied by tender of any lost duties,
+    substantially mitigates penalties — for non-fraud cases the exposure is
+    typically reduced to the interest on the lost revenue. When a repeated
+    misclassification is discovered, assess promptly whether a prior
+    disclosure covering the affected entries is warranted; delay can forfeit
+    the mitigation.
+  tags: [prior_disclosure, penalties, section_1592, mitigation]
+  confidence: 0.9
+- content: >-
+    OFAC SDN screening and the 50 Percent Rule: US persons are generally
+    prohibited from dealing with persons on OFAC's Specially Designated
+    Nationals (SDN) list, and property of blocked persons that comes within
+    US jurisdiction must be blocked, not merely rejected. Under OFAC's 50
+    Percent Rule, any entity owned 50 percent or more in the aggregate by
+    one or more blocked persons is itself blocked EVEN IF it does not appear
+    on the list — so beneficial-ownership research is part of match
+    adjudication, not an optional extra. Screening applies to all
+    transaction parties: suppliers, consignees, banks, carriers, and
+    intermediaries.
+  tags: [ofac, sdn, fifty_percent_rule, sanctions]
+  confidence: 0.95
+- content: >-
+    BIS Entity List basics: the Entity List (Export Administration
+    Regulations) imposes supplemental license requirements on exports,
+    re-exports, and in-country transfers of items subject to the EAR when a
+    listed party is involved — frequently with a license review policy of
+    presumption of denial and with most license exceptions unavailable. An
+    Entity List match therefore triggers a license-requirement analysis
+    specific to that entry, not an automatic prohibition or an automatic
+    release; the list entry itself states the scope of the requirement.
+    Related BIS lists (Denied Persons, Unverified) carry different legal
+    consequences and must not be conflated with Entity List treatment.
+  tags: [bis, entity_list, ear, screening]
+  confidence: 0.9
+- content: >-
+    EAR dual-use licensing concept: items subject to the Export
+    Administration Regulations are either classified under an Export Control
+    Classification Number (ECCN) on the Commerce Control List or designated
+    EAR99. Whether an export, re-export, or transfer needs a BIS license
+    depends on the ECCN's reasons for control crossed with the destination
+    (Commerce Country Chart), the end user, and the end use — and license
+    requirements can attach to re-exports of US-origin items from third
+    countries. Thermal imaging, high-performance computing, and certain
+    telecom/encryption items are classic dual-use categories where a
+    commercial import can still carry downstream export-control obligations.
+  tags: [ear, eccn, dual_use, licensing]
+  confidence: 0.9
+- content: >-
+    Country of origin and substantial transformation: for non-preferential
+    purposes, the origin of goods processed in multiple countries is the
+    country where they last underwent a substantial transformation — emerging
+    with a new name, character, or use. Minor processing, repackaging, or
+    assembly that leaves the essential article unchanged does NOT confer
+    origin, and routing goods through an intermediate country (transshipment)
+    never changes origin by itself. Preferential origin under free-trade
+    agreements uses separate rules (tariff-shift and/or regional value
+    content) and must be analyzed independently. Origin misdeclaration to
+    evade duties — including anti-dumping/countervailing exposure — is an
+    enforcement priority, and verifying it requires production records, not
+    just certificates.
+  tags: [origin, substantial_transformation, transshipment, adcvd]
+  confidence: 0.92
+- content: >-
+    CBP recordkeeping: importers must maintain entry records and supporting
+    documents (invoices, packing lists, classification and valuation
+    worksheets, origin support) and produce them on demand — generally for
+    FIVE YEARS from the date of entry (19 USC 1508 and 19 CFR part 163).
+    Screening adjudications and license determinations should be retained on
+    the same footing: an audit or focused assessment tests whether the
+    documented analysis existed at entry time, not whether the outcome can
+    be reconstructed afterward.
+  tags: [recordkeeping, cbp, retention, audit]
+  confidence: 0.92
+- content: >-
+    First-sale valuation concept: in a multi-tiered transaction
+    (manufacturer -> middleman -> US importer), the customs value may be
+    based on the earlier (first) sale price rather than the importer's
+    higher purchase price, provided the first sale is a bona fide sale at
+    arm's length and the goods were clearly destined for the United States
+    at the time of that sale. The duty savings are legitimate but the
+    documentation burden is on the importer — first-sale claims without the
+    supporting transactional records are a valuation exposure, not a
+    savings.
+  tags: [valuation, first_sale, customs_value]
+  confidence: 0.88
+- content: >-
+    Denied-party match adjudication and AI governance: a name-similarity
+    score alone neither confirms nor clears a match. Adjudication compares
+    distinguishing identifiers — address and country, date of birth and
+    nationality for individuals, entity registration/tax numbers, vessel or
+    aircraft identifiers — against the list entry, plus ownership research
+    for the OFAC 50% rule; common transliterated names produce recurring
+    false positives, and a documented distinguishing rationale is what makes
+    a release defensible. Every AI-assisted disposition must preserve a
+    provenance chain (data version, model/prompt version, match evidence,
+    reviewer identity, timestamp): screening-model tuning that suppresses
+    alerts without documented adjudication history is itself a
+    sanctions-compliance program deficiency.
+  tags: [screening, adjudication, evidence, ai_governance, provenance]
+  confidence: 0.9

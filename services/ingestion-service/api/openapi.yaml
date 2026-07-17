@@ -1,0 +1,1677 @@
+openapi: 3.1.0
+info:
+  title: ingestion-service
+  description: 'Windrose ingestion-service (BRD 03): connections, ingestion jobs,
+    resumable uploads, schedules, webhook push.'
+  version: 0.1.0
+paths:
+  /healthz:
+    get:
+      tags:
+      - health
+      summary: Healthz
+      operationId: healthz_healthz_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+                title: Response Healthz Healthz Get
+  /readyz:
+    get:
+      tags:
+      - health
+      summary: Readyz
+      operationId: readyz_readyz_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                title: Response Readyz Readyz Get
+  /api/v1/connections:
+    post:
+      tags:
+      - connections
+      summary: Create Connection
+      operationId: create_connection_api_v1_connections_post
+      parameters:
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConnectionCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    get:
+      tags:
+      - connections
+      summary: List Connections
+      operationId: list_connections_api_v1_connections_get
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Limit
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Cursor
+      - name: filter[connector_type]
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Filter[Connector Type]
+      - name: filter[traffic_direction]
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Filter[Traffic Direction]
+      - name: filter[q]
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Filter[Q]
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response List Connections Api V1 Connections Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/connections:test:
+    post:
+      tags:
+      - connections
+      summary: Test Connection Adhoc
+      operationId: test_connection_adhoc_api_v1_connections_test_post
+      parameters:
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConnectionTestAdhoc'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Test Connection Adhoc Api V1 Connections Test Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/connections/{connection_id}:
+    get:
+      tags:
+      - connections
+      summary: Get Connection
+      operationId: get_connection_api_v1_connections__connection_id__get
+      parameters:
+      - name: connection_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Connection Id
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Get Connection Api V1 Connections  Connection Id  Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    patch:
+      tags:
+      - connections
+      summary: Update Connection
+      operationId: update_connection_api_v1_connections__connection_id__patch
+      parameters:
+      - name: connection_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Connection Id
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConnectionUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Update Connection Api V1 Connections  Connection Id  Patch
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - connections
+      summary: Delete Connection
+      operationId: delete_connection_api_v1_connections__connection_id__delete
+      parameters:
+      - name: connection_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Connection Id
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/connections/{connection_id}/test:
+    post:
+      tags:
+      - connections
+      summary: Test Connection
+      operationId: test_connection_api_v1_connections__connection_id__test_post
+      parameters:
+      - name: connection_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Connection Id
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Test Connection Api V1 Connections  Connection Id  Test
+                  Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/connections/{connection_id}/preview:
+    post:
+      tags:
+      - connections
+      summary: Preview Connection
+      operationId: preview_connection_api_v1_connections__connection_id__preview_post
+      parameters:
+      - name: connection_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Connection Id
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PreviewRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Preview Connection Api V1 Connections  Connection
+                  Id  Preview Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/connector-types:
+    get:
+      tags:
+      - connections
+      summary: List Connector Types
+      description: ING-FR-002 catalog + JSON Schemas (MCP facade `get_connection_schema`).
+      operationId: list_connector_types_api_v1_connector_types_get
+      parameters:
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response List Connector Types Api V1 Connector Types Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/connector-types/{connector_type}:
+    get:
+      tags:
+      - connections
+      summary: Get Connector Type
+      operationId: get_connector_type_api_v1_connector_types__connector_type__get
+      parameters:
+      - name: connector_type
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Connector Type
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Get Connector Type Api V1 Connector Types  Connector
+                  Type  Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/ingestions:
+    post:
+      tags:
+      - ingestions
+      summary: Create Ingestion
+      operationId: create_ingestion_api_v1_ingestions_post
+      parameters:
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IngestionCreate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    get:
+      tags:
+      - ingestions
+      summary: List Ingestions
+      operationId: list_ingestions_api_v1_ingestions_get
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Limit
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Cursor
+      - name: filter[status]
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Filter[Status]
+      - name: filter[dataset_urn]
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Filter[Dataset Urn]
+      - name: filter[ingestion_mode]
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Filter[Ingestion Mode]
+      - name: filter[schedule_id]
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Filter[Schedule Id]
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response List Ingestions Api V1 Ingestions Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/ingestions/{ingestion_id}:
+    get:
+      tags:
+      - ingestions
+      summary: Get Ingestion
+      operationId: get_ingestion_api_v1_ingestions__ingestion_id__get
+      parameters:
+      - name: ingestion_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Ingestion Id
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Get Ingestion Api V1 Ingestions  Ingestion Id  Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/ingestions/{ingestion_id}/progress:
+    get:
+      tags:
+      - ingestions
+      summary: Get Ingestion Progress
+      description: 'Progress snapshot + recent progress events (ING-FR-026).
+
+
+        Live streaming is relayed by realtime-hub from `ingestion.events.v1`;
+
+        this endpoint serves the non-streaming fallback.'
+      operationId: get_ingestion_progress_api_v1_ingestions__ingestion_id__progress_get
+      parameters:
+      - name: ingestion_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Ingestion Id
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Get Ingestion Progress Api V1 Ingestions  Ingestion
+                  Id  Progress Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/ingestions/{ingestion_id}/cancel:
+    post:
+      tags:
+      - ingestions
+      summary: Cancel Ingestion
+      operationId: cancel_ingestion_api_v1_ingestions__ingestion_id__cancel_post
+      parameters:
+      - name: ingestion_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Ingestion Id
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Cancel Ingestion Api V1 Ingestions  Ingestion Id  Cancel
+                  Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/ingestions/{ingestion_id}/retry:
+    post:
+      tags:
+      - ingestions
+      summary: Retry Ingestion
+      operationId: retry_ingestion_api_v1_ingestions__ingestion_id__retry_post
+      parameters:
+      - name: ingestion_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Ingestion Id
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/ingestions/{ingestion_id}/reingest:
+    post:
+      tags:
+      - ingestions
+      summary: Reingest Ingestion
+      operationId: reingest_ingestion_api_v1_ingestions__ingestion_id__reingest_post
+      parameters:
+      - name: ingestion_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Ingestion Id
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/uploads:
+    post:
+      tags:
+      - uploads
+      summary: Create Upload
+      operationId: create_upload_api_v1_uploads_post
+      parameters:
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Create Upload Api V1 Uploads Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/uploads/{upload_id}/parts/{n}:
+    put:
+      tags:
+      - uploads
+      summary: Put Part
+      operationId: put_part_api_v1_uploads__upload_id__parts__n__put
+      parameters:
+      - name: upload_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Upload Id
+      - name: n
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: N
+      - name: Content-SHA256
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Content-Sha256
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Put Part Api V1 Uploads  Upload Id  Parts  N  Put
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/uploads/{upload_id}:
+    get:
+      tags:
+      - uploads
+      summary: Get Upload
+      operationId: get_upload_api_v1_uploads__upload_id__get
+      parameters:
+      - name: upload_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Upload Id
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Get Upload Api V1 Uploads  Upload Id  Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - uploads
+      summary: Abort Upload
+      operationId: abort_upload_api_v1_uploads__upload_id__delete
+      parameters:
+      - name: upload_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Upload Id
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/uploads/{upload_id}/complete:
+    post:
+      tags:
+      - uploads
+      summary: Complete Upload
+      operationId: complete_upload_api_v1_uploads__upload_id__complete_post
+      parameters:
+      - name: upload_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Upload Id
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadComplete'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/schedules:
+    post:
+      tags:
+      - schedules
+      summary: Create Schedule
+      operationId: create_schedule_api_v1_schedules_post
+      parameters:
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScheduleCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Create Schedule Api V1 Schedules Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    get:
+      tags:
+      - schedules
+      summary: List Schedules
+      operationId: list_schedules_api_v1_schedules_get
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Limit
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Cursor
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response List Schedules Api V1 Schedules Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/schedules/{schedule_id}:
+    get:
+      tags:
+      - schedules
+      summary: Get Schedule
+      operationId: get_schedule_api_v1_schedules__schedule_id__get
+      parameters:
+      - name: schedule_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Schedule Id
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Get Schedule Api V1 Schedules  Schedule Id  Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    patch:
+      tags:
+      - schedules
+      summary: Update Schedule
+      operationId: update_schedule_api_v1_schedules__schedule_id__patch
+      parameters:
+      - name: schedule_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Schedule Id
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScheduleUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Update Schedule Api V1 Schedules  Schedule Id  Patch
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - schedules
+      summary: Delete Schedule
+      operationId: delete_schedule_api_v1_schedules__schedule_id__delete
+      parameters:
+      - name: schedule_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Schedule Id
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/schedules/{schedule_id}/run_now:
+    post:
+      tags:
+      - schedules
+      summary: Run Now
+      operationId: run_now_api_v1_schedules__schedule_id__run_now_post
+      parameters:
+      - name: schedule_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Schedule Id
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Run Now Api V1 Schedules  Schedule Id  Run Now Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/schedules/{schedule_id}/pause:
+    post:
+      tags:
+      - schedules
+      summary: Pause Schedule
+      operationId: pause_schedule_api_v1_schedules__schedule_id__pause_post
+      parameters:
+      - name: schedule_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Schedule Id
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Pause Schedule Api V1 Schedules  Schedule Id  Pause
+                  Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/schedules/{schedule_id}/resume:
+    post:
+      tags:
+      - schedules
+      summary: Resume Schedule
+      operationId: resume_schedule_api_v1_schedules__schedule_id__resume_post
+      parameters:
+      - name: schedule_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Schedule Id
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Resume Schedule Api V1 Schedules  Schedule Id  Resume
+                  Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/hooks/{path_token}/events:
+    post:
+      tags:
+      - hooks
+      summary: Receive Events
+      operationId: receive_events_api_v1_hooks__path_token__events_post
+      parameters:
+      - name: path_token
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Path Token
+      - name: X-Windrose-Signature
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Windrose-Signature
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+components:
+  schemas:
+    ConnectionCreate:
+      properties:
+        name:
+          type: string
+          maxLength: 255
+          minLength: 1
+          title: Name
+        connector_type:
+          type: string
+          title: Connector Type
+        config:
+          additionalProperties: true
+          type: object
+          title: Config
+        secrets:
+          additionalProperties: true
+          type: object
+          title: Secrets
+        traffic_direction:
+          type: string
+          enum:
+          - incoming
+          - outgoing
+          - both
+          title: Traffic Direction
+          default: incoming
+        tags:
+          items:
+            type: string
+          type: array
+          title: Tags
+        workspace_id:
+          type: string
+          title: Workspace Id
+          default: 00000000-0000-0000-0000-000000000000
+        skip_test:
+          type: boolean
+          title: Skip Test
+          default: false
+      additionalProperties: false
+      type: object
+      required:
+      - name
+      - connector_type
+      - config
+      title: ConnectionCreate
+    ConnectionTestAdhoc:
+      properties:
+        connector_type:
+          type: string
+          title: Connector Type
+        config:
+          additionalProperties: true
+          type: object
+          title: Config
+        secrets:
+          additionalProperties: true
+          type: object
+          title: Secrets
+      additionalProperties: false
+      type: object
+      required:
+      - connector_type
+      - config
+      title: ConnectionTestAdhoc
+    ConnectionUpdate:
+      properties:
+        name:
+          anyOf:
+          - type: string
+            maxLength: 255
+            minLength: 1
+          - type: 'null'
+          title: Name
+        config:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Config
+        secrets:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Secrets
+        traffic_direction:
+          anyOf:
+          - type: string
+            enum:
+            - incoming
+            - outgoing
+            - both
+          - type: 'null'
+          title: Traffic Direction
+        tags:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Tags
+        skip_test:
+          type: boolean
+          title: Skip Test
+          default: false
+      additionalProperties: false
+      type: object
+      title: ConnectionUpdate
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    IngestionCreate:
+      properties:
+        ingestion_mode:
+          type: string
+          enum:
+          - file_upload
+          - query
+          - scheduled_run
+          - webhook_batch
+          title: Ingestion Mode
+        connection_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Connection Id
+        statement:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Statement
+        file_format:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: File Format
+        dataset_urn:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Dataset Urn
+        new_dataset:
+          anyOf:
+          - $ref: '#/components/schemas/NewDataset'
+          - type: 'null'
+        skip_profiling:
+          type: boolean
+          title: Skip Profiling
+          default: false
+        allow_empty:
+          type: boolean
+          title: Allow Empty
+          default: false
+        error_row_limit:
+          type: integer
+          maximum: 10000.0
+          minimum: 0.0
+          title: Error Row Limit
+          default: 100
+        workspace_id:
+          type: string
+          title: Workspace Id
+          default: 00000000-0000-0000-0000-000000000000
+      additionalProperties: false
+      type: object
+      required:
+      - ingestion_mode
+      title: IngestionCreate
+    NewDataset:
+      properties:
+        name:
+          type: string
+          maxLength: 255
+          minLength: 1
+          title: Name
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+      additionalProperties: false
+      type: object
+      required:
+      - name
+      title: NewDataset
+    PartManifestEntry:
+      properties:
+        n:
+          type: integer
+          minimum: 1.0
+          title: N
+        etag:
+          type: string
+          title: Etag
+        size:
+          type: integer
+          minimum: 0.0
+          title: Size
+      additionalProperties: false
+      type: object
+      required:
+      - n
+      - etag
+      - size
+      title: PartManifestEntry
+    PreviewRequest:
+      properties:
+        table:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Table
+        path:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Path
+        query:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Query
+        limit:
+          type: integer
+          maximum: 100.0
+          minimum: 1.0
+          title: Limit
+          default: 100
+      additionalProperties: false
+      type: object
+      title: PreviewRequest
+    ScheduleCreate:
+      properties:
+        connection_id:
+          type: string
+          title: Connection Id
+        ingestion_template:
+          additionalProperties: true
+          type: object
+          title: Ingestion Template
+        cron:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Cron
+        interval_seconds:
+          anyOf:
+          - type: integer
+            minimum: 60.0
+          - type: 'null'
+          title: Interval Seconds
+        timezone:
+          type: string
+          title: Timezone
+          default: UTC
+        watermark:
+          anyOf:
+          - $ref: '#/components/schemas/WatermarkCreate'
+          - type: 'null'
+        overlap_policy:
+          type: string
+          enum:
+          - skip
+          - buffer_one
+          title: Overlap Policy
+          default: skip
+        enabled:
+          type: boolean
+          title: Enabled
+          default: true
+        workspace_id:
+          type: string
+          title: Workspace Id
+          default: 00000000-0000-0000-0000-000000000000
+      additionalProperties: false
+      type: object
+      required:
+      - connection_id
+      - ingestion_template
+      title: ScheduleCreate
+    ScheduleUpdate:
+      properties:
+        cron:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Cron
+        interval_seconds:
+          anyOf:
+          - type: integer
+            minimum: 60.0
+          - type: 'null'
+          title: Interval Seconds
+        timezone:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Timezone
+        ingestion_template:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Ingestion Template
+        overlap_policy:
+          anyOf:
+          - type: string
+            enum:
+            - skip
+            - buffer_one
+          - type: 'null'
+          title: Overlap Policy
+        enabled:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Enabled
+      additionalProperties: false
+      type: object
+      title: ScheduleUpdate
+    UploadComplete:
+      properties:
+        parts:
+          items:
+            $ref: '#/components/schemas/PartManifestEntry'
+          type: array
+          minItems: 1
+          title: Parts
+        sha256:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Sha256
+      additionalProperties: false
+      type: object
+      required:
+      - parts
+      title: UploadComplete
+    UploadCreate:
+      properties:
+        ingestion_id:
+          type: string
+          title: Ingestion Id
+        part_size:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Part Size
+        bytes_total:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Bytes Total
+      additionalProperties: false
+      type: object
+      required:
+      - ingestion_id
+      title: UploadCreate
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+    WatermarkCreate:
+      properties:
+        column:
+          type: string
+          title: Column
+        operator:
+          type: string
+          title: Operator
+          default: '>'
+        value_type:
+          type: string
+          enum:
+          - int
+          - decimal
+          - timestamp
+          - date
+          - string
+          title: Value Type
+          default: string
+        initial_value:
+          type: string
+          title: Initial Value
+      additionalProperties: false
+      type: object
+      required:
+      - column
+      - initial_value
+      title: WatermarkCreate

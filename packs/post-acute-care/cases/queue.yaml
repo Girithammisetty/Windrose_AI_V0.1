@@ -1,0 +1,68 @@
+# Seeded care-transition queue (PAC-FR-110 workflows expressed as open
+# case-service cases): the active episodes from the seed dataset that need
+# human review — readmission-risk interventions (US-7), a PDGM comorbidity
+# flag (US-2/AC-3), a PDPM therapy-alignment flag (US-4/AC-5), and hospice
+# benefit-period recertifications (US-6) — so a coordinator logging in sees a
+# real worklist on day one.
+dataset: pac_episodes
+due_days: 3
+rows:
+  - row_pk: EP-8013
+    severity: high
+    display_projection:
+      episode_id: EP-8013
+      patient_id: PT-2014
+      care_setting: SNF
+      facility: "Cedar Grove Care Center"
+      primary_dx: "I63.9 Cerebral infarction"
+      readmission_risk_score: "0.72"
+      los_days: "41"
+      agent_recommendation: risk_intervention_started
+      note: "Stroke resident at elevated 30-day risk — recommend medication reconciliation + escalated nursing visit cadence (BR-7: prioritization only, never discharge decisions)"
+  - row_pk: EP-8016
+    severity: high
+    display_projection:
+      episode_id: EP-8016
+      patient_id: PT-2017
+      care_setting: SNF
+      facility: "Harbor View SNF"
+      primary_dx: "S72.001D Hip fracture aftercare"
+      pdpm_group: reduced_physical_function
+      readmission_risk_score: "0.66"
+      agent_recommendation: therapy_plan_realigned
+      note: "PDPM Optimizer flags PT/OT minutes above the reduced_physical_function classification — propose aligning plan to functional status and care goals (BR-4: compliance-first, no therapy for the sake of case-mix)"
+  - row_pk: EP-8014
+    severity: medium
+    display_projection:
+      episode_id: EP-8014
+      patient_id: PT-2015
+      care_setting: HHA
+      facility: "Brookside Home Health"
+      primary_dx: "G20 Parkinsons disease"
+      pdgm_group: neuro_rehab
+      missed_comorbidity_count: "1"
+      revenue_impact: "214.00"
+      agent_recommendation: comorbidity_codes_accepted
+      note: "PDGM Optimizer flags one missed comorbidity code with discharge-summary evidence — nurse review required before adding (BR-3: no comorbidity without source citation)"
+  - row_pk: EP-8010
+    severity: medium
+    display_projection:
+      episode_id: EP-8010
+      patient_id: PT-2011
+      care_setting: HOSPICE
+      facility: "Serenity Hospice"
+      primary_dx: "G30.9 Alzheimers disease"
+      los_days: "88"
+      agent_recommendation: escalate_medical_director
+      note: "Benefit-period recertification due — Hospice Eligibility Copilot drafted narrative citing FAST stage 7A, 6% weight loss, and ADL dependence; physician must review and certify (BR-5)"
+  - row_pk: EP-8015
+    severity: medium
+    display_projection:
+      episode_id: EP-8015
+      patient_id: PT-2016
+      care_setting: HOSPICE
+      facility: "Serenity Hospice"
+      primary_dx: "I50.9 Heart failure unspecified"
+      los_days: "62"
+      agent_recommendation: escalate_medical_director
+      note: "CHF hospice recertification approaching — copilot drafted LCD-criteria narrative (NYHA class IV indicators, recurrent decompensation); MD reviews, edits, signs (BR-5)"

@@ -1,0 +1,9 @@
+# Disposition taxonomy for the three review workflows (INS-FR-091 state
+# machines expressed in today's case-service disposition catalog).
+- { code: pa_approved,        label: "PA approved",                    category: false_positive, requires_note: false }
+- { code: pa_denied,          label: "PA denied (human decision)",     category: true_positive,  requires_note: true }
+- { code: pa_deferred,        label: "PA deferred — more info needed", category: inconclusive,   requires_note: true }
+- { code: appeal_upheld,      label: "Appeal upheld — denial stands",  category: true_positive,  requires_note: true }
+- { code: appeal_overturned,  label: "Appeal overturned — approve claim", category: false_positive, requires_note: true }
+- { code: denial_notice_approved, label: "Denial notice approved for send", category: false_positive, requires_note: false }
+- { code: escalate_md,        label: "Escalate to medical director",   category: inconclusive,   requires_note: false }

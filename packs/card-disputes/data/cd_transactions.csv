@@ -1,0 +1,31 @@
+txn_id,cardholder_id,account_id,txn_date,txn_month,mcc,merchant_name,merchant_country,channel,entry_mode,amount
+T-7001,C-2003,A-200301,2026-06-02,2026-06,5817,GameTopUp Digital,GB,card_not_present,ecommerce,0.99
+T-7002,C-2003,A-200301,2026-06-02,2026-06,5817,GameTopUp Digital,GB,card_not_present,ecommerce,1.49
+T-7003,C-2003,A-200301,2026-06-02,2026-06,5817,GameTopUp Digital,GB,card_not_present,ecommerce,1.99
+T-7004,C-2003,A-200301,2026-06-02,2026-06,5732,ElectroHub Online,GB,card_not_present,ecommerce,849.99
+T-7005,C-2001,A-200101,2026-04-06,2026-04,5999,TrendCart Online,US,card_not_present,ecommerce,214.50
+T-7006,C-2001,A-200101,2026-05-11,2026-05,5691,UrbanThreads.com,US,card_not_present,ecommerce,168.75
+T-7007,C-2001,A-200101,2026-06-08,2026-06,5945,HobbyNest Direct,US,card_not_present,ecommerce,342.20
+T-7008,C-2009,A-200901,2026-05-15,2026-05,7997,FitStream Plus,US,card_not_present,recurring,39.99
+T-7009,C-2009,A-200901,2026-06-15,2026-06,7997,FitStream Plus,US,card_not_present,recurring,39.99
+T-7010,C-2012,A-201201,2026-06-20,2026-06,7997,FitStream Plus,US,card_not_present,recurring,39.99
+T-7011,C-2008,A-200801,2026-06-18,2026-06,6011,FirstLine ATM 4417,US,atm,chip,300.00
+T-7012,C-2006,A-200601,2026-06-14,2026-06,5812,Casa Verde Cantina,US,card_present,chip,86.40
+T-7013,C-2006,A-200601,2026-06-14,2026-06,5812,Casa Verde Cantina,US,card_present,chip,86.40
+T-7014,C-2004,A-200401,2026-06-25,2026-06,5732,LuxeTech Bazaar,SG,card_not_present,ecommerce,2450.00
+T-7015,C-2002,A-200201,2026-03-09,2026-03,4816,StreamBox Media,US,card_not_present,recurring,15.99
+T-7016,C-2005,A-200501,2026-03-14,2026-03,5085,MachParts Supply Co,US,card_not_present,ecommerce,1284.00
+T-7017,C-2007,A-200701,2026-03-21,2026-03,5967,GlowSkin Direct,CY,card_not_present,ecommerce,89.95
+T-7018,C-2010,A-201001,2026-03-27,2026-03,5411,FreshMart Grocers,US,card_present,contactless,142.63
+T-7019,C-2011,A-201101,2026-04-03,2026-04,5099,TradeWinds Imports,CN,card_not_present,ecommerce,760.00
+T-7020,C-2002,A-200201,2026-04-10,2026-04,5541,QuickFuel Station 88,US,card_present,chip,54.20
+T-7021,C-2009,A-200901,2026-04-16,2026-04,4899,SkyLink Cable,US,card_not_present,recurring,119.00
+T-7022,C-2010,A-201001,2026-04-22,2026-04,5732,ElectroHub Online,GB,card_not_present,ecommerce,415.75
+T-7023,C-2007,A-200701,2026-05-02,2026-05,5945,HobbyNest Direct,US,card_not_present,ecommerce,66.30
+T-7024,C-2005,A-200501,2026-05-08,2026-05,7399,OfficeServ Solutions,US,card_not_present,ecommerce,289.99
+T-7025,C-2012,A-201201,2026-05-14,2026-05,5812,Harbor Grill House,US,card_present,chip,112.85
+T-7026,C-2011,A-201101,2026-05-19,2026-05,5967,GlowSkin Direct,CY,card_not_present,ecommerce,89.95
+T-7027,C-2010,A-201001,2026-05-24,2026-05,6011,FirstLine ATM 2210,US,atm,chip,400.00
+T-7028,C-2002,A-200201,2026-06-05,2026-06,5411,FreshMart Grocers,US,card_present,contactless,97.14
+T-7029,C-2008,A-200801,2026-06-10,2026-06,5541,QuickFuel Station 88,US,card_present,chip,61.45
+T-7030,C-2004,A-200401,2026-06-12,2026-06,4816,StreamBox Media,US,card_not_present,recurring,15.99

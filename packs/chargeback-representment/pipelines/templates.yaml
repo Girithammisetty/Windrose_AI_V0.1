@@ -1,0 +1,17 @@
+# Pipeline seeds (expressed against the real pipeline-orchestrator algorithm
+# catalog): an unsupervised order-anomaly detector (friendly-fraud /
+# chargeback-prone order surface scan over AVS, delivery, device and channel
+# signals) and a supervised win-likelihood scorer trained on human
+# fight/accept decisions and outcomes (the deterministic-first pre-router for
+# the response queue). Trained models require review before promotion — the
+# Dispute Program Manager approves promotions.
+- identity: mr_order_anomaly_isolation_forest
+  name: "Order anomaly detector (isolation forest)"
+  algorithm: isolation_forest
+  mode: train
+  dataset: mr_orders
+- identity: mr_win_likelihood_xgboost
+  name: "Representment win-likelihood scorer (xgboost)"
+  algorithm: xgboost
+  mode: train
+  dataset: mr_chargebacks

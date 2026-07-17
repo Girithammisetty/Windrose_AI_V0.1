@@ -1,0 +1,11 @@
+# Disposition taxonomy for the SIU lead review workflow (FWA-FR-100 state
+# machines expressed in today's case-service disposition catalog). Notes are
+# mandatory on every determinative outcome — FCA evidentiary defensibility
+# (FWA-FR-090) demands a written basis; referral additionally requires the
+# SR-I + legal two-signature chain (BR-3, enforced by disposition approval).
+- { code: open_investigation, label: "Open SIU investigation",                          category: true_positive,  requires_note: true }
+- { code: referred_siu,       label: "Referred — DOJ / OIG / state DOI (two-signature)", category: true_positive,  requires_note: true }
+- { code: recovery_initiated, label: "Recovery initiated (payback / offset / settlement)", category: true_positive, requires_note: true }
+- { code: education_letter,   label: "Provider education letter (waste, not fraud)",    category: benign,         requires_note: true }
+- { code: no_findings,        label: "No findings — close as false positive",           category: false_positive, requires_note: true }
+- { code: pend_evidence,      label: "Pend — additional evidence needed",               category: inconclusive,   requires_note: false }

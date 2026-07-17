@@ -1,0 +1,14 @@
+{
+  "type": "record",
+  "name": "MemoryWritten",
+  "namespace": "windrose.memory.events.v1",
+  "doc": "Payload of memory.written (MEM §6). Emitted on insert or merge.",
+  "fields": [
+    {"name": "memory_id", "type": "string"},
+    {"name": "scope", "type": {"type": "enum", "name": "Scope",
+      "symbols": ["session", "user", "workspace", "tenant"]}},
+    {"name": "source_type", "type": {"type": "enum", "name": "SourceType",
+      "symbols": ["agent_run", "user_explicit", "tool_output", "admin"]}},
+    {"name": "merged", "type": "boolean", "default": false}
+  ]
+}

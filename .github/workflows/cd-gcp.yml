@@ -1,0 +1,146 @@
+# Windrose — Continuous Deployment to GKE (GCP)
+#
+# Keyless auth via Workload Identity Federation. No cloud keys are stored: the
+# job mints a short-lived token from GitHub's OIDC identity.
+#
+# Required GitHub secrets (Settings -> Secrets and variables -> Actions):
+#   GCP_WIF_PROVIDER  full resource name of the WIF provider
+#                     (projects/NNN/locations/global/workloadIdentityPools/POOL/providers/PROVIDER)
+#   GCP_DEPLOY_SA     deploy service account email (windrose-ci-deploy@<project>.iam.gserviceaccount.com)
+#
+# Required GitHub variables (vars.*):
+#   GCP_PROJECT_ID    target project id
+#   GCP_REGION        region, e.g. us-central1   (GKE cluster location)
+#   GKE_CLUSTER       GKE cluster name (Terraform output gke_cluster_name)
+# Optional variables:
+#   HELM_RELEASE      Helm release name           (default: windrose)
+#   HELM_NAMESPACE    target namespace            (default: windrose)
+#   ESO_VERSION       External Secrets chart ver  (default: 0.9.20)
+#   INSTALL_ESO       "true" to install/upgrade External Secrets Operator (default: false)
+#
+# See deploy/terraform/gcp/README.md for the one-time WIF setup.
+
+name: cd-gcp
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Image tag to deploy (defaults to the release tag or commit SHA)."
+        required: false
+        type: string
+  push:
+    tags:
+      - "v*"
+
+concurrency:
+  group: cd-gcp-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write # required for WIF (mint the OIDC token)
+
+env:
+  HELM_RELEASE: ${{ vars.HELM_RELEASE || 'windrose' }}
+  HELM_NAMESPACE: ${{ vars.HELM_NAMESPACE || 'windrose' }}
+  ESO_VERSION: ${{ vars.ESO_VERSION || '0.9.20' }}
+
+jobs:
+  deploy:
+    name: Deploy to GKE
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve image tag
+        id: tag
+        run: |
+          if [ -n "${{ inputs.image_tag }}" ]; then
+            TAG="${{ inputs.image_tag }}"
+          elif [ "${{ github.ref_type }}" = "tag" ]; then
+            TAG="${GITHUB_REF_NAME}"
+          else
+            TAG="${GITHUB_SHA::12}"
+          fi
+          echo "image_tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "Deploying image tag: ${TAG}"
+
+      - name: Authenticate to Google Cloud (WIF, keyless)
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_DEPLOY_SA }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: ${{ vars.GKE_CLUSTER }}
+          location: ${{ vars.GCP_REGION }}
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.15.4
+
+      - name: Ensure namespaces
+        run: |
+          kubectl create namespace "${HELM_NAMESPACE}" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      # External Secrets Operator + a ClusterSecretStore for GCP Secret Manager.
+      # Gated by INSTALL_ESO: leave "false" if ESO is already managed out-of-band
+      # (e.g. by values-gcp.yaml / a platform bootstrap). Workload Identity means
+      # no SA key is needed — the ESO KSA is annotated with the accessor GSA.
+      - name: Install External Secrets Operator
+        if: ${{ vars.INSTALL_ESO == 'true' }}
+        run: |
+          helm repo add external-secrets https://charts.external-secrets.io
+          helm repo update
+          helm upgrade --install external-secrets external-secrets/external-secrets \
+            --namespace external-secrets --create-namespace \
+            --version "${ESO_VERSION}" \
+            --set installCRDs=true \
+            --wait --timeout 5m
+
+      - name: Apply ClusterSecretStore (GCP Secret Manager)
+        if: ${{ vars.INSTALL_ESO == 'true' }}
+        run: |
+          cat <<EOF | kubectl apply -f -
+          apiVersion: external-secrets.io/v1beta1
+          kind: ClusterSecretStore
+          metadata:
+            name: gcp-secret-manager
+          spec:
+            provider:
+              gcpsm:
+                projectID: "${{ vars.GCP_PROJECT_ID }}"
+          EOF
+
+      - name: Helm deploy Windrose
+        run: |
+          helm upgrade --install "${HELM_RELEASE}" deploy/helm/windrose \
+            --namespace "${HELM_NAMESPACE}" \
+            -f deploy/helm/windrose/values-gcp.yaml \
+            --set global.imageTag="${{ steps.tag.outputs.image_tag }}" \
+            --set global.project="${{ vars.GCP_PROJECT_ID }}" \
+            --set global.region="${{ vars.GCP_REGION }}" \
+            --wait --timeout 15m
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment \
+            --namespace "${HELM_NAMESPACE}" \
+            --selector "app.kubernetes.io/instance=${HELM_RELEASE}" \
+            --timeout 10m || true
+          echo "Deployed workloads:"
+          kubectl get deployments,pods --namespace "${HELM_NAMESPACE}"

@@ -1,0 +1,17 @@
+apiVersion: v2
+name: windrose
+description: >-
+  Windrose — governed ML backbone for insurance claims. Umbrella chart that
+  renders one Deployment/Service (+ optional HPA and pre-install migration Job)
+  per microservice from a single services list mirroring deploy/services.yaml.
+type: application
+# Chart version: bump on template/values changes.
+version: 0.1.0
+# appVersion mirrors the released image tag (a git tag like v0.1.0). At deploy
+# time override the actual image tag with --set global.imageTag=<sha-or-tag>.
+appVersion: "v0.1.0"
+kubeVersion: ">=1.27.0-0"
+maintainers:
+  - name: Windrose Platform
+sources:
+  - https://github.com/windrose-ai/windrose

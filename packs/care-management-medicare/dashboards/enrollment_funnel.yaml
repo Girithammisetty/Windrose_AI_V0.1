@@ -1,0 +1,56 @@
+# Enrollment Funnel dashboard (CMM-FR-120 #1, US-1/US-12): eligible -> offered
+# -> consented -> active per program, panel mix, condition-group enrollment
+# concentration. Chart families restricted to the render-verified set
+# (vertical_bar / grid / pie / line).
+name: "Enrollment Funnel"
+module: insights
+semantic_model: care_mgmt_core
+description: >-
+  Medicare care-management enrollment funnel (BRD 25): patients by enrollment
+  stage, active enrollment per program family (CCM/PCM/TCM/BHI/CoCM/RPM/RTM/
+  APCM), panel plan-type mix, and per-condition-group enrollment depth.
+tags: [healthcare, provider, care-management, enrollment, pack]
+charts:
+  - name: "Patients by enrollment stage"
+    chart_type: vertical_bar_chart
+    description: "Eligible / offered / consented / active funnel stages"
+    config:
+      x: { dimension: enrollment_status }
+      y: [ { measure: eligible_patients, agg_fn: count } ]
+    sources: [ { measure: eligible_patients } ]
+    w: 6
+    h: 4
+  - name: "Active enrollment by program"
+    chart_type: vertical_bar_chart
+    description: "Actively enrolled patients per program family"
+    config:
+      x: { dimension: enrolled_program }
+      y: [ { measure: enrolled_patients, agg_fn: count } ]
+    sources: [ { measure: enrolled_patients } ]
+    w: 6
+    h: 4
+  - name: "Panel mix by plan type"
+    chart_type: pie_chart
+    description: "FFS vs MA vs Duals panel composition"
+    config:
+      x: { dimension: plan_type }
+      y: [ { measure: eligible_patients, agg_fn: count } ]
+    sources: [ { measure: eligible_patients } ]
+    w: 6
+    h: 4
+  - name: "Enrollment by condition group"
+    chart_type: grid_chart
+    description: "Eligible vs enrolled patients and condition burden per condition group — flags under-enrolled conditions (Appendix Q9)"
+    config:
+      columns: [condition_group, eligible_patients, enrolled_patients, avg_chronic_conditions]
+      x: { dimension: condition_group }
+      y:
+        - { measure: eligible_patients, agg_fn: count }
+        - { measure: enrolled_patients, agg_fn: count }
+        - { measure: avg_chronic_conditions, agg_fn: avg }
+    sources:
+      - { measure: eligible_patients }
+      - { measure: enrolled_patients }
+      - { measure: avg_chronic_conditions }
+    w: 12
+    h: 4

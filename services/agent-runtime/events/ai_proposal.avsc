@@ -1,0 +1,30 @@
+{
+  "type": "record",
+  "name": "AiProposal",
+  "namespace": "windrose.agent.events.v1",
+  "doc": "ai.proposal.v1 payload (ART-FR-046). Rejection messages + edit diffs are consumed by eval-service for the learning flywheel. Emitted inside the master envelope's `payload` (JSON-encoded).",
+  "fields": [
+    {"name": "proposal_id", "type": "string"},
+    {"name": "agent_key", "type": "string"},
+    {"name": "agent_version", "type": "int"},
+    {"name": "tool_id", "type": "string"},
+    {"name": "affected_urns", "type": {"type": "array", "items": "string"}},
+    {"name": "decision", "type": ["null", {
+      "type": "record", "name": "ProposalDecision",
+      "fields": [
+        {"name": "action", "type": "string", "doc": "approve|reject|edit_args|respond"},
+        {"name": "actor", "type": "string", "doc": "user:<id> | policy:auto"},
+        {"name": "message", "type": ["null", "string"], "default": null},
+        {"name": "diff", "type": ["null", {"type": "array", "items": {
+          "type": "record", "name": "FieldDiff",
+          "fields": [
+            {"name": "field", "type": "string"},
+            {"name": "from", "type": ["null", "string"], "default": null},
+            {"name": "to", "type": ["null", "string"], "default": null}
+          ]
+        }}], "default": null},
+        {"name": "decided_at", "type": "string"}
+      ]
+    }], "default": null}
+  ]
+}

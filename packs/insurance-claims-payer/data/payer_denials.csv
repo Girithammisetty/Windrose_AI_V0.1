@@ -1,0 +1,11 @@
+denial_id,claim_id,member_id,denial_reason_code,denial_reason_text,cpt_code,service_line,decision_by,decision_month,product_type,member_state,appealed
+DEN-3001,CLM-20002,M-4402,CO-50,Not medically necessary per plan policy,70553,imaging,rules_engine,2026-01,HMO,NY,yes
+DEN-3002,CLM-20006,M-4406,CO-197,Precertification/authorization absent,27447,surgery,rules_engine,2026-02,EPO,FL,yes
+DEN-3003,CLM-20008,M-4408,PR-204,Service not covered under plan (out of network),72148,imaging,human,2026-02,PPO,TX,no
+DEN-3004,CLM-20011,M-4411,CO-50,Not medically necessary per plan policy,22551,surgery,human,2026-03,PPO,NY,yes
+DEN-3005,CLM-20014,M-4414,CO-151,Frequency exceeds plan limits,70553,imaging,rules_engine,2026-03,PPO,CA,yes
+DEN-3006,CLM-20017,M-4417,CO-197,Precertification/authorization absent,J1745,specialty_rx,rules_engine,2026-04,EPO,FL,yes
+DEN-3007,CLM-20021,M-4421,CO-50,Not medically necessary per plan policy,74177,imaging,human,2026-05,HMO,FL,no
+DEN-3008,CLM-20023,M-4423,CO-151,Frequency exceeds plan limits,64483,pain_mgmt,rules_engine,2026-05,MEDICARE_ADVANTAGE,NY,yes
+DEN-3009,CLM-20026,M-4426,CO-50,Not medically necessary per plan policy,96413,oncology,human,2026-06,PPO,CA,yes
+DEN-3010,CLM-20029,M-4429,PR-204,Service not covered under plan (out of network),72110,imaging,rules_engine,2026-06,HMO,FL,no

@@ -1,0 +1,70 @@
+{
+  "pack": "benefits-appeals",
+  "version": "1.0.0",
+  "workspace_id": "019f6a76-5759-78c2-b225-860d97a63d6a",
+  "tenant_id": "019f6a76-530d-7301-a968-51a719fb802d",
+  "started_at": "2026-07-16T10:26:09Z",
+  "finished_at": "2026-07-16T10:26:28Z",
+  "actions": [
+    {
+      "kind": "datasets",
+      "identity": "gb_claimants",
+      "action": "failed",
+      "urn": null,
+      "detail": "complete 500: {\"error\":{\"code\":\"INTERNAL\",\"message\":\"internal error\",\"trace_id\":\"019f6a76-5ac5-7bd0-b614-2689cd761b73\"}}"
+    },
+    {
+      "kind": "datasets",
+      "identity": "gb_claims",
+      "action": "failed",
+      "urn": null,
+      "detail": "complete 500: {\"error\":{\"code\":\"INTERNAL\",\"message\":\"internal error\",\"trace_id\":\"019f6a76-73bb-790d-9e17-07b82e86fe08\"}}"
+    },
+    {
+      "kind": "datasets",
+      "identity": "gb_determinations",
+      "action": "failed",
+      "urn": null,
+      "detail": "complete 500: {\"error\":{\"code\":\"INTERNAL\",\"message\":\"internal error\",\"trace_id\":\"019f6a76-8ca5-7109-b6b7-a795ffe09956\"}}"
+    }
+  ],
+  "deferred": [
+    {
+      "kind": "guardrails",
+      "reason": "Benefits-domain policies (no adverse action \u2014 denial, termination, reduction, overpayment establishment, fraud penalty \u2014 without an individualized human determination and a compliant written notice; no outcome communicated to a claimant before the human decision; identity flags route to verification pathways, never automatic denial; disparate-impact watch on denial and fraud-referral patterns) require guardrail-service / OPA policy materialization, which Core does not expose as a pack surface yet. The behavioral core is partially covered today by Core invariants: every pack-configured agent is proposal-mode with four-eyes approval (agent-runtime), and the agent instructions + disposition taxonomy route final determinations exclusively to human examiners with the Program Integrity Manager as approver."
+    },
+    {
+      "kind": "agent_recipes",
+      "reason": "Bespoke LangGraph recipes (Eligibility Determination Copilot, Appeal Hearing Packet Builder, Overpayment Waiver Analyzer, Identity Verification Router) require agent-runtime graph-module registration (BRD 23 BR-12). This pack specializes the existing case-triage + analytics agents via TenantAgentConfig prompt_params + tenant-scope RAG grounding instead."
+    },
+    {
+      "kind": "connection_templates",
+      "reason": "Production read connectors (state benefits mainframes and eligibility systems, UI tax/wage systems, interstate and federal cross-matches such as quarterly wage records, new-hire registries, SSA/DMV identity verification, vital records, and document-management systems holding claimant evidence) require customer credentials and pack-service connector materialization. The pack ships seed datasets in the exact landing shape; production connectors are configured through the product Data > Connections UI."
+    },
+    {
+      "kind": "write_adapters",
+      "reason": "Write adapters (post an eligibility decision to the benefits system of record, issue or release payments, establish overpayment debts, send adverse-action and appeal-rights notices, docket fair hearings) execute only behind pack-service's materialization contract and customer credentials; every such write stays proposal-mode with human approval \u2014 no autonomous benefit denial, termination, or debt establishment, ever."
+    },
+    {
+      "kind": "eval_sets",
+      "reason": "Golden eval sets (determination triage, deadline-risk ranking, waiver-eligibility analysis, identity-flag disposition, hearing-packet completeness) require eval-service write APIs whose action names are not yet in the rbac canonical catalog (Core follow-up noted in rbac catalog.go)."
+    },
+    {
+      "kind": "ontology",
+      "reason": "Ontology registration (Claimant, Household, Claim, Determination, Issue, VerificationDocument, WageRecord, Appeal, Hearing, Notice, OverpaymentDebt, WaiverRequest) awaits pack-service; entity semantics are carried today by the benefits_core semantic model and dataset schemas."
+    },
+    {
+      "kind": "case_schemas",
+      "reason": "Typed case schemas (eligibility_determination, redetermination_review, appeal_hearing_prep, overpayment_review, identity_verification, fraud_referral) await case-service schema materialization; today's cases carry the same fields via display_projection + the disposition taxonomy."
+    },
+    {
+      "kind": "model_archetypes",
+      "reason": "Model archetypes (determination_outcome_confidence, identity_risk_score, waiver_likelihood) await experiment-service archetype APIs; the scoring capability ships as pipeline seeds instead (isolation_forest claim anomaly + xgboost determination-outcome scorer) with model-governance and human-review expectations noted in grounding memories."
+    },
+    {
+      "kind": "display_labels",
+      "reason": "Display-label overlays (\"Determination\", \"Fair hearing\", \"Expedited \u2014 clock running\", \"Waiver candidate\", entity templates) require the BFF label-registry endpoints (BFF-FR-082/088) which are pack-service-tier features."
+    }
+  ],
+  "result": "failed"
+}

@@ -1,0 +1,23 @@
+{
+  "type": "record",
+  "name": "AiEventEnvelope",
+  "namespace": "com.windrose.ai.events",
+  "doc": "Envelope for ai.events.v1 (MASTER-FR-031). Partition key = tenant_id. event_type ∈ {budget.threshold, budget.exhausted, budget.anomaly, guardrail.triggered, provider.state_changed, key.created, key.revoked, ladder.updated, guardrail_policy.updated, security.cross_tenant_denied, usage.reconciliation_drift}.",
+  "fields": [
+    {"name": "event_id", "type": "string"},
+    {"name": "event_type", "type": "string"},
+    {"name": "tenant_id", "type": "string"},
+    {"name": "actor", "type": {"type": "record", "name": "Actor", "fields": [
+      {"name": "type", "type": "string"},
+      {"name": "id", "type": "string"}
+    ]}},
+    {"name": "via_agent", "type": ["null", {"type": "record", "name": "ViaAgent", "fields": [
+      {"name": "agent_id", "type": "string"},
+      {"name": "version", "type": ["null", "string"], "default": null}
+    ]}], "default": null},
+    {"name": "resource_urn", "type": "string"},
+    {"name": "occurred_at", "type": "string"},
+    {"name": "trace_id", "type": ["null", "string"], "default": null},
+    {"name": "payload", "type": "string", "doc": "JSON-encoded event payload; per-event schemas documented in BRD 12 §6. No PII values (MASTER-FR-042)."}
+  ]
+}

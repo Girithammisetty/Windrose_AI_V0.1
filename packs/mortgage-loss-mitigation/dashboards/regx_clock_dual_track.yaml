@@ -1,0 +1,68 @@
+# Reg X Clock & Dual-Track Watch: 12 CFR 1024.41 deadline runway,
+# dual-tracking holds, and document completeness — the compliance view a
+# CFPB examiner walks first.
+name: "Reg X Clock & Dual-Track Watch"
+module: insights
+semantic_model: lossmit_core
+description: >-
+  RESPA Reg X compliance posture: open applications by evaluation-deadline
+  runway, dual-tracking holds by investor, document completeness mix,
+  complete-application intake trend, and the per-investor clock grid.
+tags: [mortgage, servicing, reg_x, dual_tracking, compliance, pack]
+charts:
+  - name: "Deadline runway (open book)"
+    chart_type: vertical_bar_chart
+    description: "Open applications by days remaining to the Reg X evaluation/appeal decision deadline"
+    config:
+      x: { dimension: deadline_bucket }
+      y: [ { measure: open_application_count, agg_fn: count } ]
+    sources: [ { measure: open_application_count } ]
+    w: 6
+    h: 4
+  - name: "Dual-track holds by investor"
+    chart_type: vertical_bar_chart
+    description: "Applications with a foreclosure-process hold in effect, split by investor"
+    config:
+      x: { dimension: investor }
+      y: [ { measure: dual_track_hold_count, agg_fn: count } ]
+    sources: [ { measure: dual_track_hold_count } ]
+    w: 6
+    h: 4
+  - name: "Document completeness mix"
+    chart_type: pie_chart
+    description: "Complete vs incomplete applications (the 30-day clock only runs on complete)"
+    config:
+      x: { dimension: doc_status }
+      y: [ { measure: application_count, agg_fn: count } ]
+    sources: [ { measure: application_count } ]
+    w: 6
+    h: 4
+  - name: "Complete-application intake by month"
+    chart_type: line_chart
+    description: "Complete applications received by month (clock-starting volume)"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: complete_doc_count, agg_fn: count } ]
+    sources: [ { measure: complete_doc_count } ]
+    w: 6
+    h: 4
+  - name: "Investor clock grid"
+    chart_type: grid_chart
+    description: "Volume, open backlog, dual-track holds, incomplete docs and arrearage by investor"
+    config:
+      columns: [investor, application_count, open_application_count, dual_track_hold_count, incomplete_doc_count, total_arrearage_amount]
+      x: { dimension: investor }
+      y:
+        - { measure: application_count, agg_fn: count }
+        - { measure: open_application_count, agg_fn: count }
+        - { measure: dual_track_hold_count, agg_fn: count }
+        - { measure: incomplete_doc_count, agg_fn: count }
+        - { measure: total_arrearage_amount, agg_fn: sum }
+    sources:
+      - { measure: application_count }
+      - { measure: open_application_count }
+      - { measure: dual_track_hold_count }
+      - { measure: incomplete_doc_count }
+      - { measure: total_arrearage_amount }
+    w: 12
+    h: 4

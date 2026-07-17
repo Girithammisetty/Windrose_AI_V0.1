@@ -1,0 +1,71 @@
+# Investigation-methodology grounding records (the knowledge INV-FR-090's
+# guardrails encode, delivered today as tenant-scope copilot RAG grounding so
+# every consumer vertical's triage copilot reasons with the same
+# investigation discipline).
+- content: >-
+    Chain of custody (investigation framework): every evidence artifact must
+    be content-hashed (SHA-256) at capture, its provenance chain preserved
+    (source system, transform, storage location), and any deletion requires
+    two-person sign-off. Evidence whose hash cannot be re-verified is
+    inadmissible in a referral packet and must be re-gathered from source.
+  tags: [investigation, chain_of_custody, evidence]
+  confidence: 0.98
+- content: >-
+    Tipping-off prohibition (generic): never notify, hint to, or take action
+    visible to a subject under investigation before the investigation
+    concludes. All investigation cases, notes, and proposals are internal;
+    member/customer-facing communications must never reference an open
+    investigation. Consumer regulations add criminal penalties (e.g. BSA
+    tipping-off in banking).
+  tags: [investigation, tipping_off, confidentiality]
+  confidence: 0.98
+- content: >-
+    Evidence provenance rule: every investigation proposal (disposition
+    recommendation, escalation, referral) must cite the specific evidence it
+    relies on — transaction ids, claim ids, document references, prior-case
+    ids. Unsourced conclusions are rejected at review; "pattern looks
+    suspicious" without cited instances is not a finding.
+  tags: [investigation, provenance, citations]
+  confidence: 0.95
+- content: >-
+    Two-signature referral: any external referral (law enforcement, regulator,
+    external review body) requires two distinct approvers — minimally a senior
+    investigator plus a compliance/legal role — recorded with identities and
+    timestamps. A single actor must never both prepare and solely approve an
+    external referral.
+  tags: [investigation, referral, four_eyes]
+  confidence: 0.98
+- content: >-
+    Investigation lifecycle (framework): intake signal -> pattern detection
+    (deterministic rules first, statistical outliers second, judgement last)
+    -> network/relationship analysis around the flagged entity -> risk
+    scoring with explicit confidence -> human verdict. Low-confidence scores
+    loop back for more evidence at most twice before forcing a human
+    decision; investigations never loop indefinitely.
+  tags: [investigation, lifecycle, methodology]
+  confidence: 0.95
+- content: >-
+    Peer-group deviation principle: an entity's behavior is suspicious
+    relative to its OWN history and its PEER GROUP, not in absolute terms. A
+    high transaction volume is normal for a supermarket and anomalous for a
+    dormant personal account; a high procedure count is normal for a trauma
+    center and anomalous for a solo practice. Always establish the baseline
+    before flagging.
+  tags: [investigation, baselines, peer_group]
+  confidence: 0.95
+- content: >-
+    False-positive discipline: most investigation signals are false positives.
+    Dismissals are first-class outcomes and must be recorded with the reason
+    (the dismissal rationale trains the next model generation). An
+    investigator who never dismisses is as miscalibrated as one who never
+    escalates.
+  tags: [investigation, false_positives, learning_loop]
+  confidence: 0.9
+- content: >-
+    Investigator identity protection: investigation records shared outside
+    the investigation team (including external referrals) identify the
+    INSTITUTION as the source, not individual investigators, unless the
+    receiving authority requires named attestation. Internal audit trails
+    retain full identity.
+  tags: [investigation, identity_protection]
+  confidence: 0.9

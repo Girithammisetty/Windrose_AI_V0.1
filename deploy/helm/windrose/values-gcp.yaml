@@ -1,0 +1,40 @@
+# GCP (GKE) overrides. Cloud-specific only — everything else comes from values.yaml.
+# Infra endpoints below are PLACEHOLDERS; the CD workflow overrides them with
+# Terraform outputs (deploy/terraform/gcp).
+
+global:
+  # Google Artifact Registry.
+  registry: us-docker.pkg.dev/windrose-prod/windrose
+
+serviceAccount:
+  create: true
+  annotations:
+    # GKE Workload Identity: bind KSA -> GSA for keyless GCS/Secret Manager access.
+    iam.gke.io/gcp-service-account: windrose-workload@windrose-prod.iam.gserviceaccount.com  # PLACEHOLDER
+
+ingress:
+  className: gce
+  annotations:
+    kubernetes.io/ingress.class: gce
+    # kubernetes.io/ingress.global-static-ip-name: windrose-ip   # PLACEHOLDER
+    # networking.gke.io/managed-certificates: windrose-cert       # PLACEHOLDER
+
+storageClass: standard-rwo
+
+externalSecrets:
+  enabled: true
+  secretStoreRef:
+    name: windrose-gcp-secrets
+    kind: ClusterSecretStore   # backed by GCP Secret Manager
+  remoteKeyPrefix: windrose/prod
+
+config:
+  ICEBERG_WAREHOUSE: gs://windrose-prod-warehouse/
+  OBJECTSTORE_REGION_HINT: us-central1
+  # POSTGRES_HOST / REDIS_URL / KAFKA_BOOTSTRAP etc. come from windrose-secrets
+  # (GCP Secret Manager) — not set here.
+  #
+  # BYO observability backend (opt-in — uncomment + point at your own collector):
+  # WINDROSE_OTEL_ENABLED: "true"
+  # OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector.observability.svc:4317   # in-cluster collector
+  # OTEL_EXPORTER_OTLP_ENDPOINT: <your-grafana-cloud-otlp-gateway>:4317  # or a vendor OTLP/gRPC endpoint

@@ -1,0 +1,30 @@
+# Saved queries (query-service) — includes the account->enforcement-action
+# edge source (parent/child/n) for network-family charts: repeat-violator
+# fans (one account, many actions) and action-concentration clusters from
+# the enforcement book.
+- identity: ts_enforcement_edges
+  name: "Appeals: account-enforcement network edges"
+  description: >-
+    Account -> enforcement-action edge list (parent/child/n) from the
+    enforcement decision book — network-chart source for spotting
+    repeat-violator fans (one account accumulating many actions) and
+    action-concentration clusters (which enforcement actions dominate
+    which accounts).
+  sql: >-
+    SELECT account_id AS parent, action AS child,
+           count(*) AS n
+    FROM {{dataset('ts-enforcements')}}
+    GROUP BY account_id, action
+  tags: [appeals, network, enforcement, repeat_violators, pack]
+- identity: ts_priority_open_appeals
+  name: "Appeals: deadline-ranked open queue"
+  description: "Open appeals ranked by deadline runway then severity — the reviewer ranked-queue seed (deadline x severity x standing, not FIFO)."
+  sql: >-
+    SELECT appeal_id, decision_id, appeal_type, policy_area,
+           enforcement_source, user_standing, severity,
+           cast(days_to_deadline AS double) AS days_to_deadline,
+           cast(age_days AS double) AS age_days
+    FROM {{dataset('ts-appeals')}}
+    WHERE status = 'open'
+    ORDER BY days_to_deadline ASC, severity ASC
+  tags: [appeals, queue, backlog, deadlines, pack]

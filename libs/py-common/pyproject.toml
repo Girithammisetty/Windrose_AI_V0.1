@@ -1,0 +1,74 @@
+[project]
+name = "windrose-common"
+version = "0.1.0"
+description = "Windrose shared plumbing: real adapters for MinIO/S3, Iceberg REST, Vault, Kafka, OPA, Redis, JWKS, OTel, and HTTP helpers."
+requires-python = ">=3.12"
+dependencies = [
+    # object storage (S3 API -> MinIO) — real multipart streaming
+    "boto3>=1.34",
+    # lakehouse (Iceberg REST catalog + S3 FileIO -> MinIO)
+    "pyiceberg[s3fs]>=0.7,<0.10",
+    "pyarrow>=16",
+    "pandas>=2.2",
+    # secrets (Vault KV v2)
+    "hvac>=2.1",
+    # event bus (Kafka API -> Redpanda)
+    "aiokafka>=0.11",
+    # cache / dedup / projection
+    "redis>=5.0",
+    # authn (JWKS + RS256)
+    "pyjwt[crypto]>=2.8",
+    # http client (OPA, JWKS fetch) + server error envelope helpers
+    "httpx>=0.27",
+    # transactional-outbox relay against the service Postgres
+    "sqlalchemy[asyncio]>=2.0.30",
+    "asyncpg>=0.29",
+    # telemetry
+    "opentelemetry-api>=1.25",
+    "opentelemetry-sdk>=1.25",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.25",
+]
+
+# Secrets backend SDKs for BYO Infra Hardening Phase 2 (docs/design/
+# byo-infra-hardening.md). AWS Secrets Manager uses boto3 (already a base dep
+# above via S3), so it needs nothing extra. Azure/GCP are credential-gated,
+# heavier SDKs kept optional (mirrors ingestion-service's `cloud` extras
+# group) — install with `uv sync --extra cloud` when SECRETS_BACKEND needs
+# them; AWSSecretsManagerStore works out of the box.
+[project.optional-dependencies]
+cloud = [
+    "azure-keyvault-secrets>=4.8",
+    "azure-identity>=1.17",
+    "google-cloud-secret-manager>=2.20",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.2",
+    "pytest-asyncio>=0.23",
+    "ruff>=0.5",
+    "testcontainers>=4.5",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+markers = [
+    "integration: requires the local dev infra (docker-compose.dev.yml); auto-skips when an endpoint is unreachable",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+ignore = ["B008"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["windrose_common"]

@@ -1,0 +1,124 @@
+# ap-invoice-audit capability pack — Core-neutral edition: accounts-payable
+# invoice exception and fraud audit for enterprise finance / AP shared
+# services, P2P BPOs, and audit-recovery firms. Installable TODAY against
+# Windrose Core's public APIs via packctl; the manifest envelope follows
+# BRD 23 (PKG-FR-001/003). Components the current Core cannot materialize
+# are declared under `deferred` — recorded in the install ledger, never
+# faked.
+pack_manifest: 1
+name: ap-invoice-audit
+version: 1.0.0
+publisher: { id: pub-windrose, name: "Windrose Inc." }
+description: >-
+  AI-assisted accounts-payable invoice exception and fraud audit: exception
+  triage with payment-run deadline awareness (three-way-match gaps,
+  duplicates, price/quantity variances), BEC banking-change and shell-vendor
+  fraud escalation with out-of-band verification discipline, split-invoicing
+  threshold detection, duplicate-payment recovery workflow, AP-controls KPI
+  semantic model and dashboards (block rate, release rate, recovered
+  dollars, fraud-escalation share, deadline runway, vendor-risk mix),
+  vendor-category network analytics, payment-controls + invoice-fraud
+  grounding memories, and invoice-anomaly + exception-outcome training
+  pipelines.
+categories: [finance, accounts_payable, procure_to_pay, fraud, recovery_audit]
+regulatory: [sox_icfr, irs_1099_tin, ofac_sanctions, coso]
+components:
+  datasets:
+    - { file: "data/datasets.yaml", identity: "datasets" }
+  semantic_models:
+    - { file: "semantic/ap_audit_core.yaml", identity: "ap_audit_core" }
+  verified_queries:
+    - { file: "queries/verified.yaml", identity: "canonical_questions" }
+  saved_queries:
+    - { file: "queries/saved.yaml", identity: "saved_queries" }
+  dashboards:
+    - { file: "dashboards/ap_exception_center.yaml", identity: "ap_exception_center" }
+    - { file: "dashboards/fraud_vendor_risk.yaml", identity: "fraud_vendor_risk" }
+    - { file: "dashboards/recovery_controls.yaml", identity: "recovery_controls" }
+  dispositions:
+    - { file: "cases/dispositions.yaml", identity: "dispositions" }
+  cases:
+    - { file: "cases/queue.yaml", identity: "exception_queue" }
+  roles:
+    - { file: "rbac/roles.yaml", identity: "roles" }
+  agent_configs:
+    - { file: "agents/configs.yaml", identity: "agent_configs" }
+  memories:
+    - { file: "memories/grounding.yaml", identity: "grounding" }
+  pipelines:
+    - { file: "pipelines/templates.yaml", identity: "pipelines" }
+deferred:
+  - kind: guardrails
+    reason: >-
+      AP-domain policies (no payment released over a control exception
+      without an approver-signed rationale; no vendor banking change
+      accepted without documented out-of-band verification; no vendor
+      payable until TIN verification and sanctions screening complete;
+      block scope limited to the payment at risk) require
+      guardrail-service / OPA policy materialization, which Core does not
+      expose as a pack surface yet. The behavioral core is partially
+      covered today by Core invariants: every pack-configured agent is
+      proposal-mode with four-eyes approval (agent-runtime), and the agent
+      instructions + disposition taxonomy route payment blocks and
+      releases exclusively to human analysts with the AP Controls Manager
+      as approver.
+  - kind: agent_recipes
+    reason: >-
+      Bespoke LangGraph recipes (Exception Triage Copilot, Banking-Change
+      Verification Sentinel, Duplicate-Pair Matcher, Recovery Statement
+      Auditor) require agent-runtime graph-module registration (BRD 23
+      BR-12). This pack specializes the existing case-triage + analytics
+      agents via TenantAgentConfig prompt_params + tenant-scope RAG
+      grounding instead.
+  - kind: connection_templates
+    reason: >-
+      Production read connectors (ERP AP subledgers: SAP S/4HANA, Oracle
+      Fusion, NetSuite; P2P suites: Coupa, Ariba, Ivalua; invoice-capture/
+      OCR platforms; bank payment gateways for run schedules; vendor-master
+      and TIN/sanctions screening services) require customer credentials
+      and pack-service connector materialization. The pack ships seed
+      datasets in the exact landing shape; production connectors are
+      configured through the product Data > Connections UI.
+  - kind: write_adapters
+    reason: >-
+      Write adapters (place/release payment blocks in the ERP, park or
+      reject invoices back to the vendor portal, post negotiated credit
+      memos, update vendor-master banking details after verification)
+      execute only behind pack-service's materialization contract and
+      customer credentials; every such write stays proposal-mode with
+      human approval — no autonomous payment movement or vendor-master
+      change, ever.
+  - kind: eval_sets
+    reason: >-
+      Golden eval sets (duplicate-pair matching, BEC banking-change
+      triage, split-invoicing detection, release-vs-block calibration)
+      require eval-service write APIs whose action names are not yet in
+      the rbac canonical catalog (Core follow-up noted in rbac
+      catalog.go).
+  - kind: ontology
+    reason: >-
+      Ontology registration (Vendor, VendorBankAccount, PurchaseOrder,
+      GoodsReceipt, Invoice, InvoiceLine, PaymentRun, Exception,
+      CreditMemo, ApprovalThreshold, RecoveryClaim) awaits pack-service;
+      entity semantics are carried today by the ap_audit_core semantic
+      model and dataset schemas.
+  - kind: case_schemas
+    reason: >-
+      Typed case schemas (duplicate_review, banking_change_verification,
+      shell_vendor_investigation, price_variance_negotiation,
+      recovery_claim) await case-service schema materialization; today's
+      cases carry the same fields via display_projection + the disposition
+      taxonomy.
+  - kind: model_archetypes
+    reason: >-
+      Model archetypes (duplicate_pair_confidence, vendor_fraud_risk_score)
+      await experiment-service archetype APIs; the scoring capability
+      ships as pipeline seeds instead (isolation_forest invoice anomaly +
+      xgboost exception-outcome scorer) with model-governance expectations
+      noted in grounding memories.
+  - kind: display_labels
+    reason: >-
+      Display-label overlays ("Exception", "Payment block", "Banking
+      change pending verification", "Discount window closing", entity
+      templates) require the BFF label-registry endpoints (BFF-FR-082/088)
+      which are pack-service-tier features.

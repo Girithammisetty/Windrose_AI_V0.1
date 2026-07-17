@@ -1,0 +1,23 @@
+# Pack datasets (ingestion-service file_upload, stable names for idempotency).
+# In production these tables arrive via agency-management / broker-portal /
+# clearance-system connectors (deferred until pack-service ships connector
+# materialization); this seed data is REAL rows in the same landing shape,
+# encoding genuine submission-triage patterns so every downstream component
+# runs against real signal from day one: an in-appetite middle-market GL
+# renewal missing loss runs, a marginal cyber risk with no MFA/EDR
+# attestations, a large cat-exposed Florida property schedule near treaty
+# capacity, a duplicate submission from a second broker (clearance conflict —
+# first-in rule), a habitual out-of-appetite broker's trucking fleet, and a
+# renewal-defense submission two days from the broker's needed-by date.
+- identity: uw_submissions
+  name: uw-submissions
+  file: data/uw_submissions.csv
+  format: csv
+- identity: uw_accounts
+  name: uw-accounts
+  file: data/uw_accounts.csv
+  format: csv
+- identity: uw_insureds
+  name: uw-insureds
+  file: data/uw_insureds.csv
+  format: csv

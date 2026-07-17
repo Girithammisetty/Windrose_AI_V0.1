@@ -1,0 +1,64 @@
+# Verified NL<->SQL queries (four-eyes approved at install). SQL uses
+# {{dataset('<name>')}} macros — the only table references query-service's
+# tenant-namespace guard admits.
+- nl_text: "Which open complaints are closest to an MDR reporting deadline?"
+  sql_text: >-
+    SELECT complaint_id, device_id, complaint_source, event_type,
+           device_problem, patient_harm, severity,
+           cast(days_to_deadline AS double) AS days_to_deadline,
+           cast(age_days AS double) AS age_days
+    FROM {{dataset('dc-complaints')}}
+    WHERE status = 'open'
+    ORDER BY days_to_deadline ASC
+  model: complaints_core
+  tags: [complaints, mdr, deadlines, backlog, pack]
+- nl_text: "MDR filing rate by event type — which events convert to reports?"
+  sql_text: >-
+    SELECT event_type,
+           count(*) AS closed_complaints,
+           sum(CASE WHEN disposition = 'file_mdr_report' THEN 1 ELSE 0 END) AS mdr_filed,
+           round(sum(CASE WHEN disposition = 'file_mdr_report' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS mdr_filing_rate
+    FROM {{dataset('dc-complaints')}}
+    WHERE status = 'closed'
+    GROUP BY event_type
+    ORDER BY mdr_filing_rate DESC
+  model: complaints_core
+  tags: [complaints, mdr, reportability, kpi, pack]
+- nl_text: "Device-problem trending by month — where is a signal building?"
+  sql_text: >-
+    SELECT device_problem, filed_month,
+           count(*) AS complaints,
+           sum(CASE WHEN disposition = 'file_mdr_report' THEN 1 ELSE 0 END) AS mdr_filed,
+           sum(CASE WHEN disposition = 'open_capa_investigation' THEN 1 ELSE 0 END) AS capa_opened
+    FROM {{dataset('dc-complaints')}}
+    GROUP BY device_problem, filed_month
+    ORDER BY device_problem, filed_month
+  model: complaints_core
+  tags: [complaints, trending, signal, device_problem, capa, pack]
+- nl_text: "Complaint intake quality by source — harm mix, duplicates and processing age"
+  sql_text: >-
+    SELECT complaint_source,
+           count(*) AS complaints,
+           sum(CASE WHEN patient_harm = 'serious' THEN 1 ELSE 0 END) AS serious_harm,
+           sum(CASE WHEN patient_harm = 'death' THEN 1 ELSE 0 END) AS deaths,
+           sum(CASE WHEN disposition = 'close_duplicate_complaint' THEN 1 ELSE 0 END) AS duplicates,
+           round(avg(cast(age_days AS double)), 1) AS avg_age_days
+    FROM {{dataset('dc-complaints')}}
+    GROUP BY complaint_source
+    ORDER BY complaints DESC
+  model: complaints_core
+  tags: [complaints, intake, data_quality, source, pack]
+- nl_text: "Reportability outcome mix by device problem code"
+  sql_text: >-
+    SELECT device_problem,
+           count(*) AS complaints,
+           sum(CASE WHEN reportability = 'mdr_reportable' THEN 1 ELSE 0 END) AS mdr_reportable,
+           sum(CASE WHEN reportability = 'not_reportable' THEN 1 ELSE 0 END) AS not_reportable,
+           sum(CASE WHEN reportability = 'pending' THEN 1 ELSE 0 END) AS pending_decision,
+           sum(CASE WHEN patient_harm = 'serious' THEN 1 ELSE 0 END) AS serious_harm
+    FROM {{dataset('dc-complaints')}}
+    GROUP BY device_problem
+    ORDER BY mdr_reportable DESC, complaints DESC
+  model: complaints_core
+  tags: [complaints, reportability, device_problem, signal, pack]

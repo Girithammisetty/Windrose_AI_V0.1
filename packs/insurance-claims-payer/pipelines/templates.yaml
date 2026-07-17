@@ -1,0 +1,10 @@
+# Pipeline seeds (INS-FR-071 model archetype, expressed against the real
+# pipeline-orchestrator algorithm catalog): a PA-approval classifier trained on
+# the prior-auth dataset. The nightly label-export / quarterly distillation
+# Argo workflows (INS-FR-100/101) are deferred — they require the distillation
+# endpoints of BRD 12 not yet shipped in Core.
+- identity: pa_approval_classifier
+  name: "PA approval classifier (xgboost)"
+  algorithm: xgboost
+  mode: train
+  dataset: prior_auth_requests

@@ -1,0 +1,28 @@
+# Saved queries (query-service) — includes the party relationship-network
+# edge source (parent/child/n) for network-family charts: the Core-supported
+# bridge for BRD 30's related-party graph analytics (US-3), so graph work is
+# NOT deferred.
+- identity: party_network_edges
+  name: "AML: party relationship network edges"
+  description: >-
+    Related-party network (parent/child/n) from the relationship-edge dataset:
+    wire chains, beneficial-ownership links (OFAC 50% Rule chains), shared
+    directors/addresses — edge list for network-family charts and layering
+    chain walks.
+  sql: >-
+    SELECT src_id AS parent, dst_id AS child,
+           sum(cast(weight AS double)) AS n
+    FROM {{dataset('aml-relationship-edges')}}
+    GROUP BY src_id, dst_id
+  tags: [banking, aml, network, ownership, pack]
+- identity: high_value_open_alerts
+  name: "AML: high-value open alerts"
+  description: "Open alerts ranked by dollar exposure — the L1 ranked queue seed (US-1: risk x dollar x age, not FIFO)."
+  sql: >-
+    SELECT alert_id, party_id, typology, severity, assigned_tier,
+           cast(age_days AS double) AS age_days,
+           cast(amount_involved AS double) AS amount_involved
+    FROM {{dataset('aml-alerts')}}
+    WHERE status = 'open'
+    ORDER BY amount_involved DESC
+  tags: [banking, aml, alerts, queue, pack]

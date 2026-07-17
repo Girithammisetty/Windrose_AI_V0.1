@@ -1,0 +1,27 @@
+{
+  "type": "record",
+  "name": "EventEnvelope",
+  "namespace": "ai.windrose.rbac.v1",
+  "doc": "Platform event envelope (MASTER-FR-031). Topic rbac.events.v1; partition key = tenant_id.",
+  "fields": [
+    {"name": "event_id", "type": {"type": "string", "logicalType": "uuid"}, "doc": "uuidv7; consumer dedup key"},
+    {"name": "event_type", "type": "string", "doc": "<resource>.<past_tense_verb>, e.g. workspace.created"},
+    {"name": "tenant_id", "type": {"type": "string", "logicalType": "uuid"}},
+    {"name": "actor", "type": {
+      "type": "record", "name": "Actor", "fields": [
+        {"name": "type", "type": {"type": "enum", "name": "ActorType", "symbols": ["user", "service", "agent"]}},
+        {"name": "id", "type": "string"}
+      ]
+    }},
+    {"name": "via_agent", "type": ["null", {
+      "type": "record", "name": "ViaAgent", "fields": [
+        {"name": "agent_id", "type": "string"},
+        {"name": "version", "type": "string"}
+      ]
+    }], "default": null, "doc": "Dual attribution for OBO actions (MASTER-FR-041)"},
+    {"name": "resource_urn", "type": "string", "default": ""},
+    {"name": "occurred_at", "type": {"type": "long", "logicalType": "timestamp-micros"}},
+    {"name": "trace_id", "type": "string", "default": ""},
+    {"name": "payload", "type": "string", "doc": "JSON-encoded event payload; no PII beyond resource references (MASTER-FR-042)"}
+  ]
+}

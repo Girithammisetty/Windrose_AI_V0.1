@@ -1,0 +1,11 @@
+# Shared investigation-lifecycle disposition vocabulary (INV-FR-080 case
+# lifecycle states expressed as today's case-service dispositions). Consumer
+# packs (payer-fwa-siu, banking-aml) add their vertical verdict taxonomies ON
+# TOP of these generic ones — same additive layering the BRD requires of
+# guardrails.
+- { code: inv_dismissed,       label: "Investigation dismissed — no findings",   category: false_positive, requires_note: true }
+- { code: inv_handed_off,      label: "Handed off to next investigation stage",  category: inconclusive,   requires_note: false }
+- { code: inv_needs_deeper,    label: "Needs deeper network analysis",           category: inconclusive,   requires_note: true }
+- { code: inv_evidence_incomplete, label: "Evidence bundle incomplete",          category: inconclusive,   requires_note: true }
+- { code: inv_confirmed,       label: "Findings confirmed by investigator",      category: true_positive,  requires_note: true }
+- { code: inv_referred_external, label: "Referred externally (two-signature)",   category: true_positive,  requires_note: true }

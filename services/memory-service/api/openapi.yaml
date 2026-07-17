@@ -1,0 +1,130 @@
+openapi: 3.0.3
+info:
+  title: memory-service
+  version: 0.1.0
+  description: >
+    Governed store for scoped agent memories (session/user/workspace/tenant) and
+    RAG corpora. Write path (injection screening, PII policy, dedup/merge),
+    retrieval (scope-filtered, hard tenant filter, top-k + recency blend),
+    corpus CDC ingestion, right-to-erasure, retention, browsing/admin. BRD 15.
+servers:
+  - url: /api/v1
+security:
+  - bearerAuth: []
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: {type: string}
+            message: {type: string}
+            trace_id: {type: string}
+            details: {}
+    Provenance:
+      type: object
+      required: [source_type]
+      properties:
+        source_type: {type: string, enum: [agent_run, user_explicit, tool_output, admin]}
+        run_id: {type: string}
+        agent_key: {type: string}
+        agent_version: {type: string}
+        user_id: {type: string}
+        tool_id: {type: string}
+    WriteMemory:
+      type: object
+      required: [scope, scope_ref, content, provenance]
+      properties:
+        scope: {type: string, enum: [session, user, workspace, tenant]}
+        scope_ref: {type: string}
+        content: {type: string, maxLength: 8192}
+        provenance: {$ref: '#/components/schemas/Provenance'}
+        confidence: {type: number}
+        tags: {type: array, items: {type: string}, maxItems: 16}
+    RetrieveRequest:
+      type: object
+      properties:
+        query_text: {type: string}
+        query_embedding: {type: array, items: {type: number}}
+        scopes: {type: array, items: {type: string}}
+        scope_refs: {type: object, additionalProperties: {type: string}}
+        corpora: {type: array, items: {type: string}}
+        top_k: {type: integer, maximum: 24, default: 8}
+        min_confidence: {type: number}
+        tags: {type: array, items: {type: string}}
+        snapshot_ver: {type: string}
+        include_debug: {type: boolean}
+paths:
+  /memories:
+    post:
+      summary: Write a memory (screened, PII-checked, deduped/merged)
+      description: >
+        Errors — 403 SCOPE_DENIED, 422 PII_REJECTED, 503 SCREENING_UNAVAILABLE
+        (BR-1). Returns 200 with status=quarantined for blocked content (AC-2).
+      requestBody:
+        required: true
+        content: {application/json: {schema: {$ref: '#/components/schemas/WriteMemory'}}}
+      responses:
+        '200': {description: written or quarantined}
+        '403': {description: SCOPE_DENIED, content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}}
+        '422': {description: PII_REJECTED / VALIDATION_FAILED, content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}}
+        '503': {description: SCREENING_UNAVAILABLE}
+    get:
+      summary: Browse memories (paginated, filterable)
+      parameters:
+        - {name: scope, in: query, schema: {type: string}}
+        - {name: filter[status], in: query, schema: {type: string}}
+        - {name: filter[tags], in: query, schema: {type: string}}
+        - {name: limit, in: query, schema: {type: integer, default: 50, maximum: 200}}
+        - {name: cursor, in: query, schema: {type: string}}
+      responses:
+        '200': {description: page of memories}
+  /memories/batch:
+    post:
+      summary: Batch write (<=50) with per-item results
+      responses: {'200': {description: per-item results}}
+  /memories/{memory_id}:
+    get: {summary: Get one memory, responses: {'200': {description: ok}, '404': {description: not found}}}
+    patch: {summary: Edit content (re-embeds, provenance->admin), responses: {'200': {description: ok}}}
+    delete: {summary: Hard delete, responses: {'204': {description: deleted}}}
+  /memories/{memory_id}/unquarantine:
+    post: {summary: Restore a quarantined memory (security role, reason required), responses: {'200': {description: ok}}}
+  /retrieve:
+    post:
+      summary: Scoped memory + corpus retrieval (hard tenant filter, blended ranking)
+      requestBody:
+        required: true
+        content: {application/json: {schema: {$ref: '#/components/schemas/RetrieveRequest'}}}
+      responses:
+        '200': {description: ranked results; envelope carries degraded flag (BR-2)}
+        '403': {description: SCOPE_DENIED}
+  /erasure:
+    post:
+      summary: Start a right-to-erasure workflow (DPO/tenant-admin/system)
+      responses: {'202': {description: operation accepted, returns operation_id}}
+  /erasure/{request_id}:
+    get: {summary: Erasure status + signed verification report, responses: {'200': {description: ok}, '404': {description: not found}}}
+  /policies/self:
+    get: {summary: Get tenant memory policy, responses: {'200': {description: ok}}}
+    put:
+      summary: Set tenant memory policy (TTL overrides within platform bounds, PII classes, injection profile, corpus flags)
+      responses: {'200': {description: ok}, '422': {description: outside platform bounds}}
+  /corpora:
+    post: {summary: Register a corpus (operator), responses: {'201': {description: created}}}
+  /corpora/{corpus_key}:
+    patch: {summary: Update a corpus (source/chunking/status), responses: {'200': {description: ok}}}
+  /corpora/{corpus_key}/rebuild:
+    post: {summary: Re-embed on model-version bump (atomic switch, AC-10), responses: {'202': {description: rebuild report}, '409': {description: rebuild in progress}}}
+  /corpora/{corpus_key}/status:
+    get: {summary: Corpus freshness/chunk counts/version, responses: {'200': {description: ok}}}
+  /corpora/docs/documents:
+    post: {summary: Push a document into the docs corpus (api_push), responses: {'201': {description: chunked}}}
+  /stats:
+    get: {summary: Per-scope stats (tenant admin), responses: {'200': {description: ok}}}

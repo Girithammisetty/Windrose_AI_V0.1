@@ -1,0 +1,315 @@
+{
+  "pack": "chargeback-representment",
+  "version": "1.0.0",
+  "workspace_id": "019f6a75-b487-7a9e-9bb9-bbabac27e7ed",
+  "tenant_id": "019f6a75-b029-79f6-bfe9-337494ef122a",
+  "started_at": "2026-07-16T10:32:30Z",
+  "finished_at": "2026-07-16T10:32:39Z",
+  "actions": [
+    {
+      "kind": "datasets",
+      "identity": "mr_customers",
+      "action": "create",
+      "urn": "wr:019f6a75-b029-79f6-bfe9-337494ef122a:dataset:dataset/019f6a7c-2c25-71ed-89a0-f0e6e0c55461",
+      "detail": "'mr-customers' ingested rows=12 snapshot=6687218715979717352"
+    },
+    {
+      "kind": "datasets",
+      "identity": "mr_orders",
+      "action": "create",
+      "urn": "wr:019f6a75-b029-79f6-bfe9-337494ef122a:dataset:dataset/019f6a7c-2d70-7178-b71f-51fec0671d1a",
+      "detail": "'mr-orders' ingested rows=30 snapshot=6241388488309547988"
+    },
+    {
+      "kind": "datasets",
+      "identity": "mr_chargebacks",
+      "action": "create",
+      "urn": "wr:019f6a75-b029-79f6-bfe9-337494ef122a:dataset:dataset/019f6a7c-2e6b-7804-94b8-52dfa830c08a",
+      "detail": "'mr-chargebacks' ingested rows=26 snapshot=2440757454896192923"
+    },
+    {
+      "kind": "semantic_models",
+      "identity": "representment_core",
+      "action": "create",
+      "urn": "wr:019f6a75-b029-79f6-bfe9-337494ef122a:semantic:model/019f6a7c-2f8d-784e-84b9-8d0011f1a213",
+      "detail": "'representment_core' published"
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_0",
+      "action": "create",
+      "urn": "wr:019f6a75-b029-79f6-bfe9-337494ef122a:semantic:verified_query/019f6a7c-38f5-7d10-9a4d-8793e5a3e2c8",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_1",
+      "action": "create",
+      "urn": "wr:019f6a75-b029-79f6-bfe9-337494ef122a:semantic:verified_query/019f6a7c-39bc-727d-a8ed-2c97029fb1a5",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_2",
+      "action": "create",
+      "urn": "wr:019f6a75-b029-79f6-bfe9-337494ef122a:semantic:verified_query/019f6a7c-3a91-79d5-a311-cb6fa54475f7",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_3",
+      "action": "create",
+      "urn": "wr:019f6a75-b029-79f6-bfe9-337494ef122a:semantic:verified_query/019f6a7c-3b6a-7175-8202-c642431684f6",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_4",
+      "action": "create",
+      "urn": "wr:019f6a75-b029-79f6-bfe9-337494ef122a:semantic:verified_query/019f6a7c-3c34-7f14-a481-826e2515ea0a",
+      "detail": ""
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "representment_customer_edges",
+      "action": "create",
+      "urn": "wr:019f6a75-b029-79f6-bfe9-337494ef122a:query:query/019f6a7c-3cdd-7451-8641-37181e71f85d",
+      "detail": "Representment: customer-category network edges"
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "high_value_open_chargebacks",
+      "action": "create",
+      "urn": "wr:019f6a75-b029-79f6-bfe9-337494ef122a:query:query/019f6a7c-3d22-7d69-830c-0e0ba4a0ab9d",
+      "detail": "Representment: high-value open queue"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "chargeback_response_center",
+      "action": "create",
+      "urn": "wr:019f6a75-b029-79f6-bfe9-337494ef122a:chart:dashboard/019f6a7c-3d89-7148-814b-447d0ba4d5d9",
+      "detail": "Chargeback Response Center"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "chargeback_response_center",
+      "action": "verify",
+      "urn": "wr:019f6a75-b029-79f6-bfe9-337494ef122a:chart:dashboard/019f6a7c-3d89-7148-814b-447d0ba4d5d9",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "win_rates_evidence",
+      "action": "create",
+      "urn": "wr:019f6a75-b029-79f6-bfe9-337494ef122a:chart:dashboard/019f6a7c-3f5a-75c8-a56e-91ddfccdfeff",
+      "detail": "Win Rates & Evidence"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "win_rates_evidence",
+      "action": "verify",
+      "urn": "wr:019f6a75-b029-79f6-bfe9-337494ef122a:chart:dashboard/019f6a7c-3f5a-75c8-a56e-91ddfccdfeff",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "program_health_thresholds",
+      "action": "create",
+      "urn": "wr:019f6a75-b029-79f6-bfe9-337494ef122a:chart:dashboard/019f6a7c-4107-7148-bd2a-b1544bf9eb81",
+      "detail": "Program Health & Thresholds"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "program_health_thresholds",
+      "action": "verify",
+      "urn": "wr:019f6a75-b029-79f6-bfe9-337494ef122a:chart:dashboard/019f6a7c-4107-7148-bd2a-b1544bf9eb81",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "represent_with_evidence"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "accept_liability_refund"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "pre_arbitration_escalate"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "flag_friendly_fraud_pattern"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "close_duplicate_or_resolved"
+    },
+    {
+      "kind": "cases",
+      "identity": "response_queue",
+      "action": "create",
+      "urn": "wr:019f6a75-b029-79f6-bfe9-337494ef122a:dataset:dataset/019f6a7c-2e6b-7804-94b8-52dfa830c08a",
+      "detail": "6 open cases (reindexed)"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Dispute Response Analyst'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Dispute Response Analyst' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Evidence Specialist'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Evidence Specialist' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Pre-Arbitration Lead'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Pre-Arbitration Lead' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Dispute Program Manager'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Dispute Program Manager' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Payments Compliance Auditor'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Payments Compliance Auditor' bound to permission group"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "case-triage prompt_params set"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "analytics prompt_params set"
+    },
+    {
+      "kind": "memories",
+      "identity": "grounding",
+      "action": "create",
+      "urn": null,
+      "detail": "10 grounding records written, 0 already present"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "create",
+      "urn": null,
+      "detail": "'Order anomaly detector (isolation forest)' (isolation_forest, train)"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "create",
+      "urn": null,
+      "detail": "'Representment win-likelihood scorer (xgboost)' (xgboost, train)"
+    }
+  ],
+  "deferred": [
+    {
+      "kind": "guardrails",
+      "reason": "Representment-domain policies (evidence packages may contain only genuine verifiable records \u2014 never fabricated or inferred evidence; no refund on an order with an open chargeback without the duplicate check; no representment filing past the acquirer deadline; block-list additions require a confirmed pattern, not a single suspicion) require guardrail-service / OPA policy materialization, which Core does not expose as a pack surface yet. The behavioral core is partially covered today by Core invariants: every pack-configured agent is proposal-mode with four-eyes approval (agent-runtime), and the agent instructions + disposition taxonomy route filings, refunds, and escalations exclusively to human analysts with the Dispute Program Manager as approver."
+    },
+    {
+      "kind": "agent_recipes",
+      "reason": "Bespoke LangGraph recipes (Representment Package Builder, CE 3.0 Qualifier, Fight/Accept Economics Router, Pre-Arbitration Advisor, Friendly-Fraud Pattern Miner) require agent-runtime graph-module registration (BRD 23 BR-12). This pack specializes the existing case-triage + analytics agents via TenantAgentConfig prompt_params + tenant-scope RAG grounding instead."
+    },
+    {
+      "kind": "connection_templates",
+      "reason": "Production read connectors (PSP/acquirer dispute APIs and webhook feeds; network dispute rails via the acquirer \u2014 Visa Resolve Online, Mastercom; pre-dispute alert rails \u2014 Verifi RDR/Order Insight, Ethoca-style alert feeds; order-management/OMS and e-commerce platforms; carrier tracking APIs for delivery-confirmation evidence; device-fingerprint/antifraud platforms for CE 3.0 elements) require customer credentials and pack-service connector materialization. The pack ships seed datasets in the exact landing shape; production connectors are configured through the product Data > Connections UI."
+    },
+    {
+      "kind": "write_adapters",
+      "reason": "Write adapters (submit representment/second presentment via the PSP/acquirer API, accept liability, issue the refund on the commerce platform, respond to pre-dispute alerts, accept or continue pre-arbitration, add a customer to the block-list) execute only behind pack-service's materialization contract and customer credentials; every such write stays proposal-mode with human approval \u2014 no autonomous filing, refund, or block-list mutation, ever."
+    },
+    {
+      "kind": "eval_sets",
+      "reason": "Golden eval sets (fight/accept triage, reason-code evidence matching, CE 3.0 qualification detection, duplicate/alert-refund detection, pre-arb economics ranking) require eval-service write APIs whose action names are not yet in the rbac canonical catalog (Core follow-up noted in rbac catalog.go)."
+    },
+    {
+      "kind": "ontology",
+      "reason": "Ontology registration (Merchant, Customer, Order, Payment, Chargeback, ReasonCode, Representment, PreArbitration, EvidencePackage, PreDisputeAlert, BlockListEntry, MonitoringProgramStatus) awaits pack-service; entity semantics are carried today by the representment_core semantic model and dataset schemas."
+    },
+    {
+      "kind": "case_schemas",
+      "reason": "Typed case schemas (chargeback_response, evidence_assembly, pre_arbitration_review, friendly_fraud_review, alert_deduplication) await case-service schema materialization; today's cases carry the same fields via display_projection + the disposition taxonomy."
+    },
+    {
+      "kind": "model_archetypes",
+      "reason": "Model archetypes (representment_win_probability, friendly_fraud_score) await experiment-service archetype APIs; the scoring capability ships as pipeline seeds instead (isolation_forest order anomaly + xgboost win-likelihood scorer) with model-governance expectations noted in grounding memories."
+    },
+    {
+      "kind": "display_labels",
+      "reason": "Display-label overlays (\"Chargeback\", \"Representment\", \"Response due\", \"CE 3.0 qualified\", \"Below fight threshold\", entity templates) require the BFF label-registry endpoints (BFF-FR-082/088) which are pack-service-tier features."
+    }
+  ],
+  "result": "installed"
+}

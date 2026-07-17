@@ -1,0 +1,16 @@
+pa_id,member_id,prescriber_npi,ndc,drug_name,gpi_class,urgency,submitted_month,status,turnaround_hours,controlled_substance,cs_schedule,formulary_tier,step_therapy_met,agent_recommendation,agent_confidence,denial_reason,member_state
+PA-9001,M-6003,1679284530,00169413013,semaglutide 1mg pen,272700,standard,2026-04,approved,26,no,none,3,yes,approve,0.94,none,TX
+PA-9002,M-6005,1891460257,00074433902,adalimumab 40mg pen,664000,standard,2026-04,approved,41,no,none,5,yes,escalate_pharmacist,0.71,none,NY
+PA-9003,M-6011,1679284530,00002150680,tirzepatide 5mg pen,272700,standard,2026-04,denied,55,no,none,3,no,escalate_pharmacist,0.66,step_therapy_not_met,IL
+PA-9004,M-6004,1780375926,00406051201,oxycodone-acetaminophen 5-325mg,651000,expedited,2026-05,approved,9,yes,C2,2,yes,escalate_pharmacist,0.52,none,FL
+PA-9005,M-6012,1679284530,00169413013,semaglutide 1mg pen,272700,standard,2026-05,denied,64,no,none,3,no,escalate_pharmacist,0.61,quantity_limit_exceeded,TX
+PA-9006,M-6007,1902573418,00088222033,insulin glargine 100u/ml,271000,expedited,2026-05,approved,7,no,none,2,yes,approve,0.96,none,CA
+PA-9007,M-6013,1679284530,00169413013,semaglutide 1mg pen,272700,expedited,2026-07,pending,10,no,none,3,yes,approve,0.90,none,OH
+PA-9008,M-6002,1568392041,00003089421,apixaban 5mg,833700,standard,2026-05,approved,18,no,none,2,yes,approve,0.95,none,PA
+PA-9009,M-6014,1780375926,00406051201,oxycodone-acetaminophen 5-325mg,651000,standard,2026-06,denied,48,yes,C2,2,yes,escalate_pharmacist,0.44,opioid_mme_limit,FL
+PA-9010,M-6015,1679284530,00002150680,tirzepatide 5mg pen,272700,standard,2026-06,approved,60,no,none,3,yes,escalate_pharmacist,0.73,none,IL
+PA-9011,M-6016,1891460257,00074433902,adalimumab 40mg pen,664000,standard,2026-06,approved,52,no,none,5,yes,escalate_pharmacist,0.69,none,NY
+PA-9012,M-6017,1891460257,00074433902,adalimumab 40mg pen,664000,standard,2026-07,pending,30,no,none,5,no,escalate_pharmacist,0.58,none,CA
+PA-9013,M-6018,1679284530,00169413013,semaglutide 1mg pen,272700,standard,2026-06,approved,22,no,none,3,yes,approve,0.93,none,TX
+PA-9014,M-6019,1780375926,00406051201,oxycodone-acetaminophen 5-325mg,651000,expedited,2026-06,approved,14,yes,C2,2,yes,escalate_pharmacist,0.49,none,PA
+PA-9015,M-6020,1780375926,00406051201,oxycodone-acetaminophen 5-325mg,651000,standard,2026-07,pending,20,yes,C2,2,yes,escalate_pharmacist,0.41,none,FL

@@ -1,0 +1,13 @@
+# Pipeline seeds (BRD 28 §4 model archetypes, expressed against the real
+# pipeline-orchestrator algorithm catalog): a PA auto-decision classifier
+# trained on the Rx prior-auth dataset (rx_pa_confidence archetype precursor
+# — predicts approve vs deny/escalate so clean PAs can be one-click
+# confirmed; the model only ever RECOMMENDS, per BR-1 a human pharmacist
+# decides). The nightly adherence scan and weekly Star-gap prediction Argo
+# workflows are deferred — they need the adherence datasets and distillation
+# endpoints not yet shipped in Core.
+- identity: pa_auto_decision
+  name: "Rx PA auto-decision classifier (logistic regression)"
+  algorithm: logistic_regression
+  mode: train
+  dataset: pbm_pa_requests

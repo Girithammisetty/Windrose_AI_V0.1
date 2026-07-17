@@ -1,0 +1,110 @@
+openapi: 3.0.3
+info:
+  title: chart-service API
+  version: "1.0.0"
+  description: >
+    Dashboards + charts for the Insights and Case Management modules (BRD 07).
+    Resolves chart data by compiling chart definitions through semantic-service
+    and executing through query-service, applies server-side aggregation by
+    default, caches shaped results in Redis (ETag/304), and serves drilldowns
+    and CSV/PNG exports. All endpoints require an RS256 JWT (MASTER-FR-010);
+    authorization is via the local OPA sidecar (MASTER-FR-012).
+servers:
+  - url: /api/v1
+security:
+  - bearerAuth: []
+paths:
+  /chart-types:
+    get:
+      summary: The 30-type chart catalog + per-type JSON Schemas (CHART-FR-012)
+      responses: { '200': { description: catalog } }
+  /dashboards:
+    post:
+      summary: Create a dashboard (CHART-FR-001)
+      parameters: [{ name: Idempotency-Key, in: header, schema: { type: string } }]
+      responses:
+        '201': { description: created }
+        '409': { description: name conflict }
+        '422': { description: validation }
+    get:
+      summary: List dashboards (filter[module|archived|tag], sort=-updated_at)
+      parameters:
+        - { name: workspace_id, in: query, required: true, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, default: 50, maximum: 200 } }
+        - { name: cursor, in: query, schema: { type: string } }
+      responses: { '200': { description: page } }
+  /dashboards/{id}:
+    get: { summary: Get dashboard, responses: { '200': { description: ok }, '404': { description: not found } } }
+    patch: { summary: Update dashboard, responses: { '200': { description: ok }, '409': { description: conflict } } }
+    delete:
+      summary: Soft-delete dashboard (BR-4 guard)
+      responses: { '204': { description: deleted }, '412': { description: CHART_HAS_CASES } }
+  /dashboards/{id}/archive: { post: { summary: Archive (CHART-FR-003), responses: { '200': { description: ok } } } }
+  /dashboards/{id}/restore: { patch: { summary: Restore, responses: { '200': { description: ok }, '409': { description: name conflict } } } }
+  /dashboards/{id}/export-bundle: { post: { summary: Export portable JSON bundle (CHART-FR-005), responses: { '200': { description: ok } } } }
+  /dashboards/import:
+    post:
+      summary: Import a bundle with URN remap (CHART-FR-005 / BR-10)
+      responses: { '201': { description: created }, '422': { description: UNMAPPED_URN } }
+  /dashboards/{id}/data:
+    post:
+      summary: Batch-resolve all charts of a dashboard (CHART-FR-024, per-chart isolation)
+      responses: { '200': { description: per-chart results/errors } }
+  /dashboards/{id}/charts:
+    post:
+      summary: Create a chart in a dashboard (CHART-FR-010)
+      parameters: [{ name: Idempotency-Key, in: header, schema: { type: string } }]
+      responses: { '201': { description: created }, '409': { description: name conflict }, '422': { description: schema/agg } }
+  /charts/{id}:
+    get: { summary: Get chart, responses: { '200': { description: ok }, '404': { description: not found } } }
+    patch:
+      summary: Update chart (optimistic lock via If-Match, BR-7)
+      parameters: [{ name: If-Match, in: header, schema: { type: integer } }]
+      responses: { '200': { description: ok }, '409': { description: stale version }, '422': { description: validation } }
+    delete:
+      summary: Soft-delete chart (CHART-FR-016 guard)
+      responses: { '204': { description: deleted }, '412': { description: CHART_HAS_CASES } }
+  /charts/{id}/data:
+    get:
+      summary: Resolve chart data (ETag/304, server-side aggregation default) (CHART-FR-020)
+      parameters:
+        - { name: aggregated, in: query, schema: { type: boolean, default: true } }
+        - { name: cursor, in: query, schema: { type: string } }
+        - { name: If-None-Match, in: header, schema: { type: string } }
+      responses:
+        '200': { description: shaped data + meta.cache + ETag }
+        '304': { description: not modified }
+        '422': { description: INVALID_AGGREGATION / SOURCE_BROKEN }
+        '502': { description: UPSTREAM_QUERY_FAILED }
+  /charts/preview:
+    post:
+      summary: Resolve an unsaved chart definition inline (CHART-FR-023, never cached)
+      responses: { '200': { description: ok }, '422': { description: validation }, '429': { description: preview cap } }
+  /charts/{id}/drilldown:
+    post:
+      summary: Paginated drilldown with clicked dimension as a bind predicate (CHART-FR-040)
+      responses: { '200': { description: paginated }, '404': { description: NO_DRILLDOWN_CONFIGURED }, '422': { description: validation } }
+  /charts/{id}/export:
+    post:
+      summary: Async CSV/PNG export (CHART-FR-041)
+      responses: { '202': { description: '{operation_id}' }, '429': { description: EXPORT_LIMIT } }
+  /charts/{id}/link:
+    put:
+      summary: Create cross-module link (CHART-FR-015)
+      responses: { '200': { description: ok }, '409': { description: CIRCULAR_LINK }, '422': { description: validation } }
+    delete:
+      summary: Remove cross-module link
+      responses: { '204': { description: removed }, '404': { description: not found } }
+  /operations/{id}:
+    get: { summary: Export/render operation status, responses: { '200': { description: ok }, '404': { description: not found } } }
+  /exports/{key}:
+    get:
+      summary: Download a signed export artifact (HMAC-validated, not JWT)
+      parameters:
+        - { name: key, in: path, required: true, schema: { type: string } }
+        - { name: exp, in: query, required: true, schema: { type: integer } }
+        - { name: sig, in: query, required: true, schema: { type: string } }
+      responses: { '200': { description: artifact }, '404': { description: expired/invalid } }
+components:
+  securitySchemes:
+    bearerAuth: { type: http, scheme: bearer, bearerFormat: JWT }

@@ -1,0 +1,65 @@
+# Verified NL<->SQL queries (four-eyes approved at install). SQL uses
+# {{dataset('<name>')}} macros — the only table references query-service's
+# tenant-namespace guard admits.
+- nl_text: "What's our enforcement rate by product vertical?"
+  sql_text: >-
+    SELECT product_vertical,
+           count(*) AS closed_reviews,
+           sum(CASE WHEN disposition = 'remove_listing_enforce' THEN 1 ELSE 0 END) AS enforced,
+           round(sum(CASE WHEN disposition = 'remove_listing_enforce' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS enforcement_rate
+    FROM {{dataset('sv-reviews')}}
+    WHERE status = 'closed'
+    GROUP BY product_vertical
+    ORDER BY enforcement_rate DESC
+  model: seller_vetting_core
+  tags: [seller_vetting, enforcement, kpi, pack]
+- nl_text: "Which open reviews are closest to their response or takedown deadline?"
+  sql_text: >-
+    SELECT review_id, listing_id, review_type, trigger_source, claim_basis,
+           severity,
+           cast(days_to_deadline AS double) AS days_to_deadline,
+           cast(age_days AS double) AS age_days,
+           cast(gmv_at_risk AS double) AS gmv_at_risk
+    FROM {{dataset('sv-reviews')}}
+    WHERE status = 'open'
+    ORDER BY days_to_deadline ASC
+  model: seller_vetting_core
+  tags: [seller_vetting, deadlines, backlog, pack]
+- nl_text: "Counterfeit signal stack — deep-discount listings with reused images by seller"
+  sql_text: >-
+    SELECT seller_id,
+           count(*) AS flagged_listings,
+           sum(CASE WHEN fulfillment = 'seller' THEN 1 ELSE 0 END) AS seller_fulfilled,
+           round(avg(cast(list_price AS double)), 2) AS avg_list_price
+    FROM {{dataset('sv-listings')}}
+    WHERE price_vs_msrp = 'deep_discount' AND image_reuse = 'yes'
+    GROUP BY seller_id
+    ORDER BY flagged_listings DESC
+  model: seller_vetting_core
+  tags: [counterfeit, signals, deep_discount, image_reuse, pack]
+- nl_text: "Claim rejection rate by trigger source (false or abusive claim watch)"
+  sql_text: >-
+    SELECT trigger_source,
+           count(*) AS closed_reviews,
+           sum(CASE WHEN disposition = 'reject_claim_insufficient' THEN 1 ELSE 0 END) AS rejected,
+           round(sum(CASE WHEN disposition = 'reject_claim_insufficient' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS claim_rejection_rate
+    FROM {{dataset('sv-reviews')}}
+    WHERE status = 'closed'
+    GROUP BY trigger_source
+    ORDER BY claim_rejection_rate DESC
+  model: seller_vetting_core
+  tags: [ip_claims, claim_abuse, brand_registry, pack]
+- nl_text: "GMV at risk on the open book by severity and review type"
+  sql_text: >-
+    SELECT severity, review_type,
+           count(*) AS open_reviews,
+           sum(cast(gmv_at_risk AS double)) AS gmv_at_risk,
+           round(avg(cast(days_to_deadline AS double)), 1) AS avg_days_to_deadline
+    FROM {{dataset('sv-reviews')}}
+    WHERE status = 'open'
+    GROUP BY severity, review_type
+    ORDER BY gmv_at_risk DESC
+  model: seller_vetting_core
+  tags: [seller_vetting, exposure, gmv_at_risk, pack]

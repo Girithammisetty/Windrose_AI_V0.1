@@ -1,0 +1,137 @@
+# Tenant-scope RAG grounding records (memory-service). This is the INFORM /
+# DMCA / trademark / KYB / ring-typology domain knowledge the vetting
+# copilot retrieves when reasoning about a review. Every record is factual
+# regulatory or operational reference material; thresholds and dates are
+# stated only where well established, otherwise qualitatively.
+- content: >-
+    INFORM Consumers Act (US, effective June 2023): online marketplaces must
+    collect and verify identifying information from high-volume third-party
+    sellers — bank account information, government-issued ID or tax ID, and
+    working contact information — with the high-volume trigger set at 200 or
+    more discrete sales totaling $5,000 or more in gross revenue over a
+    continuous 12-month period. Verification must happen promptly after a
+    seller qualifies (a 10-day collection window applies), sellers must
+    certify their information annually, and higher-revenue sellers must have
+    identity and contact information disclosed to buyers. Marketplaces must
+    suspend sellers who fail to comply after notice; enforcement sits with
+    the FTC and state attorneys general.
+  tags: [inform_act, kyb, seller_verification, disclosure]
+  confidence: 0.92
+- content: >-
+    DMCA notice-and-takedown (17 U.S.C. 512) for copyright claims: a valid
+    notice must identify the copyrighted work and the infringing material,
+    include the claimant's contact information, a good-faith-belief
+    statement, an accuracy statement under penalty of perjury, and a
+    signature. The platform must act expeditiously on valid notices to keep
+    safe harbor, and must operate a repeat-infringer termination policy. The
+    seller may file a counter-notice; unless the claimant files suit, the
+    material is restored in roughly 10-14 business days. Section 512(f)
+    creates liability for knowingly material misrepresentations in a notice
+    OR a counter-notice — false claims carry legal exposure both ways.
+  tags: [dmca, copyright, takedown, counter_notice, safe_harbor]
+  confidence: 0.95
+- content: >-
+    First-sale doctrine and trademark in resale: resale of genuine goods is
+    generally lawful — a trademark owner cannot use infringement claims to
+    control downstream resale of authentic products. The main exception is
+    the material-difference doctrine: goods that are materially different
+    from authorized versions (missing manufacturer warranty, absent
+    quality-control steps, different packaging, region variants) can lose
+    first-sale protection even if physically genuine. A brand complaint
+    against an apparent reseller therefore needs evidence of
+    non-genuineness or a material difference, not just proof that the
+    seller is unauthorized — "unauthorized seller" alone is not trademark
+    infringement.
+  tags: [trademark, first_sale, material_difference, resale]
+  confidence: 0.9
+- content: >-
+    Test-buy evidence practice: a covert purchase of the suspect listing,
+    documented end to end — order records, unopened-package photos, serial
+    numbers/date codes, and a chain-of-custody log — followed by
+    authentication against a known-genuine reference, ideally with a brand
+    or expert authentication statement. A failed test buy is the strongest
+    single piece of counterfeiting evidence and supports listing removal
+    and, with repetition, seller-level action. Test-buy results attach to
+    the specific listing purchased; extrapolating to a seller's entire
+    catalog requires additional corroboration.
+  tags: [test_buy, evidence, authentication, chain_of_custody]
+  confidence: 0.9
+- content: >-
+    Linked-account ring signals: banned or suspended sellers commonly
+    re-enter through fresh accounts that share attributes with the banned
+    identity — payout bank accounts or payment instruments, physical or
+    return addresses, device fingerprints, IP ranges, contact details, and
+    near-identical listing text or imagery. Standard practice requires
+    multiple independently corroborated shared attributes (commonly two to
+    three) before a network-level suspension, because single shared
+    attributes occur innocently (households, shared agencies, fulfillment
+    providers). Network suspensions should document every linkage relied
+    upon — they are the most appealed enforcement action.
+  tags: [rings, linked_accounts, ban_evasion, device_fingerprint]
+  confidence: 0.88
+- content: >-
+    KYB (know-your-business) verification standards for marketplace
+    onboarding: verify the legal entity name and registration against
+    official registries, collect tax identifiers, and confirm the payout
+    bank account is held in the name of the registered entity or a
+    documented affiliate. A payout-name mismatch against the registered
+    entity is a high-risk signal — consistent with money-mule payout,
+    identity takeover, or a banned seller operating behind a front — and
+    warrants holding disbursements and re-verifying before allowing further
+    sales. Beneficial-ownership checks are standard for higher-risk
+    corridors and high-GMV accounts.
+  tags: [kyb, onboarding, banking_mismatch, verification]
+  confidence: 0.9
+- content: >-
+    Counterfeit listing risk signals: deep discounts against MSRP (steep
+    markdowns on luxury, beauty, and electronics are the classic lure),
+    reuse of stock or brand-owned imagery instead of original photographs,
+    seller fulfillment (no platform custody of the goods), new accounts
+    entering high-value verticals, and elevated buyer complaints citing
+    quality or authenticity. These are risk signals, not proof: legitimate
+    liquidation and gray-market resale also discount deeply. Enforcement
+    should rest on corroboration — a test buy, brand authentication, or
+    documented buyer evidence — with the signal stack used for ranking and
+    detector training.
+  tags: [counterfeit, signals, deep_discount, image_reuse]
+  confidence: 0.9
+- content: >-
+    Brand-registry and IP-claim abuse: false or competitor-motivated
+    infringement claims are a documented marketplace problem — claims used
+    to knock out lawful resellers or competing listings. Sound claim intake
+    verifies the claimant actually holds the asserted right, requires
+    listing-specific evidence rather than seller-level accusations, tracks
+    per-claimant accuracy rates, and applies graduated friction to
+    claimants with poor accuracy. Wrongful takedowns harm lawful sellers,
+    can create platform liability exposure (including DMCA 512(f) for
+    copyright misrepresentations), and erode brand-program trust — claims
+    need evidence both ways.
+  tags: [claim_abuse, brand_registry, false_claims, 512f]
+  confidence: 0.88
+- content: >-
+    EU Digital Services Act trader traceability ("know your business
+    customer", Article 30): online marketplaces reaching EU consumers must
+    obtain and make best efforts to verify trader information — name,
+    contact details, registration/identification numbers, payment account
+    details, and a self-certification of compliance — BEFORE allowing the
+    trader to offer products, must suspend traders who fail to provide it,
+    and must display trader identity to consumers. It is the EU parallel to
+    the INFORM Consumers Act, and randomized checks of product listings
+    against official databases are part of the expected diligence.
+  tags: [eu_dsa, trader_traceability, kybc, verification]
+  confidence: 0.9
+- content: >-
+    Reinstatement and appeals practice: suspended sellers are typically
+    reinstated through a plan of action covering root cause, immediate
+    corrective steps, and preventive controls, supported by supply-chain
+    evidence — invoices from verifiable authorized distributors that match
+    the ASINs/SKUs and quantities sold. Invoice verification (contacting
+    the distributor, checking registration) defeats the common
+    fabricated-invoice pattern. Graduated re-entry with monitoring is
+    standard. Governance expectation for AI-assisted enforcement: every
+    disposition preserves a provenance chain (data version, model version,
+    prompt hash, reviewer identity, timestamp), and pattern-level
+    over-enforcement against lawful resellers is itself a program risk to
+    monitor, even when each file individually appears defensible.
+  tags: [reinstatement, plan_of_action, invoices, governance, provenance]
+  confidence: 0.88

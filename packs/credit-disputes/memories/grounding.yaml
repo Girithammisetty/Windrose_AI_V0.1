@@ -1,0 +1,130 @@
+# Tenant-scope RAG grounding records (memory-service). This is the FCRA /
+# Reg V / e-OSCAR domain knowledge the triage copilot retrieves when
+# reasoning about a credit-reporting dispute. Every record is factual
+# regulatory or operational reference material.
+- content: >-
+    FCRA reinvestigation clock (section 611, 15 U.S.C. 1681i): when a
+    consumer disputes the completeness or accuracy of an item, the CRA must
+    conduct a reasonable reinvestigation and record the current status (or
+    delete the item) within 30 days of receiving the dispute. The window
+    extends by up to 15 days (to 45 total) if the consumer provides
+    additional relevant information during the 30-day period. The CRA must
+    forward the dispute with all relevant consumer-provided information to
+    the furnisher within 5 business days of receipt, and must give the
+    consumer written notice of the results within 5 business days of
+    completing the reinvestigation. An item that cannot be verified within
+    the window must be deleted.
+  tags: [fcra_611, deadlines, reinvestigation, cra]
+  confidence: 0.98
+- content: >-
+    Furnisher duties on a CRA referral (FCRA section 623(b), 15 U.S.C.
+    1681s-2(b)): after receiving notice of dispute from a CRA (in practice an
+    e-OSCAR ACDV), the furnisher must conduct an investigation of the
+    disputed information, review ALL relevant information provided by the
+    CRA (including consumer-supplied documents and images attached to the
+    ACDV), report the results to that CRA, and — if the information is found
+    inaccurate or incomplete — report the correction to every other
+    nationwide CRA it furnished the item to. The furnisher's response must
+    land inside the CRA's reinvestigation window; a late or missing response
+    typically results in deletion of the item by default.
+  tags: [fcra_623b, furnisher, acdv, e_oscar, duties]
+  confidence: 0.95
+- content: >-
+    Identity-theft block (FCRA section 605B): a CRA must block the reporting
+    of information the consumer identifies as resulting from identity theft
+    within 4 business days of receiving (1) an identity theft report (e.g.,
+    an FTC report or police report), (2) proof of the consumer's identity,
+    (3) identification of the specific information, and (4) the consumer's
+    statement that the information does not relate to their transaction. The
+    CRA must promptly notify the furnisher of the block. A block may be
+    declined or rescinded only on reasonable determination of material
+    misrepresentation, error, or that the consumer obtained goods, services,
+    or money as a result of the blocked transaction. Furnishers separately
+    may not re-pollute: once notified, they must not furnish the blocked
+    information again.
+  tags: [fcra_605b, identity_theft, block, deadlines]
+  confidence: 0.95
+- content: >-
+    Obsolescence periods (FCRA section 605): most adverse items may not be
+    reported after 7 years; chapter 7 bankruptcies may be reported for 10
+    years. For charged-off or collection accounts the 7-year period runs
+    from 180 days after the commencement of the delinquency that immediately
+    preceded the charge-off or collection — NOT from the charge-off date,
+    the assignment date, or any later payment. Re-aging a delinquency date
+    to extend reporting is a classic accuracy violation; the original
+    delinquency date must be established from the servicing record.
+  tags: [fcra_605, obsolescence, charge_off, reporting_period]
+  confidence: 0.95
+- content: >-
+    Frivolous or irrelevant disputes (FCRA section 611(a)(3); Reg V 12 CFR
+    1022.43 for direct disputes to furnishers): a dispute may be determined
+    frivolous or irrelevant — including when the consumer fails to provide
+    sufficient information to investigate, or resubmits a dispute that is
+    substantially the same as one already investigated without any new
+    information. The determination requires notice to the consumer within 5
+    business days, stating the reasons and identifying any information
+    required to investigate. A frivolous determination never excuses
+    checking whether the new round actually adds anything new, and the
+    determination and its reasons must be documented in the file.
+  tags: [frivolous, fcra_611, reg_v, notice, documentation]
+  confidence: 0.95
+- content: >-
+    Reasonable-investigation standard: courts and the CFPB have made clear
+    that a furnisher or CRA investigation limited to matching the consumer's
+    name, SSN, and date of birth against the same system that produced the
+    disputed reporting is generally not a reasonable investigation —
+    particularly for not-mine, identity-theft, and mixed-file disputes. The
+    litigation trend rewards checking the underlying record: the original
+    application, signature or device evidence, the servicing ledger, and the
+    chain of assignment for sold debts. Perfunctory ACDV verification
+    ("checked our system, verified") is a recurring theory in FCRA suits and
+    a stated CFPB supervisory concern about furnisher dispute handling.
+  tags: [reasonable_investigation, litigation, cfpb, not_mine, standards]
+  confidence: 0.9
+- content: >-
+    Reinsertion (FCRA section 611(a)(5)): information deleted after a
+    reinvestigation may not be reinserted unless the furnisher certifies
+    that the information is complete and accurate. If deleted information is
+    reinserted, the CRA must notify the consumer in writing within 5
+    business days of the reinsertion, including the furnisher's contact
+    information and the consumer's right to add a statement of dispute.
+    Silent reinsertion is an independent FCRA violation regardless of the
+    item's underlying accuracy.
+  tags: [reinsertion, fcra_611, notice, deletion]
+  confidence: 0.95
+- content: >-
+    Duplicate and sold-debt tradelines: when a debt is sold or reassigned,
+    only the current owner (or its collector) should report an active
+    collection tradeline; the prior collector's tradeline should be updated
+    to reflect the transfer (zero balance / transferred status). Two
+    simultaneously active collection tradelines for the same underlying debt
+    overstate the consumer's indebtedness and are a recurring accuracy
+    problem with debt buyers. Investigating a duplicate-tradeline dispute
+    means confirming the chain of assignment before deciding which tradeline
+    is the stale one — deleting the wrong one re-creates the injury.
+  tags: [duplicate_tradeline, debt_buyers, collections, accuracy]
+  confidence: 0.9
+- content: >-
+    Dispute-status reporting and adverse-action interplay: while a dispute
+    is pending, furnishers must report the account as disputed (FCRA section
+    623(a)(3)) — continuing to furnish the item without noting the dispute
+    is itself a violation. Users of credit reports who take adverse action
+    based on the file owe the consumer an adverse-action notice under FCRA
+    section 615 identifying the CRA, which is why uncorrected or duplicate
+    derogatory tradelines translate directly into consumer harm (denials,
+    pricing) and litigation exposure while the reinvestigation runs.
+  tags: [dispute_flag, adverse_action, fcra_615, fcra_623a, consumer_harm]
+  confidence: 0.9
+- content: >-
+    Recordkeeping and AI governance: the CFPB has repeatedly flagged
+    furnisher dispute-handling accuracy in supervisory highlights and
+    enforcement — including reliance on automated matching without reviewing
+    attached documentation. Every AI-assisted determination in this workflow
+    must preserve a provenance chain (data version, model version, prompt
+    hash, reviewer identity, timestamp), keep the human determination and
+    its documented findings as the record of decision, and support
+    pattern-level monitoring: a systematic tilt toward verify-accurate
+    outcomes is an examination risk even when each file individually appears
+    defensible.
+  tags: [recordkeeping, governance, cfpb, provenance, audit]
+  confidence: 0.9

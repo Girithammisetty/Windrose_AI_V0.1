@@ -1,0 +1,69 @@
+# Claims Command Center: claim mix by type, backlog aging, outcome mix,
+# intake trend. Chart families restricted to the render-verified set
+# (vertical_bar / grid / pie / line); expr_metric measures (rates) are
+# query/NL surfaces, never charted directly.
+name: "Claims Command Center"
+module: insights
+semantic_model: construction_claims_core
+description: >-
+  Top-line claims operations KPIs: claim volumes by type, adjudication
+  backlog aging by severity, human disposition outcome mix, and
+  claimed-vs-approved dollar exposure per claim type.
+tags: [construction, claims, change_orders, pack]
+charts:
+  - name: "Claims by type"
+    chart_type: vertical_bar_chart
+    description: "Claim volume by type (change orders, delay, DSC, backcharge, payment, acceleration)"
+    config:
+      x: { dimension: claim_type }
+      y: [ { measure: claim_count, agg_fn: count } ]
+    sources: [ { measure: claim_count } ]
+    w: 6
+    h: 4
+  - name: "Backlog aging by severity"
+    chart_type: vertical_bar_chart
+    description: "Average claim age in days by severity (cycle-time watch)"
+    config:
+      x: { dimension: severity }
+      y: [ { measure: avg_claim_age_days, agg_fn: avg } ]
+    sources: [ { measure: avg_claim_age_days } ]
+    w: 6
+    h: 4
+  - name: "Disposition outcome mix"
+    chart_type: pie_chart
+    description: "Approved vs rejected vs negotiated vs withdrawn vs pending"
+    config:
+      x: { dimension: claim_disposition }
+      y: [ { measure: claim_count, agg_fn: count } ]
+    sources: [ { measure: claim_count } ]
+    w: 6
+    h: 4
+  - name: "Claim intake by month"
+    chart_type: line_chart
+    description: "Claim filings trend by filed month"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: claim_count, agg_fn: count } ]
+    sources: [ { measure: claim_count } ]
+    w: 6
+    h: 4
+  - name: "Claim-type worklist grid"
+    chart_type: grid_chart
+    description: "Claims, closures, approvals, claimed and approved dollars by type"
+    config:
+      columns: [claim_type, claim_count, closed_claim_count, approved_count, total_claimed_amount, total_approved_amount]
+      x: { dimension: claim_type }
+      y:
+        - { measure: claim_count, agg_fn: count }
+        - { measure: closed_claim_count, agg_fn: count }
+        - { measure: approved_count, agg_fn: count }
+        - { measure: total_claimed_amount, agg_fn: sum }
+        - { measure: total_approved_amount, agg_fn: sum }
+    sources:
+      - { measure: claim_count }
+      - { measure: closed_claim_count }
+      - { measure: approved_count }
+      - { measure: total_claimed_amount }
+      - { measure: total_approved_amount }
+    w: 12
+    h: 4

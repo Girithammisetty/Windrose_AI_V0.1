@@ -1,0 +1,19 @@
+# Terraform working files — never commit these.
+.terraform/
+.terraform.tfstate.lock.info
+
+# State (use a remote backend; never commit local state).
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+
+# Real variable values / secrets — only the *.example is committed.
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+
+# Plan artifacts.
+*.tfplan
+
+# The provider lock file (.terraform.lock.hcl) SHOULD be committed — do not ignore it.

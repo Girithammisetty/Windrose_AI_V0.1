@@ -1,0 +1,14 @@
+# Disposition taxonomy for the inspection-finding triage workflow. Categories
+# are the Core's closed set {true_positive,false_positive,benign,inconclusive,
+# other} (CASE-FR-020). dispatch_immediate_repair is the confirmed-hazard
+# outcome; close_false_detection is the AI/detection-artifact outcome whose
+# notes feed the detector-retraining label set; schedule_planned_work is the
+# governed deferral (requires_note captures the engineering rationale and the
+# program window a deferral will be judged against later);
+# request_field_verification routes inconclusive detections to a crew;
+# close_monitored_stable documents the re-check basis for a monitor decision.
+- { code: dispatch_immediate_repair,   label: "Dispatch immediate repair — confirmed hazard",              category: true_positive,  requires_note: true }
+- { code: close_false_detection,       label: "Close — false detection (AI/detection artifact)",           category: false_positive, requires_note: true }
+- { code: schedule_planned_work,       label: "Schedule planned work — repair within program window",      category: other,          requires_note: true }
+- { code: request_field_verification,  label: "Request field verification — evidence inconclusive",        category: inconclusive,   requires_note: true }
+- { code: close_monitored_stable,      label: "Close — monitored, condition stable",                       category: benign,         requires_note: true }

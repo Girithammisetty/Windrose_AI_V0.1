@@ -1,0 +1,24 @@
+# Pack datasets (ingestion-service file_upload, stable names for idempotency).
+# In production these tables arrive from the broker's ABI/ACE entry feed, the
+# importer's ERP/TMS, and the denied-party screening vendor (deferred until
+# pack-service ships connector materialization); this seed data is REAL rows
+# in the same landing shape, encoding genuine trade-compliance patterns so
+# every downstream component runs against real signal from day one: a repeat
+# tariff-engineering reclassification attempt on a lane already corrected
+# once, an SDN fuzzy match at 0.88 on a supplier with two prior released
+# alerts, an Entity List match on a brand-new re-export consignee, a
+# misdeclared-origin transshipment suspicion on high-value solar modules, a
+# high-duty-delta classification question on a new product line, and a
+# dual-use license-determination question on thermal imaging modules.
+- identity: tc_trading_partners
+  name: tc-trading-partners
+  file: data/tc_trading_partners.csv
+  format: csv
+- identity: tc_shipments
+  name: tc-shipments
+  file: data/tc_shipments.csv
+  format: csv
+- identity: tc_review_items
+  name: tc-review-items
+  file: data/tc_review_items.csv
+  format: csv

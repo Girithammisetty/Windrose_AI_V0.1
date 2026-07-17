@@ -1,0 +1,69 @@
+# Inspection Triage Center: finding mix by type, backlog aging, repair/defer
+# outcome mix, intake trend. Chart families restricted to the render-verified
+# set (vertical_bar / grid / pie / line); expr_metric measures (rates) are
+# query/NL surfaces, never charted directly.
+name: "Inspection Triage Center"
+module: insights
+semantic_model: inspections_core
+description: >-
+  Top-line inspection-triage KPIs: finding volumes by type, triage backlog
+  aging by severity, human repair/defer disposition mix, and estimated
+  repair-cost exposure per finding type.
+tags: [utilities, inspections, asset_management, pack]
+charts:
+  - name: "Findings by type"
+    chart_type: vertical_bar_chart
+    description: "Finding volume by defect type (damage, vegetation, corrosion, leak, hotspot, wear)"
+    config:
+      x: { dimension: finding_type }
+      y: [ { measure: finding_count, agg_fn: count } ]
+    sources: [ { measure: finding_count } ]
+    w: 6
+    h: 4
+  - name: "Backlog aging by severity"
+    chart_type: vertical_bar_chart
+    description: "Average finding age in days by severity (cycle-time watch)"
+    config:
+      x: { dimension: severity }
+      y: [ { measure: avg_finding_age_days, agg_fn: avg } ]
+    sources: [ { measure: avg_finding_age_days } ]
+    w: 6
+    h: 4
+  - name: "Disposition outcome mix"
+    chart_type: pie_chart
+    description: "Immediate dispatch vs planned work vs false detection vs verification vs monitor vs pending"
+    config:
+      x: { dimension: finding_disposition }
+      y: [ { measure: finding_count, agg_fn: count } ]
+    sources: [ { measure: finding_count } ]
+    w: 6
+    h: 4
+  - name: "Finding intake by month"
+    chart_type: line_chart
+    description: "Inspection findings filed by month"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: finding_count, agg_fn: count } ]
+    sources: [ { measure: finding_count } ]
+    w: 6
+    h: 4
+  - name: "Finding-type worklist grid"
+    chart_type: grid_chart
+    description: "Findings, closures, immediate dispatches, false detections and repair-cost exposure by type"
+    config:
+      columns: [finding_type, finding_count, closed_finding_count, immediate_dispatch_count, false_detection_count, total_est_repair_cost]
+      x: { dimension: finding_type }
+      y:
+        - { measure: finding_count, agg_fn: count }
+        - { measure: closed_finding_count, agg_fn: count }
+        - { measure: immediate_dispatch_count, agg_fn: count }
+        - { measure: false_detection_count, agg_fn: count }
+        - { measure: total_est_repair_cost, agg_fn: sum }
+    sources:
+      - { measure: finding_count }
+      - { measure: closed_finding_count }
+      - { measure: immediate_dispatch_count }
+      - { measure: false_detection_count }
+      - { measure: total_est_repair_cost }
+    w: 12
+    h: 4

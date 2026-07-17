@@ -1,0 +1,69 @@
+# Broker & Funnel Performance: broker-tier mix, premium-band economics,
+# declination concentration by line, and the account-book risk quality that
+# drives appetite — the distribution-management view.
+name: "Broker & Funnel Performance"
+module: insights
+semantic_model: underwriting_core
+description: >-
+  Distribution and funnel economics: submission volume by broker tier,
+  premium-band mix of the flow, declination concentration by line of
+  business, account-book loss-history quality, and the per-tier funnel from
+  submission to accept/decline/withdrawal.
+tags: [insurance, underwriting, brokers, funnel, pack]
+charts:
+  - name: "Submissions by broker tier"
+    chart_type: vertical_bar_chart
+    description: "Submission flow split by broker tier (tiered service standards)"
+    config:
+      x: { dimension: broker_tier }
+      y: [ { measure: submission_count, agg_fn: count } ]
+    sources: [ { measure: submission_count } ]
+    w: 6
+    h: 4
+  - name: "Premium-band mix"
+    chart_type: pie_chart
+    description: "Estimated-premium bands across the submission flow"
+    config:
+      x: { dimension: premium_band }
+      y: [ { measure: submission_count, agg_fn: count } ]
+    sources: [ { measure: submission_count } ]
+    w: 6
+    h: 4
+  - name: "Declinations by line of business"
+    chart_type: vertical_bar_chart
+    description: "Out-of-appetite declinations by line — where the appetite statement bites"
+    config:
+      x: { dimension: line_of_business }
+      y: [ { measure: declined_count, agg_fn: count } ]
+    sources: [ { measure: declined_count } ]
+    w: 6
+    h: 4
+  - name: "Account book by loss history"
+    chart_type: vertical_bar_chart
+    description: "Accounts by loss-history band (clean/moderate/adverse) — the risk-quality feed"
+    config:
+      x: { dimension: loss_history }
+      y: [ { measure: account_count, agg_fn: count } ]
+    sources: [ { measure: account_count } ]
+    w: 6
+    h: 4
+  - name: "Broker-tier funnel grid"
+    chart_type: grid_chart
+    description: "Submissions, closures, accepts, declinations and withdrawals by broker tier"
+    config:
+      columns: [broker_tier, submission_count, closed_submission_count, accepted_count, declined_count, withdrawn_count]
+      x: { dimension: broker_tier }
+      y:
+        - { measure: submission_count, agg_fn: count }
+        - { measure: closed_submission_count, agg_fn: count }
+        - { measure: accepted_count, agg_fn: count }
+        - { measure: declined_count, agg_fn: count }
+        - { measure: withdrawn_count, agg_fn: count }
+    sources:
+      - { measure: submission_count }
+      - { measure: closed_submission_count }
+      - { measure: accepted_count }
+      - { measure: declined_count }
+      - { measure: withdrawn_count }
+    w: 12
+    h: 4

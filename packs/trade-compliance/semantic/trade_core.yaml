@@ -1,0 +1,157 @@
+# Semantic model `trade_core` — importer/broker trade-compliance KPI catalog
+# (classification correction rate, screening false-positive rate, true-hit
+# count, duty-risk mix, deadline runway, entered value by lane/mode),
+# expressed in the Core semantic grammar (agg whitelist, equality measure
+# filters, derived expr_metric with nullif; join_paths left/many_to_one,
+# acyclic chain: review_items -> shipments -> trading partners).
+#
+# entity.table is main.<safe_relation(dataset name)>; `dataset:` refs are
+# rebound to live dataset URNs by packctl at install. Value/score columns
+# ingest as bronze strings, so numeric measures cast(... as double) (the
+# proven claims_core / disputes_core pattern).
+name: trade_core
+description: >-
+  US import trade-compliance operations KPI model (HTS classification +
+  denied-party screening): review-queue volumes and backlog aging,
+  disposition outcome mix, classification correction and screening
+  false-positive rates, sanctions true hits and match scores, duty-risk mix
+  and regulatory deadline runway — review items joined to the shipment book
+  and the trading-partner roster.
+definition:
+  entities:
+    - name: review_items
+      dataset: tc_review_items
+      table: main.tc_review_items
+      primary_key: [review_id]
+      dataset_version_policy: { policy: latest }
+    - name: shipments
+      dataset: tc_shipments
+      table: main.tc_shipments
+      primary_key: [shipment_id]
+      dataset_version_policy: { policy: latest }
+    - name: partners
+      dataset: tc_trading_partners
+      table: main.tc_trading_partners
+      primary_key: [partner_id]
+      dataset_version_policy: { policy: latest }
+  join_paths:
+    - name: review_items_shipments
+      from_entity: review_items
+      to_entity: shipments
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: shipment_id, to_column: shipment_id }]
+    - name: shipments_partners
+      from_entity: shipments
+      to_entity: partners
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: importer_id, to_column: partner_id }]
+  dimensions:
+    - { name: item_type, entity: review_items, type: categorical, column: item_type }
+    - { name: product_category, entity: review_items, type: categorical, column: product_category }
+    - { name: declared_hs_chapter, entity: review_items, type: categorical, column: declared_hs_chapter }
+    - { name: origin_country, entity: review_items, type: categorical, column: origin_country }
+    - { name: destination, entity: review_items, type: categorical, column: destination }
+    - { name: valuation_band, entity: review_items, type: categorical, column: valuation_band }
+    - { name: screening_list, entity: review_items, type: categorical, column: screening_list }
+    - { name: duty_risk, entity: review_items, type: categorical, column: duty_risk }
+    - { name: severity, entity: review_items, type: categorical, column: severity }
+    - { name: review_status, entity: review_items, type: categorical, column: status }
+    - { name: review_disposition, entity: review_items, type: categorical, column: disposition }
+    - { name: filed_month, entity: review_items, type: categorical, column: filed_month }
+    - { name: deadline_bucket, entity: review_items, type: categorical, column: deadline_bucket }
+    - { name: lane, entity: shipments, type: categorical, column: lane }
+    - { name: mode, entity: shipments, type: categorical, column: mode }
+    - { name: broker, entity: shipments, type: categorical, column: broker }
+    - { name: entry_month, entity: shipments, type: categorical, column: entry_month }
+    - { name: dest_port, entity: shipments, type: categorical, column: dest_port }
+    - { name: partner_type, entity: partners, type: categorical, column: partner_type }
+    - { name: partner_country, entity: partners, type: categorical, column: country }
+    - { name: denied_party_risk, entity: partners, type: categorical, column: denied_party_risk }
+    - { name: ctpat_flag, entity: partners, type: categorical, column: ctpat_flag }
+    - { name: industry, entity: partners, type: categorical, column: industry }
+  measures:
+    - { name: review_item_count, entity: review_items, agg: count,
+        description: "Number of compliance review items (classification reviews + screening alerts)" }
+    - { name: open_item_count, entity: review_items, agg: count,
+        filters: "status = 'open'",
+        description: "Review items still open (adjudication backlog)" }
+    - { name: closed_item_count, entity: review_items, agg: count,
+        filters: "status = 'closed'",
+        description: "Review items closed with a final disposition" }
+    - { name: classification_review_count, entity: review_items, agg: count,
+        filters: "item_type = 'hs_classification'",
+        description: "HS classification / entry-review items" }
+    - { name: screening_alert_count, entity: review_items, agg: count,
+        filters: "item_type = 'screening_alert'",
+        description: "Denied-party screening alerts (SDN / Entity List matches)" }
+    - { name: confirmed_classification_count, entity: review_items, agg: count,
+        filters: "disposition = 'confirm_classification'",
+        description: "Reviews where the declared classification/origin was confirmed correct" }
+    - { name: reclassified_entry_count, entity: review_items, agg: count,
+        filters: "disposition = 'reclassify_correct_entry'",
+        description: "Reviews where the declared code was wrong — corrected entry filed" }
+    - { name: screening_released_count, entity: review_items, agg: count,
+        filters: "disposition = 'release_false_positive'",
+        description: "Screening alerts cleared as false positives and released" }
+    - { name: sanctions_true_hit_count, entity: review_items, agg: count,
+        filters: "disposition = 'sanctions_true_hit_hold'",
+        description: "Confirmed sanctions/denied-party hits — shipment held, reported" }
+    - { name: licensing_escalation_count, entity: review_items, agg: count,
+        filters: "disposition = 'escalate_licensing_review'",
+        description: "Reviews escalated for an export/dual-use license determination" }
+    - { name: sdn_alert_count, entity: review_items, agg: count,
+        filters: "screening_list = 'sdn'",
+        description: "Alerts matched against the OFAC SDN list" }
+    - { name: entity_list_alert_count, entity: review_items, agg: count,
+        filters: "screening_list = 'entity_list'",
+        description: "Alerts matched against the BIS Entity List" }
+    - { name: high_duty_risk_count, entity: review_items, agg: count,
+        filters: "duty_risk = 'high'",
+        description: "Review items carrying high duty/penalty exposure" }
+    - { name: avg_item_age_days, entity: review_items, agg: avg,
+        expr: "cast(age_days as double)", format: decimal,
+        description: "Average review-item age in days (cycle time / backlog aging)" }
+    - { name: avg_match_score, entity: review_items, agg: avg,
+        expr: "cast(match_score as double)", format: decimal,
+        description: "Average screening match score (0 on classification rows — slice by screening_list or item_type)" }
+    - { name: avg_days_to_deadline, entity: review_items, agg: avg,
+        expr: "cast(days_to_deadline as double)", format: decimal,
+        description: "Average days remaining to the action deadline (0 once closed)" }
+    - { name: shipment_count, entity: shipments, agg: count,
+        description: "Number of customs entries / shipments" }
+    - { name: total_entered_value, entity: shipments, agg: sum,
+        expr: "cast(value as double)", format: decimal,
+        description: "Total entered value (USD) across shipments" }
+    - { name: avg_entered_value, entity: shipments, agg: avg,
+        expr: "cast(value as double)", format: decimal,
+        description: "Average entered value per shipment" }
+    - { name: partner_count, entity: partners, agg: count,
+        description: "Number of trading partners on the roster (importers, suppliers, consignees)" }
+    - { name: high_risk_partner_count, entity: partners, agg: count,
+        filters: "denied_party_risk = 'high'",
+        description: "Trading partners in the high denied-party-risk tier" }
+    - { name: ctpat_partner_count, entity: partners, agg: count,
+        filters: "ctpat_flag = 'yes'",
+        description: "CTPAT-certified trading partners" }
+    - { name: classification_correction_rate,
+        expr_metric: "reclassified_entry_count / nullif(classification_review_count, 0)",
+        format: percent,
+        description: "Classification reviews that ended in a corrected entry over all classification reviews" }
+    - { name: screening_false_positive_rate,
+        expr_metric: "screening_released_count / nullif(screening_alert_count, 0)",
+        format: percent,
+        description: "Screening alerts released as false positives over all screening alerts" }
+    - { name: screening_true_hit_rate,
+        expr_metric: "sanctions_true_hit_count / nullif(screening_alert_count, 0)",
+        format: percent,
+        description: "Confirmed sanctions hits over all screening alerts" }
+    - { name: high_duty_risk_share,
+        expr_metric: "high_duty_risk_count / nullif(review_item_count, 0)",
+        format: percent,
+        description: "Share of the review book carrying high duty/penalty exposure" }
+    - { name: ctpat_partner_share,
+        expr_metric: "ctpat_partner_count / nullif(partner_count, 0)",
+        format: percent,
+        description: "Share of trading partners that are CTPAT-certified" }

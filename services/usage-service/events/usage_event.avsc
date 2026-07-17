@@ -1,0 +1,19 @@
+{
+  "type": "record",
+  "name": "UsageEventEnvelope",
+  "namespace": "ai.windrose.usage.events",
+  "doc": "usage.events.v1 — platform master envelope (MASTER-FR-031). usage-service emits budget.threshold/exhausted/reset, budget.created/updated/deleted, usage.anomaly_detected, usage.reconciliation_variance, usage.month_refinalized, ratecard.activated and adjustment.recorded. Partition key = tenant_id. The schemaless payload is carried as a JSON string field per the shared go-common envelope schema; the payload shapes per event_type are documented in BRD 17 §6.",
+  "fields": [
+    {"name": "event_id", "type": {"type": "string", "logicalType": "uuid"}},
+    {"name": "event_type", "type": "string", "doc": "budget.threshold | budget.exhausted | budget.reset | budget.created | budget.updated | budget.deleted | usage.anomaly_detected | usage.reconciliation_variance | usage.month_refinalized | ratecard.activated | adjustment.recorded"},
+    {"name": "tenant_id", "type": {"type": "string", "logicalType": "uuid"}},
+    {"name": "actor", "type": {"type": "record", "name": "Actor", "fields": [
+      {"name": "type", "type": "string"}, {"name": "id", "type": "string"}]}},
+    {"name": "via_agent", "type": ["null", {"type": "record", "name": "ViaAgent", "fields": [
+      {"name": "agent_id", "type": "string"}, {"name": "version", "type": "string"}]}], "default": null},
+    {"name": "resource_urn", "type": "string"},
+    {"name": "occurred_at", "type": {"type": "long", "logicalType": "timestamp-micros"}},
+    {"name": "trace_id", "type": "string"},
+    {"name": "payload", "type": "string", "doc": "JSON payload; e.g. budget.threshold = {budget_id, scope:{tenant_id, workspace_id?, user_id?, agent_id?}, meter_key, threshold, consumed, limit, window_start}; budget.exhausted adds {action}."}
+  ]
+}

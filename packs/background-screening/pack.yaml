@@ -1,0 +1,124 @@
+# background-screening capability pack — Core-neutral edition: FCRA
+# employment background-screening adjudication and adverse action for
+# consumer reporting agencies (CRAs), large employers' talent-compliance
+# teams, and gig platforms. Installable TODAY against Windrose Core's public
+# APIs via packctl; the manifest envelope follows BRD 23 (PKG-FR-001/003).
+# Components the current Core cannot materialize are declared under
+# `deferred` — recorded in the install ledger, never faked.
+pack_manifest: 1
+name: background-screening
+version: 1.0.0
+publisher: { id: pub-windrose, name: "Windrose Inc." }
+description: >-
+  AI-assisted employment background-screening adjudication for CRAs,
+  employer talent-compliance teams, and gig platforms: screening-hit triage
+  with FCRA accuracy and obsolescence awareness (7-year rule, 607(b)
+  maximum-possible-accuracy, 613 public-record rails), identity resolution
+  for common-name/mixed-file hits, pre-adverse/adverse-action two-step clock
+  tracking, EEOC individualized-assessment routing (Green factors),
+  screening-operations KPI semantic model and dashboards (clear rate,
+  adverse-finding rate, suppression rate, identity-escalation share,
+  deadline runway, turnaround), applicant-employer network analytics,
+  FCRA/EEOC grounding memories, and order-anomaly + hit-outcome training
+  pipelines.
+categories: [screening, employment, hr_compliance, gig_platforms, adjudication]
+regulatory: [fcra, eeoc_title_vii, ban_the_box, state_screening_laws, cfpb]
+components:
+  datasets:
+    - { file: "data/datasets.yaml", identity: "datasets" }
+  semantic_models:
+    - { file: "semantic/screening_core.yaml", identity: "screening_core" }
+  verified_queries:
+    - { file: "queries/verified.yaml", identity: "canonical_questions" }
+  saved_queries:
+    - { file: "queries/saved.yaml", identity: "saved_queries" }
+  dashboards:
+    - { file: "dashboards/screening_adjudication_center.yaml", identity: "screening_adjudication_center" }
+    - { file: "dashboards/adverse_action_clocks.yaml", identity: "adverse_action_clocks" }
+    - { file: "dashboards/accuracy_identity_watch.yaml", identity: "accuracy_identity_watch" }
+  dispositions:
+    - { file: "cases/dispositions.yaml", identity: "dispositions" }
+  cases:
+    - { file: "cases/queue.yaml", identity: "adjudication_queue" }
+  roles:
+    - { file: "rbac/roles.yaml", identity: "roles" }
+  agent_configs:
+    - { file: "agents/configs.yaml", identity: "agent_configs" }
+  memories:
+    - { file: "memories/grounding.yaml", identity: "grounding" }
+  pipelines:
+    - { file: "pipelines/templates.yaml", identity: "pipelines" }
+deferred:
+  - kind: guardrails
+    reason: >-
+      Screening-domain policies (no adverse-action notice before the
+      pre-adverse response window has run; no report containing a hit whose
+      identity match is below standard or whose record is 605(a)-obsolete;
+      adjudication-matrix consistency and pattern-level adverse-rate
+      disparity watch) require guardrail-service / OPA policy
+      materialization, which Core does not expose as a pack surface yet.
+      The behavioral core is partially covered today by Core invariants:
+      every pack-configured agent is proposal-mode with four-eyes approval
+      (agent-runtime), and the agent instructions + disposition taxonomy
+      route final determinations exclusively to human adjudicators with the
+      Screening Operations Manager as approver.
+  - kind: agent_recipes
+    reason: >-
+      Bespoke LangGraph recipes (Hit Adjudication Copilot, Identity
+      Resolution Assistant, Adverse Action Clock Sentinel, Individualized
+      Assessment Builder) require agent-runtime graph-module registration
+      (BRD 23 BR-12). This pack specializes the existing case-triage +
+      analytics agents via TenantAgentConfig prompt_params + tenant-scope
+      RAG grounding instead.
+  - kind: connection_templates
+    reason: >-
+      Production read connectors (court-record aggregators and county/state
+      repositories, DMV/MVR rails, education clearinghouses and registrar
+      verification services, employment-verification bureaus, sanctions and
+      registry lists, and the customer's ATS/HRIS for order intake) require
+      customer credentials and pack-service connector materialization. The
+      pack ships seed datasets in the exact landing shape; production
+      connectors are configured through the product Data > Connections UI.
+  - kind: write_adapters
+    reason: >-
+      Write adapters (send the pre-adverse-action packet — report copy +
+      Summary of Rights — and the final adverse-action notice, publish the
+      finished report to the employer's ATS, update the consumer file after
+      a 611 reinvestigation, open a furnisher dispute) execute only behind
+      pack-service's materialization contract and customer credentials;
+      every such write stays proposal-mode with human approval — no
+      autonomous notice, report release, or file change, ever.
+  - kind: eval_sets
+    reason: >-
+      Golden eval sets (identity-match adjudication, 605(a) obsolescence
+      screening, job-relatedness analysis, individualized-assessment
+      assembly) require eval-service write APIs whose action names are not
+      yet in the rbac canonical catalog (Core follow-up noted in rbac
+      catalog.go).
+  - kind: ontology
+    reason: >-
+      Ontology registration (Applicant, ScreeningOrder, Package,
+      ScreeningCheck, Hit, SourceRecord, Court, Employer, Position,
+      AdverseActionNotice, ResponseWindow, Dispute, Reinvestigation) awaits
+      pack-service; entity semantics are carried today by the
+      screening_core semantic model and dataset schemas.
+  - kind: case_schemas
+    reason: >-
+      Typed case schemas (hit_adjudication, identity_resolution,
+      adverse_action_tracking, applicant_dispute,
+      individualized_assessment) await case-service schema materialization;
+      today's cases carry the same fields via display_projection + the
+      disposition taxonomy.
+  - kind: model_archetypes
+    reason: >-
+      Model archetypes (identity_match_confidence, hit_outcome_confidence)
+      await experiment-service archetype APIs; the scoring capability ships
+      as pipeline seeds instead (isolation_forest order anomaly + xgboost
+      hit-outcome scorer) with model-governance expectations noted in
+      grounding memories.
+  - kind: display_labels
+    reason: >-
+      Display-label overlays ("Screening hit", "Pre-adverse sent",
+      "Response window closing", "Obsolete record", entity templates)
+      require the BFF label-registry endpoints (BFF-FR-082/088) which are
+      pack-service-tier features.

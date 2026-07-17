@@ -1,0 +1,13 @@
+party_id,party_name,party_type,trade,prequal_tier,prior_claims_band,surety_backed
+P-3001,Ridgeline Steel Erectors,subcontractor,structural_steel,tier_2,1_2,yes
+P-3002,Cascade Mechanical Systems,subcontractor,mechanical,tier_1,1_2,yes
+P-3003,IronPeak Electric,subcontractor,electrical,tier_1,1_2,yes
+P-3004,TerraFirm Earthworks,subcontractor,earthwork,tier_2,3_plus,yes
+P-3005,Summit Concrete Co,subcontractor,concrete,tier_2,1_2,yes
+P-3006,BlueRock Aggregates,supplier,materials,tier_3,none,no
+P-3007,Northgate Builders,gc,general,tier_1,3_plus,yes
+P-3008,Harbor Glass and Glazing,subcontractor,glazing,tier_3,3_plus,no
+P-3009,Pinnacle Roofing Systems,subcontractor,roofing,tier_2,1_2,yes
+P-3010,Vantage Fire Protection,subcontractor,fire_protection,tier_1,none,yes
+P-3011,GreatPlains Paving,subcontractor,paving,tier_3,1_2,no
+P-3012,Meridian Owner Services,owner_rep,general,tier_1,none,no

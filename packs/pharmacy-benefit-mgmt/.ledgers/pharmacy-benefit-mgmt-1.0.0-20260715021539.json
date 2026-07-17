@@ -1,0 +1,322 @@
+{
+  "pack": "pharmacy-benefit-mgmt",
+  "version": "1.0.0",
+  "workspace_id": "019f6462-1925-7d0f-8046-a3694911b658",
+  "tenant_id": "019f6462-14dc-7249-8e1f-faa5e562b126",
+  "started_at": "2026-07-15T06:15:35Z",
+  "finished_at": "2026-07-15T06:15:39Z",
+  "actions": [
+    {
+      "kind": "datasets",
+      "identity": "pbm_rx_claims",
+      "action": "noop",
+      "urn": "wr:019f6462-14dc-7249-8e1f-faa5e562b126:dataset:dataset/019f6462-1c55-78f7-9bf1-fbf5d9fcd068",
+      "detail": "dataset 'pbm-rx-claims' exists"
+    },
+    {
+      "kind": "datasets",
+      "identity": "pbm_formulary",
+      "action": "noop",
+      "urn": "wr:019f6462-14dc-7249-8e1f-faa5e562b126:dataset:dataset/019f6462-1d71-766f-9ebc-ed4f0512574a",
+      "detail": "dataset 'pbm-formulary' exists"
+    },
+    {
+      "kind": "datasets",
+      "identity": "pbm_pa_requests",
+      "action": "noop",
+      "urn": "wr:019f6462-14dc-7249-8e1f-faa5e562b126:dataset:dataset/019f6462-1e8b-71c5-a5ff-072141c60f8e",
+      "detail": "dataset 'pbm-pa-requests' exists"
+    },
+    {
+      "kind": "datasets",
+      "identity": "pbm_dur_alerts",
+      "action": "noop",
+      "urn": "wr:019f6462-14dc-7249-8e1f-faa5e562b126:dataset:dataset/019f6462-1fb7-70c1-8283-6dbf7e62b23d",
+      "detail": "dataset 'pbm-dur-alerts' exists"
+    },
+    {
+      "kind": "semantic_models",
+      "identity": "pbm_core",
+      "action": "noop",
+      "urn": null,
+      "detail": "'pbm_core' already published"
+    },
+    {
+      "kind": "semantic_models",
+      "identity": "pbm_pa",
+      "action": "noop",
+      "urn": null,
+      "detail": "'pbm_pa' already published"
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_0",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_1",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_2",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_3",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_4",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "dur_action_edges",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "plan_paid_per_member",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "dashboards",
+      "identity": "pbm_trend_safety",
+      "action": "noop",
+      "urn": "wr:019f6462-14dc-7249-8e1f-faa5e562b126:chart:dashboard/019f6462-2fd2-7ed4-920e-16a7b0f2fa6a",
+      "detail": "'PBM Trend & Safety' exists"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "pbm_trend_safety",
+      "action": "verify",
+      "urn": "wr:019f6462-14dc-7249-8e1f-faa5e562b126:chart:dashboard/019f6462-2fd2-7ed4-920e-16a7b0f2fa6a",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "pa_operations",
+      "action": "noop",
+      "urn": "wr:019f6462-14dc-7249-8e1f-faa5e562b126:chart:dashboard/019f6462-31cb-7874-a948-d1578f2868f5",
+      "detail": "'PA Operations' exists"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "pa_operations",
+      "action": "verify",
+      "urn": "wr:019f6462-14dc-7249-8e1f-faa5e562b126:chart:dashboard/019f6462-31cb-7874-a948-d1578f2868f5",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "rebate_cost",
+      "action": "noop",
+      "urn": "wr:019f6462-14dc-7249-8e1f-faa5e562b126:chart:dashboard/019f6462-3382-79b8-a319-7d2e8effafdf",
+      "detail": "'Rebate & Cost' exists"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "rebate_cost",
+      "action": "verify",
+      "urn": "wr:019f6462-14dc-7249-8e1f-faa5e562b126:chart:dashboard/019f6462-3382-79b8-a319-7d2e8effafdf",
+      "detail": "4/4 charts resolve data"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "noop",
+      "urn": null,
+      "detail": "pa_approved"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "noop",
+      "urn": null,
+      "detail": "pa_denied"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "noop",
+      "urn": null,
+      "detail": "pa_pended_info"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "noop",
+      "urn": null,
+      "detail": "dur_override"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "noop",
+      "urn": null,
+      "detail": "dur_intervene"
+    },
+    {
+      "kind": "cases",
+      "identity": "pa_dur_queue",
+      "action": "create",
+      "urn": "wr:019f6462-14dc-7249-8e1f-faa5e562b126:dataset:dataset/019f6462-1e8b-71c5-a5ff-072141c60f8e",
+      "detail": "0 open cases (reindexed)"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "noop",
+      "urn": null,
+      "detail": "role 'PA Pharmacist'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'PA Pharmacist' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "noop",
+      "urn": null,
+      "detail": "role 'Formulary Manager'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Formulary Manager' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "noop",
+      "urn": null,
+      "detail": "role 'Rebate Analyst'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Rebate Analyst' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "noop",
+      "urn": null,
+      "detail": "role 'Clinical Director'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Clinical Director' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "noop",
+      "urn": null,
+      "detail": "role 'PBM Compliance Officer'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'PBM Compliance Officer' bound to permission group"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "case-triage prompt_params set"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "analytics prompt_params set"
+    },
+    {
+      "kind": "memories",
+      "identity": "grounding",
+      "action": "noop",
+      "urn": null,
+      "detail": "0 grounding records written, 10 already present"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "noop",
+      "urn": null,
+      "detail": "Rx PA auto-decision classifier (logistic regression)"
+    }
+  ],
+  "deferred": [
+    {
+      "kind": "ontology",
+      "reason": "RX-FR-010 ontology registration (Member, Prescriber, Pharmacy, Drug, Prescription, PriorAuthRequest, Formulary, MTMEligibility, CMR, MAP, AdherenceRecord, DrugInteraction) awaits pack-service; entity semantics are carried today by the pbm_core / pbm_pa semantic models and the dataset schemas."
+    },
+    {
+      "kind": "guardrails",
+      "reason": "RX-FR-090 policy bundle (HIPAA baseline, CMS Part D turnaround + transparency, Star Ratings measure rules, NCPDP EDI formats, DEA EPCS identity/audit, state pharmacy law, DDI alert severity rules) requires guardrail-service / OPA materialization, which Core does not expose as a pack surface yet. The behavioral guarantees BR-1/BR-2 encode (no autonomous denial, no controlled-substance auto-approve) are covered today by Core invariants \u2014 proposal-mode + four-eyes approval in agent-runtime \u2014 plus the pack's agent instructions and grounding."
+    },
+    {
+      "kind": "agent_recipes",
+      "reason": "RX-FR-030..070 bespoke LangGraph recipes (Rx PA Copilot, Formulary Alternative Suggester, MTM Copilot, Adherence Intervention Prioritizer, Star Ratings Copilot) require agent-runtime graph-module registration (a Core code surface, BRD 23 BR-12). This pack specializes the existing case-triage + analytics agents via TenantAgentConfig prompt_params + tenant-scope RAG grounding instead."
+    },
+    {
+      "kind": "connection_templates",
+      "reason": "RX-FR-080 read connectors (RxClaim, MedImpact, ScriptCheck, CoverMyMeds ePA, Surescripts RTPB, NCPDP EDI, dispensing feeds, Micromedex/First Databank/Lexi-Comp, formulary configs, member CRM) require customer credentials/licenses and pack-service connector materialization. The pack ships seed datasets in the exact landing shape; production connectors are configured through the product Data > Connections UI."
+    },
+    {
+      "kind": "write_adapters",
+      "reason": "RX-FR-080 write adapters (RxClaim PA decision post-back, CoverMyMeds ePA response, Surescripts approval/denial, MTM CMR document upload, adherence intervention log) execute only behind pack-service's materialization contract and customer credentials; all platform-side writes remain proposal-mode per BR-1/BR-10."
+    },
+    {
+      "kind": "eval_sets",
+      "reason": "BRD 28 \u00a74 golden eval sets (4, incl. Rx PA agreement-rate per AC-2) require eval-service write APIs whose action names are not yet in the rbac canonical catalog (Core follow-up noted in rbac catalog.go)."
+    },
+    {
+      "kind": "model_archetypes",
+      "reason": "BRD 28 \u00a74 archetypes (rx_pa_confidence, adherence_event_risk) await experiment-service archetype APIs; the confidence model ships today as the pa_auto_decision pipeline seed instead."
+    },
+    {
+      "kind": "case_schemas",
+      "reason": "RX-FR-100 typed case schemas (rx_pa_review, formulary_alternative_review, mtm_cmr_review, adherence_intervention_case, star_gap_closure_case) await case-service schema materialization; today's cases carry the same fields via display_projection + the disposition taxonomy."
+    },
+    {
+      "kind": "display_labels",
+      "reason": "BRD 28 \u00a74 display-label overlays (rx_pa_review.singular, agent names, member/drug entity templates) require the BFF label-registry endpoints (BFF-FR-082/088) which are pack-service-tier features."
+    }
+  ],
+  "result": "installed"
+}

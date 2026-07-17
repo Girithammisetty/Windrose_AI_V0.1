@@ -1,0 +1,66 @@
+# Verified NL<->SQL queries (four-eyes approved at install). SQL uses
+# {{dataset('<name>')}} macros — the only table references query-service's
+# tenant-namespace guard admits.
+- nl_text: "What's our cardholder-favor rate by dispute type?"
+  sql_text: >-
+    SELECT dispute_type,
+           count(*) AS closed_disputes,
+           sum(CASE WHEN disposition = 'cardholder_favor' THEN 1 ELSE 0 END) AS cardholder_favor,
+           round(sum(CASE WHEN disposition = 'cardholder_favor' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS cardholder_favor_rate
+    FROM {{dataset('cd-disputes')}}
+    WHERE status = 'closed'
+    GROUP BY dispute_type
+    ORDER BY cardholder_favor_rate DESC
+  model: disputes_core
+  tags: [disputes, outcomes, kpi, pack]
+- nl_text: "Which open disputes are closest to breaching a regulatory deadline?"
+  sql_text: >-
+    SELECT dispute_id, cardholder_id, dispute_type, reg_flag, severity,
+           provisional_credit,
+           cast(deadline_days_left AS double) AS deadline_days_left,
+           cast(age_days AS double) AS age_days,
+           cast(amount AS double) AS amount
+    FROM {{dataset('cd-disputes')}}
+    WHERE status = 'open'
+    ORDER BY deadline_days_left ASC
+  model: disputes_core
+  tags: [disputes, deadlines, reg_e, backlog, pack]
+- nl_text: "Repeat disputers — cardholders with multiple disputes (first-party fraud watch)"
+  sql_text: >-
+    SELECT cardholder_id,
+           count(*) AS dispute_count,
+           sum(CASE WHEN disposition = 'denied_no_error' THEN 1 ELSE 0 END) AS prior_denials,
+           sum(cast(amount AS double)) AS total_disputed
+    FROM {{dataset('cd-disputes')}}
+    GROUP BY cardholder_id
+    HAVING count(*) >= 2
+    ORDER BY dispute_count DESC, total_disputed DESC
+  model: disputes_core
+  tags: [disputes, first_party_fraud, repeat_disputers, pack]
+- nl_text: "Chargeback win rate by network and reason code"
+  sql_text: >-
+    SELECT network, reason_code,
+           count(*) AS chargebacks_filed,
+           sum(CASE WHEN disposition = 'chargeback_won' THEN 1 ELSE 0 END) AS won,
+           round(sum(CASE WHEN disposition = 'chargeback_won' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS win_rate,
+           sum(cast(recovery_amount AS double)) AS recovered
+    FROM {{dataset('cd-disputes')}}
+    WHERE chargeback_filed = 'yes'
+    GROUP BY network, reason_code
+    ORDER BY recovered DESC
+  model: disputes_core
+  tags: [chargebacks, recovery, network, pack]
+- nl_text: "Provisional credit exposure — dollars at risk on open Reg E disputes"
+  sql_text: >-
+    SELECT reg_flag, provisional_credit,
+           count(*) AS open_disputes,
+           sum(cast(amount AS double)) AS exposure,
+           round(avg(cast(deadline_days_left AS double)), 1) AS avg_deadline_days_left
+    FROM {{dataset('cd-disputes')}}
+    WHERE status = 'open'
+    GROUP BY reg_flag, provisional_credit
+    ORDER BY exposure DESC
+  model: disputes_core
+  tags: [reg_e, provisional_credit, exposure, pack]

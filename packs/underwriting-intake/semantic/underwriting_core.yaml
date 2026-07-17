@@ -1,0 +1,153 @@
+# Semantic model `underwriting_core` — commercial-lines submission intake &
+# triage KPI catalog (accept-to-underwriter rate, declination rate,
+# info-request share, appetite mix, completeness mix, deadline runway,
+# triage aging, broker-tier mix), expressed in the Core semantic grammar
+# (agg whitelist, equality measure filters, derived expr_metric with nullif;
+# join_paths left/many_to_one, acyclic chain).
+#
+# entity.table is main.<safe_relation(dataset name)>; `dataset:` refs are
+# rebound to live dataset URNs by packctl at install. age/runway columns
+# ingest as bronze strings, so numeric measures cast(... as double) (the
+# proven claims_core pattern).
+name: underwriting_core
+description: >-
+  Commercial P&C underwriting submission intake and triage KPI model:
+  submission volumes and triage aging, disposition outcome mix
+  (accept/decline/info-request/specialty-referral/withdrawn), appetite and
+  completeness posture, broker-deadline runway, broker-tier and premium-band
+  mix — submissions joined through the account book to the insured registry.
+definition:
+  entities:
+    - name: submissions
+      dataset: uw_submissions
+      table: main.uw_submissions
+      primary_key: [submission_id]
+      dataset_version_policy: { policy: latest }
+    - name: accounts
+      dataset: uw_accounts
+      table: main.uw_accounts
+      primary_key: [account_id]
+      dataset_version_policy: { policy: latest }
+    - name: insureds
+      dataset: uw_insureds
+      table: main.uw_insureds
+      primary_key: [insured_id]
+      dataset_version_policy: { policy: latest }
+  join_paths:
+    - name: submissions_accounts
+      from_entity: submissions
+      to_entity: accounts
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: account_id, to_column: account_id }]
+    - name: accounts_insureds
+      from_entity: accounts
+      to_entity: insureds
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: insured_id, to_column: insured_id }]
+  dimensions:
+    - { name: line_of_business, entity: submissions, type: categorical, column: line_of_business }
+    - { name: segment, entity: submissions, type: categorical, column: segment }
+    - { name: appetite_fit, entity: submissions, type: categorical, column: appetite_fit }
+    - { name: completeness, entity: submissions, type: categorical, column: completeness }
+    - { name: priority_band, entity: submissions, type: categorical, column: priority_band }
+    - { name: broker_name, entity: submissions, type: categorical, column: broker_name }
+    - { name: broker_tier, entity: submissions, type: categorical, column: broker_tier }
+    - { name: severity, entity: submissions, type: categorical, column: severity }
+    - { name: submission_status, entity: submissions, type: categorical, column: status }
+    - { name: submission_disposition, entity: submissions, type: categorical, column: disposition }
+    - { name: deadline_bucket, entity: submissions, type: categorical, column: deadline_bucket }
+    - { name: premium_band, entity: submissions, type: categorical, column: premium_band }
+    - { name: filed_month, entity: submissions, type: categorical, column: filed_month }
+    - { name: industry, entity: accounts, type: categorical, column: industry }
+    - { name: account_state, entity: accounts, type: categorical, column: state }
+    - { name: tiv_band, entity: accounts, type: categorical, column: tiv_band }
+    - { name: loss_history, entity: accounts, type: categorical, column: loss_history }
+    - { name: years_in_business, entity: accounts, type: categorical, column: years_in_business }
+    - { name: account_month, entity: accounts, type: categorical, column: submission_month }
+    - { name: industry_group, entity: insureds, type: categorical, column: industry_group }
+    - { name: size_tier, entity: insureds, type: categorical, column: size_tier }
+    - { name: prior_carrier_band, entity: insureds, type: categorical, column: prior_carrier_band }
+    - { name: risk_grade, entity: insureds, type: categorical, column: risk_grade }
+  measures:
+    - { name: submission_count, entity: submissions, agg: count,
+        description: "Number of submissions received" }
+    - { name: open_submission_count, entity: submissions, agg: count,
+        filters: "status = 'open'",
+        description: "Submissions still in triage (open worklist)" }
+    - { name: closed_submission_count, entity: submissions, agg: count,
+        filters: "status = 'closed'",
+        description: "Submissions triaged to a final intake outcome" }
+    - { name: accepted_count, entity: submissions, agg: count,
+        filters: "disposition = 'accept_route_to_underwriter'",
+        description: "Submissions cleared and routed to an underwriter" }
+    - { name: declined_count, entity: submissions, agg: count,
+        filters: "disposition = 'decline_out_of_appetite'",
+        description: "Submissions declined out of appetite with documented reasons" }
+    - { name: info_requested_count, entity: submissions, agg: count,
+        filters: "disposition = 'request_missing_information'",
+        description: "Submissions closed pending missing information from the broker" }
+    - { name: referred_specialty_count, entity: submissions, agg: count,
+        filters: "disposition = 'refer_specialty_market'",
+        description: "Submissions referred to specialty / E&S markets" }
+    - { name: withdrawn_count, entity: submissions, agg: count,
+        filters: "disposition = 'close_broker_withdrawn'",
+        description: "Submissions closed after the broker withdrew" }
+    - { name: in_appetite_count, entity: submissions, agg: count,
+        filters: "appetite_fit = 'in_appetite'",
+        description: "Submissions inside the published appetite statement" }
+    - { name: out_of_appetite_count, entity: submissions, agg: count,
+        filters: "appetite_fit = 'out_of_appetite'",
+        description: "Submissions outside appetite (declination hygiene watch)" }
+    - { name: complete_submission_count, entity: submissions, agg: count,
+        filters: "completeness = 'complete'",
+        description: "Submissions with a complete file (apps, loss runs, SOV)" }
+    - { name: missing_loss_runs_count, entity: submissions, agg: count,
+        filters: "completeness = 'missing_loss_runs'",
+        description: "Submissions missing currently-valued loss runs" }
+    - { name: urgent_count, entity: submissions, agg: count,
+        filters: "priority_band = 'urgent'",
+        description: "Urgent-priority submissions (renewal defense / tight needed-by)" }
+    - { name: cyber_submission_count, entity: submissions, agg: count,
+        filters: "line_of_business = 'cyber'",
+        description: "Cyber submissions (minimum-controls attestation watch)" }
+    - { name: tier1_submission_count, entity: submissions, agg: count,
+        filters: "broker_tier = 'tier_1'",
+        description: "Submissions from tier-1 brokers (service-standard SLA)" }
+    - { name: avg_triage_age_days, entity: submissions, agg: avg,
+        expr: "cast(age_days as double)", format: decimal,
+        description: "Average submission age in days (triage cycle time / backlog aging)" }
+    - { name: avg_deadline_runway_days, entity: submissions, agg: avg,
+        expr: "cast(days_to_deadline as double)", format: decimal,
+        description: "Average days remaining to the broker's needed-by date" }
+    - { name: account_count, entity: accounts, agg: count,
+        description: "Number of accounts on the submission book" }
+    - { name: adverse_loss_history_count, entity: accounts, agg: count,
+        filters: "loss_history = 'adverse'",
+        description: "Accounts with adverse loss history (appetite and referral driver)" }
+    - { name: insured_count, entity: insureds, agg: count,
+        description: "Number of distinct insureds in the registry" }
+    - { name: preferred_risk_count, entity: insureds, agg: count,
+        filters: "risk_grade = 'preferred'",
+        description: "Insureds graded preferred (target book)" }
+    - { name: accept_to_underwriter_rate,
+        expr_metric: "accepted_count / nullif(closed_submission_count, 0)",
+        format: percent,
+        description: "Submissions routed to an underwriter over all triage closures" }
+    - { name: declination_rate,
+        expr_metric: "declined_count / nullif(closed_submission_count, 0)",
+        format: percent,
+        description: "Out-of-appetite declinations over all triage closures" }
+    - { name: info_request_share,
+        expr_metric: "info_requested_count / nullif(closed_submission_count, 0)",
+        format: percent,
+        description: "Closures that ended as missing-information requests" }
+    - { name: in_appetite_share,
+        expr_metric: "in_appetite_count / nullif(submission_count, 0)",
+        format: percent,
+        description: "Share of the submission flow inside the appetite statement" }
+    - { name: complete_submission_share,
+        expr_metric: "complete_submission_count / nullif(submission_count, 0)",
+        format: percent,
+        description: "Share of submissions arriving with a complete file" }

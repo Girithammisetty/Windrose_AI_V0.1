@@ -1,0 +1,315 @@
+{
+  "pack": "trade-compliance",
+  "version": "1.0.0",
+  "workspace_id": "019f6a73-e0f9-7b4e-9c9a-a7b5404d9446",
+  "tenant_id": "019f6a73-e0af-7d6d-b381-1a26863a6a2e",
+  "started_at": "2026-07-16T10:31:44Z",
+  "finished_at": "2026-07-16T10:31:49Z",
+  "actions": [
+    {
+      "kind": "datasets",
+      "identity": "tc_trading_partners",
+      "action": "noop",
+      "urn": "wr:019f6a73-e0af-7d6d-b381-1a26863a6a2e:dataset:dataset/019f6a73-e485-741c-916d-e902a0861c21",
+      "detail": "dataset 'tc-trading-partners' exists"
+    },
+    {
+      "kind": "datasets",
+      "identity": "tc_shipments",
+      "action": "noop",
+      "urn": "wr:019f6a73-e0af-7d6d-b381-1a26863a6a2e:dataset:dataset/019f6a73-e62c-7f6d-8ccf-0874b30219d2",
+      "detail": "dataset 'tc-shipments' exists"
+    },
+    {
+      "kind": "datasets",
+      "identity": "tc_review_items",
+      "action": "noop",
+      "urn": "wr:019f6a73-e0af-7d6d-b381-1a26863a6a2e:dataset:dataset/019f6a73-e778-797d-8188-775e64adcd4d",
+      "detail": "dataset 'tc-review-items' exists"
+    },
+    {
+      "kind": "semantic_models",
+      "identity": "trade_core",
+      "action": "noop",
+      "urn": null,
+      "detail": "'trade_core' already published"
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_0",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_1",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_2",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_3",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_4",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "importer_sourcing_edges",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "high_priority_open_reviews",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "dashboards",
+      "identity": "trade_command_center",
+      "action": "noop",
+      "urn": "wr:019f6a73-e0af-7d6d-b381-1a26863a6a2e:chart:dashboard/019f6a73-f75a-704a-8716-514e9404bebd",
+      "detail": "'Trade Compliance Command Center' exists"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "trade_command_center",
+      "action": "verify",
+      "urn": "wr:019f6a73-e0af-7d6d-b381-1a26863a6a2e:chart:dashboard/019f6a73-f75a-704a-8716-514e9404bebd",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "screening_sanctions",
+      "action": "noop",
+      "urn": "wr:019f6a73-e0af-7d6d-b381-1a26863a6a2e:chart:dashboard/019f6a73-f943-76ce-8b82-25c2c25176bc",
+      "detail": "'Screening & Sanctions' exists"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "screening_sanctions",
+      "action": "verify",
+      "urn": "wr:019f6a73-e0af-7d6d-b381-1a26863a6a2e:chart:dashboard/019f6a73-f943-76ce-8b82-25c2c25176bc",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "classification_duty_risk",
+      "action": "noop",
+      "urn": "wr:019f6a73-e0af-7d6d-b381-1a26863a6a2e:chart:dashboard/019f6a73-fb04-7318-a511-73539371ebcd",
+      "detail": "'Classification & Duty Risk' exists"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "classification_duty_risk",
+      "action": "verify",
+      "urn": "wr:019f6a73-e0af-7d6d-b381-1a26863a6a2e:chart:dashboard/019f6a73-fb04-7318-a511-73539371ebcd",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "noop",
+      "urn": null,
+      "detail": "confirm_classification"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "noop",
+      "urn": null,
+      "detail": "reclassify_correct_entry"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "noop",
+      "urn": null,
+      "detail": "sanctions_true_hit_hold"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "noop",
+      "urn": null,
+      "detail": "escalate_licensing_review"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "noop",
+      "urn": null,
+      "detail": "release_false_positive"
+    },
+    {
+      "kind": "cases",
+      "identity": "review_queue",
+      "action": "create",
+      "urn": "wr:019f6a73-e0af-7d6d-b381-1a26863a6a2e:dataset:dataset/019f6a73-e778-797d-8188-775e64adcd4d",
+      "detail": "0 open cases (reindexed)"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "noop",
+      "urn": null,
+      "detail": "role 'Classification Analyst'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Classification Analyst' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "noop",
+      "urn": null,
+      "detail": "role 'Screening Analyst'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Screening Analyst' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "noop",
+      "urn": null,
+      "detail": "role 'Licensing Specialist'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Licensing Specialist' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "noop",
+      "urn": null,
+      "detail": "role 'Trade Compliance Manager'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Trade Compliance Manager' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "noop",
+      "urn": null,
+      "detail": "role 'Trade Audit Lead'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Trade Audit Lead' bound to permission group"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "case-triage prompt_params set"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "analytics prompt_params set"
+    },
+    {
+      "kind": "memories",
+      "identity": "grounding",
+      "action": "create",
+      "urn": null,
+      "detail": "8 grounding records written, 2 already present"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "create",
+      "urn": null,
+      "detail": "'Shipment anomaly detector (isolation forest)' (isolation_forest, train)"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "create",
+      "urn": null,
+      "detail": "'Review outcome scorer (xgboost)' (xgboost, train)"
+    }
+  ],
+  "deferred": [
+    {
+      "kind": "guardrails",
+      "reason": "Trade-domain policies (no release while a plausible denied-party match is unresolved; a sanctions hold can only be lifted with manager approval and a documented distinguishing rationale; corrected entries and prior disclosures never filed without human sign-off; screening thresholds cannot be tuned down without an adjudication-history review) require guardrail-service / OPA policy materialization, which Core does not expose as a pack surface yet. The behavioral core is partially covered today by Core invariants: every pack-configured agent is proposal-mode with four-eyes approval (agent-runtime), and the agent instructions + disposition taxonomy route holds, releases, and corrected entries exclusively to human analysts with the Trade Compliance Manager as approver."
+    },
+    {
+      "kind": "agent_recipes",
+      "reason": "Bespoke LangGraph recipes (Classification Copilot with GRI-ordered heading analysis, Screening Match Adjudicator, License Determination Assistant, Origin Verification Sentinel) require agent-runtime graph-module registration (BRD 23 BR-12). This pack specializes the existing case-triage + analytics agents via TenantAgentConfig prompt_params + tenant-scope RAG grounding instead."
+    },
+    {
+      "kind": "connection_templates",
+      "reason": "Production read connectors (broker/ABI entry feeds and ACE reports; TMS/forwarding systems such as CargoWise-class platforms; ERP purchase and supplier masters; denied-party screening vendors' consolidated list feeds; carrier manifests) require customer credentials and pack-service connector materialization. The pack ships seed datasets in the exact landing shape; production connectors are configured through the product Data > Connections UI."
+    },
+    {
+      "kind": "write_adapters",
+      "reason": "Write adapters (file post-summary corrections / corrected entries via the broker, transmit hold/release instructions to the forwarder or broker system, draft prior-disclosure and voluntary self-disclosure packages for CBP/OFAC/BIS, submit license applications) execute only behind pack-service's materialization contract and customer credentials; every such write stays proposal-mode with human approval \u2014 no autonomous holds, releases, filings, or disclosures, ever."
+    },
+    {
+      "kind": "eval_sets",
+      "reason": "Golden eval sets (HS classification review, screening match adjudication, origin/transshipment risk ranking, license-determination escalation) require eval-service write APIs whose action names are not yet in the rbac canonical catalog (Core follow-up noted in rbac catalog.go)."
+    },
+    {
+      "kind": "ontology",
+      "reason": "Ontology registration (Shipment, EntryLine, HsCode, OriginClaim, TradingPartner, ScreeningAlert, WatchListEntry, LicenseDetermination, DutyExposure, PriorDisclosure, DeadlineClock) awaits pack-service; entity semantics are carried today by the trade_core semantic model and dataset schemas."
+    },
+    {
+      "kind": "case_schemas",
+      "reason": "Typed case schemas (hs_classification_review, screening_adjudication, origin_verification, license_determination, prior_disclosure_review) await case-service schema materialization; today's cases carry the same fields via display_projection + the disposition taxonomy."
+    },
+    {
+      "kind": "model_archetypes",
+      "reason": "Model archetypes (classification_confidence, screening_match_risk) await experiment-service archetype APIs; the scoring capability ships as pipeline seeds instead (isolation_forest shipment anomaly + xgboost review-outcome scorer) with model-governance expectations noted in grounding memories."
+    },
+    {
+      "kind": "display_labels",
+      "reason": "Display-label overlays (\"Review item\", \"Screening alert\", \"Corrected entry due\", \"Hold pending adjudication\", entity templates) require the BFF label-registry endpoints (BFF-FR-082/088) which are pack-service-tier features."
+    }
+  ],
+  "result": "installed"
+}

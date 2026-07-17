@@ -1,0 +1,151 @@
+# Semantic model `mrb_core` — manufacturing quality / MRB KPI catalog
+# (rework rate, use-as-is share, scrap share, supplier-return share, backlog
+# aging, deadline runway, detection-point and spec-class mix), expressed in
+# the Core semantic grammar (agg whitelist, equality measure filters, derived
+# expr_metric with nullif; join_paths left/many_to_one, acyclic).
+#
+# entity.table is main.<safe_relation(dataset name)>; `dataset:` refs are
+# rebound to live dataset URNs by packctl at install. Cost columns ingest as
+# bronze strings, so numeric measures cast(... as double) (the proven
+# claims_core pattern). Topology is the proven CHAIN:
+# nonconformances -> lots -> suppliers, both hops many_to_one.
+name: mrb_core
+description: >-
+  Regulated-manufacturing nonconformance / Material Review Board KPI model
+  (AS9100 / ISO 13485 / IATF 16949): nonconformance volumes and backlog
+  aging, disposition outcome mix (rework, use-as-is, scrap, supplier return,
+  no defect found), containment and deadline runway on the open book,
+  detection-point and spec-class mix, and supplier quality posture —
+  nonconformances joined through manufacturing lots to the supplier base.
+definition:
+  entities:
+    - name: nonconformances
+      dataset: nc_nonconformances
+      table: main.nc_nonconformances
+      primary_key: [nc_id]
+      dataset_version_policy: { policy: latest }
+    - name: lots
+      dataset: nc_lots
+      table: main.nc_lots
+      primary_key: [lot_id]
+      dataset_version_policy: { policy: latest }
+    - name: suppliers
+      dataset: nc_suppliers
+      table: main.nc_suppliers
+      primary_key: [supplier_id]
+      dataset_version_policy: { policy: latest }
+  join_paths:
+    - name: nonconformances_lots
+      from_entity: nonconformances
+      to_entity: lots
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: lot_id, to_column: lot_id }]
+    - name: lots_suppliers
+      from_entity: lots
+      to_entity: suppliers
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: supplier_id, to_column: supplier_id }]
+  dimensions:
+    - { name: nc_type, entity: nonconformances, type: categorical, column: nc_type }
+    - { name: detection_point, entity: nonconformances, type: categorical, column: detection_point }
+    - { name: spec_class, entity: nonconformances, type: categorical, column: spec_class }
+    - { name: quantity_band, entity: nonconformances, type: categorical, column: quantity_band }
+    - { name: severity, entity: nonconformances, type: categorical, column: severity }
+    - { name: nc_status, entity: nonconformances, type: categorical, column: status }
+    - { name: nc_disposition, entity: nonconformances, type: categorical, column: disposition }
+    - { name: containment, entity: nonconformances, type: categorical, column: containment }
+    - { name: deadline_bucket, entity: nonconformances, type: categorical, column: deadline_bucket }
+    - { name: filed_month, entity: nonconformances, type: categorical, column: filed_month }
+    - { name: part_family, entity: lots, type: categorical, column: part_family }
+    - { name: program, entity: lots, type: categorical, column: program }
+    - { name: lot_size_band, entity: lots, type: categorical, column: lot_size_band }
+    - { name: mfg_month, entity: lots, type: categorical, column: mfg_month }
+    - { name: serialized, entity: lots, type: categorical, column: serialized }
+    - { name: supplier_tier, entity: suppliers, type: categorical, column: tier }
+    - { name: certification, entity: suppliers, type: categorical, column: certification }
+    - { name: scorecard, entity: suppliers, type: categorical, column: scorecard }
+    - { name: prior_scars, entity: suppliers, type: categorical, column: prior_scars }
+    - { name: approved, entity: suppliers, type: categorical, column: approved }
+  measures:
+    - { name: nc_count, entity: nonconformances, agg: count,
+        description: "Number of nonconformance reports" }
+    - { name: open_nc_count, entity: nonconformances, agg: count,
+        filters: "status = 'open'",
+        description: "Nonconformances awaiting an MRB disposition (open backlog)" }
+    - { name: closed_nc_count, entity: nonconformances, agg: count,
+        filters: "status = 'closed'",
+        description: "Nonconformances closed with a final disposition" }
+    - { name: rework_count, entity: nonconformances, agg: count,
+        filters: "disposition = 'rework_to_spec'",
+        description: "NCs dispositioned rework-to-spec (re-verification required)" }
+    - { name: use_as_is_count, entity: nonconformances, agg: count,
+        filters: "disposition = 'use_as_is'",
+        description: "NCs accepted use-as-is under engineering disposition/concession" }
+    - { name: scrap_count, entity: nonconformances, agg: count,
+        filters: "disposition = 'scrap'",
+        description: "NCs dispositioned scrap (nonrecoverable material loss)" }
+    - { name: supplier_return_count, entity: nonconformances, agg: count,
+        filters: "disposition = 'return_to_supplier'",
+        description: "NCs returned to the supplier (SCAR path)" }
+    - { name: no_defect_found_count, entity: nonconformances, agg: count,
+        filters: "disposition = 'no_defect_found'",
+        description: "NCs closed no-defect-found — parts conform, report withdrawn" }
+    - { name: critical_char_count, entity: nonconformances, agg: count,
+        filters: "spec_class = 'critical_characteristic'",
+        description: "NCs on critical characteristics (customer/design-authority watch)" }
+    - { name: customer_return_count, entity: nonconformances, agg: count,
+        filters: "detection_point = 'customer_return'",
+        description: "NCs detected by the customer (escapes — external failure)" }
+    - { name: foreign_object_count, entity: nonconformances, agg: count,
+        filters: "nc_type = 'foreign_object'",
+        description: "Foreign-object-debris (FOD) nonconformances" }
+    - { name: quarantined_count, entity: nonconformances, agg: count,
+        filters: "containment = 'quarantined'",
+        description: "NCs with material currently quarantined (containment active)" }
+    - { name: avg_nc_age_days, entity: nonconformances, agg: avg,
+        expr: "cast(age_days as double)", format: decimal,
+        description: "Average nonconformance age in days (cycle time / backlog aging)" }
+    - { name: total_cost_impact, entity: nonconformances, agg: sum,
+        expr: "cast(est_cost_impact as double)", format: decimal,
+        description: "Total estimated cost-of-quality impact (internal + external failure)" }
+    - { name: avg_cost_impact, entity: nonconformances, agg: avg,
+        expr: "cast(est_cost_impact as double)", format: decimal,
+        description: "Average estimated cost impact per nonconformance" }
+    - { name: lot_count, entity: lots, agg: count,
+        description: "Number of manufacturing lots on record" }
+    - { name: serialized_lot_count, entity: lots, agg: count,
+        filters: "serialized = 'yes'",
+        description: "Serialized lots (unit-level traceability for containment sweeps)" }
+    - { name: supplier_count, entity: suppliers, agg: count,
+        description: "Number of suppliers on the approved-source ledger" }
+    - { name: red_scorecard_supplier_count, entity: suppliers, agg: count,
+        filters: "scorecard = 'red'",
+        description: "Suppliers on a red quality scorecard (source-inspection watch)" }
+    - { name: repeat_scar_supplier_count, entity: suppliers, agg: count,
+        filters: "prior_scars = '3_plus'",
+        description: "Suppliers with 3+ prior SCARs (repeat corrective-action offenders)" }
+    - { name: unapproved_supplier_count, entity: suppliers, agg: count,
+        filters: "approved = 'no'",
+        description: "Suppliers not currently on the approved supplier list" }
+    - { name: rework_rate,
+        expr_metric: "rework_count / nullif(closed_nc_count, 0)",
+        format: percent,
+        description: "Rework-to-spec dispositions over all closed NCs" }
+    - { name: use_as_is_share,
+        expr_metric: "use_as_is_count / nullif(closed_nc_count, 0)",
+        format: percent,
+        description: "Use-as-is dispositions over all closed NCs (concession pressure)" }
+    - { name: scrap_share,
+        expr_metric: "scrap_count / nullif(closed_nc_count, 0)",
+        format: percent,
+        description: "Scrap dispositions over all closed NCs (nonrecoverable loss share)" }
+    - { name: supplier_return_share,
+        expr_metric: "supplier_return_count / nullif(closed_nc_count, 0)",
+        format: percent,
+        description: "Return-to-supplier dispositions over all closed NCs (SCAR share)" }
+    - { name: repeat_scar_supplier_share,
+        expr_metric: "repeat_scar_supplier_count / nullif(supplier_count, 0)",
+        format: percent,
+        description: "Share of the supplier base with 3+ prior SCARs" }

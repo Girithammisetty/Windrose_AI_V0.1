@@ -1,0 +1,41 @@
+{
+  "type": "record",
+  "name": "IngestionEventEnvelope",
+  "namespace": "ai.windrose.ingestion.events.v1",
+  "doc": "Envelope per MASTER-FR-031 for topic ingestion.events.v1. Partition key = tenant_id. Emitted event_types: connection.created/updated/deleted/test_failed, ingestion.created/started/progress/completed/failed/cancelled/transitioned, ingestion.schedule_fired/schedule_skipped, schedule.created, upload.expired, security.cross_tenant_denied.",
+  "fields": [
+    {"name": "event_id", "type": {"type": "string", "logicalType": "uuid"}},
+    {"name": "event_type", "type": "string"},
+    {"name": "tenant_id", "type": {"type": "string", "logicalType": "uuid"}},
+    {
+      "name": "actor",
+      "type": {
+        "type": "record",
+        "name": "Actor",
+        "fields": [
+          {"name": "type", "type": "string"},
+          {"name": "id", "type": "string"}
+        ]
+      }
+    },
+    {
+      "name": "via_agent",
+      "type": [
+        "null",
+        {
+          "type": "record",
+          "name": "ViaAgent",
+          "fields": [
+            {"name": "agent_id", "type": "string"},
+            {"name": "version", "type": "string"}
+          ]
+        }
+      ],
+      "default": null
+    },
+    {"name": "resource_urn", "type": "string"},
+    {"name": "occurred_at", "type": {"type": "long", "logicalType": "timestamp-millis"}},
+    {"name": "trace_id", "type": ["null", "string"], "default": null},
+    {"name": "payload", "type": "string", "doc": "JSON-encoded event payload (schema per event_type)"}
+  ]
+}

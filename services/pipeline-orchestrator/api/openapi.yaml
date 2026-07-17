@@ -1,0 +1,87 @@
+openapi: 3.0.3
+info:
+  title: pipeline-orchestrator
+  version: 0.1.0
+  description: >
+    ML pipeline templates, typed-DAG validation, Argo compilation, run lifecycle,
+    component + algorithm catalogs. Runs execute on the REAL local training executor
+    by default (scikit-learn/xgboost → real MLflow); the Argo backend is infra-gated.
+servers:
+  - url: /api/v1
+security:
+  - bearerAuth: []
+components:
+  securitySchemes:
+    bearerAuth: {type: http, scheme: bearer, bearerFormat: JWT}
+  responses:
+    Error:
+      description: Error envelope (MASTER-FR-024)
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: object
+                properties:
+                  code: {type: string}
+                  message: {type: string}
+                  trace_id: {type: string}
+                  details: {type: array, items: {type: object}}
+paths:
+  /pipelines/validate:
+    post:
+      summary: Validate a definition without saving (PIPE-FR-017)
+      parameters: [{name: mode, in: query, schema: {type: string, enum: [structure_only, provided_parameters, all]}}]
+      responses:
+        "200": {description: valid}
+        "422": {$ref: '#/components/responses/Error'}
+  /pipelines:
+    get: {summary: List templates (PIPE-FR-001), responses: {"200": {description: ok}}}
+    post:
+      summary: Create template (PIPE-FR-001/002/003)
+      responses: {"201": {description: created}, "409": {$ref: '#/components/responses/Error'}, "422": {$ref: '#/components/responses/Error'}}
+  /pipelines/{id}:
+    get: {summary: Get template, responses: {"200": {description: ok}, "404": {$ref: '#/components/responses/Error'}}}
+    put: {summary: New immutable version (PIPE-FR-002), responses: {"200": {description: ok}, "409": {$ref: '#/components/responses/Error'}}}
+    delete: {summary: Archive (PIPE-FR-004), responses: {"200": {description: ok}, "409": {$ref: '#/components/responses/Error'}}}
+  /pipelines/{id}/restore:
+    patch: {summary: Restore archived template (PIPE-FR-004), responses: {"200": {description: ok}}}
+  /pipelines/{id}/clone:
+    post: {summary: Clone template (PIPE-FR-005), responses: {"201": {description: created}}}
+  /pipelines/{id}/versions:
+    get: {summary: Version history (PIPE-FR-002), responses: {"200": {description: ok}}}
+  /pipelines/{id}/versions/{version_id}/activate:
+    post: {summary: Re-activate a prior version (PIPE-FR-002/BR-3), responses: {"200": {description: ok}}}
+  /pipelines/{id}/compile:
+    post: {summary: Compile to Argo WorkflowTemplate (PIPE-FR-020), responses: {"200": {description: ok}, "422": {$ref: '#/components/responses/Error'}}}
+  /pipelines/{id}/run:
+    post:
+      summary: Submit a run (PIPE-FR-030) → 202
+      responses:
+        "202": {description: accepted}
+        "422": {$ref: '#/components/responses/Error'}
+        "429": {$ref: '#/components/responses/Error'}
+  /runs:
+    get: {summary: List runs, responses: {"200": {description: ok}}}
+  /runs/{id}:
+    get: {summary: Run detail incl. components_status (PIPE-FR-033), responses: {"200": {description: ok}, "404": {$ref: '#/components/responses/Error'}}}
+  /runs/{id}/terminate:
+    put: {summary: Terminate (idempotent, PIPE-FR-034), responses: {"200": {description: ok}}}
+  /runs/{id}/retry:
+    post: {summary: Retry a failed run (PIPE-FR-037), responses: {"202": {description: accepted}, "409": {$ref: '#/components/responses/Error'}}}
+  /runs/{id}/manifest:
+    get: {summary: Compiled manifest + resolved params (PIPE-FR-062), responses: {"200": {description: ok}}}
+  /components:
+    get: {summary: Component registry catalog grouped (PIPE-FR-050), responses: {"200": {description: ok}}}
+  /components/{name}:
+    get: {summary: Component detail (PIPE-FR-050), responses: {"200": {description: ok}, "404": {$ref: '#/components/responses/Error'}}}
+  /algorithm-templates:
+    get: {summary: Algorithm-template catalog (PIPE-FR-052), responses: {"200": {description: ok}}}
+  /algorithm-templates/{name}:
+    get: {summary: Algorithm-template detail (PIPE-FR-052), responses: {"200": {description: ok}, "404": {$ref: '#/components/responses/Error'}}}
+  /algorithm-templates/{name}/pipelines:
+    post: {summary: Instantiate a training pipeline (PIPE-FR-052), responses: {"201": {description: created}, "422": {$ref: '#/components/responses/Error'}}}
+  /admin/quotas/{tenant_id}:
+    get: {summary: Get tenant quota (PIPE-FR-040), responses: {"200": {description: ok}}}
+    put: {summary: Set tenant quota (PIPE-FR-040), responses: {"200": {description: ok}}}

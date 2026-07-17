@@ -1,0 +1,135 @@
+# Tenant-scope RAG grounding records (memory-service). This is the warranty
+# law / dealer-network / field-quality domain knowledge the triage copilot
+# retrieves when reasoning about a claim. Every record is factual legal,
+# regulatory or operational reference material; specific figures are stated
+# only where well established, otherwise qualitatively.
+- content: >-
+    Magnuson-Moss Warranty Act (15 U.S.C. 2301 et seq., enforced by the
+    FTC): the federal law governing written warranties on consumer
+    products. A warranty labeled "full" must meet federal minimum standards
+    — remedy defects without charge within a reasonable time and without
+    unreasonable conditions; anything less must be conspicuously labeled
+    "limited". The Act prohibits tie-in-sales provisions: coverage cannot
+    be conditioned on the use of the brand's own parts or service (unless
+    provided free of charge or under an FTC waiver) — a warrantor may deny
+    for an aftermarket part or independent service only where the evidence
+    shows that part or service actually caused the failure. A warrantor who
+    gives a written warranty cannot disclaim implied warranties; a limited
+    warranty may cap their duration to the written term where state law
+    permits.
+  tags: [magnuson_moss, warranty_law, tie_in, ftc]
+  confidence: 0.95
+- content: >-
+    Implied warranty of merchantability (UCC Article 2, adopted in state
+    law): goods sold by a merchant carry an implied promise that they are
+    fit for the ordinary purposes for which such goods are used, arising by
+    operation of law without any written promise; a related implied
+    warranty of fitness for a particular purpose arises when the seller
+    knows the buyer's specific use and the buyer relies on the seller's
+    judgment. Commercial (B2B) equipment sales often disclaim implied
+    warranties with conspicuous language, but consumer sales interact with
+    Magnuson-Moss limits on disclaimers while a written warranty is in
+    effect.
+  tags: [implied_warranty, merchantability, ucc, warranty_law]
+  confidence: 0.9
+- content: >-
+    Warranty reserve accounting: under US GAAP, expected warranty cost is
+    accrued as a liability at the time of sale (matching principle),
+    estimated from historical claims-per-unit and cost-per-claim by product
+    line, and trued up as actual claims develop. Claim adjudication data
+    quality therefore directly drives reserve adequacy and
+    financial-statement accuracy; a sudden failure-rate shift — such as a
+    component cluster on one build batch — is a trigger to re-estimate the
+    reserve, and recovered supplier chargebacks reduce net warranty cost
+    and must reconcile to the specific claims recovered.
+  tags: [warranty_reserve, accounting, accrual, finance]
+  confidence: 0.9
+- content: >-
+    Dealer claim-padding red flags: labor-operation stacking (multiple
+    overlapping labor ops billed for one repair), repeat identical repairs
+    on the same unit, claims-per-unit rates well above peer dealers of
+    similar volume and mix, odometer/hour-meter rollback or implausible
+    usage progression between visits, part-return mismatches or failure to
+    return requested parts, and claims clustered just inside a coverage
+    boundary. A statistical outlier justifies audit escalation, not blanket
+    denial — each claim is adjudicated on its own diagnostic evidence, and
+    dealer agreements typically provide for post-payment audit with
+    chargeback of paid claims that fail audit.
+  tags: [claim_padding, dealer_audit, red_flags, integrity]
+  confidence: 0.9
+- content: >-
+    Early-warning / field-failure signal detection: monitor failure rates
+    by component system x build batch/month x usage band; the same failure
+    mode recurring at low hours across one build population is an emerging
+    quality signal that triggers engineering containment, supplier quality
+    review (8D-style root-cause practice), and possibly a field campaign.
+    For motor-vehicle manufacturers, US law (the TREAD Act) requires
+    early-warning reporting of field data — including warranty claim
+    counts, field reports and consumer complaints — to NHTSA, so warranty
+    data integrity is itself a regulatory obligation.
+  tags: [early_warning, field_failure, tread_act, quality_signals]
+  confidence: 0.9
+- content: >-
+    Supplier cost recovery (warranty chargeback): OEM purchase agreements
+    commonly include warranty-sharing or chargeback clauses letting the
+    manufacturer debit a supplier for warranty claims attributable to a
+    defective supplied component. Recovery requires evidence discipline —
+    returned-part failure analysis, defect attribution to the supplier's
+    part or process rather than assembly or service error, and lot/batch
+    traceability — and is settled via debit memos or periodically
+    negotiated recovery rates. Recovered dollars reduce net warranty cost;
+    weak attribution evidence is the most common reason supplier debits are
+    reversed in dispute.
+  tags: [supplier_recovery, chargeback, debit_memo, traceability]
+  confidence: 0.9
+- content: >-
+    Goodwill policy governance: out-of-warranty goodwill assistance is
+    discretionary, not a legal obligation — it should be governed by
+    documented criteria (customer loyalty and fleet relationship,
+    maintenance history, proximity to the coverage boundary, safety and
+    brand considerations), tiered approval authority, and typically a
+    cost-share (partial payment) rather than full coverage. Goodwill spend
+    is tracked separately from the contractual warranty reserve;
+    inconsistent or undocumented goodwill creates both budget leakage and
+    disparate-treatment complaints from dealers and customers.
+  tags: [goodwill, policy_governance, cost_share, discretion]
+  confidence: 0.9
+- content: >-
+    NHTSA recall interplay: under the National Traffic and Motor Vehicle
+    Safety Act, a safety-related defect obligates the manufacturer to
+    notify owners and NHTSA and to remedy the defect free of charge —
+    recall remedies do not depend on warranty status. A warranty claim
+    implicating an open safety campaign must be routed to the campaign (and
+    funded by it), never adjudicated or denied as an ordinary warranty
+    claim; using warranty denial to suppress a safety signal is a serious
+    regulatory exposure. Equivalent principles apply to consumer-product
+    safety recalls administered by the CPSC for non-vehicle products.
+  tags: [nhtsa, recall, safety_defect, routing]
+  confidence: 0.92
+- content: >-
+    Claim documentation standards: a payable warranty claim file shows the
+    customer complaint, the diagnostic path (fault codes, tests performed),
+    the causal part, the labor operations performed with standard times,
+    parts consumed, and repair verification; replacements and high-dollar
+    repairs additionally carry photo evidence and/or the returned part for
+    failure analysis. A denial must state the specific exclusion or
+    evidence gap in terms the dealer can be told and can act on; a
+    repeat-repair comeback (same unit, same failure, multiple visits)
+    requires a documented root-cause diagnostic before a further identical
+    repair is paid — and for consumer vehicles, repeated failed repair
+    attempts can implicate state lemon-law remedies.
+  tags: [documentation, evidence_standards, comeback, lemon_law]
+  confidence: 0.9
+- content: >-
+    AI governance and provenance for warranty adjudication: every
+    AI-assisted disposition preserves a provenance chain (data version,
+    model version, prompt hash, reviewer identity, timestamp); the AI
+    proposes and a human decides — claim payment, denial, goodwill and
+    supplier debits are always human-approved, with the Warranty Operations
+    Manager as the four-eyes approver. Monitor program-level patterns, not
+    just individual files: systematic over-denial, dealer-disparate
+    outcomes, or drift in the claim-outcome model against human decisions
+    are governance findings even when each file individually appears
+    defensible.
+  tags: [ai_governance, provenance, four_eyes, model_monitoring]
+  confidence: 0.9

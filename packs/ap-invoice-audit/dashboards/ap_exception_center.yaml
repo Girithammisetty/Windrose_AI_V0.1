@@ -1,0 +1,69 @@
+# AP Exception Center: exception mix by type, backlog aging, disposition
+# outcome mix, intake trend. Chart families restricted to the render-verified
+# set (vertical_bar / grid / pie / line); expr_metric measures (rates) are
+# query/NL surfaces, never charted directly.
+name: "AP Exception Center"
+module: insights
+semantic_model: ap_audit_core
+description: >-
+  Top-line AP exception-audit KPIs: exception volumes by type, audit backlog
+  aging by severity, human disposition outcome mix, and dollar exposure per
+  exception type.
+tags: [finance, accounts_payable, exceptions, pack]
+charts:
+  - name: "Exceptions by type"
+    chart_type: vertical_bar_chart
+    description: "Exception volume by type (duplicate, price variance, missing PO, banking change, ...)"
+    config:
+      x: { dimension: exception_type }
+      y: [ { measure: exception_count, agg_fn: count } ]
+    sources: [ { measure: exception_count } ]
+    w: 6
+    h: 4
+  - name: "Backlog aging by severity"
+    chart_type: vertical_bar_chart
+    description: "Average exception age in days by severity (cycle-time watch)"
+    config:
+      x: { dimension: severity }
+      y: [ { measure: avg_exception_age_days, agg_fn: avg } ]
+    sources: [ { measure: avg_exception_age_days } ]
+    w: 6
+    h: 4
+  - name: "Disposition outcome mix"
+    chart_type: pie_chart
+    description: "Blocked vs released vs partial credit vs fraud escalation vs rejected vs pending"
+    config:
+      x: { dimension: exception_disposition }
+      y: [ { measure: exception_count, agg_fn: count } ]
+    sources: [ { measure: exception_count } ]
+    w: 6
+    h: 4
+  - name: "Exception intake by month"
+    chart_type: line_chart
+    description: "Exception filings trend by filed month"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: exception_count, agg_fn: count } ]
+    sources: [ { measure: exception_count } ]
+    w: 6
+    h: 4
+  - name: "Exception-type worklist grid"
+    chart_type: grid_chart
+    description: "Exceptions, closures, blocks, releases and exposure by type"
+    config:
+      columns: [exception_type, exception_count, closed_exception_count, blocked_count, released_count, total_exposure_amount]
+      x: { dimension: exception_type }
+      y:
+        - { measure: exception_count, agg_fn: count }
+        - { measure: closed_exception_count, agg_fn: count }
+        - { measure: blocked_count, agg_fn: count }
+        - { measure: released_count, agg_fn: count }
+        - { measure: total_exposure_amount, agg_fn: sum }
+    sources:
+      - { measure: exception_count }
+      - { measure: closed_exception_count }
+      - { measure: blocked_count }
+      - { measure: released_count }
+      - { measure: total_exposure_amount }
+    w: 12
+    h: 4

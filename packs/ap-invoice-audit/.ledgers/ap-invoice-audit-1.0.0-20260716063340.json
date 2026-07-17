@@ -1,0 +1,315 @@
+{
+  "pack": "ap-invoice-audit",
+  "version": "1.0.0",
+  "workspace_id": "019f6a77-5015-74f1-a0b6-a923a85392e4",
+  "tenant_id": "019f6a77-4bc9-7b8d-a363-570dc178db9d",
+  "started_at": "2026-07-16T10:33:31Z",
+  "finished_at": "2026-07-16T10:33:40Z",
+  "actions": [
+    {
+      "kind": "datasets",
+      "identity": "ap_exceptions",
+      "action": "create",
+      "urn": "wr:019f6a77-4bc9-7b8d-a363-570dc178db9d:dataset:dataset/019f6a7d-1af3-7d73-91d1-26ecee385cf4",
+      "detail": "'ap-exceptions' ingested rows=26 snapshot=2698046892866083431"
+    },
+    {
+      "kind": "datasets",
+      "identity": "ap_invoices",
+      "action": "create",
+      "urn": "wr:019f6a77-4bc9-7b8d-a363-570dc178db9d:dataset:dataset/019f6a7d-1c67-752f-ac13-5b9b67c291d7",
+      "detail": "'ap-invoices' ingested rows=30 snapshot=2229811844322307099"
+    },
+    {
+      "kind": "datasets",
+      "identity": "ap_vendors",
+      "action": "create",
+      "urn": "wr:019f6a77-4bc9-7b8d-a363-570dc178db9d:dataset:dataset/019f6a7d-1d86-739c-a279-9684153cde73",
+      "detail": "'ap-vendors' ingested rows=12 snapshot=6534722185372368478"
+    },
+    {
+      "kind": "semantic_models",
+      "identity": "ap_audit_core",
+      "action": "create",
+      "urn": "wr:019f6a77-4bc9-7b8d-a363-570dc178db9d:semantic:model/019f6a7d-1ec0-756c-8e34-3be263f16129",
+      "detail": "'ap_audit_core' published"
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_0",
+      "action": "create",
+      "urn": "wr:019f6a77-4bc9-7b8d-a363-570dc178db9d:semantic:verified_query/019f6a7d-283f-7bcf-886b-adeb5a435d71",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_1",
+      "action": "create",
+      "urn": "wr:019f6a77-4bc9-7b8d-a363-570dc178db9d:semantic:verified_query/019f6a7d-2901-7ef2-b6b7-2569dc332a91",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_2",
+      "action": "create",
+      "urn": "wr:019f6a77-4bc9-7b8d-a363-570dc178db9d:semantic:verified_query/019f6a7d-29b4-75bd-b43b-42cc94455397",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_3",
+      "action": "create",
+      "urn": "wr:019f6a77-4bc9-7b8d-a363-570dc178db9d:semantic:verified_query/019f6a7d-2a83-75ae-ab52-9ab750f23ca7",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_4",
+      "action": "create",
+      "urn": "wr:019f6a77-4bc9-7b8d-a363-570dc178db9d:semantic:verified_query/019f6a7d-2b45-7714-ae14-77c9c12db96e",
+      "detail": ""
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "vendor_category_edges",
+      "action": "create",
+      "urn": "wr:019f6a77-4bc9-7b8d-a363-570dc178db9d:query:query/019f6a7d-2bf4-7ba8-aae8-08a6a56875c8",
+      "detail": "AP: vendor-category network edges"
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "high_value_open_exceptions",
+      "action": "create",
+      "urn": "wr:019f6a77-4bc9-7b8d-a363-570dc178db9d:query:query/019f6a7d-2c43-7c25-a3ea-272d5b4d5862",
+      "detail": "AP: high-value open exception queue"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "ap_exception_center",
+      "action": "create",
+      "urn": "wr:019f6a77-4bc9-7b8d-a363-570dc178db9d:chart:dashboard/019f6a7d-2ca8-7f07-941d-fbcdd7ea59b1",
+      "detail": "AP Exception Center"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "ap_exception_center",
+      "action": "verify",
+      "urn": "wr:019f6a77-4bc9-7b8d-a363-570dc178db9d:chart:dashboard/019f6a7d-2ca8-7f07-941d-fbcdd7ea59b1",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "fraud_vendor_risk",
+      "action": "create",
+      "urn": "wr:019f6a77-4bc9-7b8d-a363-570dc178db9d:chart:dashboard/019f6a7d-2e87-7910-9c33-f4f2a4bbc2e3",
+      "detail": "Fraud & Vendor Risk"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "fraud_vendor_risk",
+      "action": "verify",
+      "urn": "wr:019f6a77-4bc9-7b8d-a363-570dc178db9d:chart:dashboard/019f6a7d-2e87-7910-9c33-f4f2a4bbc2e3",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "recovery_controls",
+      "action": "create",
+      "urn": "wr:019f6a77-4bc9-7b8d-a363-570dc178db9d:chart:dashboard/019f6a7d-3052-7017-b242-2a4c5761c59e",
+      "detail": "Recovery & Controls"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "recovery_controls",
+      "action": "verify",
+      "urn": "wr:019f6a77-4bc9-7b8d-a363-570dc178db9d:chart:dashboard/019f6a7d-3052-7017-b242-2a4c5761c59e",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "block_payment_confirmed_error"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "reject_return_to_vendor"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "release_payment_cleared"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "partial_credit_recovery"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "escalate_fraud_investigation"
+    },
+    {
+      "kind": "cases",
+      "identity": "exception_queue",
+      "action": "create",
+      "urn": "wr:019f6a77-4bc9-7b8d-a363-570dc178db9d:dataset:dataset/019f6a7d-1af3-7d73-91d1-26ecee385cf4",
+      "detail": "6 open cases (reindexed)"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'AP Exception Analyst'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'AP Exception Analyst' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Recovery Audit Analyst'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Recovery Audit Analyst' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Vendor Master Specialist'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Vendor Master Specialist' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'AP Controls Manager'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'AP Controls Manager' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Internal Controls Auditor'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Internal Controls Auditor' bound to permission group"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "case-triage prompt_params set"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "analytics prompt_params set"
+    },
+    {
+      "kind": "memories",
+      "identity": "grounding",
+      "action": "create",
+      "urn": null,
+      "detail": "10 grounding records written, 0 already present"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "create",
+      "urn": null,
+      "detail": "'Invoice anomaly detector (isolation forest)' (isolation_forest, train)"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "create",
+      "urn": null,
+      "detail": "'Exception outcome scorer (xgboost)' (xgboost, train)"
+    }
+  ],
+  "deferred": [
+    {
+      "kind": "guardrails",
+      "reason": "AP-domain policies (no payment released over a control exception without an approver-signed rationale; no vendor banking change accepted without documented out-of-band verification; no vendor payable until TIN verification and sanctions screening complete; block scope limited to the payment at risk) require guardrail-service / OPA policy materialization, which Core does not expose as a pack surface yet. The behavioral core is partially covered today by Core invariants: every pack-configured agent is proposal-mode with four-eyes approval (agent-runtime), and the agent instructions + disposition taxonomy route payment blocks and releases exclusively to human analysts with the AP Controls Manager as approver."
+    },
+    {
+      "kind": "agent_recipes",
+      "reason": "Bespoke LangGraph recipes (Exception Triage Copilot, Banking-Change Verification Sentinel, Duplicate-Pair Matcher, Recovery Statement Auditor) require agent-runtime graph-module registration (BRD 23 BR-12). This pack specializes the existing case-triage + analytics agents via TenantAgentConfig prompt_params + tenant-scope RAG grounding instead."
+    },
+    {
+      "kind": "connection_templates",
+      "reason": "Production read connectors (ERP AP subledgers: SAP S/4HANA, Oracle Fusion, NetSuite; P2P suites: Coupa, Ariba, Ivalua; invoice-capture/ OCR platforms; bank payment gateways for run schedules; vendor-master and TIN/sanctions screening services) require customer credentials and pack-service connector materialization. The pack ships seed datasets in the exact landing shape; production connectors are configured through the product Data > Connections UI."
+    },
+    {
+      "kind": "write_adapters",
+      "reason": "Write adapters (place/release payment blocks in the ERP, park or reject invoices back to the vendor portal, post negotiated credit memos, update vendor-master banking details after verification) execute only behind pack-service's materialization contract and customer credentials; every such write stays proposal-mode with human approval \u2014 no autonomous payment movement or vendor-master change, ever."
+    },
+    {
+      "kind": "eval_sets",
+      "reason": "Golden eval sets (duplicate-pair matching, BEC banking-change triage, split-invoicing detection, release-vs-block calibration) require eval-service write APIs whose action names are not yet in the rbac canonical catalog (Core follow-up noted in rbac catalog.go)."
+    },
+    {
+      "kind": "ontology",
+      "reason": "Ontology registration (Vendor, VendorBankAccount, PurchaseOrder, GoodsReceipt, Invoice, InvoiceLine, PaymentRun, Exception, CreditMemo, ApprovalThreshold, RecoveryClaim) awaits pack-service; entity semantics are carried today by the ap_audit_core semantic model and dataset schemas."
+    },
+    {
+      "kind": "case_schemas",
+      "reason": "Typed case schemas (duplicate_review, banking_change_verification, shell_vendor_investigation, price_variance_negotiation, recovery_claim) await case-service schema materialization; today's cases carry the same fields via display_projection + the disposition taxonomy."
+    },
+    {
+      "kind": "model_archetypes",
+      "reason": "Model archetypes (duplicate_pair_confidence, vendor_fraud_risk_score) await experiment-service archetype APIs; the scoring capability ships as pipeline seeds instead (isolation_forest invoice anomaly + xgboost exception-outcome scorer) with model-governance expectations noted in grounding memories."
+    },
+    {
+      "kind": "display_labels",
+      "reason": "Display-label overlays (\"Exception\", \"Payment block\", \"Banking change pending verification\", \"Discount window closing\", entity templates) require the BFF label-registry endpoints (BFF-FR-082/088) which are pack-service-tier features."
+    }
+  ],
+  "result": "installed"
+}

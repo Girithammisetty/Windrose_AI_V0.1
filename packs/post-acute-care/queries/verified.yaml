@@ -1,0 +1,59 @@
+# Verified NL<->SQL queries (BRD 29 PAC-FR-020 KPI catalog; SEM-FR-040
+# four-eyes approved at install). SQL uses {{dataset('<name>')}} macros — the
+# only table references query-service's tenant-namespace guard admits.
+- nl_text: "What's our 30-day rehospitalization rate by care setting?"
+  sql_text: >-
+    SELECT care_setting,
+           count(*) AS episodes,
+           sum(CASE WHEN readmitted_30d = 'yes' THEN 1 ELSE 0 END) AS readmitted,
+           round(sum(CASE WHEN readmitted_30d = 'yes' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS rehospitalization_30d_rate
+    FROM {{dataset('pac-episodes')}}
+    GROUP BY care_setting
+  model: pac_episodes
+  tags: [readmissions, kpi, pack]
+- nl_text: "Which primary diagnoses drive the longest lengths of stay?"
+  sql_text: >-
+    SELECT primary_dx_code, primary_dx_desc,
+           count(*) AS episodes,
+           round(avg(cast(los_days AS double)), 1) AS avg_los_days
+    FROM {{dataset('pac-episodes')}}
+    GROUP BY primary_dx_code, primary_dx_desc
+    ORDER BY avg_los_days DESC
+  model: pac_episodes
+  tags: [length-of-stay, diagnoses, pack]
+- nl_text: "What share of home health episodes captured a PDGM comorbidity adjustment, by month?"
+  sql_text: >-
+    SELECT admit_month,
+           count(*) AS hha_episodes,
+           sum(CASE WHEN comorbidity_adjusted = 'yes' THEN 1 ELSE 0 END) AS adjusted,
+           round(sum(CASE WHEN comorbidity_adjusted = 'yes' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS comorbidity_capture_rate
+    FROM {{dataset('pac-episodes')}}
+    WHERE care_setting = 'HHA'
+    GROUP BY admit_month
+    ORDER BY admit_month
+  model: pac_episodes
+  tags: [pdgm, comorbidity, kpi, pack]
+- nl_text: "How much faster are copilot-drafted assessments than manual ones, by assessment type?"
+  sql_text: >-
+    SELECT assessment_type, drafted_by_copilot,
+           count(*) AS assessments,
+           round(avg(cast(completion_minutes AS double)), 1) AS avg_minutes
+    FROM {{dataset('pac-assessments')}}
+    GROUP BY assessment_type, drafted_by_copilot
+    ORDER BY assessment_type, drafted_by_copilot
+  model: pac_episodes
+  tags: [oasis, mds, copilot, pack]
+- nl_text: "Referral acceptance rate by referring hospital"
+  sql_text: >-
+    SELECT referring_hospital,
+           count(*) AS referrals,
+           sum(CASE WHEN status = 'accepted' THEN 1 ELSE 0 END) AS accepted,
+           round(sum(CASE WHEN status = 'accepted' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS acceptance_rate
+    FROM {{dataset('pac-referrals')}}
+    GROUP BY referring_hospital
+    ORDER BY referrals DESC
+  model: pac_referrals
+  tags: [referrals, intake, kpi, pack]

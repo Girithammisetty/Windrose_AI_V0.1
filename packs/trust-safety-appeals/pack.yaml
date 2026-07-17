@@ -1,0 +1,124 @@
+# trust-safety-appeals capability pack — Core-neutral edition: platform
+# trust & safety appeals adjudication (content and account enforcement
+# appeals) for social/UGC platforms, marketplaces, gaming platforms, and
+# dating apps under DSA/OSA process obligations. Installable TODAY against
+# Windrose Core's public APIs via packctl; the manifest envelope follows
+# BRD 23 (PKG-FR-001/003). Components the current Core cannot materialize
+# are declared under `deferred` — recorded in the install ledger, never faked.
+pack_manifest: 1
+name: trust-safety-appeals
+version: 1.0.0
+publisher: { id: pub-windrose, name: "Windrose Inc." }
+description: >-
+  AI-assisted trust-and-safety appeals adjudication for online platforms:
+  appeal intake triage with complaint-handling deadline awareness (DSA
+  statement-of-reasons and internal complaint-handling obligations, human
+  review never solely automated), classifier false-positive detection with
+  overturn-rate feedback into enforcement quality, brigading/mass-report
+  integrity screening, compromised-account restore paths, policy-gap
+  escalation and precedent loops, appeals-operations KPI semantic model and
+  dashboards (overturn rate, uphold rate, escalation share, deadline runway,
+  enforcement-source mix), account-enforcement network analytics, DSA/OSA
+  grounding memories, and enforcement-anomaly + appeal-outcome training
+  pipelines.
+categories: [trust_safety, content_moderation, appeals, platform_governance, marketplaces]
+regulatory: [eu_dsa, uk_online_safety_act]
+components:
+  datasets:
+    - { file: "data/datasets.yaml", identity: "datasets" }
+  semantic_models:
+    - { file: "semantic/appeals_core.yaml", identity: "appeals_core" }
+  verified_queries:
+    - { file: "queries/verified.yaml", identity: "canonical_questions" }
+  saved_queries:
+    - { file: "queries/saved.yaml", identity: "saved_queries" }
+  dashboards:
+    - { file: "dashboards/appeals_command_center.yaml", identity: "appeals_command_center" }
+    - { file: "dashboards/overturn_classifier_quality.yaml", identity: "overturn_classifier_quality" }
+    - { file: "dashboards/dsa_compliance_transparency.yaml", identity: "dsa_compliance_transparency" }
+  dispositions:
+    - { file: "cases/dispositions.yaml", identity: "dispositions" }
+  cases:
+    - { file: "cases/queue.yaml", identity: "appeals_queue" }
+  roles:
+    - { file: "rbac/roles.yaml", identity: "roles" }
+  agent_configs:
+    - { file: "agents/configs.yaml", identity: "agent_configs" }
+  memories:
+    - { file: "memories/grounding.yaml", identity: "grounding" }
+  pipelines:
+    - { file: "pipelines/templates.yaml", identity: "pipelines" }
+deferred:
+  - kind: guardrails
+    reason: >-
+      Appeals-domain policies (no outcome promised to an appellant before
+      the human determination; statements of reasons must cite the actual
+      findings; no complaint decision taken solely by automated means — DSA
+      Art. 20; report-count evidence never substitutes for content
+      assessment; outcome-disparity watch across user groups and
+      geographies) require guardrail-service / OPA policy materialization,
+      which Core does not expose as a pack surface yet. The behavioral core
+      is partially covered today by Core invariants: every pack-configured
+      agent is proposal-mode with four-eyes approval (agent-runtime), and
+      the agent instructions + disposition taxonomy route final
+      determinations exclusively to human reviewers with the Appeals
+      Operations Manager as approver.
+  - kind: agent_recipes
+    reason: >-
+      Bespoke LangGraph recipes (Appeal Intake Copilot, Statement-of-Reasons
+      Drafter, Brigading/Report-Integrity Screener, Complaint-Deadline
+      Sentinel) require agent-runtime graph-module registration (BRD 23
+      BR-12). This pack specializes the existing case-triage + analytics
+      agents via TenantAgentConfig prompt_params + tenant-scope RAG
+      grounding instead.
+  - kind: connection_templates
+    reason: >-
+      Production read connectors (moderation/enforcement platforms and
+      queues, classifier scoring stores, user-report pipelines, identity and
+      session-anomaly systems for compromised-account evidence, brand-rights
+      registries for counterfeit authorization checks, out-of-court dispute
+      settlement body intake feeds) require customer credentials and
+      pack-service connector materialization. The pack ships seed datasets
+      in the exact landing shape; production connectors are configured
+      through the product Data > Connections UI.
+  - kind: write_adapters
+    reason: >-
+      Write adapters (restore content or account on the enforcement system,
+      lift or modify an enforcement action, expunge strikes from a
+      compromise window, send the statement-of-reasons / appeal-outcome
+      notice, route corrected labels into classifier retraining sets)
+      execute only behind pack-service's materialization contract and
+      customer credentials; every such write stays proposal-mode with human
+      approval — no autonomous restoration, removal, or strike change, ever.
+  - kind: eval_sets
+    reason: >-
+      Golden eval sets (appeal triage, counter-speech/satire false-positive
+      detection, brigading-signal ranking, duplicate-appeal detection)
+      require eval-service write APIs whose action names are not yet in the
+      rbac canonical catalog (Core follow-up noted in rbac catalog.go).
+  - kind: ontology
+    reason: >-
+      Ontology registration (Account, Content, EnforcementDecision, Policy,
+      PolicyVersion, Appeal, Report, Reporter, Strike, StatementOfReasons,
+      ComplaintClock, ODSReferral) awaits pack-service; entity semantics are
+      carried today by the appeals_core semantic model and dataset schemas.
+  - kind: case_schemas
+    reason: >-
+      Typed case schemas (appeal_review, policy_escalation,
+      report_integrity_review, compromised_account_review,
+      duplicate_appeal_check) await case-service schema materialization;
+      today's cases carry the same fields via display_projection + the
+      disposition taxonomy.
+  - kind: model_archetypes
+    reason: >-
+      Model archetypes (appeal_overturn_likelihood, brigading_risk_score)
+      await experiment-service archetype APIs; the scoring capability ships
+      as pipeline seeds instead (isolation_forest enforcement anomaly +
+      xgboost appeal-outcome scorer) with model-governance expectations
+      noted in grounding memories.
+  - kind: display_labels
+    reason: >-
+      Display-label overlays ("Appeal", "Enforcement decision", "Statement
+      of reasons due", "Deadline at risk", entity templates) require the BFF
+      label-registry endpoints (BFF-FR-082/088) which are pack-service-tier
+      features.

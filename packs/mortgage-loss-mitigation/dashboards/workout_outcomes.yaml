@@ -1,0 +1,68 @@
+# Workout Outcomes: approval/denial patterns by workout type and hardship,
+# the loan-book product surface feeding the distressed pipeline, and the
+# monthly approval trend.
+name: "Workout Outcomes"
+module: insights
+semantic_model: lossmit_core
+description: >-
+  Workout effectiveness: approved offers by request type, denials by hardship
+  reason, the distressed-book product mix, monthly approval trend, and the
+  hardship outcomes grid with arrearage exposure.
+tags: [mortgage, servicing, workouts, outcomes, pack]
+charts:
+  - name: "Approved workouts by request type"
+    chart_type: vertical_bar_chart
+    description: "Workout offers approved, split by workout type (retention vs non-retention mix)"
+    config:
+      x: { dimension: request_type }
+      y: [ { measure: approved_workout_count, agg_fn: count } ]
+    sources: [ { measure: approved_workout_count } ]
+    w: 6
+    h: 4
+  - name: "Denials by hardship reason"
+    chart_type: vertical_bar_chart
+    description: "Denied applications by claimed hardship — fair-servicing pattern watch"
+    config:
+      x: { dimension: hardship_reason }
+      y: [ { measure: denied_count, agg_fn: count } ]
+    sources: [ { measure: denied_count } ]
+    w: 6
+    h: 4
+  - name: "Distressed-book product mix"
+    chart_type: pie_chart
+    description: "Fixed vs ARM loans on the distressed servicing book (payment-shock surface)"
+    config:
+      x: { dimension: loan_product }
+      y: [ { measure: loan_count, agg_fn: count } ]
+    sources: [ { measure: loan_count } ]
+    w: 6
+    h: 4
+  - name: "Workout approvals by month"
+    chart_type: line_chart
+    description: "Approved workout offers by filed month"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: approved_workout_count, agg_fn: count } ]
+    sources: [ { measure: approved_workout_count } ]
+    w: 6
+    h: 4
+  - name: "Hardship outcomes grid"
+    chart_type: grid_chart
+    description: "Applications, approvals, denials, doc-chase closures and arrearage by hardship reason"
+    config:
+      columns: [hardship_reason, application_count, approved_workout_count, denied_count, docs_requested_count, total_arrearage_amount]
+      x: { dimension: hardship_reason }
+      y:
+        - { measure: application_count, agg_fn: count }
+        - { measure: approved_workout_count, agg_fn: count }
+        - { measure: denied_count, agg_fn: count }
+        - { measure: docs_requested_count, agg_fn: count }
+        - { measure: total_arrearage_amount, agg_fn: sum }
+    sources:
+      - { measure: application_count }
+      - { measure: approved_workout_count }
+      - { measure: denied_count }
+      - { measure: docs_requested_count }
+      - { measure: total_arrearage_amount }
+    w: 12
+    h: 4

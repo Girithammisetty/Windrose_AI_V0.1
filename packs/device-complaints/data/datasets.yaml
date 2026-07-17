@@ -1,0 +1,24 @@
+# Pack datasets (ingestion-service file_upload, stable names for idempotency).
+# In production these tables arrive via the manufacturer's eQMS/complaint
+# system, field-service platform, and distributor portals (deferred until
+# pack-service ships connector materialization); this seed data is REAL rows
+# in the same landing shape, encoding genuine complaint-handling patterns so
+# every downstream component runs against real signal from day one: a
+# reported death with device involvement unconfirmed (reportability
+# presumption, 30-day clock running), a monitor alarm failure that could
+# recur (third alarm complaint on one product — trending threshold), a
+# software-anomaly cluster after a v4.0 rollout (CAPA candidate), a possibly
+# design-induced use error (human factors), a returned-device analysis
+# pending, and a suspected distributor double-report of an already-filed MDR.
+- identity: dc_complaints
+  name: dc-complaints
+  file: data/dc_complaints.csv
+  format: csv
+- identity: dc_devices
+  name: dc-devices
+  file: data/dc_devices.csv
+  format: csv
+- identity: dc_products
+  name: dc-products
+  file: data/dc_products.csv
+  format: csv

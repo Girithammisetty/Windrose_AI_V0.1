@@ -1,0 +1,15 @@
+go 1.26.5
+
+use (
+	./libs/go-common
+	./services/audit-service
+	./services/case-service
+	./services/chart-service
+	./services/identity-service
+	./services/notification-service
+	./services/query-service
+	./services/rbac-service
+	./services/realtime-hub
+	./services/tool-plane
+	./services/usage-service
+)

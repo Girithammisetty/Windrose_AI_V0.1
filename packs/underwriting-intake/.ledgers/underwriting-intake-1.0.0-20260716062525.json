@@ -1,0 +1,70 @@
+{
+  "pack": "underwriting-intake",
+  "version": "1.0.0",
+  "workspace_id": "019f6a75-613f-71a5-9296-8769e73f14c6",
+  "tenant_id": "019f6a75-5d07-7d56-b83a-fc2b75598d32",
+  "started_at": "2026-07-16T10:25:05Z",
+  "finished_at": "2026-07-16T10:25:25Z",
+  "actions": [
+    {
+      "kind": "datasets",
+      "identity": "uw_submissions",
+      "action": "failed",
+      "urn": null,
+      "detail": "complete 500: {\"error\":{\"code\":\"INTERNAL\",\"message\":\"internal error\",\"trace_id\":\"019f6a75-64ed-7764-a7a8-963fb49a48b1\"}}"
+    },
+    {
+      "kind": "datasets",
+      "identity": "uw_accounts",
+      "action": "failed",
+      "urn": null,
+      "detail": "complete 500: {\"error\":{\"code\":\"INTERNAL\",\"message\":\"internal error\",\"trace_id\":\"019f6a75-7dfe-7475-b726-911b371a1319\"}}"
+    },
+    {
+      "kind": "datasets",
+      "identity": "uw_insureds",
+      "action": "failed",
+      "urn": null,
+      "detail": "complete 500: {\"error\":{\"code\":\"INTERNAL\",\"message\":\"internal error\",\"trace_id\":\"019f6a75-96d6-7a54-a576-8788ccc211b2\"}}"
+    }
+  ],
+  "deferred": [
+    {
+      "kind": "guardrails",
+      "reason": "Underwriting-domain policies (no appetite decision communicated to a broker before the human determination; declination notes must carry specific risk-based reasons; no E&S referral without the documented admitted-market declination; unfair-discrimination pattern watch on declines) require guardrail-service / OPA policy materialization, which Core does not expose as a pack surface yet. The behavioral core is partially covered today by Core invariants: every pack-configured agent is proposal-mode with four-eyes approval (agent-runtime), and the agent instructions + disposition taxonomy route final intake determinations exclusively to human analysts with the Underwriting Operations Manager as approver."
+    },
+    {
+      "kind": "agent_recipes",
+      "reason": "Bespoke LangGraph recipes (Submission Clearance Checker, Appetite Fit Scorer, Completeness Chaser, Renewal-Defense Deadline Sentinel) require agent-runtime graph-module registration (BRD 23 BR-12). This pack specializes the existing case-triage + analytics agents via TenantAgentConfig prompt_params + tenant-scope RAG grounding instead."
+    },
+    {
+      "kind": "connection_templates",
+      "reason": "Production read connectors (agency-management and broker-portal systems: Applied Epic, Vertafore AMS360; submission-intake email/ACORD extraction feeds; clearance systems; loss-run retrieval services; D&B/experian-style firmographic enrichment; cat-modeling exposure feeds) require customer credentials and pack-service connector materialization. The pack ships seed datasets in the exact landing shape; production connectors are configured through the product Data > Connections UI."
+    },
+    {
+      "kind": "write_adapters",
+      "reason": "Write adapters (record the clearance block/release in the clearance system, send the declination letter with documented reasons, issue the broker information request, open the underwriting file in the policy admin system, notify the surplus-lines broker on referral) execute only behind pack-service's materialization contract and customer credentials; every such write stays proposal-mode with human approval \u2014 no autonomous declination, referral, or broker communication, ever."
+    },
+    {
+      "kind": "eval_sets",
+      "reason": "Golden eval sets (clearance-conflict detection, appetite-fit calls, completeness gap identification, deadline-risk ranking) require eval-service write APIs whose action names are not yet in the rbac canonical catalog (Core follow-up noted in rbac catalog.go)."
+    },
+    {
+      "kind": "ontology",
+      "reason": "Ontology registration (Insured, Account, Submission, Broker, Brokerage, AppetiteStatement, LossRun, StatementOfValues, Application, ClearanceRecord, NeededByClock, DeclinationLetter) awaits pack-service; entity semantics are carried today by the underwriting_core semantic model and dataset schemas."
+    },
+    {
+      "kind": "case_schemas",
+      "reason": "Typed case schemas (submission_triage, clearance_conflict_review, appetite_referral, completeness_chase, renewal_defense) await case-service schema materialization; today's cases carry the same fields via display_projection + the disposition taxonomy."
+    },
+    {
+      "kind": "model_archetypes",
+      "reason": "Model archetypes (appetite_fit_confidence, submission_priority_score) await experiment-service archetype APIs; the scoring capability ships as pipeline seeds instead (isolation_forest account-book anomaly + xgboost triage-outcome scorer) with NAIC AI-bulletin model-governance expectations noted in grounding memories."
+    },
+    {
+      "kind": "display_labels",
+      "reason": "Display-label overlays (\"Submission\", \"Clearance\", \"Needed-by date\", \"Renewal defense\", entity templates) require the BFF label-registry endpoints (BFF-FR-082/088) which are pack-service-tier features."
+    }
+  ],
+  "result": "failed"
+}

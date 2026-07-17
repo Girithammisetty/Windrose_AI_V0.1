@@ -1,0 +1,108 @@
+# pharmacy-benefit-mgmt capability pack (BRD 28) — Core-neutral edition.
+# Installable TODAY against Windrose Core's public APIs via packctl; the
+# manifest envelope follows BRD 23 (PKG-FR-001/003) so this bundle is
+# forward-compatible with pack-service when it ships. Components the current
+# Core cannot materialize are declared under `deferred` with the exact BRD 28
+# requirement they trace to — recorded in the install ledger, never faked.
+pack_manifest: 1
+name: pharmacy-benefit-mgmt
+version: 1.0.0
+publisher: { id: pub-windrose, name: "Windrose Inc." }
+description: >-
+  AI-assisted pharmacy benefit management for PBMs, health plans, and
+  Medicare Part D sponsors: Rx prior-authorization review with formulary and
+  step-therapy grounding, DUR safety-alert triage, PBM KPI semantic models
+  (generic dispensing rate, PA turnaround, rebate capture, PMPM), three
+  dashboards, a PA/DUR review queue with pharmacist dispositions, PBM role
+  catalog, domain-grounded copilot configuration, and a PA auto-decision
+  training pipeline.
+categories: [pharmacy, pbm, prior-auth, mtm, adherence, medicare-part-d]
+regulatory: [hipaa, hitrust, cms_part_d, cms_ma, ncpdp_ecl, dea_ec, state_pharmacy_law, ddi_alerts]
+components:
+  datasets:
+    - { file: "data/datasets.yaml", identity: "datasets" }
+  semantic_models:
+    - { file: "semantic/pbm_core.yaml", identity: "pbm_core" }
+    - { file: "semantic/pbm_pa.yaml", identity: "pbm_pa" }
+  verified_queries:
+    - { file: "queries/verified.yaml", identity: "canonical_questions" }
+  saved_queries:
+    - { file: "queries/saved.yaml", identity: "saved_queries" }
+  dashboards:
+    - { file: "dashboards/pbm_trend_safety.yaml", identity: "pbm_trend_safety" }
+    - { file: "dashboards/pa_operations.yaml", identity: "pa_operations" }
+    - { file: "dashboards/rebate_cost.yaml", identity: "rebate_cost" }
+  dispositions:
+    - { file: "cases/dispositions.yaml", identity: "dispositions" }
+  cases:
+    - { file: "cases/queue.yaml", identity: "pa_dur_queue" }
+  roles:
+    - { file: "rbac/roles.yaml", identity: "roles" }
+  agent_configs:
+    - { file: "agents/configs.yaml", identity: "agent_configs" }
+  memories:
+    - { file: "memories/grounding.yaml", identity: "grounding" }
+  pipelines:
+    - { file: "pipelines/templates.yaml", identity: "pipelines" }
+deferred:
+  - kind: ontology
+    reason: >-
+      RX-FR-010 ontology registration (Member, Prescriber, Pharmacy, Drug,
+      Prescription, PriorAuthRequest, Formulary, MTMEligibility, CMR, MAP,
+      AdherenceRecord, DrugInteraction) awaits pack-service; entity semantics
+      are carried today by the pbm_core / pbm_pa semantic models and the
+      dataset schemas.
+  - kind: guardrails
+    reason: >-
+      RX-FR-090 policy bundle (HIPAA baseline, CMS Part D turnaround +
+      transparency, Star Ratings measure rules, NCPDP EDI formats, DEA EPCS
+      identity/audit, state pharmacy law, DDI alert severity rules) requires
+      guardrail-service / OPA materialization, which Core does not expose as
+      a pack surface yet. The behavioral guarantees BR-1/BR-2 encode (no
+      autonomous denial, no controlled-substance auto-approve) are covered
+      today by Core invariants — proposal-mode + four-eyes approval in
+      agent-runtime — plus the pack's agent instructions and grounding.
+  - kind: agent_recipes
+    reason: >-
+      RX-FR-030..070 bespoke LangGraph recipes (Rx PA Copilot, Formulary
+      Alternative Suggester, MTM Copilot, Adherence Intervention Prioritizer,
+      Star Ratings Copilot) require agent-runtime graph-module registration
+      (a Core code surface, BRD 23 BR-12). This pack specializes the existing
+      case-triage + analytics agents via TenantAgentConfig prompt_params +
+      tenant-scope RAG grounding instead.
+  - kind: connection_templates
+    reason: >-
+      RX-FR-080 read connectors (RxClaim, MedImpact, ScriptCheck, CoverMyMeds
+      ePA, Surescripts RTPB, NCPDP EDI, dispensing feeds, Micromedex/First
+      Databank/Lexi-Comp, formulary configs, member CRM) require customer
+      credentials/licenses and pack-service connector materialization. The
+      pack ships seed datasets in the exact landing shape; production
+      connectors are configured through the product Data > Connections UI.
+  - kind: write_adapters
+    reason: >-
+      RX-FR-080 write adapters (RxClaim PA decision post-back, CoverMyMeds
+      ePA response, Surescripts approval/denial, MTM CMR document upload,
+      adherence intervention log) execute only behind pack-service's
+      materialization contract and customer credentials; all platform-side
+      writes remain proposal-mode per BR-1/BR-10.
+  - kind: eval_sets
+    reason: >-
+      BRD 28 §4 golden eval sets (4, incl. Rx PA agreement-rate per AC-2)
+      require eval-service write APIs whose action names are not yet in the
+      rbac canonical catalog (Core follow-up noted in rbac catalog.go).
+  - kind: model_archetypes
+    reason: >-
+      BRD 28 §4 archetypes (rx_pa_confidence, adherence_event_risk) await
+      experiment-service archetype APIs; the confidence model ships today as
+      the pa_auto_decision pipeline seed instead.
+  - kind: case_schemas
+    reason: >-
+      RX-FR-100 typed case schemas (rx_pa_review, formulary_alternative_review,
+      mtm_cmr_review, adherence_intervention_case, star_gap_closure_case)
+      await case-service schema materialization; today's cases carry the same
+      fields via display_projection + the disposition taxonomy.
+  - kind: display_labels
+    reason: >-
+      BRD 28 §4 display-label overlays (rx_pa_review.singular, agent names,
+      member/drug entity templates) require the BFF label-registry endpoints
+      (BFF-FR-082/088) which are pack-service-tier features.

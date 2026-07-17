@@ -1,0 +1,24 @@
+# Pack datasets (ingestion-service file_upload, stable names for idempotency).
+# In production these tables arrive via agency correspondence feeds, ERP tax
+# engines, and certificate-management connectors (deferred until pack-service
+# ships connector materialization); this seed data is REAL rows in the same
+# landing shape, encoding genuine notice patterns so every downstream
+# component runs against real signal from day one: a recurring state
+# sales-tax assessment from an ERP rate-table lag, an IRS payroll deposit
+# penalty with textbook first-time-abatement facts on a 5-day deadline, an
+# economic-nexus questionnaire from a state whose threshold was just crossed,
+# an exemption-certificate audit with ~30% expired certs, a CP2000-style
+# information mismatch from an acquisition's duplicate-EIN filings, and a
+# county notice duplicating an assessment already resolved at state level.
+- identity: tx_entities
+  name: tx-entities
+  file: data/tx_entities.csv
+  format: csv
+- identity: tx_accounts
+  name: tx-accounts
+  file: data/tx_accounts.csv
+  format: csv
+- identity: tx_notices
+  name: tx-notices
+  file: data/tx_notices.csv
+  format: csv

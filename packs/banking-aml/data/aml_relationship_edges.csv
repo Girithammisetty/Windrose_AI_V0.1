@@ -1,0 +1,16 @@
+src_id,dst_id,edge_type,weight
+P-1002,P-1003,wire_transfer,250000.00
+P-1003,P-1004,wire_transfer,248500.00
+P-1004,C-EXT-77,wire_transfer,247000.00
+SDN-4402,P-1002,beneficial_owner,0.55
+P-1002,P-1003,beneficial_owner,0.60
+P-1002,P-1004,shared_director,1.00
+C-EXT-12,P-1006,ach_transfer,9750.00
+P-1006,C-EXT-31,wire_transfer,8700.00
+P-1009,C-EXT-44,wire_transfer,151500.00
+C-EXT-90,P-1005,wire_transfer,75000.00
+C-EXT-51,P-1012,ach_transfer,1900.00
+C-EXT-52,P-1012,ach_transfer,2100.00
+C-EXT-53,P-1012,ach_transfer,1800.00
+P-1012,C-EXT-60,wire_transfer,5600.00
+P-1010,C-EXT-88,shared_address,1.00

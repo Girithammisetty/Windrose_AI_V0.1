@@ -1,0 +1,17 @@
+# Pipeline seeds (expressed against the real pipeline-orchestrator algorithm
+# catalog): an unsupervised device-fleet anomaly detector (repeat-repair /
+# lot / software-version outlier scan feeding trending review) and a
+# supervised reportability scorer trained on human dispositions (the
+# deterministic-first pre-router for complaint intake). Trained models
+# require review before promotion — the Quality & Regulatory Manager
+# approves promotions.
+- identity: dc_device_anomaly_isolation_forest
+  name: "Device fleet anomaly detector (isolation forest)"
+  algorithm: isolation_forest
+  mode: train
+  dataset: dc_devices
+- identity: dc_reportability_xgboost
+  name: "Complaint reportability scorer (xgboost)"
+  algorithm: xgboost
+  mode: train
+  dataset: dc_complaints

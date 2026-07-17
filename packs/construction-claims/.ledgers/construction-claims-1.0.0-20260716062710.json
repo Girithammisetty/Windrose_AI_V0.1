@@ -1,0 +1,70 @@
+{
+  "pack": "construction-claims",
+  "version": "1.0.0",
+  "workspace_id": "019f6a76-fcdc-7cc9-ae30-842dcc2fa42d",
+  "tenant_id": "019f6a76-f8ae-724d-bca7-44f2931b869d",
+  "started_at": "2026-07-16T10:26:51Z",
+  "finished_at": "2026-07-16T10:27:10Z",
+  "actions": [
+    {
+      "kind": "datasets",
+      "identity": "cc_claims",
+      "action": "failed",
+      "urn": null,
+      "detail": "complete 500: {\"error\":{\"code\":\"INTERNAL\",\"message\":\"internal error\",\"trace_id\":\"019f6a77-0084-7b14-9059-cb2a38bced2d\"}}"
+    },
+    {
+      "kind": "datasets",
+      "identity": "cc_contracts",
+      "action": "failed",
+      "urn": null,
+      "detail": "complete 500: {\"error\":{\"code\":\"INTERNAL\",\"message\":\"internal error\",\"trace_id\":\"019f6a77-19c6-7ed9-a32b-ee97b03e98b4\"}}"
+    },
+    {
+      "kind": "datasets",
+      "identity": "cc_parties",
+      "action": "failed",
+      "urn": null,
+      "detail": "complete 500: {\"error\":{\"code\":\"INTERNAL\",\"message\":\"internal error\",\"trace_id\":\"019f6a77-32b6-7315-bb1d-9843926d8f4f\"}}"
+    }
+  ],
+  "deferred": [
+    {
+      "kind": "guardrails",
+      "reason": "Claims-domain policies (no entitlement position communicated to a claimant before the human determination; every rejection must cite the governing contract clause and the record evidence relied upon; no surety default declaration without contract-required notice and cure period; negotiated settlements above authority thresholds escalate to the review board) require guardrail-service / OPA policy materialization, which Core does not expose as a pack surface yet. The behavioral core is partially covered today by Core invariants: every pack-configured agent is proposal-mode with four-eyes approval (agent-runtime), and the agent instructions + disposition taxonomy route final determinations exclusively to human analysts with the Claims Review Board Manager as approver."
+    },
+    {
+      "kind": "agent_recipes",
+      "reason": "Bespoke LangGraph recipes (Claim Intake Copilot, Delay Analysis Assistant for TIA/windows narratives, Quantum Review Builder with measured-mile benchmarking, Notice & Deadline Sentinel) require agent-runtime graph-module registration (BRD 23 BR-12). This pack specializes the existing case-triage + analytics agents via TenantAgentConfig prompt_params + tenant-scope RAG grounding instead."
+    },
+    {
+      "kind": "connection_templates",
+      "reason": "Production read connectors (project-controls and PMIS platforms: Procore, Autodesk Construction Cloud, Oracle Primavera P6 and Unifier, e-Builder, Kahua; ERP/cost systems: CMiC, Sage 300 CRE, Viewpoint Vista; document management for daily reports, RFIs, submittals and boring logs) require customer credentials and pack-service connector materialization. The pack ships seed datasets in the exact landing shape; production connectors are configured through the product Data > Connections UI."
+    },
+    {
+      "kind": "write_adapters",
+      "reason": "Write adapters (execute a change order in the contract/ERP system, post a backcharge, release or hold a progress payment, issue a formal claim determination letter, transmit a surety notice) execute only behind pack-service's materialization contract and customer credentials; every such write stays proposal-mode with human approval \u2014 no autonomous change-order execution, payment movement, or default declaration, ever."
+    },
+    {
+      "kind": "eval_sets",
+      "reason": "Golden eval sets (entitlement triage, delay-analysis method selection, quantum reasonableness ranking, notice-timeliness screening) require eval-service write APIs whose action names are not yet in the rbac canonical catalog (Core follow-up noted in rbac catalog.go)."
+    },
+    {
+      "kind": "ontology",
+      "reason": "Ontology registration (Project, Contract, Party, Surety, Claim, ChangeOrder, DelayEvent, ScheduleUpdate, NoticeRecord, Backcharge, PayApplication, DeterminationLetter) awaits pack-service; entity semantics are carried today by the construction_claims_core semantic model and dataset schemas."
+    },
+    {
+      "kind": "case_schemas",
+      "reason": "Typed case schemas (change_order_review, delay_claim_analysis, dsc_investigation, defect_backcharge_review, payment_dispute_review, acceleration_claim_review) await case-service schema materialization; today's cases carry the same fields via display_projection + the disposition taxonomy."
+    },
+    {
+      "kind": "model_archetypes",
+      "reason": "Model archetypes (claim_outcome_confidence, quantum_inflation_score) await experiment-service archetype APIs; the scoring capability ships as pipeline seeds instead (isolation_forest contract-book anomaly + xgboost claim-outcome scorer) with model-governance expectations noted in grounding memories."
+    },
+    {
+      "kind": "display_labels",
+      "reason": "Display-label overlays (\"Claim\", \"Change order\", \"Notice deadline at risk\", \"Surety notice pending\", entity templates) require the BFF label-registry endpoints (BFF-FR-082/088) which are pack-service-tier features."
+    }
+  ],
+  "result": "failed"
+}

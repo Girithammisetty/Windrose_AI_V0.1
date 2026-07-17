@@ -1,0 +1,29 @@
+*.log
+.env
+.env.*
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+dist/
+bin/
+coverage*
+.DS_Store
+
+# secrets / key material — never commit (dev harness IdP signing keys)
+*.pem
+*.key
+!services/identity-service/internal/keys/*.go
+deploy/e2e/keys/
+
+# build caches and ephemeral runtime state
+.next/
+run/
+logs/
+security/reports/
+test-results*/
+playwright-report*/
+playwright-live-report/
+*.tsbuildinfo

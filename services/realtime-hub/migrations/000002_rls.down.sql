@@ -1,0 +1,3 @@
+DROP POLICY IF EXISTS tenant_isolation ON stream_tickets;
+ALTER TABLE stream_tickets NO FORCE ROW LEVEL SECURITY;
+ALTER TABLE stream_tickets DISABLE ROW LEVEL SECURITY;

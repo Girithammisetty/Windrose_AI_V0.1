@@ -1,0 +1,69 @@
+# Loss Mitigation Command Center: application mix by workout type, backlog
+# aging, outcome mix, intake trend. Chart families restricted to the
+# render-verified set (vertical_bar / grid / pie / line); expr_metric
+# measures (rates) are query/NL surfaces, never charted directly.
+name: "Loss Mitigation Command Center"
+module: insights
+semantic_model: lossmit_core
+description: >-
+  Top-line loss-mitigation operations KPIs: application volumes by workout
+  request type, evaluation backlog aging by severity, human disposition
+  outcome mix, and intake trend with arrearage exposure per request type.
+tags: [mortgage, servicing, loss_mitigation, pack]
+charts:
+  - name: "Applications by request type"
+    chart_type: vertical_bar_chart
+    description: "Application volume by workout type (modification, forbearance, plan, short sale, DIL)"
+    config:
+      x: { dimension: request_type }
+      y: [ { measure: application_count, agg_fn: count } ]
+    sources: [ { measure: application_count } ]
+    w: 6
+    h: 4
+  - name: "Backlog aging by severity"
+    chart_type: vertical_bar_chart
+    description: "Average application age in days by severity (cycle-time watch)"
+    config:
+      x: { dimension: severity }
+      y: [ { measure: avg_application_age_days, agg_fn: avg } ]
+    sources: [ { measure: avg_application_age_days } ]
+    w: 6
+    h: 4
+  - name: "Disposition outcome mix"
+    chart_type: pie_chart
+    description: "Approved vs denied vs docs-requested vs referred vs reinstated vs pending"
+    config:
+      x: { dimension: application_disposition }
+      y: [ { measure: application_count, agg_fn: count } ]
+    sources: [ { measure: application_count } ]
+    w: 6
+    h: 4
+  - name: "Application intake by month"
+    chart_type: line_chart
+    description: "Loss-mitigation application filings trend by filed month"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: application_count, agg_fn: count } ]
+    sources: [ { measure: application_count } ]
+    w: 6
+    h: 4
+  - name: "Request-type worklist grid"
+    chart_type: grid_chart
+    description: "Applications, closures, approvals, open backlog and arrearage exposure by request type"
+    config:
+      columns: [request_type, application_count, closed_application_count, approved_workout_count, open_application_count, total_arrearage_amount]
+      x: { dimension: request_type }
+      y:
+        - { measure: application_count, agg_fn: count }
+        - { measure: closed_application_count, agg_fn: count }
+        - { measure: approved_workout_count, agg_fn: count }
+        - { measure: open_application_count, agg_fn: count }
+        - { measure: total_arrearage_amount, agg_fn: sum }
+    sources:
+      - { measure: application_count }
+      - { measure: closed_application_count }
+      - { measure: approved_workout_count }
+      - { measure: open_application_count }
+      - { measure: total_arrearage_amount }
+    w: 12
+    h: 4

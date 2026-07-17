@@ -1,0 +1,25 @@
+# Pack datasets (ingestion-service file_upload, stable names for idempotency).
+# In production these tables arrive via the customer's EHR / RPM / telephony
+# connectors (CMM-FR-110 — deferred until pack-service ships connector
+# materialization); this seed data is REAL rows in the same shape those
+# connectors land — the Medicare panel (CMM-FR-010 Patient/ChronicCondition/
+# Consent/Discharge), the care coordination activity log, the code-selection
+# BillingCandidate ledger, and RPM device-reading summaries — so every
+# downstream component (semantic models, dashboards, cases, pipelines) runs
+# against genuine data from day one.
+- identity: care_patients
+  name: care-patients
+  file: data/care_patients.csv
+  format: csv
+- identity: care_activities
+  name: care-activities
+  file: data/care_activities.csv
+  format: csv
+- identity: care_billing_candidates
+  name: care-billing-candidates
+  file: data/care_billing_candidates.csv
+  format: csv
+- identity: care_rpm_readings
+  name: care-rpm-readings
+  file: data/care_rpm_readings.csv
+  format: csv

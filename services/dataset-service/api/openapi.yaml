@@ -1,0 +1,277 @@
+openapi: 3.0.3
+info:
+  title: dataset-service
+  version: 0.1.0
+  description: >
+    Windrose dataset catalog: datasets, versions (Iceberg snapshot refs),
+    profiles (object-store pointer + summary), lineage graph, similarity
+    search. Master BRD contracts: cursor pagination, error envelope,
+    Idempotency-Key, X-Trace-Id.
+servers:
+  - url: /api/v1
+security:
+  - bearerAuth: []
+paths:
+  /datasets:
+    post:
+      summary: Create dataset (DST-FR-001)
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DatasetCreate" }
+      responses:
+        "201": { $ref: "#/components/responses/Dataset" }
+        "409": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+    get:
+      summary: List / search datasets (DST-FR-060)
+      parameters:
+        - { name: q, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, default: 50, maximum: 200 } }
+        - { name: cursor, in: query, schema: { type: string } }
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [-created_at, created_at, name, -name, row_count, -row_count]
+        - { name: "filter[status]", in: query, schema: { type: string } }
+        - { name: "filter[tags]", in: query, schema: { type: string } }
+        - { name: "filter[created_by]", in: query, schema: { type: string } }
+        - { name: "filter[column]", in: query, schema: { type: string } }
+        - { name: "filter[quality_flag]", in: query, schema: { type: string } }
+        - { name: "filter[has_pii]", in: query, schema: { type: boolean } }
+      responses:
+        "200": { $ref: "#/components/responses/DatasetPage" }
+  /datasets/{dataset_id}:
+    parameters: [{ $ref: "#/components/parameters/DatasetId" }]
+    get:
+      summary: Read dataset (ETag for caching)
+      responses:
+        "200": { $ref: "#/components/responses/Dataset" }
+        "404": { $ref: "#/components/responses/Error" }
+    patch:
+      summary: Update dataset; deprecation via lifecycle (DST-FR-007, BR-11)
+      parameters:
+        - { name: If-Match, in: header, schema: { type: string } }
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DatasetPatch" }
+      responses:
+        "200": { $ref: "#/components/responses/Dataset" }
+        "409": { $ref: "#/components/responses/Error" }
+    delete:
+      summary: Soft-delete; requires force with downstream consumers (DST-FR-063)
+      parameters:
+        - { name: force, in: query, schema: { type: boolean, default: false } }
+      responses:
+        "200": { description: deleted }
+        "409": { $ref: "#/components/responses/Error" }
+  /datasets/{dataset_id}/restore:
+    post:
+      summary: Restore within 30 days; auto-renames on conflict (DST-FR-006)
+      parameters: [{ $ref: "#/components/parameters/DatasetId" }]
+      responses:
+        "200": { $ref: "#/components/responses/Dataset" }
+        "410": { $ref: "#/components/responses/Error" }
+  /datasets/{dataset_id}/consumers:
+    get:
+      summary: Downstream impact summary (DST-FR-063)
+      parameters: [{ $ref: "#/components/parameters/DatasetId" }]
+      responses:
+        "200": { description: consumer counts by service/activity }
+  /datasets:similar:
+    post:
+      summary: Schema/column similarity ranking (DST-FR-061)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                schema: { type: object, additionalProperties: true }
+                columns: { type: array, items: { type: string } }
+      responses:
+        "200": { description: ranked datasets with matched_columns }
+        "422": { $ref: "#/components/responses/Error" }
+  /datasets/{dataset_id}/versions:
+    get:
+      summary: List versions (paginated, newest first)
+      parameters:
+        - { $ref: "#/components/parameters/DatasetId" }
+        - { name: limit, in: query, schema: { type: integer, default: 50, maximum: 200 } }
+        - { name: cursor, in: query, schema: { type: string } }
+      responses:
+        "200": { description: version page }
+  /datasets/{dataset_id}/versions/{version_no}:
+    get:
+      summary: Read one version
+      parameters:
+        - { $ref: "#/components/parameters/DatasetId" }
+        - { name: version_no, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200": { description: version }
+        "404": { $ref: "#/components/responses/Error" }
+  /datasets/{dataset_id}/versions/{version_no}/profile:
+    post:
+      summary: (Re)trigger profiling (DST-FR-020; 3/hour cap)
+      parameters:
+        - { $ref: "#/components/parameters/DatasetId" }
+        - { name: version_no, in: path, required: true, schema: { type: integer } }
+        - { $ref: "#/components/parameters/IdempotencyKey" }
+      responses:
+        "202": { description: "{operation_id, profile_id, status}" }
+        "409": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
+  /datasets/{dataset_id}/profile:
+    get:
+      summary: Profile summary + 24h signed URLs (DST-FR-027)
+      parameters:
+        - { $ref: "#/components/parameters/DatasetId" }
+        - { name: version, in: query, schema: { type: integer } }
+      responses:
+        "200": { description: summary, alerts, full_json_url, html_report_url }
+        "404": { $ref: "#/components/responses/Error" }
+        "410": { $ref: "#/components/responses/Error" }
+  /lineage/edges:
+    post:
+      summary: Append lineage edge; idempotent upsert (DST-FR-041)
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/EdgeCreate" }
+      responses:
+        "201": { description: created }
+        "200": { description: idempotent replay (created=false) }
+        "404": { description: foreign-tenant URN (audited) }
+        "422": { $ref: "#/components/responses/Error" }
+  /lineage:
+    get:
+      summary: Graph query, BFS with depth<=10 and 1000-node cap (DST-FR-042)
+      parameters:
+        - { name: urn, in: query, required: true, schema: { type: string } }
+        - name: direction
+          in: query
+          schema: { type: string, enum: [upstream, downstream, both], default: both }
+        - { name: depth, in: query, schema: { type: integer, minimum: 1, maximum: 10, default: 3 } }
+        - { name: activities, in: query, schema: { type: string } }
+      responses:
+        "200": { description: "{nodes[], edges[], truncated}" }
+        "422": { $ref: "#/components/responses/Error" }
+  /internal/v1/datasets/{dataset_id}/versions:
+    post:
+      summary: Register version (service mTLS via SPIFFE; DST-FR-003, BR-1/BR-2)
+      security: [{ spiffe: [] }]
+      parameters: [{ $ref: "#/components/parameters/DatasetId" }]
+      responses:
+        "201": { description: version registered }
+        "409": { description: unknown or duplicate snapshot }
+  /internal/v1/profiles/{profile_id}:
+    put:
+      summary: Profiler result callback (mTLS + HMAC body signature; DST-FR-023)
+      security: [{ spiffe: [] }]
+      parameters:
+        - { name: profile_id, in: path, required: true, schema: { type: string } }
+        - name: X-Profiler-Signature
+          in: header
+          required: true
+          schema: { type: string, description: hex HMAC-SHA256(callback_token, body) }
+      responses:
+        "200": { description: profile updated }
+        "403": { description: bad signature / SPIFFE identity }
+        "409": { description: profile already terminal }
+components:
+  securitySchemes:
+    bearerAuth: { type: http, scheme: bearer, bearerFormat: JWT }
+    spiffe:
+      type: apiKey
+      in: header
+      name: x-client-spiffe-id
+      description: mesh-verified SPIFFE identity after mTLS termination
+  parameters:
+    DatasetId:
+      name: dataset_id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      schema: { type: string }
+  schemas:
+    DatasetCreate:
+      type: object
+      required: [workspace_id, name]
+      properties:
+        workspace_id: { type: string, format: uuid }
+        name: { type: string, maxLength: 255 }
+        description: { type: string }
+        visibility: { type: string, enum: [workspace, tenant_public] }
+        iceberg_table: { type: string }
+        partition_spec: { type: object }
+        tags: { type: array, items: { type: string } }
+        custom_metadata: { type: object, additionalProperties: { type: string } }
+    DatasetPatch:
+      type: object
+      properties:
+        name: { type: string }
+        description: { type: string }
+        visibility: { type: string, enum: [workspace, tenant_public] }
+        lifecycle: { type: string, enum: [active, deprecated] }
+        successor_urn: { type: string }
+        tags: { type: array, items: { type: string } }
+        custom_metadata: { type: object }
+    EdgeCreate:
+      type: object
+      required: [from_urn, to_urn, activity]
+      properties:
+        from_urn: { type: string }
+        to_urn: { type: string }
+        activity:
+          type: string
+          enum: [ingested, transformed, trained, inferred, exported, derived]
+        run_urn: { type: string }
+        properties: { type: object }
+        occurred_at: { type: string, format: date-time }
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          required: [code, message, trace_id]
+          properties:
+            code: { type: string }
+            message: { type: string }
+            details: {}
+            trace_id: { type: string }
+  responses:
+    Dataset:
+      description: dataset envelope
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data: { type: object }
+    DatasetPage:
+      description: paginated datasets
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data: { type: array, items: { type: object } }
+              page:
+                type: object
+                properties:
+                  next_cursor: { type: string, nullable: true }
+                  has_more: { type: boolean }
+    Error:
+      description: error envelope (MASTER-FR-024)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }

@@ -1,0 +1,10 @@
+# Disposition taxonomy for the denial-management and underpayment-recovery
+# workflows (BRD 26 US-2 recommended actions: appeal, correct+resubmit,
+# write-off; RCM-FR-050 underpayment disputes; RCM-FR-120 state machines
+# expressed in today's case-service disposition catalog).
+- { code: appeal_submitted,        label: "Appeal submitted to payer",            category: false_positive, requires_note: true }
+- { code: corrected_resubmit,      label: "Corrected claim resubmitted",          category: true_positive,  requires_note: true }
+- { code: write_off,               label: "Write-off approved",                   category: true_positive,  requires_note: true }
+- { code: escalate_payer,          label: "Escalate to payer relations",          category: inconclusive,   requires_note: false }
+- { code: underpayment_recovered,  label: "Underpayment recovered from payer",    category: true_positive,  requires_note: true }
+- { code: balance_verified_correct, label: "Payment verified correct — no action", category: benign,        requires_note: false }

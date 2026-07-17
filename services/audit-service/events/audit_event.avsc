@@ -1,0 +1,19 @@
+{
+  "type": "record",
+  "name": "AuditMetaEnvelope",
+  "namespace": "ai.windrose.audit.events.v1",
+  "doc": "Meta-audit events audit-service emits to audit.events.v1 (BRD 18 §6). audit-service does NOT re-emit the events it consumes — only these meta events, so auditors are themselves audited. Payload is the master envelope (MASTER-FR-031) with these event_type values: audit.searched, audit.export_sealed, audit.integrity_violation, audit.pii_rejected, audit.dlq_redriven.",
+  "fields": [
+    {"name": "event_id", "type": {"type": "string", "logicalType": "uuid"}},
+    {"name": "event_type", "type": "string"},
+    {"name": "tenant_id", "type": {"type": "string", "logicalType": "uuid"}},
+    {"name": "actor", "type": {"type": "record", "name": "Actor", "fields": [
+      {"name": "type", "type": "string"}, {"name": "id", "type": "string"}]}},
+    {"name": "via_agent", "type": ["null", {"type": "record", "name": "ViaAgent", "fields": [
+      {"name": "agent_id", "type": "string"}, {"name": "version", "type": "string"}]}], "default": null},
+    {"name": "resource_urn", "type": "string"},
+    {"name": "occurred_at", "type": {"type": "long", "logicalType": "timestamp-micros"}},
+    {"name": "trace_id", "type": "string"},
+    {"name": "payload", "type": "string", "doc": "JSON: filter_digest/breakglass (searched), date/manifest_sha256 (export_sealed), date/first_mismatch_seq (integrity_violation), source_service/event_type/pii_class (pii_rejected), topic/count (dlq_redriven)"}
+  ]
+}

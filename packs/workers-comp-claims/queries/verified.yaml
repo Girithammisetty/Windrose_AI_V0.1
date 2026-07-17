@@ -1,0 +1,69 @@
+# Verified NL<->SQL queries (four-eyes approved at install). SQL uses
+# {{dataset('<name>')}} macros — the only table references query-service's
+# tenant-namespace guard admits.
+- nl_text: "What's our compensability acceptance rate by jurisdiction state?"
+  sql_text: >-
+    SELECT jurisdiction_state,
+           count(*) AS closed_claims,
+           sum(CASE WHEN disposition = 'accept_compensable' THEN 1 ELSE 0 END) AS accepted,
+           sum(CASE WHEN disposition = 'deny_not_compensable' THEN 1 ELSE 0 END) AS denied,
+           round(sum(CASE WHEN disposition = 'accept_compensable' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS acceptance_rate
+    FROM {{dataset('wc-claims')}}
+    WHERE status = 'closed'
+    GROUP BY jurisdiction_state
+    ORDER BY acceptance_rate DESC
+  model: wc_claims_core
+  tags: [workers_comp, compensability, jurisdiction, kpi, pack]
+- nl_text: "Which open claims are closest to their statutory compensability decision deadline?"
+  sql_text: >-
+    SELECT claim_id, employer_id, jurisdiction_state, injury_type, claim_type,
+           severity, siu_flag, litigation_flag,
+           cast(days_to_deadline AS double) AS days_to_deadline,
+           cast(age_days AS double) AS age_days,
+           cast(incurred_reserve AS double) AS incurred_reserve
+    FROM {{dataset('wc-claims')}}
+    WHERE status = 'open'
+    ORDER BY days_to_deadline ASC
+  model: wc_claims_core
+  tags: [workers_comp, deadlines, compensability_clock, backlog, pack]
+- nl_text: "Which providers are billing above the state fee schedule across claims?"
+  sql_text: >-
+    SELECT provider_name, provider_type,
+           count(*) AS bills,
+           sum(CASE WHEN fee_schedule_flag = 'above' THEN 1 ELSE 0 END) AS above_schedule_bills,
+           sum(cast(billed_amount AS double)) AS billed,
+           sum(cast(paid_amount AS double)) AS allowed,
+           sum(cast(billed_amount AS double)) - sum(cast(paid_amount AS double)) AS variance
+    FROM {{dataset('wc-medical-bills')}}
+    GROUP BY provider_name, provider_type
+    HAVING sum(CASE WHEN fee_schedule_flag = 'above' THEN 1 ELSE 0 END) >= 1
+    ORDER BY variance DESC
+  model: wc_claims_core
+  tags: [workers_comp, bill_review, fee_schedule, providers, pack]
+- nl_text: "Reserve and paid exposure by claim type and injury type"
+  sql_text: >-
+    SELECT claim_type, injury_type,
+           count(*) AS claims,
+           sum(cast(incurred_reserve AS double)) AS total_incurred,
+           sum(cast(paid_to_date AS double)) AS total_paid,
+           round(avg(cast(incurred_reserve AS double)), 2) AS avg_incurred
+    FROM {{dataset('wc-claims')}}
+    GROUP BY claim_type, injury_type
+    ORDER BY total_incurred DESC
+  model: wc_claims_core
+  tags: [workers_comp, reserves, exposure, kpi, pack]
+- nl_text: "SIU watch — employers whose claims carry fraud red flags or SIU referrals"
+  sql_text: >-
+    SELECT employer_id,
+           count(*) AS claims,
+           sum(CASE WHEN siu_flag = 'yes' THEN 1 ELSE 0 END) AS red_flagged,
+           sum(CASE WHEN disposition = 'escalate_siu_fraud' THEN 1 ELSE 0 END) AS siu_referrals,
+           sum(CASE WHEN disposition = 'deny_not_compensable' THEN 1 ELSE 0 END) AS denials,
+           sum(cast(incurred_reserve AS double)) AS incurred_exposure
+    FROM {{dataset('wc-claims')}}
+    GROUP BY employer_id
+    HAVING sum(CASE WHEN siu_flag = 'yes' THEN 1 ELSE 0 END) >= 1
+    ORDER BY red_flagged DESC, incurred_exposure DESC
+  model: wc_claims_core
+  tags: [workers_comp, siu, fraud, employers, pack]

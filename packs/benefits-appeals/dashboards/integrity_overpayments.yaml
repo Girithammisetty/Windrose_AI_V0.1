@@ -1,0 +1,69 @@
+# Integrity & Overpayments: overpayment exposure, fraud referrals, and the
+# identity-verification surface — balanced against the false-positive harm
+# lesson (blunt identity filters freeze legitimate claimants).
+name: "Integrity & Overpayments"
+module: insights
+semantic_model: benefits_core
+description: >-
+  Program-integrity posture: overpayment dollars by program and by month,
+  fraud referrals by issue type, claimant identity-verification mix, and a
+  per-program integrity grid (overpayment cases and dollars, fraud
+  referrals, identity issues).
+tags: [government, benefits, integrity, overpayments, pack]
+charts:
+  - name: "Overpayment dollars by program"
+    chart_type: vertical_bar_chart
+    description: "Established or alleged overpayment dollars split by benefit program"
+    config:
+      x: { dimension: program }
+      y: [ { measure: total_overpayment_amount, agg_fn: sum } ]
+    sources: [ { measure: total_overpayment_amount } ]
+    w: 6
+    h: 4
+  - name: "Fraud referrals by issue type"
+    chart_type: vertical_bar_chart
+    description: "Determinations referred to program-integrity fraud investigation by adjudicated issue"
+    config:
+      x: { dimension: issue_type }
+      y: [ { measure: fraud_referral_count, agg_fn: count } ]
+    sources: [ { measure: fraud_referral_count } ]
+    w: 6
+    h: 4
+  - name: "Claimant identity verification mix"
+    chart_type: pie_chart
+    description: "Claimants by identity-verification status — flags are verification leads, never auto-denials"
+    config:
+      x: { dimension: identity_verified }
+      y: [ { measure: claimant_count, agg_fn: count } ]
+    sources: [ { measure: claimant_count } ]
+    w: 6
+    h: 4
+  - name: "Overpayment dollars by month"
+    chart_type: line_chart
+    description: "Overpayment dollars surfaced per determination month"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: total_overpayment_amount, agg_fn: sum } ]
+    sources: [ { measure: total_overpayment_amount } ]
+    w: 6
+    h: 4
+  - name: "Integrity grid by program"
+    chart_type: grid_chart
+    description: "Overpayment cases and dollars, fraud referrals and identity issues by program"
+    config:
+      columns: [program, determination_count, overpayment_case_count, total_overpayment_amount, fraud_referral_count, identity_issue_count]
+      x: { dimension: program }
+      y:
+        - { measure: determination_count, agg_fn: count }
+        - { measure: overpayment_case_count, agg_fn: count }
+        - { measure: total_overpayment_amount, agg_fn: sum }
+        - { measure: fraud_referral_count, agg_fn: count }
+        - { measure: identity_issue_count, agg_fn: count }
+    sources:
+      - { measure: determination_count }
+      - { measure: overpayment_case_count }
+      - { measure: total_overpayment_amount }
+      - { measure: fraud_referral_count }
+      - { measure: identity_issue_count }
+    w: 12
+    h: 4

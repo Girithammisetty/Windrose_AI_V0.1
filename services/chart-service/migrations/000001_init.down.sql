@@ -1,0 +1,8 @@
+DROP TABLE IF EXISTS outbox;
+DROP TABLE IF EXISTS idempotency_keys;
+DROP TABLE IF EXISTS operations;
+DROP TABLE IF EXISTS documentations;
+DROP TABLE IF EXISTS chart_links;
+DROP TABLE IF EXISTS chart_sources;
+DROP TABLE IF EXISTS charts;
+DROP TABLE IF EXISTS dashboards;

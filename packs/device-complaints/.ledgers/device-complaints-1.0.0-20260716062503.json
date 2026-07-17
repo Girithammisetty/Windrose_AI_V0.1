@@ -1,0 +1,70 @@
+{
+  "pack": "device-complaints",
+  "version": "1.0.0",
+  "workspace_id": "019f6a75-0e71-75d0-892f-52b82da9d36a",
+  "tenant_id": "019f6a75-0a20-7e92-8c4f-36c3f4f88c44",
+  "started_at": "2026-07-16T10:24:44Z",
+  "finished_at": "2026-07-16T10:25:03Z",
+  "actions": [
+    {
+      "kind": "datasets",
+      "identity": "dc_complaints",
+      "action": "failed",
+      "urn": null,
+      "detail": "complete 500: {\"error\":{\"code\":\"INTERNAL\",\"message\":\"internal error\",\"trace_id\":\"019f6a75-11b3-7520-8956-faeb5bf7d86a\"}}"
+    },
+    {
+      "kind": "datasets",
+      "identity": "dc_devices",
+      "action": "failed",
+      "urn": null,
+      "detail": "complete 500: {\"error\":{\"code\":\"INTERNAL\",\"message\":\"internal error\",\"trace_id\":\"019f6a75-2af4-7a61-be68-f60cd1948cea\"}}"
+    },
+    {
+      "kind": "datasets",
+      "identity": "dc_products",
+      "action": "failed",
+      "urn": null,
+      "detail": "complete 500: {\"error\":{\"code\":\"INTERNAL\",\"message\":\"internal error\",\"trace_id\":\"019f6a75-43d6-7b8a-bc3c-ca47212ce1aa\"}}"
+    }
+  ],
+  "deferred": [
+    {
+      "kind": "guardrails",
+      "reason": "Complaint-domain policies (no MDR filed or withheld without a documented human rationale; no reportability outcome communicated to a complainant before the determination; every death complaint carries the reportability presumption unless the file rules device involvement out; systematic not-reportable pattern watch) require guardrail-service / OPA policy materialization, which Core does not expose as a pack surface yet. The behavioral core is partially covered today by Core invariants: every pack-configured agent is proposal-mode with four-eyes approval (agent-runtime), and the agent instructions + disposition taxonomy route reportability decisions exclusively to human analysts with the Quality & Regulatory Manager as approver."
+    },
+    {
+      "kind": "agent_recipes",
+      "reason": "Bespoke LangGraph recipes (MDR Reportability Decision-Tree Copilot, Complaint Trend Sentinel, eMDR Narrative Builder, Returned-Device Analysis Tracker) require agent-runtime graph-module registration (BRD 23 BR-12). This pack specializes the existing case-triage + analytics agents via TenantAgentConfig prompt_params + tenant-scope RAG grounding instead."
+    },
+    {
+      "kind": "connection_templates",
+      "reason": "Production read connectors (eQMS/complaint platforms, field-service and returned-goods systems, distributor and importer portals, call center intake, literature-screening feeds, FDA MAUDE lookups for similar-event context) require customer credentials and pack-service connector materialization. The pack ships seed datasets in the exact landing shape; production connectors are configured through the product Data > Connections UI."
+    },
+    {
+      "kind": "write_adapters",
+      "reason": "Write adapters (submit eMDR via the FDA Electronic Submissions Gateway, file EU MDR vigilance reports / EUDAMED entries, open CAPA records in the eQMS, issue complaint-acknowledgment and device-return-request letters) execute only behind pack-service's materialization contract and customer credentials; every such write stays proposal-mode with human approval \u2014 no autonomous regulatory submission, ever."
+    },
+    {
+      "kind": "eval_sets",
+      "reason": "Golden eval sets (reportability decision-tree accuracy, deadline-risk ranking, duplicate detection, CAPA-trigger trend calls) require eval-service write APIs whose action names are not yet in the rbac canonical catalog (Core follow-up noted in rbac catalog.go)."
+    },
+    {
+      "kind": "ontology",
+      "reason": "Ontology registration (Complaint, Device, Product, Lot, DeviceProblemCode, PatientHarm, Investigation, MDRReport, ReportabilityDecision, CAPA, FieldAction, DeadlineClock) awaits pack-service; entity semantics are carried today by the complaints_core semantic model and dataset schemas."
+    },
+    {
+      "kind": "case_schemas",
+      "reason": "Typed case schemas (complaint_intake, mdr_reportability_review, capa_trend_investigation, returned_device_analysis, duplicate_review) await case-service schema materialization; today's cases carry the same fields via display_projection + the disposition taxonomy."
+    },
+    {
+      "kind": "model_archetypes",
+      "reason": "Model archetypes (reportability_confidence, complaint_trend_score) await experiment-service archetype APIs; the scoring capability ships as pipeline seeds instead (isolation_forest device-fleet anomaly + xgboost reportability scorer) with model-governance expectations noted in grounding memories."
+    },
+    {
+      "kind": "display_labels",
+      "reason": "Display-label overlays (\"Complaint\", \"MDR due\", \"Clock at risk\", \"CAPA open\", entity templates) require the BFF label-registry endpoints (BFF-FR-082/088) which are pack-service-tier features."
+    }
+  ],
+  "result": "failed"
+}

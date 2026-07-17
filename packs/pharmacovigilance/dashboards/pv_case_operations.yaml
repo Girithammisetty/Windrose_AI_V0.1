@@ -1,0 +1,69 @@
+# PV Case Operations: intake mix, backlog aging, reporting-decision mix,
+# intake trend. Chart families restricted to the render-verified set
+# (vertical_bar / grid / pie / line); expr_metric measures (rates) are
+# query/NL surfaces, never charted directly.
+name: "PV Case Operations"
+module: insights
+semantic_model: pv_core
+description: >-
+  Top-line pharmacovigilance case-processing KPIs: ICSR volumes by source,
+  backlog aging by seriousness criteria, reporting-decision mix, and monthly
+  intake trend.
+tags: [pharma, pharmacovigilance, cases, pack]
+charts:
+  - name: "Cases by source"
+    chart_type: vertical_bar_chart
+    description: "ICSR intake volume by report source (HCP, consumer, literature)"
+    config:
+      x: { dimension: source }
+      y: [ { measure: case_count, agg_fn: count } ]
+    sources: [ { measure: case_count } ]
+    w: 6
+    h: 4
+  - name: "Backlog aging by seriousness"
+    chart_type: vertical_bar_chart
+    description: "Average case age in days by seriousness criteria (cycle-time watch)"
+    config:
+      x: { dimension: seriousness_criteria }
+      y: [ { measure: avg_case_age_days, agg_fn: avg } ]
+    sources: [ { measure: avg_case_age_days } ]
+    w: 6
+    h: 4
+  - name: "Reporting decision mix"
+    chart_type: pie_chart
+    description: "Expedited vs periodic vs non-reportable vs nullified vs pending"
+    config:
+      x: { dimension: case_disposition }
+      y: [ { measure: case_count, agg_fn: count } ]
+    sources: [ { measure: case_count } ]
+    w: 6
+    h: 4
+  - name: "Case intake by month"
+    chart_type: line_chart
+    description: "ICSR intake trend by received month"
+    config:
+      x: { dimension: received_month }
+      y: [ { measure: case_count, agg_fn: count } ]
+    sources: [ { measure: case_count } ]
+    w: 6
+    h: 4
+  - name: "Source quality grid"
+    chart_type: grid_chart
+    description: "Cases, serious cases, expedited filings, duplicates and open backlog by source"
+    config:
+      columns: [source, case_count, serious_case_count, expedited_filed_count, nullified_count, open_case_count]
+      x: { dimension: source }
+      y:
+        - { measure: case_count, agg_fn: count }
+        - { measure: serious_case_count, agg_fn: count }
+        - { measure: expedited_filed_count, agg_fn: count }
+        - { measure: nullified_count, agg_fn: count }
+        - { measure: open_case_count, agg_fn: count }
+    sources:
+      - { measure: case_count }
+      - { measure: serious_case_count }
+      - { measure: expedited_filed_count }
+      - { measure: nullified_count }
+      - { measure: open_case_count }
+    w: 12
+    h: 4

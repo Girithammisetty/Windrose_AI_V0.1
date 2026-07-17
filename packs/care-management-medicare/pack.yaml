@@ -1,0 +1,115 @@
+# care-management-medicare capability pack (BRD 25) — Core-neutral edition.
+# The first provider-side vertical: Medicare care-management program family
+# (CCM / PCM / TCM / BHI / CoCM / RPM / RTM / APCM 2025) for practices, FQHCs,
+# RHCs, and ambulatory groups. Installable TODAY against Windrose Core's
+# public APIs via packctl; the manifest envelope follows BRD 23 (PKG-FR-001/
+# 003) so this bundle is forward-compatible with pack-service when it ships.
+# Components the current Core cannot materialize are declared under `deferred`
+# with the exact CMM-FR requirement they trace to — recorded in the install
+# ledger, never faked.
+pack_manifest: 1
+name: care-management-medicare
+version: 1.0.0
+publisher: { id: pub-windrose, name: "Windrose Inc." }
+description: >-
+  AI-assisted Medicare care management (CCM/PCM/TCM/BHI/CoCM/RPM/RTM/APCM) for
+  providers, FQHCs, and health-system ambulatory groups: enrollment-funnel and
+  revenue-leakage KPI semantic models, RPM operations dashboards, a monthly
+  billing review queue gated on documentation completeness, care-team role
+  catalog, CMS-rule-grounded copilot configuration, and an enrollment
+  propensity training pipeline.
+categories: [healthcare, provider, care-management, chronic-care, remote-monitoring, medicare]
+regulatory: [cms_ccm_rules, cms_rpm_rules, cms_apcm_2025, no_surprises_act, hipaa, hitrust_csf, rac_audit_defensible]
+components:
+  datasets:
+    - { file: "data/datasets.yaml", identity: "datasets" }
+  semantic_models:
+    - { file: "semantic/care_mgmt_core.yaml", identity: "care_mgmt_core" }
+    - { file: "semantic/rpm_readings.yaml", identity: "rpm_readings" }
+  verified_queries:
+    - { file: "queries/verified.yaml", identity: "canonical_questions" }
+  saved_queries:
+    - { file: "queries/saved.yaml", identity: "saved_queries" }
+  dashboards:
+    - { file: "dashboards/enrollment_funnel.yaml", identity: "enrollment_funnel" }
+    - { file: "dashboards/revenue_leakage.yaml", identity: "revenue_leakage" }
+    - { file: "dashboards/rpm_ops.yaml", identity: "rpm_ops" }
+  dispositions:
+    - { file: "cases/dispositions.yaml", identity: "dispositions" }
+  cases:
+    - { file: "cases/queue.yaml", identity: "billing_review_queue" }
+  roles:
+    - { file: "rbac/roles.yaml", identity: "roles" }
+  agent_configs:
+    - { file: "agents/configs.yaml", identity: "agent_configs" }
+  memories:
+    - { file: "memories/grounding.yaml", identity: "grounding" }
+  pipelines:
+    - { file: "pipelines/templates.yaml", identity: "pipelines" }
+deferred:
+  - kind: ontology
+    reason: >-
+      CMM-FR-010/011 ontology registration (Patient, Provider, Encounter,
+      ChronicCondition, BehavioralHealthDx, Discharge, Consent, CarePlan,
+      CareCoordinationActivity, DeviceReading, BillingCandidate,
+      RACAuditPackage, with phi:true field tagging) awaits pack-service;
+      entity semantics are carried today by the two semantic models and the
+      seed dataset schemas.
+  - kind: guardrails
+    reason: >-
+      CMM-FR-130..138 OPA policies (hipaa.rego, cms_code_mutual_exclusion,
+      cms_time_thresholds, consent_required, rpm_16day_rule, tcm_window,
+      apcm_tier_eligibility, rac_audit_trail, fqhc_rhc_g0511) require
+      guardrail-service policy materialization, which Core does not expose as
+      a pack surface yet. The behavioral guarantees are partially covered
+      today by Core invariants (proposal-mode + four-eyes approval on every
+      billing decision — BR-2) plus the same rules encoded as retrievable
+      grounding memories and the case-triage agent's instructions.
+  - kind: eval_sets
+    reason: >-
+      CMM-FR-001 golden sets (code_selection, enrollment, documentation,
+      care_plan per evals/*.jsonl) require eval-service write APIs whose
+      action names are not yet in the rbac canonical catalog (Core follow-up
+      noted in rbac catalog.go).
+  - kind: agent_recipes
+    reason: >-
+      CMM-FR-030..101 bespoke recipes (enrollment_scanner, care_scribe,
+      code_selection, care_plan_drafter, documentation_auditor, rpm_reviewer,
+      tcm_prioritizer, outreach_scheduler) require agent-runtime graph-module
+      registration (a Core code surface, BRD 23 BR-12). This pack specializes
+      the existing case-triage + analytics agents via TenantAgentConfig
+      prompt_params + tenant-scope RAG grounding instead; BR-2 (no autonomous
+      billing) holds because agent-runtime is proposal-mode only.
+  - kind: connection_templates
+    reason: >-
+      CMM-FR-110 EHR/RPM/telephony connectors (epic_ambulatory, athenahealth,
+      eclinicalworks, nextgen, cerner_ambulatory, rpm_optimize_health,
+      rpm_cadence, rpm_ihealth, phone_rc, telehealth_doxy) require customer
+      credentials and pack-service connector materialization. The pack ships
+      seed datasets in the exact landing shape; production connectors are
+      configured through the product Data > Connections UI.
+  - kind: write_adapters
+    reason: >-
+      CMM-FR-111/112 SoR write adapters (epic/athena/ecw care-activity,
+      care-plan, and billing-candidate writes with Idempotency-Key
+      case_id:proposal_id) execute only behind pack-service's materialization
+      contract and customer credentials; all platform-side writes remain
+      proposal-mode (BR-2 CMM_AUTONOMOUS_BILLING_FORBIDDEN).
+  - kind: model_archetypes
+    reason: >-
+      CMM-FR-033/090 model archetypes (enrollment_propensity,
+      readmission_risk_30d) await experiment-service archetype APIs; the
+      enrollment-propensity capability ships today as a real training
+      pipeline seed instead (pipelines/templates.yaml).
+  - kind: case_schemas
+    reason: >-
+      CMM-FR-141 typed case schemas (care_activity_review,
+      monthly_billing_review, care_plan_review, rpm_data_review,
+      tcm_discharge) await case-service schema materialization; today's
+      seeded queue carries the same fields via display_projection + the
+      disposition taxonomy.
+  - kind: display_labels
+    reason: >-
+      CMM-FR-160 label overlays (labels/en.yaml, PHI-safe patient display
+      templates) require the BFF label-registry endpoints which are
+      pack-service-tier features.

@@ -1,0 +1,62 @@
+# Verified NL<->SQL queries (four-eyes approved at install). SQL uses
+# {{dataset('<name>')}} macros — the only table references query-service's
+# tenant-namespace guard admits.
+- nl_text: "What's our overturn rate by policy area?"
+  sql_text: >-
+    SELECT policy_area,
+           count(*) AS closed_appeals,
+           sum(CASE WHEN disposition = 'overturn_restore' THEN 1 ELSE 0 END) AS overturned,
+           round(sum(CASE WHEN disposition = 'overturn_restore' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS overturn_rate
+    FROM {{dataset('ts-appeals')}}
+    WHERE status = 'closed'
+    GROUP BY policy_area
+    ORDER BY overturn_rate DESC
+  model: appeals_core
+  tags: [appeals, overturn_rate, classifier_quality, kpi, pack]
+- nl_text: "Which open appeals are closest to breaching the complaint-handling deadline?"
+  sql_text: >-
+    SELECT appeal_id, decision_id, appeal_type, policy_area,
+           enforcement_source, user_standing, severity,
+           cast(days_to_deadline AS double) AS days_to_deadline,
+           cast(age_days AS double) AS age_days
+    FROM {{dataset('ts-appeals')}}
+    WHERE status = 'open'
+    ORDER BY days_to_deadline ASC
+  model: appeals_core
+  tags: [appeals, deadlines, dsa, backlog, pack]
+- nl_text: "Overturn rate by enforcement source — is the automated classifier over-enforcing?"
+  sql_text: >-
+    SELECT enforcement_source,
+           count(*) AS closed_appeals,
+           sum(CASE WHEN disposition = 'overturn_restore' THEN 1 ELSE 0 END) AS overturned,
+           sum(CASE WHEN disposition = 'uphold_enforcement' THEN 1 ELSE 0 END) AS upheld,
+           round(sum(CASE WHEN disposition = 'overturn_restore' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS overturn_rate
+    FROM {{dataset('ts-appeals')}}
+    WHERE status = 'closed'
+    GROUP BY enforcement_source
+    ORDER BY overturn_rate DESC
+  model: appeals_core
+  tags: [appeals, classifier_quality, enforcement_source, feedback_loop, pack]
+- nl_text: "Decisions with multiple appeals filed (duplicate-appeal watch)"
+  sql_text: >-
+    SELECT decision_id,
+           count(*) AS appeal_count,
+           sum(CASE WHEN status = 'open' THEN 1 ELSE 0 END) AS open_appeals,
+           sum(CASE WHEN disposition = 'close_duplicate_appeal' THEN 1 ELSE 0 END) AS closed_as_duplicate
+    FROM {{dataset('ts-appeals')}}
+    GROUP BY decision_id
+    HAVING count(*) >= 2
+    ORDER BY appeal_count DESC
+  model: appeals_core
+  tags: [appeals, duplicates, decision_id, pack]
+- nl_text: "Which enforcement decisions drew unusually high report volumes (brigading screen)?"
+  sql_text: >-
+    SELECT decision_id, account_id, content_type, policy_version, action,
+           enforce_month, geography,
+           cast(report_count AS double) AS report_count
+    FROM {{dataset('ts-enforcements')}}
+    ORDER BY report_count DESC
+  model: appeals_core
+  tags: [enforcements, brigading, mass_reports, report_integrity, pack]

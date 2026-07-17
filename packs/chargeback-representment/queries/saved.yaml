@@ -1,0 +1,29 @@
+# Saved queries (query-service) — includes the customer->product-category
+# edge source (parent/child/n) for network-family charts: friendly-fraud
+# repeat-offender fans (one customer, many disputed categories) and
+# category-level chargeback hot spots from the order book.
+- identity: representment_customer_edges
+  name: "Representment: customer-category network edges"
+  description: >-
+    Customer -> product-category edge list (parent/child/n) from the order
+    book — network-chart source for spotting friendly-fraud repeat-offender
+    fans (one customer disputing across many categories) and chargeback-prone
+    category clusters.
+  sql: >-
+    SELECT customer_id AS parent, product_category AS child,
+           count(*) AS n
+    FROM {{dataset('mr-orders')}}
+    GROUP BY customer_id, product_category
+  tags: [representment, network, customers, pack]
+- identity: high_value_open_chargebacks
+  name: "Representment: high-value open queue"
+  description: "Open chargebacks ranked by dollar exposure — the analyst ranked-queue seed (deadline x dollar x evidence, not FIFO)."
+  sql: >-
+    SELECT chargeback_id, order_id, network, reason_code, reason_family,
+           evidence_strength, fight_economics, severity,
+           cast(days_to_deadline AS double) AS days_to_deadline,
+           cast(amount AS double) AS amount
+    FROM {{dataset('mr-chargebacks')}}
+    WHERE status = 'open'
+    ORDER BY amount DESC
+  tags: [representment, queue, backlog, pack]

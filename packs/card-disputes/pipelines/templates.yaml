@@ -1,0 +1,16 @@
+# Pipeline seeds (expressed against the real pipeline-orchestrator algorithm
+# catalog): an unsupervised transaction-anomaly detector (card-testing /
+# dispute-ring surface scan) and a supervised dispute-outcome scorer trained
+# on human dispositions (the deterministic-first pre-router for intake
+# triage). Trained models require review before promotion — the Dispute
+# Operations Manager approves promotions.
+- identity: cd_txn_anomaly_isolation_forest
+  name: "Card transaction anomaly detector (isolation forest)"
+  algorithm: isolation_forest
+  mode: train
+  dataset: cd_transactions
+- identity: cd_dispute_outcome_xgboost
+  name: "Dispute outcome scorer (xgboost)"
+  algorithm: xgboost
+  mode: train
+  dataset: cd_disputes

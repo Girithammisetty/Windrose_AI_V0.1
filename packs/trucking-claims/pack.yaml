@@ -1,0 +1,125 @@
+# trucking-claims capability pack — Core-neutral edition: cargo OS&D claims,
+# telematics safety-event review, and carrier vetting/fraud adjudication for
+# motor carriers, freight brokers, and 3PLs. Installable TODAY against
+# Windrose Core's public APIs via packctl; the manifest envelope follows
+# BRD 23 (PKG-FR-001/003). Components the current Core cannot materialize are
+# declared under `deferred` — recorded in the install ledger, never faked.
+pack_manifest: 1
+name: trucking-claims
+version: 1.0.0
+publisher: { id: pub-windrose, name: "Windrose Inc." }
+description: >-
+  AI-assisted trucking and logistics claims & safety adjudication for motor
+  carriers, freight brokers, and 3PLs: cargo OS&D claim triage with
+  Carmack-liability and filing-deadline awareness (9-month claim / 2-year
+  suit windows on standard bill-of-lading terms), reefer temperature-excursion
+  evidence workflow, carrier recovery filing, double-brokering and carrier
+  identity-theft fraud vetting, telematics safety-event review with
+  preventability-and-coaching discipline (litigation-discoverable decision
+  files), a claims-and-safety KPI semantic model and dashboards (pay rate,
+  denial rate, recovery rate, deadline runway, coaching closure, carrier
+  risk mix, on-time share), carrier-lane network analytics, Carmack/FMCSA
+  grounding memories, and shipment-anomaly + claim-outcome training
+  pipelines.
+categories: [logistics, trucking, cargo_claims, safety, carrier_fraud]
+regulatory: [carmack_amendment, cfr49_part370, fmcsa_csa, bill_of_lading_terms]
+components:
+  datasets:
+    - { file: "data/datasets.yaml", identity: "datasets" }
+  semantic_models:
+    - { file: "semantic/trucking_claims_core.yaml", identity: "trucking_claims_core" }
+  verified_queries:
+    - { file: "queries/verified.yaml", identity: "canonical_questions" }
+  saved_queries:
+    - { file: "queries/saved.yaml", identity: "saved_queries" }
+  dashboards:
+    - { file: "dashboards/claims_safety_command_center.yaml", identity: "claims_safety_command_center" }
+    - { file: "dashboards/cargo_claims_recovery.yaml", identity: "cargo_claims_recovery" }
+    - { file: "dashboards/carrier_risk_watch.yaml", identity: "carrier_risk_watch" }
+  dispositions:
+    - { file: "cases/dispositions.yaml", identity: "dispositions" }
+  cases:
+    - { file: "cases/queue.yaml", identity: "claims_safety_queue" }
+  roles:
+    - { file: "rbac/roles.yaml", identity: "roles" }
+  agent_configs:
+    - { file: "agents/configs.yaml", identity: "agent_configs" }
+  memories:
+    - { file: "memories/grounding.yaml", identity: "grounding" }
+  pipelines:
+    - { file: "pipelines/templates.yaml", identity: "pipelines" }
+deferred:
+  - kind: guardrails
+    reason: >-
+      Claims-and-safety-domain policies (no claim payment, denial, or
+      recovery filing communicated before the human determination; denial
+      letters must cite the documented investigation findings and the
+      applicable bill-of-lading defense; no preventability determination
+      recorded without the event evidence attached; suspected double-broker
+      loads freeze carrier payment pending verification) require
+      guardrail-service / OPA policy materialization, which Core does not
+      expose as a pack surface yet. The behavioral core is partially covered
+      today by Core invariants: every pack-configured agent is proposal-mode
+      with four-eyes approval (agent-runtime), and the agent instructions +
+      disposition taxonomy route final determinations exclusively to human
+      analysts with the Claims & Safety Manager as approver.
+  - kind: agent_recipes
+    reason: >-
+      Bespoke LangGraph recipes (Cargo Claim Intake Copilot, Carrier Recovery
+      Builder, Double-Broker Fraud Screener, Filing-Deadline Sentinel,
+      Preventability Review Assistant) require agent-runtime graph-module
+      registration (BRD 23 BR-12). This pack specializes the existing
+      case-triage + analytics agents via TenantAgentConfig prompt_params +
+      tenant-scope RAG grounding instead.
+  - kind: connection_templates
+    reason: >-
+      Production read connectors (TMS platforms: McLeod/TMW/MercuryGate-class
+      systems; telematics and video-safety platforms: ELD, forward-camera,
+      harsh-event feeds; FMCSA registration/safety data services; load-board
+      and carrier-identity monitoring; reefer telematics/temperature-download
+      providers; claims mailboxes/EDI) require customer credentials and
+      pack-service connector materialization. The pack ships seed datasets in
+      the exact landing shape; production connectors are configured through
+      the product Data > Connections UI.
+  - kind: write_adapters
+    reason: >-
+      Write adapters (issue claim payment or settlement in the TMS/AP system,
+      send acknowledgment/denial letters, file recovery claims against
+      upstream carriers, suspend a carrier in the carrier-management system,
+      assign driver coaching in the telematics platform) execute only behind
+      pack-service's materialization contract and customer credentials; every
+      such write stays proposal-mode with human approval — no autonomous
+      claim payment, carrier suspension, or coaching assignment, ever.
+  - kind: eval_sets
+    reason: >-
+      Golden eval sets (OS&D claim triage, Carmack liability-band assignment,
+      deadline-risk ranking, double-broker red-flag detection, preventability
+      recommendation quality) require eval-service write APIs whose action
+      names are not yet in the rbac canonical catalog (Core follow-up noted
+      in rbac catalog.go).
+  - kind: ontology
+    reason: >-
+      Ontology registration (Shipper, Consignee, Carrier, Driver, Shipment,
+      Lane, BillOfLading, Claim, SafetyEvent, RecoveryClaim, SealRecord,
+      TemperatureLog, PreventabilityDetermination, CoachingRecord) awaits
+      pack-service; entity semantics are carried today by the
+      trucking_claims_core semantic model and dataset schemas.
+  - kind: case_schemas
+    reason: >-
+      Typed case schemas (cargo_osd_claim, reefer_excursion_review,
+      safety_event_review, carrier_fraud_vetting, recovery_filing) await
+      case-service schema materialization; today's cases carry the same
+      fields via display_projection + the disposition taxonomy.
+  - kind: model_archetypes
+    reason: >-
+      Model archetypes (claim_outcome_confidence, carrier_fraud_risk_score,
+      preventability_likelihood) await experiment-service archetype APIs; the
+      scoring capability ships as pipeline seeds instead (isolation_forest
+      shipment anomaly + xgboost claim-outcome scorer) with model-governance
+      expectations noted in grounding memories.
+  - kind: display_labels
+    reason: >-
+      Display-label overlays ("Claim", "Safety event", "Filing deadline at
+      risk", "Carrier on watch", entity templates) require the BFF
+      label-registry endpoints (BFF-FR-082/088) which are pack-service-tier
+      features.

@@ -1,0 +1,11 @@
+recovery_id,lead_id,provider_npi,recovery_method,demanded_amount,recovered_amount,status,recovery_month,cycle_days
+REC-4001,LEAD-6005,1497586920,payback_demand,137400.00,98200.00,in_progress,2026-06,94
+REC-4002,LEAD-6010,1731425869,offset,10400.00,10400.00,collected,2026-03,62
+REC-4003,LEAD-6011,1546372819,settlement,32100.00,24000.00,collected,2026-04,88
+REC-4004,LEAD-6005,1497586920,prosecution_restitution,39200.00,0.00,initiated,2026-06,118
+REC-4005,LEAD-6010,1731425869,education_letter,0.00,0.00,closed,2026-03,45
+REC-4006,LEAD-6011,1546372819,payback_demand,8100.00,8100.00,collected,2026-05,71
+REC-4007,LEAD-6002,1922334455,payback_demand,187400.00,0.00,initiated,2026-06,32
+REC-4008,LEAD-6004,1546372819,offset,14700.00,9400.00,in_progress,2026-06,58
+REC-4009,LEAD-6003,1731425869,payback_demand,23900.00,0.00,initiated,2026-06,21
+REC-4010,LEAD-6012,1264859373,education_letter,0.00,0.00,closed,2026-04,19

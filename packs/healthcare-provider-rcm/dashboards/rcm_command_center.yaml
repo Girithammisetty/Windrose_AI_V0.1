@@ -1,0 +1,58 @@
+# RCM Command Center (RCM-FR-100 "RCM Overview", BRD 26 US-4): claim volumes,
+# denial mix, collection dollars vs contract by service line, and the paid
+# trend. Chart families restricted to the render-verified set
+# (vertical_bar / grid / pie / line).
+name: "RCM Command Center"
+module: insights
+semantic_model: rcm_claims
+description: >-
+  Top-line provider revenue-cycle KPIs (BRD 26 US-4): claim volume by payer
+  type, denial mix by CARC code, collections vs contract by service line, and
+  the monthly paid trend.
+tags: [healthcare, provider, rcm, revenue-cycle, pack]
+charts:
+  - name: "Claims by payer type"
+    chart_type: vertical_bar_chart
+    description: "Claim volume by payer type"
+    config:
+      x: { dimension: payer_type }
+      y: [ { measure: claim_count, agg_fn: count } ]
+    sources: [ { measure: claim_count } ]
+    w: 6
+    h: 4
+  - name: "Denial mix by CARC code"
+    chart_type: pie_chart
+    description: "Denial worklist volume by claim adjustment reason code"
+    config:
+      x: { dimension: denial_carc_code }
+      y: [ { measure: denial_count, agg_fn: count } ]
+    sources: [ { measure: denial_count } ]
+    w: 6
+    h: 4
+  - name: "Paid amount by service month"
+    chart_type: line_chart
+    description: "Monthly payer payments received"
+    config:
+      x: { dimension: service_month }
+      y: [ { measure: total_paid, agg_fn: sum } ]
+    sources: [ { measure: total_paid } ]
+    w: 6
+    h: 4
+  - name: "Collections vs contract by service line"
+    chart_type: grid_chart
+    description: "Claims, net charges, expected and actual payments by service line"
+    config:
+      columns: [service_line, claim_count, total_net_charges, total_expected_paid, total_paid]
+      x: { dimension: service_line }
+      y:
+        - { measure: claim_count, agg_fn: count }
+        - { measure: total_net_charges, agg_fn: sum }
+        - { measure: total_expected_paid, agg_fn: sum }
+        - { measure: total_paid, agg_fn: sum }
+    sources:
+      - { measure: claim_count }
+      - { measure: total_net_charges }
+      - { measure: total_expected_paid }
+      - { measure: total_paid }
+    w: 12
+    h: 4

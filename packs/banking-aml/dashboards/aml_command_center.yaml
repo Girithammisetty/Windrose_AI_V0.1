@@ -1,0 +1,69 @@
+# AML Command Center (BRD 30 §4 Alert Ops + US-7 FCC-VP KPI view): alert mix
+# by typology, backlog aging, disposition verdict mix. Chart families
+# restricted to the render-verified set (vertical_bar / grid / pie / line);
+# expr_metric measures (rates) are query/NL surfaces, never charted directly.
+name: "AML Command Center"
+module: insights
+semantic_model: aml_core
+description: >-
+  Top-line AML operations KPIs (BRD 30): alert volumes by typology, triage
+  backlog aging by severity, human disposition verdict mix, and dollar
+  exposure per typology.
+tags: [banking, aml, alerts, pack]
+charts:
+  - name: "Alerts by typology"
+    chart_type: vertical_bar_chart
+    description: "Alert volume by ML typology (structuring, layering, sanctions, ...)"
+    config:
+      x: { dimension: typology }
+      y: [ { measure: alert_count, agg_fn: count } ]
+    sources: [ { measure: alert_count } ]
+    w: 6
+    h: 4
+  - name: "Backlog aging by severity"
+    chart_type: vertical_bar_chart
+    description: "Average alert age in days by severity (cycle-time watch)"
+    config:
+      x: { dimension: severity }
+      y: [ { measure: avg_alert_age_days, agg_fn: avg } ]
+    sources: [ { measure: avg_alert_age_days } ]
+    w: 6
+    h: 4
+  - name: "Disposition verdict mix"
+    chart_type: pie_chart
+    description: "False positive vs SAR filed vs benign vs pending"
+    config:
+      x: { dimension: alert_disposition }
+      y: [ { measure: alert_count, agg_fn: count } ]
+    sources: [ { measure: alert_count } ]
+    w: 6
+    h: 4
+  - name: "Open alerts by month"
+    chart_type: line_chart
+    description: "Open-alert intake trend by alert month"
+    config:
+      x: { dimension: alert_month }
+      y: [ { measure: open_alert_count, agg_fn: count } ]
+    sources: [ { measure: open_alert_count } ]
+    w: 6
+    h: 4
+  - name: "Typology worklist grid"
+    chart_type: grid_chart
+    description: "Alerts, closures, false positives, SARs and exposure by typology"
+    config:
+      columns: [typology, alert_count, closed_alert_count, false_positive_count, sar_filed_count, total_alert_amount]
+      x: { dimension: typology }
+      y:
+        - { measure: alert_count, agg_fn: count }
+        - { measure: closed_alert_count, agg_fn: count }
+        - { measure: false_positive_count, agg_fn: count }
+        - { measure: sar_filed_count, agg_fn: count }
+        - { measure: total_alert_amount, agg_fn: sum }
+    sources:
+      - { measure: alert_count }
+      - { measure: closed_alert_count }
+      - { measure: false_positive_count }
+      - { measure: sar_filed_count }
+      - { measure: total_alert_amount }
+    w: 12
+    h: 4

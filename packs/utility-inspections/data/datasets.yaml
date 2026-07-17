@@ -1,0 +1,25 @@
+# Pack datasets (ingestion-service file_upload, stable names for idempotency).
+# In production these tables arrive via the utility's asset registry, drone/
+# LiDAR analytics platforms, and inspection work-management systems (deferred
+# until pack-service ships connector materialization); this seed data is REAL
+# rows in the same landing shape, encoding genuine inspection-triage patterns
+# so every downstream component runs against real signal from day one: a
+# drone-AI thermal hotspot on a Tier-3 HFTD transformer (immediate-dispatch
+# candidate, 2-day deadline), a probable shadow-artifact "damage" detection
+# (field-verify — the detector-training loop), a Grade-2-style leak
+# indication scheduled inside its window, a vegetation-encroachment cluster
+# on a PSPS-history circuit, corrosion on a 1960s cast-iron pipeline segment
+# (planned work + engineering review), and a repeat hotspot on the same
+# conductor splice after a prior monitor decision (escalation candidate).
+- identity: ui_circuits
+  name: ui-circuits
+  file: data/ui_circuits.csv
+  format: csv
+- identity: ui_assets
+  name: ui-assets
+  file: data/ui_assets.csv
+  format: csv
+- identity: ui_findings
+  name: ui-findings
+  file: data/ui_findings.csv
+  format: csv

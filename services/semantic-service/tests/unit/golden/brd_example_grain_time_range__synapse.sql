@@ -1,0 +1,2 @@
+SELECT TOP 1000 DATETRUNC(month, [o].[order_date]) AS [order_month], [o].[region] AS [region], sum([o].[order_total]) AS [revenue] FROM {{dataset('ds_orders')}} [o] WHERE [o].[region] IN ($1, $2) AND [o].[order_date] >= $3 AND [o].[order_date] < $4 GROUP BY DATETRUNC(month, [o].[order_date]), [o].[region] ORDER BY 1
+-- params: [{"type": "string", "value": "EMEA"}, {"type": "string", "value": "AMER"}, {"type": "date", "value": "2025-07-01"}, {"type": "date", "value": "2026-07-01"}]

@@ -1,0 +1,154 @@
+# Semantic model `ap_audit_core` — AP exception-audit KPI catalog (block
+# rate, release rate, recovered dollars, fraud-escalation share, duplicate
+# share, backlog aging, deadline runway, vendor-risk mix), expressed in the
+# Core semantic grammar (agg whitelist, equality measure filters, derived
+# expr_metric with nullif; join_paths left/many_to_one, acyclic).
+#
+# entity.table is main.<safe_relation(dataset name)>; `dataset:` refs are
+# rebound to live dataset URNs by packctl at install. Amount columns ingest
+# as bronze strings, so numeric measures cast(... as double) (the proven
+# claims_core pattern). Topology is a CHAIN: exceptions -> invoices ->
+# vendors (both many_to_one).
+name: ap_audit_core
+description: >-
+  Accounts-payable invoice exception and fraud-audit KPI model: exception
+  volumes and backlog aging, three-way-match gap mix, human disposition
+  outcome mix (block / release / partial credit / fraud escalation /
+  reject), duplicate and fraud-indicator shares, payment-run deadline
+  runway, recovered dollars — exceptions joined to the invoice register and
+  the vendor master.
+definition:
+  entities:
+    - name: exceptions
+      dataset: ap_exceptions
+      table: main.ap_exceptions
+      primary_key: [exception_id]
+      dataset_version_policy: { policy: latest }
+    - name: invoices
+      dataset: ap_invoices
+      table: main.ap_invoices
+      primary_key: [invoice_id]
+      dataset_version_policy: { policy: latest }
+    - name: vendors
+      dataset: ap_vendors
+      table: main.ap_vendors
+      primary_key: [vendor_id]
+      dataset_version_policy: { policy: latest }
+  join_paths:
+    - name: exceptions_invoices
+      from_entity: exceptions
+      to_entity: invoices
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: invoice_id, to_column: invoice_id }]
+    - name: invoices_vendors
+      from_entity: invoices
+      to_entity: vendors
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: vendor_id, to_column: vendor_id }]
+  dimensions:
+    - { name: exception_type, entity: exceptions, type: categorical, column: exception_type }
+    - { name: three_way_match, entity: exceptions, type: categorical, column: three_way_match }
+    - { name: fraud_indicator, entity: exceptions, type: categorical, column: fraud_indicator }
+    - { name: severity, entity: exceptions, type: categorical, column: severity }
+    - { name: exception_status, entity: exceptions, type: categorical, column: status }
+    - { name: exception_disposition, entity: exceptions, type: categorical, column: disposition }
+    - { name: deadline_bucket, entity: exceptions, type: categorical, column: deadline_bucket }
+    - { name: filed_month, entity: exceptions, type: categorical, column: filed_month }
+    - { name: invoice_category, entity: invoices, type: categorical, column: category }
+    - { name: po_flag, entity: invoices, type: categorical, column: po_flag }
+    - { name: payment_terms, entity: invoices, type: categorical, column: payment_terms }
+    - { name: invoice_month, entity: invoices, type: categorical, column: invoice_month }
+    - { name: approval_route, entity: invoices, type: categorical, column: approval_route }
+    - { name: currency, entity: invoices, type: categorical, column: currency }
+    - { name: vendor_country, entity: vendors, type: categorical, column: country }
+    - { name: vendor_tenure, entity: vendors, type: categorical, column: tenure_band }
+    - { name: spend_tier, entity: vendors, type: categorical, column: spend_tier }
+    - { name: master_data_changes, entity: vendors, type: categorical, column: master_data_changes }
+    - { name: w9_tin_verified, entity: vendors, type: categorical, column: w9_tin_verified }
+    - { name: sanctions_screened, entity: vendors, type: categorical, column: sanctions_screened }
+  measures:
+    - { name: exception_count, entity: exceptions, agg: count,
+        description: "Number of AP exceptions" }
+    - { name: open_exception_count, entity: exceptions, agg: count,
+        filters: "status = 'open'",
+        description: "Exceptions still open (audit backlog)" }
+    - { name: closed_exception_count, entity: exceptions, agg: count,
+        filters: "status = 'closed'",
+        description: "Exceptions closed with a final human disposition" }
+    - { name: blocked_count, entity: exceptions, agg: count,
+        filters: "disposition = 'block_payment_confirmed_error'",
+        description: "Payments blocked — error or fraud confirmed before disbursement" }
+    - { name: released_count, entity: exceptions, agg: count,
+        filters: "disposition = 'release_payment_cleared'",
+        description: "Exceptions cleared — payment released after investigation" }
+    - { name: partial_credit_count, entity: exceptions, agg: count,
+        filters: "disposition = 'partial_credit_recovery'",
+        description: "Exceptions resolved via a negotiated vendor credit (partial recovery)" }
+    - { name: fraud_escalated_count, entity: exceptions, agg: count,
+        filters: "disposition = 'escalate_fraud_investigation'",
+        description: "Exceptions escalated to a fraud investigation" }
+    - { name: rejected_count, entity: exceptions, agg: count,
+        filters: "disposition = 'reject_return_to_vendor'",
+        description: "Invoices rejected and returned to the vendor for correction" }
+    - { name: duplicate_exception_count, entity: exceptions, agg: count,
+        filters: "exception_type = 'duplicate_invoice'",
+        description: "Duplicate-invoice exceptions (double-payment surface)" }
+    - { name: bec_suspect_count, entity: exceptions, agg: count,
+        filters: "fraud_indicator = 'bec_suspect'",
+        description: "Exceptions flagged for business-email-compromise banking-change risk" }
+    - { name: shell_vendor_suspect_count, entity: exceptions, agg: count,
+        filters: "fraud_indicator = 'shell_vendor_suspect'",
+        description: "Exceptions flagged for shell/fictitious-vendor indicators" }
+    - { name: split_invoicing_count, entity: exceptions, agg: count,
+        filters: "fraud_indicator = 'split_invoicing'",
+        description: "Exceptions flagged for threshold-splitting patterns" }
+    - { name: avg_exception_age_days, entity: exceptions, agg: avg,
+        expr: "cast(age_days as double)", format: decimal,
+        description: "Average exception age in days (cycle time / backlog aging)" }
+    - { name: total_exposure_amount, entity: exceptions, agg: sum,
+        expr: "cast(invoice_amount as double)", format: decimal,
+        description: "Total invoice dollars under exception (payment exposure)" }
+    - { name: avg_exception_amount, entity: exceptions, agg: avg,
+        expr: "cast(invoice_amount as double)", format: decimal,
+        description: "Average invoice amount under exception" }
+    - { name: total_recovered_amount, entity: exceptions, agg: sum,
+        expr: "cast(recovered_amount as double)", format: decimal,
+        description: "Dollars recovered or prevented (blocked duplicates, vendor credits)" }
+    - { name: invoice_count, entity: invoices, agg: count,
+        description: "Number of invoices on the register" }
+    - { name: non_po_invoice_count, entity: invoices, agg: count,
+        filters: "po_flag = 'no'",
+        description: "Non-PO invoices (weakest control path — no three-way match anchor)" }
+    - { name: vendor_count, entity: vendors, agg: count,
+        description: "Number of vendors on the master" }
+    - { name: new_vendor_count, entity: vendors, agg: count,
+        filters: "tenure_band = 'new_under_1y'",
+        description: "Vendors onboarded within the last year (elevated fraud surface)" }
+    - { name: unverified_tin_vendor_count, entity: vendors, agg: count,
+        filters: "w9_tin_verified = 'no'",
+        description: "Vendors without a verified W-9/TIN (1099 and backup-withholding risk)" }
+    - { name: unscreened_vendor_count, entity: vendors, agg: count,
+        filters: "sanctions_screened = 'no'",
+        description: "Vendors not yet sanctions-screened (OFAC exposure)" }
+    - { name: block_rate,
+        expr_metric: "blocked_count / nullif(closed_exception_count, 0)",
+        format: percent,
+        description: "Payments blocked over all closed exceptions (control catch rate)" }
+    - { name: release_rate,
+        expr_metric: "released_count / nullif(closed_exception_count, 0)",
+        format: percent,
+        description: "Exceptions cleared for payment over all closures (false-alarm load)" }
+    - { name: fraud_escalation_share,
+        expr_metric: "fraud_escalated_count / nullif(closed_exception_count, 0)",
+        format: percent,
+        description: "Closures escalated to fraud investigation over all closures" }
+    - { name: duplicate_share,
+        expr_metric: "duplicate_exception_count / nullif(exception_count, 0)",
+        format: percent,
+        description: "Duplicate-invoice exceptions over all exceptions" }
+    - { name: recovery_rate,
+        expr_metric: "total_recovered_amount / nullif(total_exposure_amount, 0)",
+        format: percent,
+        description: "Dollars recovered or prevented over dollars under exception" }

@@ -1,0 +1,315 @@
+{
+  "pack": "tax-notices",
+  "version": "1.0.0",
+  "workspace_id": "019f6a77-f5ca-74f5-903a-3c4d99408ce3",
+  "tenant_id": "019f6a77-f193-75c8-8af7-e27aa7bc5024",
+  "started_at": "2026-07-16T10:35:12Z",
+  "finished_at": "2026-07-16T10:35:21Z",
+  "actions": [
+    {
+      "kind": "datasets",
+      "identity": "tx_entities",
+      "action": "create",
+      "urn": "wr:019f6a77-f193-75c8-8af7-e27aa7bc5024:dataset:dataset/019f6a7e-a6dc-7628-8699-c5900b465ce7",
+      "detail": "'tx-entities' ingested rows=12 snapshot=5511583416178597138"
+    },
+    {
+      "kind": "datasets",
+      "identity": "tx_accounts",
+      "action": "create",
+      "urn": "wr:019f6a77-f193-75c8-8af7-e27aa7bc5024:dataset:dataset/019f6a7e-a840-71e0-9f2b-9792df00a18a",
+      "detail": "'tx-accounts' ingested rows=30 snapshot=3310778595400835001"
+    },
+    {
+      "kind": "datasets",
+      "identity": "tx_notices",
+      "action": "create",
+      "urn": "wr:019f6a77-f193-75c8-8af7-e27aa7bc5024:dataset:dataset/019f6a7e-a972-7646-941f-33145c4ca50e",
+      "detail": "'tx-notices' ingested rows=26 snapshot=7879308868653250187"
+    },
+    {
+      "kind": "semantic_models",
+      "identity": "tax_notices_core",
+      "action": "create",
+      "urn": "wr:019f6a77-f193-75c8-8af7-e27aa7bc5024:semantic:model/019f6a7e-aa9b-790e-8602-338a1e170905",
+      "detail": "'tax_notices_core' published"
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_0",
+      "action": "create",
+      "urn": "wr:019f6a77-f193-75c8-8af7-e27aa7bc5024:semantic:verified_query/019f6a7e-b434-7687-8115-57fd131d97f3",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_1",
+      "action": "create",
+      "urn": "wr:019f6a77-f193-75c8-8af7-e27aa7bc5024:semantic:verified_query/019f6a7e-b501-7614-b2c2-6a8696737056",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_2",
+      "action": "create",
+      "urn": "wr:019f6a77-f193-75c8-8af7-e27aa7bc5024:semantic:verified_query/019f6a7e-b5db-7f45-8071-83a1e9720445",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_3",
+      "action": "create",
+      "urn": "wr:019f6a77-f193-75c8-8af7-e27aa7bc5024:semantic:verified_query/019f6a7e-b6ad-7457-b754-757fe684a849",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_4",
+      "action": "create",
+      "urn": "wr:019f6a77-f193-75c8-8af7-e27aa7bc5024:semantic:verified_query/019f6a7e-b787-7994-b673-258e16eb0c3a",
+      "detail": ""
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "tx_nexus_footprint_edges",
+      "action": "create",
+      "urn": "wr:019f6a77-f193-75c8-8af7-e27aa7bc5024:query:query/019f6a7e-b834-7a73-84f9-1cd0ca489d1a",
+      "detail": "Tax notices: entity-jurisdiction nexus edges"
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "tx_high_exposure_open_notices",
+      "action": "create",
+      "urn": "wr:019f6a77-f193-75c8-8af7-e27aa7bc5024:query:query/019f6a7e-b87a-710d-a03a-9ce0d2e03c82",
+      "detail": "Tax notices: high-exposure open queue"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "tax_notice_command_center",
+      "action": "create",
+      "urn": "wr:019f6a77-f193-75c8-8af7-e27aa7bc5024:chart:dashboard/019f6a7e-b8d9-7a9a-9cd4-d416e274248e",
+      "detail": "Tax Notice Command Center"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "tax_notice_command_center",
+      "action": "verify",
+      "urn": "wr:019f6a77-f193-75c8-8af7-e27aa7bc5024:chart:dashboard/019f6a7e-b8d9-7a9a-9cd4-d416e274248e",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "deadlines_exposure",
+      "action": "create",
+      "urn": "wr:019f6a77-f193-75c8-8af7-e27aa7bc5024:chart:dashboard/019f6a7e-babe-7858-9709-1851bb2f3218",
+      "detail": "Deadlines & Exposure"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "deadlines_exposure",
+      "action": "verify",
+      "urn": "wr:019f6a77-f193-75c8-8af7-e27aa7bc5024:chart:dashboard/019f6a7e-babe-7858-9709-1851bb2f3218",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "root_cause_abatement",
+      "action": "create",
+      "urn": "wr:019f6a77-f193-75c8-8af7-e27aa7bc5024:chart:dashboard/019f6a7e-bcc0-7ecd-809d-41adac59cd33",
+      "detail": "Root Cause & Abatement"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "root_cause_abatement",
+      "action": "verify",
+      "urn": "wr:019f6a77-f193-75c8-8af7-e27aa7bc5024:chart:dashboard/019f6a7e-bcc0-7ecd-809d-41adac59cd33",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "abate_penalty_resolved"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "pay_assessment_valid"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "file_amended_return"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "request_agency_clarification"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "close_duplicate_notice"
+    },
+    {
+      "kind": "cases",
+      "identity": "notice_queue",
+      "action": "create",
+      "urn": "wr:019f6a77-f193-75c8-8af7-e27aa7bc5024:dataset:dataset/019f6a7e-a972-7646-941f-33145c4ca50e",
+      "detail": "6 open cases (reindexed)"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Tax Notice Analyst'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Tax Notice Analyst' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Controversy & Abatement Lead'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Controversy & Abatement Lead' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Sales Tax Specialist'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Sales Tax Specialist' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Tax Compliance Manager'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Tax Compliance Manager' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Tax Governance Auditor'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Tax Governance Auditor' bound to permission group"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "case-triage prompt_params set"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "analytics prompt_params set"
+    },
+    {
+      "kind": "memories",
+      "identity": "grounding",
+      "action": "create",
+      "urn": null,
+      "detail": "10 grounding records written, 0 already present"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "create",
+      "urn": null,
+      "detail": "'Tax account anomaly detector (isolation forest)' (isolation_forest, train)"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "create",
+      "urn": null,
+      "detail": "'Notice outcome scorer (xgboost)' (xgboost, train)"
+    }
+  ],
+  "deferred": [
+    {
+      "kind": "guardrails",
+      "reason": "Tax-notice domain policies (no response filed or payment remitted before the human determination; abatement requests must cite the actual facts of the taxpayer's compliance history; never advise ignoring a statutory notice; deadline-forfeiture watch \u2014 a missed response window forfeits administrative appeal rights) require guardrail-service / OPA policy materialization, which Core does not expose as a pack surface yet. The behavioral core is partially covered today by Core invariants: every pack-configured agent is proposal-mode with four-eyes approval (agent-runtime), and the agent instructions + disposition taxonomy route final determinations exclusively to human analysts with the Tax Compliance Manager as approver."
+    },
+    {
+      "kind": "agent_recipes",
+      "reason": "Bespoke LangGraph recipes (Notice Intake Copilot, Abatement Request Builder, Economic-Nexus Threshold Monitor, Deadline Calendar Sentinel, Certificate Remediation Planner) require agent-runtime graph-module registration (BRD 23 BR-12). This pack specializes the existing case-triage + analytics agents via TenantAgentConfig prompt_params + tenant-scope RAG grounding instead."
+    },
+    {
+      "kind": "connection_templates",
+      "reason": "Production read connectors (IRS transcript/e-Services correspondence feeds, state DOR portal inboxes, ERP tax engines: SAP/Oracle/NetSuite and rate providers such as Vertex/Avalara-class services, exemption-certificate management systems, payroll providers' agency notice feeds, mailroom OCR/scanning services) require customer credentials and pack-service connector materialization. The pack ships seed datasets in the exact landing shape; production connectors are configured through the product Data > Connections UI."
+    },
+    {
+      "kind": "write_adapters",
+      "reason": "Write adapters (file a notice response or protest through an agency portal, submit a penalty-abatement request, remit an assessed payment, file an amended return through the compliance engine, update the exemption-certificate repository, register for a new jurisdiction) execute only behind pack-service's materialization contract and customer credentials; every such write stays proposal-mode with human approval \u2014 no autonomous filing, payment, or registration, ever."
+    },
+    {
+      "kind": "eval_sets",
+      "reason": "Golden eval sets (notice triage, deadline-risk ranking, abatement-eligibility screening, duplicate-notice detection, nexus-threshold determination) require eval-service write APIs whose action names are not yet in the rbac canonical catalog (Core follow-up noted in rbac catalog.go)."
+    },
+    {
+      "kind": "ontology",
+      "reason": "Ontology registration (LegalEntity, TaxAccount, Jurisdiction, Notice, Assessment, Penalty, Interest, AbatementRequest, AmendedReturn, ExemptionCertificate, FilingObligation, DeadlineClock, VoluntaryDisclosure) awaits pack-service; entity semantics are carried today by the tax_notices_core semantic model and dataset schemas."
+    },
+    {
+      "kind": "case_schemas",
+      "reason": "Typed case schemas (notice_intake, abatement_request, nexus_review, cert_audit_remediation, information_mismatch_response, duplicate_reconciliation) await case-service schema materialization; today's cases carry the same fields via display_projection + the disposition taxonomy."
+    },
+    {
+      "kind": "model_archetypes",
+      "reason": "Model archetypes (abatement_success_likelihood, notice_validity_score) await experiment-service archetype APIs; the scoring capability ships as pipeline seeds instead (isolation_forest account-anomaly scan + xgboost notice-outcome scorer) with model-governance expectations noted in grounding memories."
+    },
+    {
+      "kind": "display_labels",
+      "reason": "Display-label overlays (\"Notice\", \"Assessment\", \"Response due\", \"Deadline at risk\", \"Abated\", entity templates) require the BFF label-registry endpoints (BFF-FR-082/088) which are pack-service-tier features."
+    }
+  ],
+  "result": "installed"
+}

@@ -1,0 +1,160 @@
+# =============================================================================
+# Windrose — Continuous Deployment to AWS (EKS + Helm)
+#
+# Keyless: authenticates to AWS via GitHub OIDC (no long-lived cloud keys).
+#
+# Required GitHub configuration (Settings -> Secrets and variables -> Actions):
+#   Secrets:
+#     AWS_DEPLOY_ROLE_ARN         IAM role the workflow assumes via OIDC
+#   Variables:
+#     AWS_REGION                  e.g. us-east-1
+#     EKS_CLUSTER                 EKS cluster name (Terraform output cluster_name)
+#     REGISTRY                    image registry, e.g. ghcr.io/acme or <acct>.dkr.ecr.<region>.amazonaws.com
+#     IMAGE_TAG                   default image tag (commit SHA); overridable via dispatch input
+#     WINDROSE_SECRET_NAME        Secrets Manager path (Terraform output windrose_secret_name),
+#                                 e.g. windrose/windrose-secrets
+#     EXTERNAL_SECRETS_ROLE_ARN   IRSA role for ESO (Terraform output external_secrets_role_arn)
+#     WORKLOAD_S3_ROLE_ARN        IRSA role for S3 workloads (Terraform output workload_s3_role_arn)
+#   Optional infra-endpoint variables (else read from the synced Secret / TF output):
+#     RDS_ENDPOINT, REDIS_ENDPOINT, KAFKA_BOOTSTRAP
+# =============================================================================
+name: cd-aws
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Image tag to deploy (defaults to the REGISTRY/IMAGE_TAG variable or the commit SHA)."
+        required: false
+        type: string
+      eks_cluster:
+        description: "Override EKS cluster name (defaults to the EKS_CLUSTER variable)."
+        required: false
+        type: string
+  push:
+    tags:
+      - "v*"
+
+concurrency:
+  group: cd-aws-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  id-token: write   # required for AWS OIDC federation
+  contents: read
+
+env:
+  ESO_VERSION: "0.9.20"
+  ESO_NAMESPACE: external-secrets
+  WINDROSE_NAMESPACE: windrose
+  HELM_RELEASE: windrose
+  CHART_PATH: deploy/helm/windrose
+  VALUES_FILE: deploy/helm/windrose/values-aws.yaml
+
+jobs:
+  deploy:
+    name: Deploy to EKS
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve deploy inputs
+        id: vars
+        run: |
+          set -euo pipefail
+          IMAGE_TAG="${{ inputs.image_tag }}"
+          [ -z "$IMAGE_TAG" ] && IMAGE_TAG="${{ vars.IMAGE_TAG }}"
+          [ -z "$IMAGE_TAG" ] && IMAGE_TAG="${GITHUB_SHA}"
+          EKS_CLUSTER="${{ inputs.eks_cluster }}"
+          [ -z "$EKS_CLUSTER" ] && EKS_CLUSTER="${{ vars.EKS_CLUSTER }}"
+          {
+            echo "image_tag=${IMAGE_TAG}"
+            echo "eks_cluster=${EKS_CLUSTER}"
+          } >> "$GITHUB_OUTPUT"
+          echo "Deploying tag=${IMAGE_TAG} to cluster=${EKS_CLUSTER}"
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.15.4
+
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig \
+            --name "${{ steps.vars.outputs.eks_cluster }}" \
+            --region "${{ vars.AWS_REGION }}"
+          kubectl version --request-timeout=30s
+
+      - name: Install / upgrade External Secrets Operator
+        run: |
+          set -euo pipefail
+          helm repo add external-secrets https://charts.external-secrets.io
+          helm repo update
+          helm upgrade --install external-secrets external-secrets/external-secrets \
+            --namespace "${ESO_NAMESPACE}" --create-namespace \
+            --version "${ESO_VERSION}" \
+            --set installCRDs=true \
+            --set serviceAccount.name=external-secrets \
+            --set "serviceAccount.annotations.eks\.amazonaws\.com/role-arn=${{ vars.EXTERNAL_SECRETS_ROLE_ARN }}" \
+            --wait --timeout 5m
+
+      - name: Apply ClusterSecretStore (AWS Secrets Manager)
+        run: |
+          set -euo pipefail
+          cat <<EOF | kubectl apply -f -
+          apiVersion: external-secrets.io/v1beta1
+          kind: ClusterSecretStore
+          metadata:
+            name: aws-secrets-manager
+          spec:
+            provider:
+              aws:
+                service: SecretsManager
+                region: ${{ vars.AWS_REGION }}
+                auth:
+                  jwt:
+                    serviceAccountRef:
+                      name: external-secrets
+                      namespace: ${ESO_NAMESPACE}
+          EOF
+          # If values-aws.yaml already defines its own ClusterSecretStore/ExternalSecret,
+          # this is a harmless idempotent no-op override pointing at the same backend.
+
+      - name: Ensure workload namespace
+        run: kubectl create namespace "${WINDROSE_NAMESPACE}" --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Helm upgrade Windrose
+        run: |
+          set -euo pipefail
+          helm upgrade --install "${HELM_RELEASE}" "${CHART_PATH}" \
+            --namespace "${WINDROSE_NAMESPACE}" --create-namespace \
+            -f "${VALUES_FILE}" \
+            --set global.image.registry="${{ vars.REGISTRY }}" \
+            --set global.imageTag="${{ steps.vars.outputs.image_tag }}" \
+            --set global.aws.region="${{ vars.AWS_REGION }}" \
+            --set externalSecrets.secretStoreRef.name=aws-secrets-manager \
+            --set externalSecrets.remoteRefKey="${{ vars.WINDROSE_SECRET_NAME }}" \
+            --set serviceAccount.annotations."eks\.amazonaws\.com/role-arn"="${{ vars.WORKLOAD_S3_ROLE_ARN }}" \
+            --set-string infra.postgres.host="${{ vars.RDS_ENDPOINT }}" \
+            --set-string infra.redis.host="${{ vars.REDIS_ENDPOINT }}" \
+            --set-string infra.kafka.bootstrap="${{ vars.KAFKA_BOOTSTRAP }}" \
+            --wait --timeout 15m
+
+      - name: Wait for rollout
+        run: |
+          set -euo pipefail
+          kubectl -n "${WINDROSE_NAMESPACE}" rollout status deploy \
+            --selector "app.kubernetes.io/instance=${HELM_RELEASE}" \
+            --timeout=10m || true
+          echo "Deployed workloads:"
+          kubectl -n "${WINDROSE_NAMESPACE}" get deploy,sts,po -o wide

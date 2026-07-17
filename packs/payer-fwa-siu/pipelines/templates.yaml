@@ -1,0 +1,18 @@
+# Pipeline seeds (BRD 27 §4 model archetypes fwa_ensemble_v1 /
+# provider_outlier_v1, expressed against the real pipeline-orchestrator
+# algorithm catalog). isolation_forest is the unsupervised claim-line
+# outlier detector (FWA-FR-040 statistical-outlier stage); xgboost is the
+# supervised scorer trained on labeled lead outcomes (FWA-FR-030 ML stage).
+# The nightly-scan / weekly-outlier / quarterly-retrain schedules are
+# deferred with the model_archetypes entry — scheduling APIs are
+# pack-service tier.
+- identity: fwa_line_outlier_detector
+  name: "FWA claim-line outlier detector (isolation_forest)"
+  algorithm: isolation_forest
+  mode: train
+  dataset: fwa_claim_lines
+- identity: fwa_lead_classifier
+  name: "FWA lead outcome classifier (xgboost)"
+  algorithm: xgboost
+  mode: train
+  dataset: fwa_leads

@@ -1,0 +1,68 @@
+# Accuracy & Identity Watch: maximum-possible-accuracy posture (identity
+# confidence, suppressions, record age) and the order-side operational
+# surface (intake trend, turnaround by position) that feeds adjudication.
+name: "Accuracy & Identity Watch"
+module: insights
+semantic_model: screening_core
+description: >-
+  FCRA accuracy posture: identity-match confidence mix, suppressions
+  (obsolete or mismatched records) by hit type, record-age mix on the hit
+  book, monthly order intake, and turnaround by position category.
+tags: [screening, fcra, accuracy, identity, pack]
+charts:
+  - name: "Identity confidence mix"
+    chart_type: pie_chart
+    description: "Hit reviews by identity-match confidence (common-name / mixed-file watch)"
+    config:
+      x: { dimension: identity_confidence }
+      y: [ { measure: review_count, agg_fn: count } ]
+    sources: [ { measure: review_count } ]
+    w: 6
+    h: 4
+  - name: "Suppressions by hit type"
+    chart_type: vertical_bar_chart
+    description: "Hits suppressed as obsolete or mismatched, by hit type (accuracy saves)"
+    config:
+      x: { dimension: hit_type }
+      y: [ { measure: suppressed_count, agg_fn: count } ]
+    sources: [ { measure: suppressed_count } ]
+    w: 6
+    h: 4
+  - name: "Record age mix"
+    chart_type: vertical_bar_chart
+    description: "Hit reviews by record age band (FCRA 7-year obsolescence surface)"
+    config:
+      x: { dimension: record_age_band }
+      y: [ { measure: review_count, agg_fn: count } ]
+    sources: [ { measure: review_count } ]
+    w: 6
+    h: 4
+  - name: "Order intake by month"
+    chart_type: line_chart
+    description: "Screening orders received by order month"
+    config:
+      x: { dimension: order_month }
+      y: [ { measure: order_count, agg_fn: count } ]
+    sources: [ { measure: order_count } ]
+    w: 6
+    h: 4
+  - name: "Position turnaround grid"
+    chart_type: grid_chart
+    description: "Orders, driver share, premium mix, delays and average turnaround by position category"
+    config:
+      columns: [position_category, order_count, driver_order_count, premium_package_count, delayed_order_count, avg_turnaround_days]
+      x: { dimension: position_category }
+      y:
+        - { measure: order_count, agg_fn: count }
+        - { measure: driver_order_count, agg_fn: count }
+        - { measure: premium_package_count, agg_fn: count }
+        - { measure: delayed_order_count, agg_fn: count }
+        - { measure: avg_turnaround_days, agg_fn: avg }
+    sources:
+      - { measure: order_count }
+      - { measure: driver_order_count }
+      - { measure: premium_package_count }
+      - { measure: delayed_order_count }
+      - { measure: avg_turnaround_days }
+    w: 12
+    h: 4

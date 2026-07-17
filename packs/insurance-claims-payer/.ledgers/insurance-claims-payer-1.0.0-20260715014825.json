@@ -1,0 +1,350 @@
+{
+  "pack": "insurance-claims-payer",
+  "version": "1.0.0",
+  "workspace_id": "019f62c1-0f5e-7af0-b9be-cbe343ea0ad4",
+  "tenant_id": "019f62c1-080d-71bd-b404-1d4e15b02dcb",
+  "started_at": "2026-07-15T05:48:20Z",
+  "finished_at": "2026-07-15T05:48:25Z",
+  "actions": [
+    {
+      "kind": "datasets",
+      "identity": "payer_claims",
+      "action": "noop",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:dataset:dataset/019f642f-b0ed-718e-9a4e-b32a665accc0",
+      "detail": "dataset 'payer-claims' exists"
+    },
+    {
+      "kind": "datasets",
+      "identity": "payer_denials",
+      "action": "noop",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:dataset:dataset/019f642f-b549-7afe-9458-0c06576481c3",
+      "detail": "dataset 'payer-denials' exists"
+    },
+    {
+      "kind": "datasets",
+      "identity": "payer_appeals",
+      "action": "noop",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:dataset:dataset/019f642f-b6b2-752d-8e5e-328ffdf89048",
+      "detail": "dataset 'payer-appeals' exists"
+    },
+    {
+      "kind": "datasets",
+      "identity": "prior_auth_requests",
+      "action": "noop",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:dataset:dataset/019f642f-b802-7480-a258-910407afa272",
+      "detail": "dataset 'payer-prior-auth-requests' exists"
+    },
+    {
+      "kind": "semantic_models",
+      "identity": "claims",
+      "action": "noop",
+      "urn": null,
+      "detail": "'payer_claims' already published"
+    },
+    {
+      "kind": "semantic_models",
+      "identity": "utilization",
+      "action": "noop",
+      "urn": null,
+      "detail": "'payer_utilization' already published"
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_0",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_1",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_2",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_3",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_4",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "denial_flow_edges",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "high_value_denials",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "dashboards",
+      "identity": "payer_kpi",
+      "action": "noop",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:chart:dashboard/019f6431-e960-7ea2-96e2-15dcc1e21258",
+      "detail": "'Payer KPI' exists"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "payer_kpi",
+      "action": "verify",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:chart:dashboard/019f6431-e960-7ea2-96e2-15dcc1e21258",
+      "detail": "4/4 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "appeals_analytics",
+      "action": "noop",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:chart:dashboard/019f6431-eb8a-7674-8a7a-90f0c427312c",
+      "detail": "'Appeals Analytics' exists"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "appeals_analytics",
+      "action": "verify",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:chart:dashboard/019f6431-eb8a-7674-8a7a-90f0c427312c",
+      "detail": "3/3 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "pa_ops",
+      "action": "noop",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:chart:dashboard/019f6431-ed38-7799-8787-a601f0bc40ad",
+      "detail": "'PA Ops' exists"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "pa_ops",
+      "action": "verify",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:chart:dashboard/019f6431-ed38-7799-8787-a601f0bc40ad",
+      "detail": "4/4 charts resolve data"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "noop",
+      "urn": null,
+      "detail": "pa_approved"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "noop",
+      "urn": null,
+      "detail": "pa_denied"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "noop",
+      "urn": null,
+      "detail": "pa_deferred"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "noop",
+      "urn": null,
+      "detail": "appeal_upheld"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "noop",
+      "urn": null,
+      "detail": "appeal_overturned"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "noop",
+      "urn": null,
+      "detail": "denial_notice_approved"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "noop",
+      "urn": null,
+      "detail": "escalate_md"
+    },
+    {
+      "kind": "cases",
+      "identity": "pa_queue",
+      "action": "create",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:dataset:dataset/019f642f-b802-7480-a258-910407afa272",
+      "detail": "0 open cases (reindexed)"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "noop",
+      "urn": null,
+      "detail": "role 'PA Nurse Reviewer'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'PA Nurse Reviewer' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "noop",
+      "urn": null,
+      "detail": "role 'Medical Director'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Medical Director' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "noop",
+      "urn": null,
+      "detail": "role 'Appeals Analyst'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Appeals Analyst' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "noop",
+      "urn": null,
+      "detail": "role 'Payment Integrity Analyst'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Payment Integrity Analyst' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "noop",
+      "urn": null,
+      "detail": "role 'Compliance Officer'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Compliance Officer' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "noop",
+      "urn": null,
+      "detail": "role 'Member Services'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Member Services' bound to permission group"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "case-triage prompt_params set"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "analytics prompt_params set"
+    },
+    {
+      "kind": "memories",
+      "identity": "grounding",
+      "action": "noop",
+      "urn": null,
+      "detail": "0 grounding records written, 8 already present"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "noop",
+      "urn": null,
+      "detail": "PA approval classifier (xgboost)"
+    }
+  ],
+  "deferred": [
+    {
+      "kind": "guardrails",
+      "reason": "INS-FR-080..082 (hipaa.rego, cms_2024_human_review.rego, naic_ai_disclosure.rego) require guardrail-service / OPA policy materialization, which Core does not expose as a pack surface yet. The behavioral guarantees they encode are partially covered today by Core invariants: proposal-mode + four-eyes approval (agent-runtime) and the caller-permission gate satisfy the human-review requirement for every pack-configured agent."
+    },
+    {
+      "kind": "agent_recipes",
+      "reason": "INS-FR-030/040/050 bespoke LangGraph recipes (prior_auth, appeal_analyst, denial_rationale) require agent-runtime graph-module registration (a Core code surface, BRD 23 BR-12). This pack specializes the existing case-triage + analytics agents via TenantAgentConfig prompt_params + tenant-scope RAG grounding instead."
+    },
+    {
+      "kind": "connection_templates",
+      "reason": "INS-FR-060 SoR connectors (Facets, HealthEdge, QNXT, Guidewire, Epic FHIR, EDI 837/835/278) require customer credentials and pack-service connector materialization. The pack ships seed datasets in the exact landing shape; production connectors are configured through the product Data > Connections UI."
+    },
+    {
+      "kind": "eval_sets",
+      "reason": "INS-FR shipped golden sets (pa_golden, appeal_golden, denial_golden) require eval-service write APIs whose action names are not yet in the rbac canonical catalog (Core follow-up noted in rbac catalog.go)."
+    },
+    {
+      "kind": "display_labels",
+      "reason": "INS-FR-110 label overlays require the BFF label-registry endpoints (BFF-FR-082/088) which are pack-service-tier features."
+    },
+    {
+      "kind": "write_adapters",
+      "reason": "INS-FR-061 SoR write adapters (Facets PA decision, Guidewire notes, EDI responses) execute only behind pack-service's materialization contract and customer credentials; all platform-side writes remain proposal-mode."
+    },
+    {
+      "kind": "ontology",
+      "reason": "INS-FR-010 ontology registration awaits pack-service; entity semantics are carried today by the semantic models and dataset schemas."
+    },
+    {
+      "kind": "case_schemas",
+      "reason": "INS-FR-091 typed case schemas await case-service schema materialization; today's cases carry the same fields via display_projection + the disposition taxonomy."
+    },
+    {
+      "kind": "model_archetypes",
+      "reason": "INS-FR-071 confidence calibrator ships as a pipeline seed instead (pa_approval_classifier); Platt-scaling archetype registration awaits experiment-service archetype APIs."
+    }
+  ],
+  "result": "installed"
+}

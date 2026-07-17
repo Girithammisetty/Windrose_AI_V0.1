@@ -1,0 +1,57 @@
+# Referral Intake dashboard (BRD 29 PAC-FR-070 / US-5): the intake
+# coordinator's view of hospital referral flow, acceptance mix, and response
+# latency.
+name: "Referral Intake"
+module: insights
+semantic_model: pac_referrals
+description: >-
+  Referral triage operations (BRD 29): referral volume by referring hospital,
+  acceptance/decline/pending mix, and intake response hours by complexity
+  tier.
+tags: [post-acute, referrals, intake, pack]
+charts:
+  - name: "Referrals by referring hospital"
+    chart_type: vertical_bar_chart
+    description: "Referral volume by source hospital"
+    config:
+      x: { dimension: referring_hospital }
+      y: [ { measure: referral_count, agg_fn: count } ]
+    sources: [ { measure: referral_count } ]
+    w: 6
+    h: 4
+  - name: "Referral status mix"
+    chart_type: pie_chart
+    description: "Accepted vs declined vs pending referrals"
+    config:
+      x: { dimension: referral_status }
+      y: [ { measure: referral_count, agg_fn: count } ]
+    sources: [ { measure: referral_count } ]
+    w: 6
+    h: 4
+  - name: "Response hours by complexity tier"
+    chart_type: vertical_bar_chart
+    description: "Mean intake response latency by referral complexity"
+    config:
+      x: { dimension: complexity_tier }
+      y: [ { measure: avg_response_hours, agg_fn: avg } ]
+    sources: [ { measure: avg_response_hours } ]
+    w: 6
+    h: 4
+  - name: "Intake grid by hospital"
+    chart_type: grid_chart
+    description: "Referrals, acceptances, declines, and response hours by hospital"
+    config:
+      columns: [referring_hospital, referral_count, accepted_referral_count, declined_referral_count, avg_response_hours]
+      x: { dimension: referring_hospital }
+      y:
+        - { measure: referral_count, agg_fn: count }
+        - { measure: accepted_referral_count, agg_fn: count }
+        - { measure: declined_referral_count, agg_fn: count }
+        - { measure: avg_response_hours, agg_fn: avg }
+    sources:
+      - { measure: referral_count }
+      - { measure: accepted_referral_count }
+      - { measure: declined_referral_count }
+      - { measure: avg_response_hours }
+    w: 6
+    h: 4

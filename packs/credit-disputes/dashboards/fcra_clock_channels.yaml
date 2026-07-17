@@ -1,0 +1,68 @@
+# FCRA Clock & Channels: 30/45-day reinvestigation runway, 605B block
+# posture, and the intake-channel mix (direct vs e-OSCAR ACDV vs court
+# document) — the compliance view an examiner walks first.
+name: "FCRA Clock & Channels"
+module: insights
+semantic_model: credit_disputes_core
+description: >-
+  FCRA compliance posture: open backlog by intake channel, deadline runway
+  buckets on the reinvestigation clock, identity-theft block mix (605B),
+  identity-theft claim trend, and the per-channel workload grid.
+tags: [credit_reporting, fcra, deadlines, compliance, pack]
+charts:
+  - name: "Open disputes by channel"
+    chart_type: vertical_bar_chart
+    description: "Open backlog split by intake channel (direct, e-OSCAR ACDV, court document)"
+    config:
+      x: { dimension: channel }
+      y: [ { measure: open_dispute_count, agg_fn: count } ]
+    sources: [ { measure: open_dispute_count } ]
+    w: 6
+    h: 4
+  - name: "Deadline runway (open book)"
+    chart_type: vertical_bar_chart
+    description: "Open disputes by days remaining to the governing FCRA deadline"
+    config:
+      x: { dimension: deadline_bucket }
+      y: [ { measure: open_dispute_count, agg_fn: count } ]
+    sources: [ { measure: open_dispute_count } ]
+    w: 6
+    h: 4
+  - name: "Identity-theft block mix"
+    chart_type: pie_chart
+    description: "Disputes carrying an FCRA 605B block request vs standard reinvestigations"
+    config:
+      x: { dimension: fcra_flag }
+      y: [ { measure: dispute_count, agg_fn: count } ]
+    sources: [ { measure: dispute_count } ]
+    w: 6
+    h: 4
+  - name: "Identity-theft claim trend"
+    chart_type: line_chart
+    description: "Identity-theft dispute claims filed by month"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: identity_theft_claim_count, agg_fn: count } ]
+    sources: [ { measure: identity_theft_claim_count } ]
+    w: 6
+    h: 4
+  - name: "Channel workload grid"
+    chart_type: grid_chart
+    description: "Volume, open backlog, closures, 605B blocks and high-severity load by intake channel"
+    config:
+      columns: [channel, dispute_count, open_dispute_count, closed_dispute_count, identity_theft_block_count, high_severity_count]
+      x: { dimension: channel }
+      y:
+        - { measure: dispute_count, agg_fn: count }
+        - { measure: open_dispute_count, agg_fn: count }
+        - { measure: closed_dispute_count, agg_fn: count }
+        - { measure: identity_theft_block_count, agg_fn: count }
+        - { measure: high_severity_count, agg_fn: count }
+    sources:
+      - { measure: dispute_count }
+      - { measure: open_dispute_count }
+      - { measure: closed_dispute_count }
+      - { measure: identity_theft_block_count }
+      - { measure: high_severity_count }
+    w: 12
+    h: 4

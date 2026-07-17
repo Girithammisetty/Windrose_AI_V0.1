@@ -1,0 +1,50 @@
+# Semantic model `rpm_readings` — the RPM half of CMM-FR-020 (BRD 25's second
+# shipped model). One row per patient x month x device summary: reading_days
+# drives rpm_adherence and the CPT 99454 16-day rule (CMM-FR-134/BR-4);
+# review_minutes drives the 99457 20-minute review requirement.
+name: rpm_readings
+description: >-
+  Remote patient monitoring model (BRD 25 CMM-FR-020 rpm_adherence): device
+  reading-days per 30-day cycle, 16-day-rule compliance for CPT 99454, anomaly
+  counts (CMM-FR-080 thresholds), and review-note completion for CPT 99457.
+definition:
+  entities:
+    - name: rpm
+      dataset: care_rpm_readings
+      table: main.care_rpm_readings
+      primary_key: [reading_id]
+      dataset_version_policy: { policy: latest }
+  dimensions:
+    - { name: rpm_patient, entity: rpm, type: categorical, column: patient_id }
+    - { name: rpm_month, entity: rpm, type: categorical, column: reading_month }
+    - { name: rpm_device_type, entity: rpm, type: categorical, column: device_type }
+    - { name: rpm_vendor, entity: rpm, type: categorical, column: device_vendor }
+    - { name: rpm_fda_cleared, entity: rpm, type: categorical, column: fda_cleared_flag }
+    - { name: rpm_16day_flag, entity: rpm, type: categorical, column: meets_16day_flag }
+    - { name: rpm_note_status, entity: rpm, type: categorical, column: review_note_status }
+  measures:
+    - { name: rpm_patient_months, entity: rpm, agg: count,
+        description: "RPM patient-month review cycles" }
+    - { name: avg_reading_days, entity: rpm, agg: avg,
+        expr: "cast(reading_days as double)", format: decimal,
+        description: "CMM-FR-020 rpm_adherence: mean days with >=1 device reading per 30-day cycle" }
+    - { name: total_anomaly_count, entity: rpm, agg: sum,
+        expr: "cast(anomaly_count as double)", format: decimal,
+        description: "Flagged device-reading anomalies (CMM-FR-080 thresholds)" }
+    - { name: avg_review_minutes, entity: rpm, agg: avg,
+        expr: "cast(review_minutes as double)", format: decimal,
+        description: "Mean clinician data-review minutes per cycle (CPT 99457 threshold 20)" }
+    - { name: meets_16day_count, entity: rpm, agg: count,
+        filters: "meets_16day_flag = 'yes'",
+        description: "Cycles meeting the CPT 99454 16-day rule (CMM-FR-134)" }
+    - { name: reviewed_note_count, entity: rpm, agg: count,
+        filters: "review_note_status = 'approved'",
+        description: "Cycles with a signed RPM review note (CMM-FR-080)" }
+    - { name: rpm_16day_compliance_rate,
+        expr_metric: "meets_16day_count / nullif(rpm_patient_months, 0)",
+        format: percent,
+        description: "Share of RPM cycles billable under 99454 (16-day rule)" }
+    - { name: rpm_review_completion_rate,
+        expr_metric: "reviewed_note_count / nullif(rpm_patient_months, 0)",
+        format: percent,
+        description: "CMM-FR-120 RPM Ops review-note completion rate" }

@@ -1,0 +1,65 @@
+# Verified NL<->SQL queries (four-eyes approved at install). SQL uses
+# {{dataset('<name>')}} macros — the only table references query-service's
+# tenant-namespace guard admits.
+- nl_text: "What's our workout approval rate by request type?"
+  sql_text: >-
+    SELECT request_type,
+           count(*) AS closed_applications,
+           sum(CASE WHEN disposition = 'approve_workout_offer' THEN 1 ELSE 0 END) AS approved,
+           round(sum(CASE WHEN disposition = 'approve_workout_offer' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS approval_rate
+    FROM {{dataset('lm-applications')}}
+    WHERE status = 'closed'
+    GROUP BY request_type
+    ORDER BY approval_rate DESC
+  model: lossmit_core
+  tags: [loss_mitigation, outcomes, kpi, pack]
+- nl_text: "Which open applications are closest to a Reg X decision deadline?"
+  sql_text: >-
+    SELECT app_id, loan_id, request_type, investor, doc_status,
+           dual_track_hold, severity,
+           cast(days_to_deadline AS double) AS days_to_deadline,
+           cast(age_days AS double) AS age_days,
+           cast(arrearage_amount AS double) AS arrearage_amount
+    FROM {{dataset('lm-applications')}}
+    WHERE status = 'open'
+    ORDER BY days_to_deadline ASC
+  model: lossmit_core
+  tags: [loss_mitigation, deadlines, reg_x, backlog, pack]
+- nl_text: "Loans with repeat loss-mitigation applications (redefault watch)"
+  sql_text: >-
+    SELECT loan_id,
+           count(*) AS application_count,
+           sum(CASE WHEN disposition = 'deny_with_specific_reasons' THEN 1 ELSE 0 END) AS prior_denials,
+           sum(cast(arrearage_amount AS double)) AS total_arrearage
+    FROM {{dataset('lm-applications')}}
+    GROUP BY loan_id
+    HAVING count(*) >= 2
+    ORDER BY application_count DESC, total_arrearage DESC
+  model: lossmit_core
+  tags: [loss_mitigation, redefault, repeat_requests, pack]
+- nl_text: "Denial rate by investor"
+  sql_text: >-
+    SELECT investor,
+           count(*) AS closed_applications,
+           sum(CASE WHEN disposition = 'deny_with_specific_reasons' THEN 1 ELSE 0 END) AS denied,
+           round(sum(CASE WHEN disposition = 'deny_with_specific_reasons' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS denial_rate
+    FROM {{dataset('lm-applications')}}
+    WHERE status = 'closed'
+    GROUP BY investor
+    ORDER BY denial_rate DESC
+  model: lossmit_core
+  tags: [loss_mitigation, denials, investor, fair_servicing, pack]
+- nl_text: "Arrearage exposure on the open book by dual-track status"
+  sql_text: >-
+    SELECT dual_track_hold, investor,
+           count(*) AS open_applications,
+           sum(cast(arrearage_amount AS double)) AS arrearage_exposure,
+           round(avg(cast(days_to_deadline AS double)), 1) AS avg_days_to_deadline
+    FROM {{dataset('lm-applications')}}
+    WHERE status = 'open'
+    GROUP BY dual_track_hold, investor
+    ORDER BY arrearage_exposure DESC
+  model: lossmit_core
+  tags: [loss_mitigation, dual_tracking, arrearage, exposure, pack]

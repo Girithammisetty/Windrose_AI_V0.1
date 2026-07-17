@@ -1,0 +1,127 @@
+openapi: 3.0.3
+info:
+  title: realtime-hub API
+  version: "1.0.0"
+  description: >
+    Single push channel to browsers over SSE (primary) and WebSocket (secondary).
+    Fans in from Kafka + an internal publish API and fans out sticky-less across
+    pods via Redis pub/sub. See BRD 20 (realtime-hub) and MASTER_BRD §2.
+servers:
+  - url: /
+paths:
+  /api/v1/stream:
+    get:
+      summary: SSE connect (primary transport, RTH-FR-001)
+      description: >
+        Opens a text/event-stream. Auth via `Authorization: Bearer <JWT>` header
+        or a one-time `ticket` query param (for EventSource clients). Subscribes
+        the topics in `topics` (max 20). Each event carries `id` (= producer
+        event_id), `event` (= topic), and `data` (JSON). Heartbeat `: hb` every
+        15s. Per-topic authz failures arrive as `event: control` /
+        `{"type":"error","code":"TOPIC_FORBIDDEN"}` without closing the stream.
+      parameters:
+        - { name: topics, in: query, schema: { type: string }, description: "comma-separated topic list (≤20)" }
+        - { name: ticket, in: query, schema: { type: string }, description: "single-use connect ticket (alternative to Bearer)" }
+        - { name: Last-Event-ID, in: header, schema: { type: string }, description: "resume cursor (RTH-FR-031)" }
+      responses:
+        "200": { description: "event stream (text/event-stream)" }
+        "401": { description: "invalid ticket or token" }
+        "429": { description: "CONNECTION_LIMIT (per-user/tenant/pod cap)", headers: { Retry-After: { schema: { type: integer } } } }
+  /api/v1/ws:
+    get:
+      summary: WebSocket upgrade (secondary transport, RTH-FR-002)
+      description: >
+        Upgrades to WebSocket. Up frames `{type: subscribe|unsubscribe|ping|refresh_token, topics?, last_event_id?, token?}`;
+        down frames `{type: event|error|pong|subscribed|revoked|gap|reset|reconnect|...}`.
+        Same auth, caps, and semantics as SSE.
+      responses:
+        "101": { description: "switching protocols" }
+        "401": { description: "unauthenticated" }
+        "429": { description: "CONNECTION_LIMIT" }
+  /api/v1/stream-tickets:
+    post:
+      summary: Mint a single-use connect ticket (RTH-FR-011)
+      description: "JWT-authed. Returns an opaque 30s ticket bound to (subject, tenant, topics, IP hash)."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: { topics: { type: array, items: { type: string } } }
+      responses:
+        "201": { description: "ticket minted" }
+        "422": { description: "INVALID_TOPIC" }
+  /api/v1/stream/{conn_id}/topics:
+    post:
+      summary: Add/remove topics on a live connection (RTH-FR-001)
+      parameters: [ { name: conn_id, in: path, required: true, schema: { type: string } } ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                add: { type: array, items: { type: string } }
+                remove: { type: array, items: { type: string } }
+                last_event_id: { type: string }
+      responses:
+        "200": { description: "updated subscriptions" }
+        "404": { description: "connection not on this pod" }
+        "429": { description: "topic-op rate exceeded (≤10/s)" }
+  /api/v1/stream/{conn_id}/token:
+    post:
+      summary: Refresh the JWT for a live SSE connection (RTH-FR-010)
+      parameters: [ { name: conn_id, in: path, required: true, schema: { type: string } } ]
+      responses:
+        "200": { description: "refreshed" }
+        "401": { description: "subject mismatch (BR-10)" }
+        "404": { description: "connection not found" }
+  /internal/v1/publish:
+    post:
+      summary: Internal publish API (RTH-FR-021) — SEPARATE internal listener, authenticated
+      description: >
+        Latency-critical producer path (agent-runtime chat tokens). Served on
+        INTERNAL_LISTEN_ADDR (not the public port), frontable by mesh mTLS.
+        Authenticated at the app layer: the caller MUST present a service/agent
+        JWT with the realtime.publish scope — user/unauthenticated callers get
+        401. Idempotent by event_id; 64KB payload cap; ttl_seconds=0 is ephemeral
+        (skips replay).
+      security: [ { bearerAuth: [] } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tenant_id, topic]
+              properties:
+                tenant_id: { type: string }
+                topic: { type: string }
+                event_id: { type: string }
+                payload_json: { type: object }
+                ttl_seconds: { type: integer }
+      responses:
+        "200": { description: "PublishAck {event_id, accepted, reason}" }
+        "400": { description: "INVALID_ARGUMENT" }
+        "401": { description: "UNAUTHENTICATED / not a realtime.publish producer" }
+        "413": { description: "RESOURCE_EXHAUSTED (payload > 64KB)" }
+  /admin/connections:
+    get:
+      summary: List connections (RTH-FR-044, scope realtime.admin.connections)
+      parameters: [ { name: tenant, in: query, schema: { type: string } } ]
+      responses: { "200": { description: "connection list" }, "403": { description: "admin scope required" } }
+  /admin/connections/{conn_id}:
+    delete:
+      summary: Drop a connection (RTH-FR-044)
+      parameters: [ { name: conn_id, in: path, required: true, schema: { type: string } } ]
+      responses: { "200": { description: "killed" }, "403": { description: "forbidden" }, "404": { description: "not found" } }
+  /healthz:
+    get: { summary: "Liveness (MASTER-FR-051)", responses: { "200": { description: ok } } }
+  /readyz:
+    get: { summary: "Readiness; reports degraded-replay when Redis is down (AC-13)", responses: { "200": { description: ready/degraded } } }
+  /metrics:
+    get: { summary: "Prometheus metrics (RTH-FR-050)", responses: { "200": { description: metrics } } }
+components:
+  securitySchemes:
+    bearerAuth: { type: http, scheme: bearer, bearerFormat: JWT }

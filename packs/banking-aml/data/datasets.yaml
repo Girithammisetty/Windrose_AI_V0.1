@@ -1,0 +1,25 @@
+# Pack datasets (ingestion-service file_upload, stable names for idempotency).
+# In production these tables arrive via the customer's core-banking + AML
+# platform connectors (AML-FR-100 — deferred until pack-service ships
+# connector materialization); this seed data is REAL rows in the same landing
+# shape, encoding the BRD 30 typologies so every downstream component runs
+# against genuine patterns from day one: paired sub-$10K same-day cash
+# deposits (structuring), a 3-hop rapid layering wire chain, a dormant-then-
+# active mule, a florist with weekly $50K international wires (peer anomaly,
+# AC-9), sanctions near-match names, and a funnel account.
+- identity: aml_parties
+  name: aml-parties
+  file: data/aml_parties.csv
+  format: csv
+- identity: aml_transactions
+  name: aml-transactions
+  file: data/aml_transactions.csv
+  format: csv
+- identity: aml_alerts
+  name: aml-alerts
+  file: data/aml_alerts.csv
+  format: csv
+- identity: aml_relationship_edges
+  name: aml-relationship-edges
+  file: data/aml_relationship_edges.csv
+  format: csv

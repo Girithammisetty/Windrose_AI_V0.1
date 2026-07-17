@@ -1,0 +1,64 @@
+# Seeded PA-review queue (INS-FR-091 pa_review): the pending / MD-escalation
+# prior-auth requests from the seed dataset become OPEN cases so a PA nurse
+# logging in sees a real worklist on day one.
+dataset: prior_auth_requests
+due_days: 3
+rows:
+  - row_pk: PAR-7010
+    severity: medium
+    display_projection:
+      par_id: PAR-7010
+      requested_service: "Sleep study polysomnography"
+      cpt_code: "95810"
+      urgency: standard
+      product_type: HMO
+      member_state: FL
+      agent_recommendation: approve
+      agent_confidence: "0.88"
+      note: "Standard PA pending 36h — within the CMS 7-day window; agent recommends approve"
+  - row_pk: PAR-7012
+    severity: high
+    display_projection:
+      par_id: PAR-7012
+      requested_service: "Brain MRI with contrast"
+      cpt_code: "70553"
+      urgency: urgent
+      product_type: HMO
+      member_state: NY
+      agent_recommendation: escalate_md
+      agent_confidence: "0.58"
+      note: "URGENT PA pending 12h of the 72h window — agent confidence below threshold, MD review required"
+  - row_pk: PAR-7003
+    severity: high
+    display_projection:
+      par_id: PAR-7003
+      requested_service: "Infliximab infusion"
+      cpt_code: "J1745"
+      urgency: standard
+      product_type: EPO
+      member_state: FL
+      agent_recommendation: escalate_md
+      agent_confidence: "0.62"
+      note: "Specialty-drug PA denied by rules engine; provider appeal expected — verify medical-necessity criteria"
+  - row_pk: APL-5005
+    severity: high
+    display_projection:
+      appeal_id: APL-5005
+      denial_id: DEN-3006
+      claim_id: CLM-20017
+      denial_reason_code: CO-197
+      cpt_code: J1745
+      potential_value: "9800.00"
+      member_state: FL
+      note: "Level-1 provider appeal pending: precert-absent denial on specialty infusion (overturn precedent exists)"
+  - row_pk: APL-5007
+    severity: medium
+    display_projection:
+      appeal_id: APL-5007
+      denial_id: DEN-3009
+      claim_id: CLM-20026
+      denial_reason_code: CO-50
+      cpt_code: "96413"
+      potential_value: "6600.00"
+      member_state: CA
+      note: "Level-1 provider appeal pending: medical-necessity denial on chemo administration"

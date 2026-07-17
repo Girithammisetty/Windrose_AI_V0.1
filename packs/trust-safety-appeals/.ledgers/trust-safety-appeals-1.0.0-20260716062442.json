@@ -1,0 +1,70 @@
+{
+  "pack": "trust-safety-appeals",
+  "version": "1.0.0",
+  "workspace_id": "019f6a74-f6ce-7b1b-8194-07c91989d7dd",
+  "tenant_id": "019f6a74-f27f-72f1-9489-932d4d188e80",
+  "started_at": "2026-07-16T10:24:38Z",
+  "finished_at": "2026-07-16T10:24:42Z",
+  "actions": [
+    {
+      "kind": "datasets",
+      "identity": "ts_appeals",
+      "action": "create",
+      "urn": "wr:019f6a74-f27f-72f1-9489-932d4d188e80:dataset:dataset/019f6a74-fa38-72c6-93ce-a2c1089c8b34",
+      "detail": "'ts-appeals' ingested rows=26 snapshot=1722394198686692119"
+    },
+    {
+      "kind": "datasets",
+      "identity": "ts_enforcements",
+      "action": "create",
+      "urn": "wr:019f6a74-f27f-72f1-9489-932d4d188e80:dataset:dataset/019f6a74-fbb1-7812-9ac2-1297573f3a0a",
+      "detail": "'ts-enforcements' ingested rows=30 snapshot=1324735833641267906"
+    },
+    {
+      "kind": "datasets",
+      "identity": "ts_accounts",
+      "action": "failed",
+      "urn": null,
+      "detail": "complete 500: {\"error\":{\"code\":\"INTERNAL\",\"message\":\"internal error\",\"trace_id\":\"019f6a74-fd12-76c3-8c70-f1117697b3eb\"}}"
+    }
+  ],
+  "deferred": [
+    {
+      "kind": "guardrails",
+      "reason": "Appeals-domain policies (no outcome promised to an appellant before the human determination; statements of reasons must cite the actual findings; no complaint decision taken solely by automated means \u2014 DSA Art. 20; report-count evidence never substitutes for content assessment; outcome-disparity watch across user groups and geographies) require guardrail-service / OPA policy materialization, which Core does not expose as a pack surface yet. The behavioral core is partially covered today by Core invariants: every pack-configured agent is proposal-mode with four-eyes approval (agent-runtime), and the agent instructions + disposition taxonomy route final determinations exclusively to human reviewers with the Appeals Operations Manager as approver."
+    },
+    {
+      "kind": "agent_recipes",
+      "reason": "Bespoke LangGraph recipes (Appeal Intake Copilot, Statement-of-Reasons Drafter, Brigading/Report-Integrity Screener, Complaint-Deadline Sentinel) require agent-runtime graph-module registration (BRD 23 BR-12). This pack specializes the existing case-triage + analytics agents via TenantAgentConfig prompt_params + tenant-scope RAG grounding instead."
+    },
+    {
+      "kind": "connection_templates",
+      "reason": "Production read connectors (moderation/enforcement platforms and queues, classifier scoring stores, user-report pipelines, identity and session-anomaly systems for compromised-account evidence, brand-rights registries for counterfeit authorization checks, out-of-court dispute settlement body intake feeds) require customer credentials and pack-service connector materialization. The pack ships seed datasets in the exact landing shape; production connectors are configured through the product Data > Connections UI."
+    },
+    {
+      "kind": "write_adapters",
+      "reason": "Write adapters (restore content or account on the enforcement system, lift or modify an enforcement action, expunge strikes from a compromise window, send the statement-of-reasons / appeal-outcome notice, route corrected labels into classifier retraining sets) execute only behind pack-service's materialization contract and customer credentials; every such write stays proposal-mode with human approval \u2014 no autonomous restoration, removal, or strike change, ever."
+    },
+    {
+      "kind": "eval_sets",
+      "reason": "Golden eval sets (appeal triage, counter-speech/satire false-positive detection, brigading-signal ranking, duplicate-appeal detection) require eval-service write APIs whose action names are not yet in the rbac canonical catalog (Core follow-up noted in rbac catalog.go)."
+    },
+    {
+      "kind": "ontology",
+      "reason": "Ontology registration (Account, Content, EnforcementDecision, Policy, PolicyVersion, Appeal, Report, Reporter, Strike, StatementOfReasons, ComplaintClock, ODSReferral) awaits pack-service; entity semantics are carried today by the appeals_core semantic model and dataset schemas."
+    },
+    {
+      "kind": "case_schemas",
+      "reason": "Typed case schemas (appeal_review, policy_escalation, report_integrity_review, compromised_account_review, duplicate_appeal_check) await case-service schema materialization; today's cases carry the same fields via display_projection + the disposition taxonomy."
+    },
+    {
+      "kind": "model_archetypes",
+      "reason": "Model archetypes (appeal_overturn_likelihood, brigading_risk_score) await experiment-service archetype APIs; the scoring capability ships as pipeline seeds instead (isolation_forest enforcement anomaly + xgboost appeal-outcome scorer) with model-governance expectations noted in grounding memories."
+    },
+    {
+      "kind": "display_labels",
+      "reason": "Display-label overlays (\"Appeal\", \"Enforcement decision\", \"Statement of reasons due\", \"Deadline at risk\", entity templates) require the BFF label-registry endpoints (BFF-FR-082/088) which are pack-service-tier features."
+    }
+  ],
+  "result": "failed"
+}

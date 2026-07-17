@@ -1,0 +1,69 @@
+# Verified NL<->SQL queries (four-eyes approved at install). SQL uses
+# {{dataset('<name>')}} macros — the only table references query-service's
+# tenant-namespace guard admits.
+- nl_text: "What's our representment win rate by network and reason code?"
+  sql_text: >-
+    SELECT network, reason_code,
+           count(*) AS representments_filed,
+           sum(CASE WHEN outcome = 'won' THEN 1 ELSE 0 END) AS won,
+           round(sum(CASE WHEN outcome = 'won' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS win_rate,
+           sum(cast(recovered_amount AS double)) AS recovered
+    FROM {{dataset('mr-chargebacks')}}
+    WHERE represented = 'yes'
+    GROUP BY network, reason_code
+    ORDER BY recovered DESC
+  model: representment_core
+  tags: [chargebacks, representment, win_rate, pack]
+- nl_text: "Which open chargebacks are closest to their response deadline?"
+  sql_text: >-
+    SELECT chargeback_id, order_id, network, reason_code, reason_family,
+           evidence_strength, fight_economics, first_party_suspect, severity,
+           cast(days_to_deadline AS double) AS days_to_deadline,
+           cast(age_days AS double) AS age_days,
+           cast(amount AS double) AS amount
+    FROM {{dataset('mr-chargebacks')}}
+    WHERE status = 'open'
+    ORDER BY days_to_deadline ASC
+  model: representment_core
+  tags: [chargebacks, deadlines, response_queue, pack]
+- nl_text: "Fight vs accept mix by reason family — where are we conceding liability?"
+  sql_text: >-
+    SELECT reason_family,
+           count(*) AS closed_chargebacks,
+           sum(CASE WHEN represented = 'yes' THEN 1 ELSE 0 END) AS fought,
+           sum(CASE WHEN disposition = 'accept_liability_refund' THEN 1 ELSE 0 END) AS accepted,
+           round(sum(CASE WHEN disposition = 'accept_liability_refund' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS accept_liability_share
+    FROM {{dataset('mr-chargebacks')}}
+    WHERE status = 'closed'
+    GROUP BY reason_family
+    ORDER BY accept_liability_share DESC
+  model: representment_core
+  tags: [chargebacks, fight_economics, accept_liability, pack]
+- nl_text: "Net recovery by month — dollars recovered against dollars under chargeback"
+  sql_text: >-
+    SELECT filed_month,
+           count(*) AS chargebacks,
+           sum(cast(amount AS double)) AS disputed_dollars,
+           sum(cast(recovered_amount AS double)) AS recovered_dollars,
+           round(sum(cast(recovered_amount AS double))
+                 / nullif(sum(cast(amount AS double)), 0), 4) AS net_recovery_rate
+    FROM {{dataset('mr-chargebacks')}}
+    GROUP BY filed_month
+    ORDER BY filed_month
+  model: representment_core
+  tags: [chargebacks, recovery, trend, pack]
+- nl_text: "How do first-party (friendly-fraud) suspect chargebacks resolve versus the rest?"
+  sql_text: >-
+    SELECT first_party_suspect,
+           count(*) AS chargebacks,
+           sum(CASE WHEN represented = 'yes' THEN 1 ELSE 0 END) AS fought,
+           sum(CASE WHEN outcome = 'won' THEN 1 ELSE 0 END) AS won,
+           sum(CASE WHEN disposition = 'accept_liability_refund' THEN 1 ELSE 0 END) AS accepted,
+           sum(cast(amount AS double)) AS disputed_dollars
+    FROM {{dataset('mr-chargebacks')}}
+    GROUP BY first_party_suspect
+    ORDER BY first_party_suspect DESC
+  model: representment_core
+  tags: [chargebacks, friendly_fraud, first_party, pack]

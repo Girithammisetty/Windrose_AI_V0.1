@@ -1,0 +1,57 @@
+# RPM Ops dashboard (CMM-FR-120 #4, US-5, CMM-FR-080/082): device adherence,
+# 16-day-rule compliance for CPT 99454, anomaly trend, and per-vendor summary
+# including review-note minutes (CPT 99457 threshold).
+name: "RPM Ops"
+module: insights
+semantic_model: rpm_readings
+description: >-
+  Remote patient monitoring operations (BRD 25): reading-day adherence by
+  device type, CPT 99454 16-day-rule compliance mix, anomaly counts by month,
+  and vendor-level cycle summary with review minutes.
+tags: [healthcare, provider, care-management, rpm, pack]
+charts:
+  - name: "Reading days by device type"
+    chart_type: vertical_bar_chart
+    description: "Mean reading days per 30-day cycle by device type (rpm_adherence)"
+    config:
+      x: { dimension: rpm_device_type }
+      y: [ { measure: avg_reading_days, agg_fn: avg } ]
+    sources: [ { measure: avg_reading_days } ]
+    w: 6
+    h: 4
+  - name: "16-day rule compliance"
+    chart_type: pie_chart
+    description: "Cycles meeting vs missing the CPT 99454 16-day rule"
+    config:
+      x: { dimension: rpm_16day_flag }
+      y: [ { measure: rpm_patient_months, agg_fn: count } ]
+    sources: [ { measure: rpm_patient_months } ]
+    w: 6
+    h: 4
+  - name: "Anomalies by month"
+    chart_type: line_chart
+    description: "Flagged reading anomalies per month (CMM-FR-080 thresholds)"
+    config:
+      x: { dimension: rpm_month }
+      y: [ { measure: total_anomaly_count, agg_fn: sum } ]
+    sources: [ { measure: total_anomaly_count } ]
+    w: 6
+    h: 4
+  - name: "Vendor cycle summary"
+    chart_type: grid_chart
+    description: "Cycles, adherence, anomalies, and review minutes per device vendor (BR-9 FDA whitelist watch)"
+    config:
+      columns: [rpm_vendor, rpm_patient_months, avg_reading_days, total_anomaly_count, avg_review_minutes]
+      x: { dimension: rpm_vendor }
+      y:
+        - { measure: rpm_patient_months, agg_fn: count }
+        - { measure: avg_reading_days, agg_fn: avg }
+        - { measure: total_anomaly_count, agg_fn: sum }
+        - { measure: avg_review_minutes, agg_fn: avg }
+    sources:
+      - { measure: rpm_patient_months }
+      - { measure: avg_reading_days }
+      - { measure: total_anomaly_count }
+      - { measure: avg_review_minutes }
+    w: 12
+    h: 4

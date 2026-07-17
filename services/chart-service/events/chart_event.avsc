@@ -1,0 +1,41 @@
+{
+  "type": "record",
+  "name": "ChartEvent",
+  "namespace": "ai.windrose.chart.v1",
+  "doc": "Envelope for chart.events.v1 (MASTER-FR-031). Partition key = tenant_id. Event types: dashboard.created|updated|archived|restored|deleted, chart.created|updated|deleted, chart.link.created|removed, chart.export.completed|failed, chart.data.resolved (sampled).",
+  "fields": [
+    { "name": "event_id", "type": { "type": "string", "logicalType": "uuid" }, "doc": "uuidv7" },
+    { "name": "event_type", "type": "string" },
+    { "name": "tenant_id", "type": { "type": "string", "logicalType": "uuid" } },
+    {
+      "name": "actor",
+      "type": {
+        "type": "record",
+        "name": "Actor",
+        "fields": [
+          { "name": "type", "type": { "type": "enum", "name": "ActorType", "symbols": ["user", "service", "agent", "platform"] } },
+          { "name": "id", "type": "string" }
+        ]
+      }
+    },
+    {
+      "name": "via_agent",
+      "type": [
+        "null",
+        {
+          "type": "record",
+          "name": "ViaAgent",
+          "fields": [
+            { "name": "agent_id", "type": "string" },
+            { "name": "version", "type": "string" }
+          ]
+        }
+      ],
+      "default": null
+    },
+    { "name": "resource_urn", "type": "string", "doc": "wr:<tenant>:chart:<type>/<id>" },
+    { "name": "occurred_at", "type": { "type": "long", "logicalType": "timestamp-micros" } },
+    { "name": "trace_id", "type": "string" },
+    { "name": "payload", "type": "string", "doc": "JSON-encoded event-specific payload" }
+  ]
+}

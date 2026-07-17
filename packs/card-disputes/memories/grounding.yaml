@@ -1,0 +1,114 @@
+# Tenant-scope RAG grounding records (memory-service). This is the Reg E /
+# Reg Z / network-rule domain knowledge the triage copilot retrieves when
+# reasoning about a dispute. Every record is factual regulatory or
+# operational reference material.
+- content: >-
+    Reg E error-resolution clock (12 CFR 1005.11): the consumer has 60 days
+    from transmittal of the periodic statement to report an error. The bank
+    must investigate and resolve within 10 business days — or take up to 45
+    days if it issues provisional credit (with interest where applicable)
+    within 10 business days and notifies the consumer. Extended windows: 90
+    days for point-of-sale debit, foreign-initiated transactions, and new
+    accounts; new accounts (first deposit within 30 days) also get 20
+    business days instead of 10 for the provisional-credit decision. Results
+    must be reported to the consumer within 3 business days of completing
+    the investigation.
+  tags: [reg_e, deadlines, provisional_credit, error_resolution]
+  confidence: 0.98
+- content: >-
+    Reg E consumer liability tiers (12 CFR 1005.6) for a lost or stolen
+    access device: at most $50 if reported within 2 business days of
+    learning of the loss; up to $500 if reported later than 2 business days;
+    unlimited exposure only for unauthorized transfers appearing on a
+    periodic statement and not reported within 60 days of transmittal. For
+    unauthorized transactions NOT involving a lost access device (e.g., a
+    stolen card number used online), the consumer has no liability if
+    reported within the 60-day statement window. Network zero-liability
+    policies are usually more generous than the regulation — apply the more
+    protective standard the program has adopted.
+  tags: [reg_e, liability, fraud_unauthorized]
+  confidence: 0.95
+- content: >-
+    Reg Z billing-error rights (12 CFR 1026.13, credit cards): the
+    cardholder must send a billing-error notice within 60 days of the first
+    statement reflecting the error; the creditor must acknowledge within 30
+    days and resolve within two complete billing cycles (never more than 90
+    days). During the investigation the cardholder may withhold the disputed
+    amount; the creditor may not collect it, impose finance charges on it if
+    an error is confirmed, or report it delinquent to credit bureaus. A
+    denial requires a written explanation, and the cardholder may request
+    copies of the documents relied upon.
+  tags: [reg_z, billing_error, deadlines, credit]
+  confidence: 0.98
+- content: >-
+    Provisional-credit reversal (Reg E): when the investigation finds no
+    error, the bank must give written notice of the reversal including the
+    date and amount, and must honor checks and preauthorized transfers
+    against the reversed amount for 5 business days after the notice.
+    Reversing provisional credit without the required notice is itself a
+    Reg E violation regardless of the investigation's merits.
+  tags: [reg_e, provisional_credit, reversal, notice]
+  confidence: 0.95
+- content: >-
+    Network chargeback windows: most Visa and Mastercard reason codes allow
+    120 calendar days from the transaction processing date (or from expected
+    delivery for non-receipt claims) to file; some codes are shorter. Visa
+    reason-code families: 10.x fraud (10.3 card-present fraud, 10.4
+    card-absent/CNP fraud), 11.x authorization errors, 12.x processing
+    errors (12.5 incorrect amount, 12.6.1 duplicate processing), 13.x
+    consumer disputes (13.1 merchandise/services not received, 13.3 not as
+    described or defective, 13.7 cancelled merchandise/services).
+    Mastercard: 4837 no cardholder authorization, 4853 cardholder dispute
+    (goods/services), 4834 point-of-interaction error (includes duplicates),
+    4860 credit not processed.
+  tags: [chargebacks, reason_codes, visa, mastercard, windows]
+  confidence: 0.9
+- content: >-
+    Visa Compelling Evidence 3.0 (effective April 2023) for 10.4 CNP fraud
+    disputes: the merchant can block or remedy the dispute by showing two or
+    more prior undisputed transactions on the same card, 120-365 days old,
+    that share qualifying data elements with the disputed transaction (such
+    as device ID/fingerprint, IP address, shipping address, account login) —
+    shifting liability back to the issuer. Pre-screen 10.4 candidates for CE
+    3.0 exposure before filing: a chargeback likely to be defeated by CE 3.0
+    evidence wastes cycle time and network fees.
+  tags: [visa, ce30, compelling_evidence, cnp, chargebacks]
+  confidence: 0.9
+- content: >-
+    First-party ("friendly") fraud signals: industry loss studies
+    consistently attribute a substantial share of CNP fraud claims to
+    first-party misuse — the cardholder or a household member made or
+    benefited from the purchase. Signals: repeat 'item not received' or
+    'unauthorized' claims with carrier delivery confirmation to the address
+    on file, device/IP match to the cardholder's own devices, prior denials
+    for the same pattern, disputes filed just inside the 60-day window, and
+    high dispute frequency relative to tenure. Each claim must still be
+    investigated on its own evidence — a history of abuse is a risk signal,
+    not proof, and Reg E deadlines apply in full to suspected first-party
+    claims.
+  tags: [first_party_fraud, friendly_fraud, signals, investigation]
+  confidence: 0.85
+- content: >-
+    Card-testing pattern: a burst of micro-authorizations ($0.50-$2.00) at
+    card-not-present merchants validates stolen card numbers before a larger
+    fraudulent charge, typically same-day at a different CNP merchant. On a
+    confirmed pattern: dispute the monetizing charge (10.4/4837), reissue
+    the card, and do not waste representment cycles on the micro-charges —
+    their recovery value is below network fees. ATM partial-dispense
+    (shortfall) claims are Reg E errors: request the ATM's electronic
+    journal and the operator's cash-total reconciliation; a balanced cash
+    position at the operator supports denial, an overage supports the claim.
+  tags: [card_testing, atm_shortfall, typology, evidence]
+  confidence: 0.9
+- content: >-
+    Recordkeeping and model governance: Reg E requires retaining evidence of
+    compliance for at least 2 years (12 CFR 1005.13), and examiners review
+    dispute files for the specific findings behind each denial — a denial
+    letter must reflect the actual investigation, and the consumer may
+    request the documents relied upon. Every AI-assisted disposition must
+    preserve a provenance chain (data version, model version, prompt hash,
+    reviewer identity, timestamp); pattern-level over-denial of disputes is
+    a UDAAP and CFPB examination risk even when each file individually
+    appears defensible.
+  tags: [recordkeeping, governance, cfpb, udaap, audit]
+  confidence: 0.9

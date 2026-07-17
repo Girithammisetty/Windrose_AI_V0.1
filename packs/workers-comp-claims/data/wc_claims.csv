@@ -1,0 +1,27 @@
+claim_id,employer_id,claimant_name,jurisdiction_state,injury_type,body_part,cause_code,claim_type,severity,status,disposition,siu_flag,litigation_flag,rtw_status,filed_month,age_days,days_to_deadline,deadline_bucket,incurred_reserve,paid_to_date
+WC-5001,E-3002,Miguel Santoro,TX,fracture,ankle,fall_from_height,indemnity,high,closed,accept_compensable,no,no,modified_duty,2026-03,62,0,closed,48500.00,31200.00
+WC-5002,E-3004,Janet Okafor,IL,laceration,hand_wrist,caught_in_equipment,medical_only,low,closed,close_return_to_work,no,no,full_duty,2026-03,14,0,closed,2400.00,1850.00
+WC-5003,E-3001,Derek Malone,CA,strain_sprain,lower_back,lifting,indemnity,medium,closed,accept_compensable,no,no,modified_duty,2026-03,49,0,closed,18700.00,12400.00
+WC-5004,E-3005,Rosa Delgado,FL,burn,arm,hot_surface_contact,medical_only,low,closed,close_return_to_work,no,no,full_duty,2026-03,11,0,closed,1900.00,1420.00
+WC-5005,E-3009,Antoine Gibbs,TX,strain_sprain,shoulder,lifting,indemnity,medium,closed,refer_utilization_review,no,no,not_released,2026-04,55,0,closed,26900.00,14750.00
+WC-5006,E-3007,Casey Brandt,FL,strain_sprain,lower_back,lifting,indemnity,medium,closed,deny_not_compensable,yes,no,not_applicable,2026-03,21,0,closed,3500.00,0.00
+WC-5007,E-3003,Priya Venkat,IL,strain_sprain,lower_back,lifting,indemnity,medium,closed,accept_compensable,no,no,modified_duty,2026-04,44,0,closed,22300.00,15600.00
+WC-5008,E-3006,Walter Kaminski,PA,crush_injury,hand_wrist,caught_in_equipment,indemnity,high,closed,accept_compensable,no,no,not_released,2026-03,71,0,closed,88400.00,52100.00
+WC-5009,E-3010,Fiona Reyes,CA,contusion,knee,fall_same_level,medical_only,low,closed,close_return_to_work,no,no,full_duty,2026-04,9,0,closed,1600.00,1180.00
+WC-5010,E-3008,Gordon Lim,CA,repetitive_stress,hand_wrist,repetitive_motion,medical_only,low,closed,accept_compensable,no,no,full_duty,2026-04,33,0,closed,5200.00,3900.00
+WC-5011,E-3001,Sonia Petrov,CA,contusion,multiple,motor_vehicle_accident,indemnity,medium,closed,accept_compensable,no,yes,modified_duty,2026-04,58,0,closed,31800.00,19500.00
+WC-5012,E-3009,Leah Whitcomb,TX,strain_sprain,lower_back,lifting,indemnity,medium,closed,escalate_siu_fraud,yes,no,not_applicable,2026-04,39,0,closed,4800.00,2100.00
+WC-5013,E-3011,Owen Gallagher,PA,laceration,arm,sharp_object,medical_only,low,closed,accept_compensable,no,no,full_duty,2026-05,18,0,closed,2900.00,2200.00
+WC-5014,E-3012,Maribel Fuentes,TX,strain_sprain,lower_back,lifting,indemnity,medium,closed,accept_compensable,no,no,modified_duty,2026-05,41,0,closed,19600.00,11300.00
+WC-5015,E-3005,Trent Osei,FL,laceration,hand_wrist,sharp_object,medical_only,low,closed,deny_not_compensable,no,no,not_applicable,2026-05,16,0,closed,900.00,0.00
+WC-5016,E-3002,Hollis Vance,TX,concussion,head,struck_by_object,indemnity,high,closed,refer_utilization_review,no,no,not_released,2026-05,47,0,closed,35400.00,18900.00
+WC-5017,E-3004,Nikolai Baranov,IL,strain_sprain,knee,fall_same_level,medical_only,low,closed,accept_compensable,no,no,full_duty,2026-05,22,0,closed,3300.00,2450.00
+WC-5018,E-3007,Dwayne Cutler,FL,strain_sprain,shoulder,lifting,indemnity,medium,closed,escalate_siu_fraud,yes,no,not_applicable,2026-06,25,0,closed,5100.00,1800.00
+WC-5019,E-3010,Amara Diallo,CA,contusion,ankle,struck_by_object,medical_only,low,closed,close_return_to_work,no,no,full_duty,2026-06,8,0,closed,1400.00,1050.00
+WC-5020,E-3006,Silas Redfern,PA,fracture,arm,struck_by_object,indemnity,medium,closed,deny_not_compensable,no,yes,not_applicable,2026-06,19,0,closed,6200.00,0.00
+WC-6001,E-3009,Colton Briggs,TX,strain_sprain,lower_back,lifting,indemnity,high,open,pending,yes,no,not_released,2026-06,6,9,8_21_days,7500.00,350.00
+WC-6002,E-3003,Yolanda Marsh,IL,strain_sprain,shoulder,lifting,indemnity,high,open,pending,no,no,not_released,2026-06,12,2,0_7_days,16800.00,1240.00
+WC-6003,E-3002,Rafael Quintana,TX,fracture,multiple,fall_from_height,indemnity,high,open,pending,no,no,not_released,2026-06,18,24,over_21_days,275000.00,64300.00
+WC-6004,E-3004,Denise Holloway,IL,strain_sprain,knee,fall_same_level,indemnity,medium,open,pending,no,no,not_released,2026-06,22,12,8_21_days,9800.00,2100.00
+WC-6005,E-3001,Jerome Askew,CA,strain_sprain,lower_back,lifting,medical_only,medium,open,pending,no,no,modified_duty,2026-06,26,30,over_21_days,6400.00,3900.00
+WC-6006,E-3006,Bethany Kroll,PA,repetitive_stress,shoulder,repetitive_motion,indemnity,medium,open,pending,no,yes,not_released,2026-06,34,5,0_7_days,42500.00,8700.00

@@ -1,0 +1,146 @@
+{
+  "pack": "investigation-framework",
+  "version": "1.0.0",
+  "workspace_id": "019f6462-7388-7b52-a1bd-882b060c29cd",
+  "tenant_id": "019f6462-6b63-7a87-a307-5fda2e2e2ac1",
+  "started_at": "2026-07-15T06:06:42Z",
+  "finished_at": "2026-07-15T06:06:44Z",
+  "actions": [
+    {
+      "kind": "dispositions",
+      "identity": "lifecycle_dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "inv_dismissed"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "lifecycle_dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "inv_handed_off"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "lifecycle_dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "inv_needs_deeper"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "lifecycle_dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "inv_evidence_incomplete"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "lifecycle_dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "inv_confirmed"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "lifecycle_dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "inv_referred_external"
+    },
+    {
+      "kind": "roles",
+      "identity": "investigation_roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Investigator'"
+    },
+    {
+      "kind": "roles",
+      "identity": "investigation_roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Investigator' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "investigation_roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Investigation Supervisor'"
+    },
+    {
+      "kind": "roles",
+      "identity": "investigation_roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Investigation Supervisor' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "investigation_roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Evidence Custodian'"
+    },
+    {
+      "kind": "roles",
+      "identity": "investigation_roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Evidence Custodian' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "investigation_roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Investigation Quality Reviewer'"
+    },
+    {
+      "kind": "roles",
+      "identity": "investigation_roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Investigation Quality Reviewer' bound to permission group"
+    },
+    {
+      "kind": "memories",
+      "identity": "methodology",
+      "action": "create",
+      "urn": null,
+      "detail": "8 grounding records written, 0 already present"
+    }
+  ],
+  "deferred": [
+    {
+      "kind": "agent_recipes",
+      "reason": "INV-FR-010..040 abstract 3-specialist agents (pattern_detector, network_graph_investigator, risk_scorer, evidence_gatherer) require agent-runtime graph-module registration + the consumer-pack specialization-point mechanism \u2014 both pack-service-tier (BRD 23 BR-12). Today the methodology memories ground the existing case-triage agent with the same investigation discipline."
+    },
+    {
+      "kind": "guardrails",
+      "reason": "INV-FR-090 rego guardrails (chain_of_custody, tipping_off_lite, evidence_provenance, two_signature_referral, investigator_identity) await guardrail-service materialization. Their behavioral intent is carried today as grounding memories + Core invariants (four-eyes approvals, WORM audit)."
+    },
+    {
+      "kind": "case_schemas",
+      "reason": "INV-FR-080 five investigation case schemas await case-service schema materialization; the lifecycle vocabulary ships as dispositions instead."
+    },
+    {
+      "kind": "eval_sets",
+      "reason": "INV abstract golden sets await eval-service pack write APIs (rbac catalog gap noted in Core)."
+    },
+    {
+      "kind": "ontology",
+      "reason": "investigation_base ontology registration awaits pack-service."
+    },
+    {
+      "kind": "model_archetypes",
+      "reason": "confidence_calibrator + network_anomaly_baseline archetypes await experiment-service archetype APIs; consumer packs ship trainable pipeline seeds instead."
+    },
+    {
+      "kind": "display_labels",
+      "reason": "Label overlays await BFF label-registry endpoints (BFF-FR-082/088)."
+    }
+  ],
+  "result": "installed"
+}

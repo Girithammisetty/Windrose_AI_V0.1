@@ -1,0 +1,71 @@
+# Seeded AP exception-audit queue: the OPEN exceptions from the seed dataset
+# become cases so an analyst logging in sees a real, pattern-diverse worklist
+# on day one — a BEC banking-change request two days before a large payment
+# run, an OCR near-duplicate invoice pair, a shell-vendor suspect with an
+# employee-address collision, a split-invoicing string under the approval
+# threshold, a 12% price variance vs PO, and a missing-receipt release
+# candidate. due_days=4 keeps triage ahead of the tightest payment-run
+# deadlines (2 and 4 days) on the open book.
+dataset: ap_exceptions
+due_days: 4
+rows:
+  - row_pk: EX-7001
+    severity: high
+    display_projection:
+      exception_id: EX-7001
+      vendor: "Meridian IT Partners (V-3001)"
+      exception_type: suspicious_banking_change
+      fraud_indicator: bec_suspect
+      amount: "148200.00"
+      days_to_deadline: "2"
+      note: "Emailed request to change Meridian IT Partners' remittance bank account landed 2 days before the $148,200 payment run for IV-2103 (MIT-55871) — classic BEC timing; requester domain differs from the vendor-master contact domain by one character. Do NOT verify via any contact in the request: out-of-band verify with the known-good phone number on the vendor master. Precedent: EX-6013 blocked a confirmed $96,400 BEC attempt on this same vendor in May"
+  - row_pk: EX-7002
+    severity: high
+    display_projection:
+      exception_id: EX-7002
+      vendor: "BlueRidge Logistics (V-3003)"
+      exception_type: duplicate_invoice
+      fraud_indicator: none
+      amount: "23410.00"
+      days_to_deadline: "4"
+      note: "IV-2102 (BRL-1O442) matches paid invoice IV-2101 (BRL-10442) on vendor, amount ($23,410) and date — the invoice numbers differ by a single OCR-confusable character (letter O vs digit 0), the signature of a rescan resubmitted through the email channel after the portal original. Confirm the shipment count with the PO before blocking; hold the payment out of the run in the meantime"
+  - row_pk: EX-7003
+    severity: high
+    display_projection:
+      exception_id: EX-7003
+      vendor: "Quartzline Services LLC (V-3009)"
+      exception_type: missing_po
+      fraud_indicator: shell_vendor_suspect
+      amount: "9840.00"
+      days_to_deadline: "9"
+      note: "New services-only vendor (onboarded <1 year, no W-9/TIN verification, never sanctions-screened, multiple master-data changes) billing $9,840 on IV-2107 with no PO; remittance address collides with a current AP employee's home address and invoice numbers run sequentially from 0001 (QLS-0001, QLS-0002 = IV-2107, IV-2108) — textbook shell-vendor indicators. No goods receipt exists for either invoice; escalation candidate"
+  - row_pk: EX-7004
+    severity: medium
+    display_projection:
+      exception_id: EX-7004
+      vendor: "Sterling Consulting Group (V-3006)"
+      exception_type: missing_po
+      fraud_indicator: split_invoicing
+      amount: "4950.00"
+      days_to_deadline: "12"
+      note: "IV-2105 (SCG-0448, $4,950) is the middle of three same-week consulting invoices — SCG-0447/0448/0449 (IV-2104..IV-2106) — each exactly $50 under the $5,000 single-approver threshold, so none reached the dual-approver route. Aggregate the string as one $14,850 engagement and route to dual approval; ask the requester for the statement of work covering all three"
+  - row_pk: EX-7005
+    severity: medium
+    display_projection:
+      exception_id: EX-7005
+      vendor: "Helix Raw Materials GmbH (V-3005)"
+      exception_type: price_variance
+      fraud_indicator: none
+      amount: "52300.00"
+      days_to_deadline: "18"
+      note: "IV-2109 (HRM-88123) bills raw materials 12% above the PO unit price — $52,300 invoiced vs the PO-implied total; quantity and receipt match, price is the only gap. Vendor previously granted an 8% credit on the same pattern (EX-6003, $2,496 recovered on IV-2113 pricing; EX-6015 similar) — negotiate a partial credit against the PO price before the net-60 clock forces a decision"
+  - row_pk: EX-7006
+    severity: medium
+    display_projection:
+      exception_id: EX-7006
+      vendor: "Cortland Facilities Group (V-3002)"
+      exception_type: missing_receipt
+      fraud_indicator: none
+      amount: "6875.00"
+      days_to_deadline: "21"
+      note: "IV-2110 (CFG-33018, $6,875) failed three-way match only on the goods receipt — the site manager confirms the facilities materials arrived on schedule but the receipt was never posted. Long-tenured, fully verified vendor with a clean history (EX-6002, EX-6012 same pattern, both released). Release candidate once the receipt is posted; chase the receiving team, don't penalize the vendor"

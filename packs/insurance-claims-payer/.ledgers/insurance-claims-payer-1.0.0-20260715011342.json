@@ -1,0 +1,308 @@
+{
+  "pack": "insurance-claims-payer",
+  "version": "1.0.0",
+  "workspace_id": "019f62c1-0f5e-7af0-b9be-cbe343ea0ad4",
+  "tenant_id": "019f62c1-080d-71bd-b404-1d4e15b02dcb",
+  "started_at": "2026-07-15T05:13:37Z",
+  "finished_at": "2026-07-15T05:13:42Z",
+  "actions": [
+    {
+      "kind": "datasets",
+      "identity": "payer_claims",
+      "action": "noop",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:dataset:dataset/019f642f-b0ed-718e-9a4e-b32a665accc0",
+      "detail": "dataset 'payer-claims' exists"
+    },
+    {
+      "kind": "datasets",
+      "identity": "payer_denials",
+      "action": "noop",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:dataset:dataset/019f642f-b549-7afe-9458-0c06576481c3",
+      "detail": "dataset 'payer-denials' exists"
+    },
+    {
+      "kind": "datasets",
+      "identity": "payer_appeals",
+      "action": "noop",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:dataset:dataset/019f642f-b6b2-752d-8e5e-328ffdf89048",
+      "detail": "dataset 'payer-appeals' exists"
+    },
+    {
+      "kind": "datasets",
+      "identity": "prior_auth_requests",
+      "action": "noop",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:dataset:dataset/019f642f-b802-7480-a258-910407afa272",
+      "detail": "dataset 'payer-prior-auth-requests' exists"
+    },
+    {
+      "kind": "semantic_models",
+      "identity": "claims",
+      "action": "create",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:semantic:model/019f6431-dffd-714b-bbea-46f69ff57f34",
+      "detail": "'payer_claims' published"
+    },
+    {
+      "kind": "semantic_models",
+      "identity": "utilization",
+      "action": "create",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:semantic:model/019f6431-e16c-77c4-9205-2b49a7054e55",
+      "detail": "'payer_utilization' published"
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_0",
+      "action": "create",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:semantic:verified_query/019f6431-e488-7a1d-a488-86b05da148db",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_1",
+      "action": "create",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:semantic:verified_query/019f6431-e55e-734b-9ad2-e93c8f09af0b",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_2",
+      "action": "create",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:semantic:verified_query/019f6431-e616-7257-a2d3-35574e26faf4",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_3",
+      "action": "create",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:semantic:verified_query/019f6431-e6e1-73a5-b0bf-272fa58cce8c",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_4",
+      "action": "create",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:semantic:verified_query/019f6431-e79b-7223-a491-a83b422c8e0a",
+      "detail": ""
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "denial_flow_edges",
+      "action": "create",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:query:query/019f6431-e899-7883-a5b2-d8cc73cb0619",
+      "detail": "Payer: denial reason to service line"
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "high_value_denials",
+      "action": "create",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:query:query/019f6431-e8ed-7cd1-81ec-da499127db49",
+      "detail": "Payer: high-value denied claims"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "payer_kpi",
+      "action": "create",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:chart:dashboard/019f6431-e960-7ea2-96e2-15dcc1e21258",
+      "detail": "Payer KPI"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "payer_kpi",
+      "action": "warn",
+      "urn": null,
+      "detail": "chart 'Claims by product type' data 502: {\"error\":{\"code\":\"UPSTREAM_QUERY_FAILED\",\"message\":\"query results status 403: {\\\"error\\\":{\\\"code\\\":\\\"PERMISSION_DENIED\\\",\\\"message\\\":\\\"not allowed: qu"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "payer_kpi",
+      "action": "warn",
+      "urn": null,
+      "detail": "chart 'Paid amount by service line' data 502: {\"error\":{\"code\":\"UPSTREAM_QUERY_FAILED\",\"message\":\"query results status 403: {\\\"error\\\":{\\\"code\\\":\\\"PERMISSION_DENIED\\\",\\\"message\\\":\\\"not allowed: qu"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "payer_kpi",
+      "action": "warn",
+      "urn": null,
+      "detail": "chart 'Claim status mix' data 502: {\"error\":{\"code\":\"UPSTREAM_QUERY_FAILED\",\"message\":\"query results status 403: {\\\"error\\\":{\\\"code\\\":\\\"PERMISSION_DENIED\\\",\\\"message\\\":\\\"not allowed: qu"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "payer_kpi",
+      "action": "warn",
+      "urn": null,
+      "detail": "chart 'Claims grid by service line' data 502: {\"error\":{\"code\":\"UPSTREAM_QUERY_FAILED\",\"message\":\"query results status 403: {\\\"error\\\":{\\\"code\\\":\\\"PERMISSION_DENIED\\\",\\\"message\\\":\\\"not allowed: qu"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "payer_kpi",
+      "action": "verify",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:chart:dashboard/019f6431-e960-7ea2-96e2-15dcc1e21258",
+      "detail": "0/4 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "appeals_analytics",
+      "action": "create",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:chart:dashboard/019f6431-eb8a-7674-8a7a-90f0c427312c",
+      "detail": "Appeals Analytics"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "appeals_analytics",
+      "action": "warn",
+      "urn": null,
+      "detail": "chart 'Appeals by level' data 502: {\"error\":{\"code\":\"UPSTREAM_QUERY_FAILED\",\"message\":\"query results status 403: {\\\"error\\\":{\\\"code\\\":\\\"PERMISSION_DENIED\\\",\\\"message\\\":\\\"not allowed: qu"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "appeals_analytics",
+      "action": "warn",
+      "urn": null,
+      "detail": "chart 'Appeal verdict mix' data 502: {\"error\":{\"code\":\"UPSTREAM_QUERY_FAILED\",\"message\":\"query results status 403: {\\\"error\\\":{\\\"code\\\":\\\"PERMISSION_DENIED\\\",\\\"message\\\":\\\"not allowed: qu"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "appeals_analytics",
+      "action": "warn",
+      "urn": null,
+      "detail": "chart 'Overturns by denial reason' data 502: {\"error\":{\"code\":\"UPSTREAM_QUERY_FAILED\",\"message\":\"query results status 403: {\\\"error\\\":{\\\"code\\\":\\\"PERMISSION_DENIED\\\",\\\"message\\\":\\\"not allowed: qu"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "appeals_analytics",
+      "action": "verify",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:chart:dashboard/019f6431-eb8a-7674-8a7a-90f0c427312c",
+      "detail": "0/3 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "pa_ops",
+      "action": "create",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:chart:dashboard/019f6431-ed38-7799-8787-a601f0bc40ad",
+      "detail": "PA Ops"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "pa_ops",
+      "action": "warn",
+      "urn": null,
+      "detail": "chart 'PA requests by urgency' data 502: {\"error\":{\"code\":\"UPSTREAM_QUERY_FAILED\",\"message\":\"query results status 403: {\\\"error\\\":{\\\"code\\\":\\\"PERMISSION_DENIED\\\",\\\"message\\\":\\\"not allowed: qu"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "pa_ops",
+      "action": "warn",
+      "urn": null,
+      "detail": "chart 'PA decision mix' data 502: {\"error\":{\"code\":\"UPSTREAM_QUERY_FAILED\",\"message\":\"query results status 403: {\\\"error\\\":{\\\"code\\\":\\\"PERMISSION_DENIED\\\",\\\"message\\\":\\\"not allowed: qu"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "pa_ops",
+      "action": "warn",
+      "urn": null,
+      "detail": "chart 'Turnaround by urgency' data 502: {\"error\":{\"code\":\"UPSTREAM_QUERY_FAILED\",\"message\":\"query results status 403: {\\\"error\\\":{\\\"code\\\":\\\"PERMISSION_DENIED\\\",\\\"message\\\":\\\"not allowed: qu"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "pa_ops",
+      "action": "warn",
+      "urn": null,
+      "detail": "chart 'Agent recommendation grid' data 502: {\"error\":{\"code\":\"UPSTREAM_QUERY_FAILED\",\"message\":\"query results status 403: {\\\"error\\\":{\\\"code\\\":\\\"PERMISSION_DENIED\\\",\\\"message\\\":\\\"not allowed: qu"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "pa_ops",
+      "action": "verify",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:chart:dashboard/019f6431-ed38-7799-8787-a601f0bc40ad",
+      "detail": "0/4 charts resolve data"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "pa_approved"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "pa_denied"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "failed",
+      "urn": null,
+      "detail": "pa_deferred: 422 {\"error\":{\"code\":\"VALIDATION_FAILED\",\"message\":\"code, label and a valid category are required\",\"trace_id\":\"b0c73e53-cef7-462a-85f8-acf47475e707\"}}\n"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "appeal_upheld"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "appeal_overturned"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "denial_notice_approved"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "failed",
+      "urn": null,
+      "detail": "escalate_md: 422 {\"error\":{\"code\":\"VALIDATION_FAILED\",\"message\":\"code, label and a valid category are required\",\"trace_id\":\"e8fb885a-42b4-4a5d-8d94-d855a11fbd0c\"}}\n"
+    }
+  ],
+  "deferred": [
+    {
+      "kind": "guardrails",
+      "reason": "INS-FR-080..082 (hipaa.rego, cms_2024_human_review.rego, naic_ai_disclosure.rego) require guardrail-service / OPA policy materialization, which Core does not expose as a pack surface yet. The behavioral guarantees they encode are partially covered today by Core invariants: proposal-mode + four-eyes approval (agent-runtime) and the caller-permission gate satisfy the human-review requirement for every pack-configured agent."
+    },
+    {
+      "kind": "agent_recipes",
+      "reason": "INS-FR-030/040/050 bespoke LangGraph recipes (prior_auth, appeal_analyst, denial_rationale) require agent-runtime graph-module registration (a Core code surface, BRD 23 BR-12). This pack specializes the existing case-triage + analytics agents via TenantAgentConfig prompt_params + tenant-scope RAG grounding instead."
+    },
+    {
+      "kind": "connection_templates",
+      "reason": "INS-FR-060 SoR connectors (Facets, HealthEdge, QNXT, Guidewire, Epic FHIR, EDI 837/835/278) require customer credentials and pack-service connector materialization. The pack ships seed datasets in the exact landing shape; production connectors are configured through the product Data > Connections UI."
+    },
+    {
+      "kind": "eval_sets",
+      "reason": "INS-FR shipped golden sets (pa_golden, appeal_golden, denial_golden) require eval-service write APIs whose action names are not yet in the rbac canonical catalog (Core follow-up noted in rbac catalog.go)."
+    },
+    {
+      "kind": "display_labels",
+      "reason": "INS-FR-110 label overlays require the BFF label-registry endpoints (BFF-FR-082/088) which are pack-service-tier features."
+    },
+    {
+      "kind": "write_adapters",
+      "reason": "INS-FR-061 SoR write adapters (Facets PA decision, Guidewire notes, EDI responses) execute only behind pack-service's materialization contract and customer credentials; all platform-side writes remain proposal-mode."
+    },
+    {
+      "kind": "ontology",
+      "reason": "INS-FR-010 ontology registration awaits pack-service; entity semantics are carried today by the semantic models and dataset schemas."
+    },
+    {
+      "kind": "case_schemas",
+      "reason": "INS-FR-091 typed case schemas await case-service schema materialization; today's cases carry the same fields via display_projection + the disposition taxonomy."
+    },
+    {
+      "kind": "model_archetypes",
+      "reason": "INS-FR-071 confidence calibrator ships as a pipeline seed instead (pa_approval_classifier); Platt-scaling archetype registration awaits experiment-service archetype APIs."
+    }
+  ],
+  "result": "failed"
+}

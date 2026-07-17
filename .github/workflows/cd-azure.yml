@@ -1,0 +1,209 @@
+# Windrose — Continuous Deployment to Azure (AKS)
+#
+# Keyless: authenticates with azure/login via GitHub OIDC (no cloud keys stored).
+# Installs External Secrets Operator + an Azure Key Vault ClusterSecretStore
+# (Workload Identity), which syncs the Terraform-staged Key Vault secrets into the
+# in-cluster `windrose-secrets` Secret, then `helm upgrade --install`s the umbrella
+# chart and waits for rollout.
+#
+# ---------------------------------------------------------------------------
+# Required GitHub configuration (Settings -> Secrets and variables -> Actions,
+# or per-Environment). Nothing here is baked into an image or committed.
+#
+#   SECRETS (Settings -> Secrets):
+#     AZURE_CLIENT_ID          App/UAMI client id federated to this repo (OIDC)
+#     AZURE_TENANT_ID          AAD tenant id
+#     AZURE_SUBSCRIPTION_ID    Target subscription id
+#     AKS_CLUSTER              AKS cluster name        (tf output aks_cluster_name)
+#     AKS_RG                   AKS resource group      (tf output resource_group_name)
+#
+#   VARIABLES (Settings -> Variables):
+#     KEY_VAULT_URL            https://<vault>.vault.azure.net/   (tf output key_vault_uri)
+#     ESO_IDENTITY_CLIENT_ID   ESO managed-identity client id     (tf output external_secrets_identity_client_id)
+#     REGISTRY                 e.g. acme.azurecr.io  (image repo prefix; optional)
+#     BLOB_IDENTITY_CLIENT_ID  Blob managed-identity client id    (tf output blob_identity_client_id; optional)
+#
+# The federated identity for AZURE_CLIENT_ID must trust
+#   repo:<org>/<repo>:ref:refs/heads/main  and/or  repo:<org>/<repo>:ref:refs/tags/v*
+# and hold the roles needed to read AKS credentials + (optionally) manage the cluster.
+# ---------------------------------------------------------------------------
+
+name: cd-azure
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Image tag to deploy (default: commit SHA)"
+        required: false
+        type: string
+      environment:
+        description: "Target environment"
+        required: false
+        default: production
+        type: string
+  push:
+    tags:
+      - "v*"
+
+concurrency:
+  group: cd-azure-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  id-token: write # required for azure/login OIDC
+  contents: read
+
+env:
+  CHART_PATH: deploy/helm/windrose
+  VALUES_FILE: deploy/helm/windrose/values-azure.yaml
+  RELEASE_NAME: windrose
+  RELEASE_NAMESPACE: windrose
+  ESO_NAMESPACE: external-secrets
+  ESO_SERVICE_ACCOUNT: external-secrets
+  SECRET_STORE_NAME: windrose-azure-kv
+  TARGET_SECRET_NAME: windrose-secrets
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment || 'production' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve image tag
+        id: tag
+        run: |
+          TAG="${{ inputs.image_tag }}"
+          if [ -z "$TAG" ]; then
+            if [ "${GITHUB_REF_TYPE}" = "tag" ]; then TAG="${GITHUB_REF_NAME}"; else TAG="${GITHUB_SHA}"; fi
+          fi
+          echo "image_tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "Deploying image tag: ${TAG}"
+
+      - name: Azure login (OIDC, keyless)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Get AKS credentials
+        run: |
+          az aks install-cli
+          az aks get-credentials \
+            --resource-group "${{ secrets.AKS_RG }}" \
+            --name "${{ secrets.AKS_CLUSTER }}" \
+            --overwrite-existing
+          # Convert kubeconfig to use the azure CLI token (AAD-enabled clusters).
+          kubelogin convert-kubeconfig -l azurecli
+          kubectl version --output=yaml || true
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.15.3
+
+      - name: Install External Secrets Operator
+        run: |
+          helm repo add external-secrets https://charts.external-secrets.io
+          helm repo update
+          # Annotate the ESO ServiceAccount with the workload-identity client id and
+          # label its pods so the Azure Key Vault provider can federate.
+          cat > /tmp/eso-values.yaml <<EOF
+          installCRDs: true
+          serviceAccount:
+            annotations:
+              azure.workload.identity/client-id: "${{ vars.ESO_IDENTITY_CLIENT_ID }}"
+          podLabels:
+            azure.workload.identity/use: "true"
+          EOF
+          helm upgrade --install external-secrets external-secrets/external-secrets \
+            --namespace "${ESO_NAMESPACE}" --create-namespace \
+            -f /tmp/eso-values.yaml \
+            --wait --timeout 5m
+          kubectl -n "${ESO_NAMESPACE}" rollout status deploy/external-secrets --timeout=5m
+          kubectl -n "${ESO_NAMESPACE}" rollout status deploy/external-secrets-webhook --timeout=5m
+
+      - name: Configure ClusterSecretStore (Azure Key Vault, Workload Identity)
+        run: |
+          cat <<EOF | kubectl apply -f -
+          apiVersion: external-secrets.io/v1beta1
+          kind: ClusterSecretStore
+          metadata:
+            name: ${SECRET_STORE_NAME}
+          spec:
+            provider:
+              azurekv:
+                authType: WorkloadIdentity
+                vaultUrl: "${{ vars.KEY_VAULT_URL }}"
+                serviceAccountRef:
+                  name: ${ESO_SERVICE_ACCOUNT}
+                  namespace: ${ESO_NAMESPACE}
+          EOF
+
+      - name: Sync windrose-secrets from Key Vault
+        run: |
+          kubectl create namespace "${RELEASE_NAMESPACE}" --dry-run=client -o yaml | kubectl apply -f -
+          # Pull every Key Vault secret and rewrite hyphenated names back to the
+          # UPPER_SNAKE env keys the services expect (postgres-host -> POSTGRES_HOST).
+          cat <<EOF | kubectl apply -f -
+          apiVersion: external-secrets.io/v1beta1
+          kind: ExternalSecret
+          metadata:
+            name: windrose-secrets
+            namespace: ${RELEASE_NAMESPACE}
+          spec:
+            refreshInterval: 1h
+            secretStoreRef:
+              kind: ClusterSecretStore
+              name: ${SECRET_STORE_NAME}
+            target:
+              name: ${TARGET_SECRET_NAME}
+              creationPolicy: Owner
+            dataFrom:
+              - find:
+                  name:
+                    regexp: ".*"
+                rewrite:
+                  - transform:
+                      template: '{{ .value | replace "-" "_" | upper }}'
+          EOF
+          echo "Waiting for ${TARGET_SECRET_NAME} to be materialised..."
+          for i in $(seq 1 30); do
+            if kubectl -n "${RELEASE_NAMESPACE}" get secret "${TARGET_SECRET_NAME}" >/dev/null 2>&1; then
+              echo "Secret ${TARGET_SECRET_NAME} is ready."; break
+            fi
+            sleep 10
+            if [ "$i" = "30" ]; then
+              echo "::error::Timed out waiting for ${TARGET_SECRET_NAME}"
+              kubectl -n "${RELEASE_NAMESPACE}" describe externalsecret windrose-secrets || true
+              exit 1
+            fi
+          done
+
+      - name: Deploy Windrose (helm upgrade --install)
+        run: |
+          EXTRA_ARGS=()
+          if [ -n "${{ vars.REGISTRY }}" ]; then
+            EXTRA_ARGS+=(--set "global.image.registry=${{ vars.REGISTRY }}")
+          fi
+          if [ -n "${{ vars.BLOB_IDENTITY_CLIENT_ID }}" ]; then
+            EXTRA_ARGS+=(--set "global.workloadIdentity.blobClientId=${{ vars.BLOB_IDENTITY_CLIENT_ID }}")
+          fi
+          helm upgrade --install "${RELEASE_NAME}" "${CHART_PATH}" \
+            --namespace "${RELEASE_NAMESPACE}" --create-namespace \
+            -f "${VALUES_FILE}" \
+            --set "global.imageTag=${{ steps.tag.outputs.image_tag }}" \
+            --set "global.existingSecret=${TARGET_SECRET_NAME}" \
+            "${EXTRA_ARGS[@]}" \
+            --wait --timeout 15m
+
+      - name: Verify rollout
+        run: |
+          kubectl -n "${RELEASE_NAMESPACE}" get deploy -o name | while read -r d; do
+            kubectl -n "${RELEASE_NAMESPACE}" rollout status "$d" --timeout=5m
+          done
+          echo "Deployed pods:"
+          kubectl -n "${RELEASE_NAMESPACE}" get pods -o wide

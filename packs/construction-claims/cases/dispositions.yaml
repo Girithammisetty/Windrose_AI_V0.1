@@ -1,0 +1,14 @@
+# Disposition taxonomy for the claim-adjudication workflow. Categories are
+# the Core's closed set {true_positive,false_positive,benign,inconclusive,
+# other} (CASE-FR-020). approve_change_order and reject_no_entitlement are
+# the entitlement determinations (requires_note captures the contract clause
+# and record evidence every determination letter must cite);
+# negotiate_partial_merit is the partial-merit settlement path;
+# request_substantiation sends an unsupported quantum back for
+# contemporaneous records (measured-mile, not total-cost);
+# close_withdrawn_resolved records claimant withdrawal or field resolution.
+- { code: approve_change_order,      label: "Approve — entitlement and quantum substantiated",        category: true_positive,  requires_note: true }
+- { code: reject_no_entitlement,     label: "Reject — no contractual entitlement",                    category: false_positive, requires_note: true }
+- { code: negotiate_partial_merit,   label: "Negotiate — partial merit, settle at adjusted quantum",  category: other,          requires_note: true }
+- { code: request_substantiation,    label: "Request substantiation — quantum or causation unsupported", category: inconclusive, requires_note: true }
+- { code: close_withdrawn_resolved,  label: "Close — withdrawn or resolved in the field",             category: benign,         requires_note: true }

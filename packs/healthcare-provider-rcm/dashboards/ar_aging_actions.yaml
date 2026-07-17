@@ -1,0 +1,57 @@
+# A/R Aging Actions dashboard (RCM-FR-100 "AR Aging Actions", BRD 26 US-3):
+# open balances by aging bucket and payer, insurance vs patient split, and the
+# per-payer worklist grid with the AR-prioritizer score (RCM-FR-060).
+name: "A/R Aging Actions"
+module: insights
+semantic_model: rcm_ar
+description: >-
+  Provider A/R follow-up analytics (BRD 26): open balance by aging bucket
+  (0-30 .. 120_plus), item mix by payer type and balance type, and the
+  per-payer aging grid with days outstanding and follow-up priority.
+tags: [healthcare, provider, rcm, ar, aging, pack]
+charts:
+  - name: "A/R balance by aging bucket"
+    chart_type: vertical_bar_chart
+    description: "Open dollars by aging bucket"
+    config:
+      x: { dimension: aging_bucket }
+      y: [ { measure: total_ar_balance, agg_fn: sum } ]
+    sources: [ { measure: total_ar_balance } ]
+    w: 6
+    h: 4
+  - name: "A/R items by payer type"
+    chart_type: pie_chart
+    description: "Open A/R item mix by payer type"
+    config:
+      x: { dimension: ar_payer_type }
+      y: [ { measure: ar_item_count, agg_fn: count } ]
+    sources: [ { measure: ar_item_count } ]
+    w: 6
+    h: 4
+  - name: "A/R balance by balance type"
+    chart_type: vertical_bar_chart
+    description: "Insurance vs patient-responsibility open dollars"
+    config:
+      x: { dimension: balance_type }
+      y: [ { measure: total_ar_balance, agg_fn: sum } ]
+    sources: [ { measure: total_ar_balance } ]
+    w: 6
+    h: 4
+  - name: "A/R worklist by payer"
+    chart_type: grid_chart
+    description: "Per-payer open items, dollars, days outstanding, and follow-up priority"
+    config:
+      columns: [ar_payer_name, ar_item_count, total_ar_balance, avg_days_outstanding, avg_priority_score]
+      x: { dimension: ar_payer_name }
+      y:
+        - { measure: ar_item_count, agg_fn: count }
+        - { measure: total_ar_balance, agg_fn: sum }
+        - { measure: avg_days_outstanding, agg_fn: avg }
+        - { measure: avg_priority_score, agg_fn: avg }
+    sources:
+      - { measure: ar_item_count }
+      - { measure: total_ar_balance }
+      - { measure: avg_days_outstanding }
+      - { measure: avg_priority_score }
+    w: 12
+    h: 4

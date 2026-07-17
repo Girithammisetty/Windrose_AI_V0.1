@@ -1,0 +1,29 @@
+# Saved queries (query-service) — includes the carrier->lane edge source
+# (parent/child/n) for network-family charts: repeat-damage carrier/lane
+# clustering and hot-lane exposure from the shipment book.
+- identity: carrier_lane_edges
+  name: "Claims: carrier-lane network edges"
+  description: >-
+    Carrier -> lane edge list (parent/child/n) from the shipment book —
+    network-chart source for spotting repeat-damage carrier/lane clusters
+    (one carrier concentrated on one lane, like the Ironbridge CHI-DAL
+    damage cluster) and theft hot-lane exposure (which carriers run the
+    ONT-LAS corridor).
+  sql: >-
+    SELECT carrier_id AS parent, lane AS child,
+           count(*) AS n
+    FROM {{dataset('tl-shipments')}}
+    GROUP BY carrier_id, lane
+  tags: [claims, network, carriers, lanes, pack]
+- identity: high_exposure_open_claims
+  name: "Claims: high-exposure open queue"
+  description: "Open claims and reviews ranked by dollar exposure — the analyst ranked-queue seed (deadline x dollar x severity, not FIFO)."
+  sql: >-
+    SELECT claim_id, shipment_id, claim_kind, claim_type, commodity_event,
+           liability_band, severity,
+           cast(days_to_deadline AS double) AS days_to_deadline,
+           cast(amount AS double) AS amount
+    FROM {{dataset('tl-claims')}}
+    WHERE status = 'open'
+    ORDER BY amount DESC
+  tags: [claims, queue, backlog, pack]

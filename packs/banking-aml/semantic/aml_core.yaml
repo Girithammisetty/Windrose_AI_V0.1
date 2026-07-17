@@ -1,0 +1,125 @@
+# Semantic model `aml_core` — AML-FR-020 KPI catalog (alert false-positive
+# rate, SAR conversion rate, backlog aging, sanctions screening mix),
+# expressed in the Core semantic grammar (SEM-FR-004: agg whitelist, measure
+# filters, derived expr_metric with nullif; join_paths left/many_to_one,
+# acyclic).
+#
+# entity.table is main.<safe_relation(dataset name)> — the physical relation
+# query-service materializes; `dataset:` refs are rebound to live dataset URNs
+# by packctl at install. Amount columns ingest as bronze strings, so numeric
+# measures cast(... as double) (the proven claims_core pattern).
+name: aml_core
+description: >-
+  US banking AML KPI model (BRD 30 AML-FR-020): alert false-positive rate,
+  SAR conversion rate, alert backlog aging, sanctions near-match screening
+  mix, transaction monitoring volumes — alerts and transactions joined to the
+  party (KYC) book.
+definition:
+  entities:
+    - name: alerts
+      dataset: aml_alerts
+      table: main.aml_alerts
+      primary_key: [alert_id]
+      dataset_version_policy: { policy: latest }
+    - name: transactions
+      dataset: aml_transactions
+      table: main.aml_transactions
+      primary_key: [txn_id]
+      dataset_version_policy: { policy: latest }
+    - name: parties
+      dataset: aml_parties
+      table: main.aml_parties
+      primary_key: [party_id]
+      dataset_version_policy: { policy: latest }
+  join_paths:
+    - name: alerts_parties
+      from_entity: alerts
+      to_entity: parties
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: party_id, to_column: party_id }]
+    - name: transactions_parties
+      from_entity: transactions
+      to_entity: parties
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: party_id, to_column: party_id }]
+  dimensions:
+    - { name: typology, entity: alerts, type: categorical, column: typology }
+    - { name: scenario_rule, entity: alerts, type: categorical, column: scenario_rule }
+    - { name: severity, entity: alerts, type: categorical, column: severity }
+    - { name: alert_status, entity: alerts, type: categorical, column: status }
+    - { name: alert_disposition, entity: alerts, type: categorical, column: disposition }
+    - { name: assigned_tier, entity: alerts, type: categorical, column: assigned_tier }
+    - { name: alert_month, entity: alerts, type: categorical, column: alert_month }
+    - { name: channel, entity: transactions, type: categorical, column: channel }
+    - { name: direction, entity: transactions, type: categorical, column: direction }
+    - { name: txn_month, entity: transactions, type: categorical, column: txn_month }
+    - { name: counterparty_jurisdiction, entity: transactions, type: categorical, column: counterparty_jurisdiction }
+    - { name: cross_border, entity: transactions, type: categorical, column: cross_border }
+    - { name: branch_id, entity: transactions, type: categorical, column: branch_id }
+    - { name: party_type, entity: parties, type: categorical, column: party_type }
+    - { name: risk_rating, entity: parties, type: categorical, column: risk_rating }
+    - { name: kyc_status, entity: parties, type: categorical, column: kyc_status }
+    - { name: pep_flag, entity: parties, type: categorical, column: pep_flag }
+    - { name: sic_code, entity: parties, type: categorical, column: sic_code }
+    - { name: declared_business, entity: parties, type: categorical, column: declared_business }
+    - { name: party_jurisdiction, entity: parties, type: categorical, column: party_jurisdiction }
+  measures:
+    - { name: alert_count, entity: alerts, agg: count,
+        description: "Number of alerts" }
+    - { name: open_alert_count, entity: alerts, agg: count,
+        filters: "status = 'open'",
+        description: "Alerts still open (triage backlog)" }
+    - { name: closed_alert_count, entity: alerts, agg: count,
+        filters: "status = 'closed'",
+        description: "Alerts closed with a human disposition" }
+    - { name: false_positive_count, entity: alerts, agg: count,
+        filters: "disposition = 'false_positive'",
+        description: "Alerts closed as false positive" }
+    - { name: sar_filed_count, entity: alerts, agg: count,
+        filters: "disposition = 'sar_filed'",
+        description: "Alerts closed with a SAR filed (MLRO decision)" }
+    - { name: sanctions_hit_count, entity: alerts, agg: count,
+        filters: "typology = 'sanctions_near_match'",
+        description: "Sanctions near-match screening hits" }
+    - { name: avg_alert_age_days, entity: alerts, agg: avg,
+        expr: "cast(age_days as double)", format: decimal,
+        description: "Average alert age in days (cycle time / backlog aging)" }
+    - { name: total_alert_amount, entity: alerts, agg: sum,
+        expr: "cast(amount_involved as double)", format: decimal,
+        description: "Total dollar amount involved across alerts" }
+    - { name: avg_match_score, entity: alerts, agg: avg,
+        expr: "cast(match_score as double)", format: decimal,
+        description: "Mean sanctions name-match score (0 for non-sanctions alerts)" }
+    - { name: txn_count, entity: transactions, agg: count,
+        description: "Number of monitored transactions" }
+    - { name: cash_txn_count, entity: transactions, agg: count,
+        filters: "channel = 'cash'",
+        description: "Cash transactions (CTR / structuring surface)" }
+    - { name: wire_txn_count, entity: transactions, agg: count,
+        filters: "channel = 'wire'",
+        description: "Wire transactions (layering surface)" }
+    - { name: total_txn_amount, entity: transactions, agg: sum,
+        expr: "cast(amount as double)", format: decimal,
+        description: "Total transaction amount" }
+    - { name: avg_txn_amount, entity: transactions, agg: avg,
+        expr: "cast(amount as double)", format: decimal,
+        description: "Average transaction amount" }
+    - { name: party_count, entity: parties, agg: count,
+        description: "Number of parties (customers) on the book" }
+    - { name: high_risk_party_count, entity: parties, agg: count,
+        filters: "risk_rating = 'high'",
+        description: "Parties rated high risk (EDD population)" }
+    - { name: alert_false_positive_rate,
+        expr_metric: "false_positive_count / nullif(closed_alert_count, 0)",
+        format: percent,
+        description: "AML-FR-020 alert_false_positive_rate: FP closures over all closures" }
+    - { name: sar_conversion_rate,
+        expr_metric: "sar_filed_count / nullif(closed_alert_count, 0)",
+        format: percent,
+        description: "AML-FR-020 sar_conversion_rate: SARs filed over alerts closed" }
+    - { name: edd_high_risk_ratio,
+        expr_metric: "high_risk_party_count / nullif(party_count, 0)",
+        format: percent,
+        description: "AML-FR-020 edd_high_risk_ratio: high-risk parties over book" }

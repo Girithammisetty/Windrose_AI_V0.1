@@ -1,0 +1,92 @@
+openapi: 3.1.0
+info:
+  title: eval-service
+  version: 0.1.0
+  description: >
+    Agent quality flywheel (BRD 16): golden datasets, scorers, eval runs, the CI
+    gate API, canary comparison, score trends and agent SLOs. All responses use
+    the master data/error envelopes (MASTER-FR-022/024). Bearer JWT on /api/v1;
+    the CI plane also accepts an allowed SPIFFE identity (mTLS).
+servers:
+  - url: http://localhost:8313
+components:
+  securitySchemes:
+    bearerAuth: { type: http, scheme: bearer, bearerFormat: JWT }
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: { type: string }
+            message: { type: string }
+            trace_id: { type: string }
+            details: {}
+security: [{ bearerAuth: [] }]
+paths:
+  /healthz: { get: { security: [], responses: { "200": { description: ok } } } }
+  /readyz: { get: { security: [], responses: { "200": { description: ready } } } }
+
+  /api/v1/datasets:
+    post: { summary: Create a golden dataset (draft), responses: { "201": { description: created } } }
+    get: { summary: List datasets, responses: { "200": { description: page } } }
+  /api/v1/datasets/{dataset_key}/versions/{version}:
+    get: { summary: Get a dataset version, responses: { "200": { description: ok }, "404": { description: not found } } }
+  /api/v1/datasets/{dataset_key}/versions/{version}/freeze:
+    post: { summary: Freeze a dataset version (guard = ≥1 active case), responses: { "200": { description: frozen }, "422": { description: freeze guard } } }
+
+  /api/v1/cases:
+    post: { summary: Create an eval case, responses: { "201": { description: created } } }
+    get: { summary: Review queue (filter[status], filter[dataset_key]), responses: { "200": { description: page } } }
+  /api/v1/cases/{case_id}:
+    get: { summary: Get a case, responses: { "200": { description: ok }, "404": { description: not found } } }
+    patch: { summary: Edit a case, responses: { "200": { description: ok }, "409": { description: frozen } } }
+  /api/v1/cases/{case_id}/promote:
+    post: { summary: Promote a candidate case to active, responses: { "200": { description: ok }, "422": { description: ANONYMIZATION_REQUIRED } } }
+  /api/v1/cases/{case_id}/attest:
+    post: { summary: Attest anonymization for a production-sourced case, responses: { "200": { description: ok } } }
+  /api/v1/cases/{case_id}/reject: { post: { summary: Reject a candidate, responses: { "200": { description: ok } } } }
+  /api/v1/cases/{case_id}/retire: { post: { summary: Retire a case, responses: { "200": { description: ok } } } }
+
+  /api/v1/scorers:
+    post: { summary: Register a scorer version, responses: { "201": { description: created } } }
+    get: { summary: List scorers, responses: { "200": { description: page } } }
+  /api/v1/scorers/{scorer_key}/versions/{version}/activate:
+    post: { summary: Activate a scorer (judge agreement ≥ 0.8), responses: { "200": { description: ok }, "422": { description: JUDGE_AGREEMENT_TOO_LOW } } }
+
+  /api/v1/suites:
+    post: { summary: Create a suite version (gate rule needs ≥1 deterministic term), responses: { "201": { description: created }, "422": { description: JUDGE_GATES_ALONE } } }
+  /api/v1/suites/{suite_id}: { get: { summary: Get a suite, responses: { "200": { description: ok } } } }
+
+  /api/v1/runs:
+    post: { summary: Create + execute an eval run, responses: { "201": { description: run }, "402": { description: EVAL_BUDGET_EXCEEDED } } }
+    get: { summary: List runs, responses: { "200": { description: page } } }
+  /api/v1/runs/{run_id}:
+    get: { summary: Get a run, responses: { "200": { description: ok } } }
+  /api/v1/runs/{run_id}/cases: { get: { summary: Per-case results, responses: { "200": { description: ok } } } }
+  /api/v1/runs/{run_id}/cancel: { post: { summary: Cancel a run, responses: { "200": { description: ok } } } }
+
+  /api/v1/ci/evaluate:
+    post: { summary: CI gate trigger (SPIFFE mTLS or JWT); runs suite + returns gate verdict, responses: { "202": { description: operation } } }
+
+  /api/v1/gates/{gate_run_id}:
+    get: { summary: Gate verdict (per-scorer aggregates + baseline deltas), responses: { "200": { description: ok }, "409": { description: BASELINE_INCOMPARABLE } } }
+  /api/v1/gates:
+    get: { summary: Find gates by agent_key + content_digest, responses: { "200": { description: ok } } }
+
+  /api/v1/canaries:
+    post: { summary: Create a canary comparison, responses: { "201": { description: created } } }
+  /api/v1/canaries/{comparison_id}:
+    get: { summary: Get a canary report, responses: { "200": { description: ok } } }
+  /api/v1/canaries/{comparison_id}/samples:
+    post: { summary: Ingest paired samples (recomputes CIs / early stop), responses: { "200": { description: ok } } }
+  /api/v1/canaries/{comparison_id}/stop:
+    post: { summary: Stop/expire a canary, responses: { "200": { description: ok } } }
+
+  /api/v1/trends:
+    get: { summary: Score trends per agent/scorer/window, responses: { "200": { description: ok } } }
+  /api/v1/slos:
+    get: { summary: Agent SLO metrics (operator=all tenants; tenant admin=own), responses: { "200": { description: ok } } }
+  /api/v1/slos/targets:
+    post: { summary: Set SLO targets / error budgets, responses: { "200": { description: ok } } }

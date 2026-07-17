@@ -1,0 +1,24 @@
+{
+  "type": "record",
+  "name": "AiAgentRun",
+  "namespace": "windrose.agent.events.v1",
+  "doc": "ai.agent_run.v1 payload (ART-FR-011). Run lifecycle transitions. Emitted inside the master envelope's `payload` (JSON-encoded).",
+  "fields": [
+    {"name": "run_id", "type": "string"},
+    {"name": "session_id", "type": "string"},
+    {"name": "agent_key", "type": "string"},
+    {"name": "agent_version", "type": "int"},
+    {"name": "principal_type", "type": "string", "doc": "user_obo | agent_autonomous"},
+    {"name": "status", "type": "string", "doc": "queued|running|awaiting_input|awaiting_approval|completed|failed|cancelled|killed|expired"},
+    {"name": "event", "type": "string", "doc": "run.started|state_changed|completed|failed|killed"},
+    {"name": "usage", "type": ["null", {
+      "type": "record", "name": "RunUsage",
+      "fields": [
+        {"name": "input_tokens", "type": ["null", "int"], "default": null},
+        {"name": "output_tokens", "type": ["null", "int"], "default": null},
+        {"name": "model", "type": ["null", "string"], "default": null}
+      ]
+    }], "default": null},
+    {"name": "error_code", "type": ["null", "string"], "default": null}
+  ]
+}

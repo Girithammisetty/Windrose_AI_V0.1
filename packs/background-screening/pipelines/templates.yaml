@@ -1,0 +1,17 @@
+# Pipeline seeds (expressed against the real pipeline-orchestrator algorithm
+# catalog): an unsupervised order-anomaly detector (turnaround outliers,
+# unusual order/velocity patterns worth an operations look) and a supervised
+# review-outcome scorer trained on human adjudications (the
+# deterministic-first pre-router for hit triage). Trained models require
+# review before promotion — the Screening Operations Manager approves
+# promotions.
+- identity: bs_order_anomaly_isolation_forest
+  name: "Screening order anomaly detector (isolation forest)"
+  algorithm: isolation_forest
+  mode: train
+  dataset: bs_orders
+- identity: bs_review_outcome_xgboost
+  name: "Screening-hit outcome scorer (xgboost)"
+  algorithm: xgboost
+  mode: train
+  dataset: bs_reviews

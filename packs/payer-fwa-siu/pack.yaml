@@ -1,0 +1,107 @@
+# payer-fwa-siu capability pack (BRD 27) — Core-neutral edition.
+# Post-payment Fraud/Waste/Abuse detection + Special Investigations Unit
+# workflow for US health payers. Installable TODAY against Windrose Core's
+# public APIs via packctl; the manifest envelope follows BRD 23 so this bundle
+# is forward-compatible with pack-service. Components the current Core cannot
+# materialize are declared under `deferred` with the exact FWA-FR requirement
+# they trace to — recorded in the install ledger, never faked.
+pack_manifest: 1
+name: payer-fwa-siu
+version: 1.0.0
+publisher: { id: pub-windrose, name: "Windrose Inc." }
+description: >-
+  Payer-side FWA detection and SIU investigation workflow (BRD 27):
+  claim-line FWA scoring seeds (upcoding, unbundling per NCCI, phantom
+  billing, impossible days), provider peer-group outlier profiles with
+  LEIE exclusion status, SIU lead queue with investigation dispositions,
+  recovery tracking, SIU KPI semantic models and dashboards (hit rate,
+  recovered dollars, false-positive rate), SIU role catalog,
+  investigation-grounded copilot configuration, and isolation-forest /
+  xgboost detector training pipelines.
+categories: [insurance, payer, fwa, siu, payment-integrity]
+regulatory: [hipaa, hitrust, false_claims_act, glba, doj_referral_std, state_doi_reporting, chain_of_custody]
+components:
+  datasets:
+    - { file: "data/datasets.yaml", identity: "datasets" }
+  semantic_models:
+    - { file: "semantic/fwa_claims.yaml", identity: "fwa_claims" }
+    - { file: "semantic/siu_operations.yaml", identity: "siu_operations" }
+  verified_queries:
+    - { file: "queries/verified.yaml", identity: "canonical_questions" }
+  saved_queries:
+    - { file: "queries/saved.yaml", identity: "saved_queries" }
+  dashboards:
+    - { file: "dashboards/siu_command_center.yaml", identity: "siu_command_center" }
+    - { file: "dashboards/provider_outliers.yaml", identity: "provider_outliers" }
+  dispositions:
+    - { file: "cases/dispositions.yaml", identity: "dispositions" }
+  cases:
+    - { file: "cases/queue.yaml", identity: "siu_lead_queue" }
+  roles:
+    - { file: "rbac/roles.yaml", identity: "roles" }
+  agent_configs:
+    - { file: "agents/configs.yaml", identity: "agent_configs" }
+  memories:
+    - { file: "memories/grounding.yaml", identity: "grounding" }
+  pipelines:
+    - { file: "pipelines/templates.yaml", identity: "pipelines" }
+deferred:
+  - kind: ontology
+    reason: >-
+      FWA-FR-010 ontology registration (Provider, Member, Claim, SIUCase,
+      Evidence, Sanction, NPDBRecord, LawEnforcementReferral, Recovery)
+      awaits pack-service; entity semantics are carried today by the
+      fwa_claims / siu_operations semantic models and the dataset schemas.
+  - kind: guardrails
+    reason: >-
+      FWA-FR-090 policies (chain-of-custody hash+timestamp+access log,
+      FCA evidentiary standards, DOJ referral format, state DOI reporting,
+      whistleblower pseudonymization) require guardrail-service / OPA
+      materialization. Core invariants cover part of the intent today:
+      proposal-mode + four-eyes approval enforce BR-1/BR-3 human sign-off
+      for every pack-configured agent action.
+  - kind: agent_recipes
+    reason: >-
+      FWA-FR-030..070 bespoke recipes (FWA Scorer, Provider Outlier
+      Detector, SIU Case Builder, Evidence Gatherer, Prosecution-Referral
+      Packet Drafter) require agent-runtime graph-module registration
+      (BRD 23 BR-12). This pack specializes the existing case-triage +
+      analytics agents via TenantAgentConfig prompt_params + tenant-scope
+      RAG grounding instead.
+  - kind: connection_templates
+    reason: >-
+      FWA-FR-080 read connectors (Facets/HealthEdge/QNXT/Amisys, EDI
+      837/835, NPPES, LEIE, OIG-CIA, state exclusion lists, NPDB, SAM.gov,
+      NHCAA feeds, member CRM, provider directory) require customer
+      credentials and pack-service connector materialization. The pack
+      ships seed datasets in the exact landing shape those connectors
+      produce; production connectors are configured via Data > Connections.
+  - kind: write_adapters
+    reason: >-
+      FWA-FR-080 write adapters (core-admin case flag, recovery record,
+      DOJ e-referral delivery, provider sanction flag, member payback
+      notification) execute only behind pack-service's materialization
+      contract and customer credentials; BR-1/BR-8 keep every platform-side
+      write proposal-mode, and AC-8 forbids autonomous recovery writes.
+  - kind: eval_sets
+    reason: >-
+      BRD 27 §4 golden sets (FWA scoring, outlier detection, packet
+      drafting, evidence completeness) require eval-service write APIs
+      whose action names are not yet in the rbac canonical catalog.
+  - kind: model_archetypes
+    reason: >-
+      BRD 27 §4 archetypes (fwa_ensemble_v1, provider_outlier_v1) await
+      experiment-service archetype APIs; the detector ships today as
+      pipeline seeds (isolation_forest claim-line outlier detector +
+      xgboost lead classifier per FWA-FR-030/040).
+  - kind: display_labels
+    reason: >-
+      BRD 27 §4 display labels (FWA candidate / Investigation / Referral /
+      Recovery, agent names, provider/member entity templates) require the
+      BFF label-registry endpoints, a pack-service-tier feature.
+  - kind: case_schemas
+    reason: >-
+      FWA-FR-100 typed case schemas (fwa_review, siu_investigation,
+      prosecution_referral_review, recovery_action_case) await case-service
+      schema materialization; today's SIU lead queue carries the same
+      fields via display_projection + the disposition taxonomy.

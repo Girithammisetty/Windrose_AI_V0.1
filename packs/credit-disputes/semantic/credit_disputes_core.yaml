@@ -1,0 +1,162 @@
+# Semantic model `credit_disputes_core` — furnisher/CRA credit-reporting
+# dispute-operations KPI catalog (correction rate, verified-accurate rate,
+# deletion rate, identity-theft share, deadline runway, channel mix,
+# repeat-dispute share), expressed in the Core semantic grammar (agg
+# whitelist, equality measure filters, derived expr_metric with nullif;
+# join_paths left/many_to_one, acyclic chain).
+#
+# entity.table is main.<safe_relation(dataset name)>; `dataset:` refs are
+# rebound to live dataset URNs by packctl at install. Numeric columns ingest
+# as bronze strings, so numeric measures cast(... as double) (the proven
+# claims_core pattern).
+name: credit_disputes_core
+description: >-
+  FCRA credit-reporting dispute operations KPI model for furnishers and CRAs
+  (FCRA 611/623(b)/605B): reinvestigation volumes and backlog aging by
+  channel (direct, e-OSCAR ACDV, court document), disposition outcome mix
+  (corrections, verified-accurate, deletions, identity-theft escalations,
+  documented frivolous closures), deadline runway on the 30/45-day clock,
+  and the tradeline/consumer book the disputes attach to.
+definition:
+  entities:
+    - name: disputes
+      dataset: cr_disputes
+      table: main.cr_disputes
+      primary_key: [dispute_id]
+      dataset_version_policy: { policy: latest }
+    - name: tradelines
+      dataset: cr_tradelines
+      table: main.cr_tradelines
+      primary_key: [tradeline_id]
+      dataset_version_policy: { policy: latest }
+    - name: consumers
+      dataset: cr_consumers
+      table: main.cr_consumers
+      primary_key: [consumer_id]
+      dataset_version_policy: { policy: latest }
+  join_paths:
+    - name: disputes_tradelines
+      from_entity: disputes
+      to_entity: tradelines
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: tradeline_id, to_column: tradeline_id }]
+    - name: tradelines_consumers
+      from_entity: tradelines
+      to_entity: consumers
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: consumer_id, to_column: consumer_id }]
+  dimensions:
+    - { name: channel, entity: disputes, type: categorical, column: channel }
+    - { name: dispute_reason, entity: disputes, type: categorical, column: dispute_reason }
+    - { name: tradeline_type, entity: disputes, type: categorical, column: tradeline_type }
+    - { name: fcra_flag, entity: disputes, type: categorical, column: fcra_flag }
+    - { name: severity, entity: disputes, type: categorical, column: severity }
+    - { name: dispute_status, entity: disputes, type: categorical, column: status }
+    - { name: dispute_disposition, entity: disputes, type: categorical, column: disposition }
+    - { name: filed_month, entity: disputes, type: categorical, column: filed_month }
+    - { name: deadline_bucket, entity: disputes, type: categorical, column: deadline_bucket }
+    - { name: account_status, entity: tradelines, type: categorical, column: account_status }
+    - { name: balance_band, entity: tradelines, type: categorical, column: balance_band }
+    - { name: delinquency_history, entity: tradelines, type: categorical, column: delinquency_history }
+    - { name: opened_year, entity: tradelines, type: categorical, column: opened_year }
+    - { name: furnisher_system, entity: tradelines, type: categorical, column: furnisher_system }
+    - { name: consumer_state, entity: consumers, type: categorical, column: state }
+    - { name: prior_disputes, entity: consumers, type: categorical, column: prior_disputes }
+    - { name: identity_theft_report, entity: consumers, type: categorical, column: identity_theft_report }
+    - { name: credit_monitoring, entity: consumers, type: categorical, column: credit_monitoring }
+    - { name: litigation_history, entity: consumers, type: categorical, column: litigation_history }
+  measures:
+    - { name: dispute_count, entity: disputes, agg: count,
+        description: "Number of credit-reporting disputes" }
+    - { name: open_dispute_count, entity: disputes, agg: count,
+        filters: "status = 'open'",
+        description: "Disputes still open on the reinvestigation clock" }
+    - { name: closed_dispute_count, entity: disputes, agg: count,
+        filters: "status = 'closed'",
+        description: "Disputes closed with a final determination" }
+    - { name: correction_count, entity: disputes, agg: count,
+        filters: "disposition = 'correct_tradeline'",
+        description: "Disputes resolved by correcting the tradeline (furnish correction to all CRAs)" }
+    - { name: verified_accurate_count, entity: disputes, agg: count,
+        filters: "disposition = 'verify_accurate_as_reported'",
+        description: "Disputes where the reinvestigation verified the tradeline accurate as reported" }
+    - { name: deletion_count, entity: disputes, agg: count,
+        filters: "disposition = 'delete_unverifiable'",
+        description: "Disputes resolved by deleting the tradeline (unverifiable or obsolete)" }
+    - { name: identity_theft_escalation_count, entity: disputes, agg: count,
+        filters: "disposition = 'escalate_identity_theft_review'",
+        description: "Disputes escalated to identity-theft review (FCRA 605B track)" }
+    - { name: frivolous_closure_count, entity: disputes, agg: count,
+        filters: "disposition = 'close_frivolous_documented'",
+        description: "Disputes closed as frivolous/irrelevant with the documented notice" }
+    - { name: acdv_dispute_count, entity: disputes, agg: count,
+        filters: "channel = 'e_oscar_acdv'",
+        description: "Disputes referred by a CRA via e-OSCAR ACDV (furnisher must answer inside the CRA window)" }
+    - { name: direct_dispute_count, entity: disputes, agg: count,
+        filters: "channel = 'direct'",
+        description: "Direct consumer disputes (Reg V direct-dispute duties)" }
+    - { name: court_document_dispute_count, entity: disputes, agg: count,
+        filters: "channel = 'court_document'",
+        description: "Disputes arriving with court or attorney documentation" }
+    - { name: identity_theft_claim_count, entity: disputes, agg: count,
+        filters: "dispute_reason = 'identity_theft'",
+        description: "Disputes claiming identity theft" }
+    - { name: identity_theft_block_count, entity: disputes, agg: count,
+        filters: "fcra_flag = 'identity_theft_block'",
+        description: "Disputes carrying an FCRA 605B block request (4-business-day clock)" }
+    - { name: obsolete_info_count, entity: disputes, agg: count,
+        filters: "dispute_reason = 'obsolete_info'",
+        description: "Disputes claiming the item is past the FCRA reporting period" }
+    - { name: high_severity_count, entity: disputes, agg: count,
+        filters: "severity = 'high'",
+        description: "High-severity disputes (deadline-critical or identity-theft)" }
+    - { name: avg_dispute_age_days, entity: disputes, agg: avg,
+        expr: "cast(age_days as double)", format: decimal,
+        description: "Average dispute age in days (cycle time / backlog aging)" }
+    - { name: avg_deadline_runway_days, entity: disputes, agg: avg,
+        expr: "cast(days_to_deadline as double)", format: decimal,
+        description: "Average days remaining to the governing FCRA deadline (closed rows carry 0 — slice by status or deadline_bucket)" }
+    - { name: tradeline_count, entity: tradelines, agg: count,
+        description: "Number of furnished tradelines on the book" }
+    - { name: in_collection_tradeline_count, entity: tradelines, agg: count,
+        filters: "account_status = 'in_collection'",
+        description: "Tradelines in collection status (duplicate-tradeline surface)" }
+    - { name: charged_off_tradeline_count, entity: tradelines, agg: count,
+        filters: "account_status = 'charged_off'",
+        description: "Charged-off tradelines (obsolescence watch)" }
+    - { name: serious_delinquency_tradeline_count, entity: tradelines, agg: count,
+        filters: "delinquency_history = 'late_90_plus'",
+        description: "Tradelines with a 90+ day delinquency history" }
+    - { name: consumer_count, entity: consumers, agg: count,
+        description: "Number of consumers with furnished tradelines" }
+    - { name: litigation_consumer_count, entity: consumers, agg: count,
+        filters: "litigation_history = 'yes'",
+        description: "Consumers with FCRA litigation history (reasonable-investigation depth flag)" }
+    - { name: identity_theft_report_consumer_count, entity: consumers, agg: count,
+        filters: "identity_theft_report = 'yes'",
+        description: "Consumers with an identity theft report on file (605B eligibility)" }
+    - { name: repeat_disputer_count, entity: consumers, agg: count,
+        filters: "prior_disputes = 'over_5'",
+        description: "Consumers with more than five prior disputes (frivolous-pattern watch)" }
+    - { name: correction_rate,
+        expr_metric: "correction_count / nullif(closed_dispute_count, 0)",
+        format: percent,
+        description: "Tradeline corrections over all closed disputes (furnisher accuracy signal)" }
+    - { name: verified_accurate_rate,
+        expr_metric: "verified_accurate_count / nullif(closed_dispute_count, 0)",
+        format: percent,
+        description: "Verified-accurate determinations over all closed disputes" }
+    - { name: deletion_rate,
+        expr_metric: "deletion_count / nullif(closed_dispute_count, 0)",
+        format: percent,
+        description: "Tradeline deletions (unverifiable or obsolete) over all closed disputes" }
+    - { name: identity_theft_share,
+        expr_metric: "identity_theft_claim_count / nullif(dispute_count, 0)",
+        format: percent,
+        description: "Share of dispute volume claiming identity theft" }
+    - { name: repeat_disputer_share,
+        expr_metric: "repeat_disputer_count / nullif(consumer_count, 0)",
+        format: percent,
+        description: "Share of the consumer book with more than five prior disputes" }

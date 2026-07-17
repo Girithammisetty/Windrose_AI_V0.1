@@ -1,0 +1,72 @@
+# Semantic model `pbm_pa` — the Rx prior-authorization half of BRD 28
+# RX-FR-020 (pa_turnaround, pa_auto_approve_rate) over the ePA landing shape.
+# turnaround_hours is hours-to-decision for decided PAs and hours-elapsed for
+# pending ones (always populated, so avg casts safely). CMS Part D coverage
+# determination windows: 72h standard / 24h expedited.
+name: pbm_pa
+description: >-
+  Rx prior-authorization model (BRD 28): PA volumes, approval/denial splits,
+  turnaround against the CMS Part D coverage-determination windows, controlled
+  substance mix, and agent recommendation split.
+definition:
+  entities:
+    - name: pa_requests
+      dataset: pbm_pa_requests
+      table: main.pbm_pa_requests
+      primary_key: [pa_id]
+      dataset_version_policy: { policy: latest }
+  dimensions:
+    - { name: urgency, entity: pa_requests, type: categorical, column: urgency }
+    - { name: pa_status, entity: pa_requests, type: categorical, column: status }
+    - { name: submitted_month, entity: pa_requests, type: categorical, column: submitted_month }
+    - { name: pa_gpi_class, entity: pa_requests, type: categorical, column: gpi_class }
+    - { name: pa_drug_name, entity: pa_requests, type: categorical, column: drug_name }
+    - { name: controlled_substance, entity: pa_requests, type: categorical, column: controlled_substance }
+    - { name: cs_schedule, entity: pa_requests, type: categorical, column: cs_schedule }
+    - { name: pa_formulary_tier, entity: pa_requests, type: categorical, column: formulary_tier }
+    - { name: step_therapy_met, entity: pa_requests, type: categorical, column: step_therapy_met }
+    - { name: agent_recommendation, entity: pa_requests, type: categorical, column: agent_recommendation }
+    - { name: denial_reason, entity: pa_requests, type: categorical, column: denial_reason }
+    - { name: pa_member_state, entity: pa_requests, type: categorical, column: member_state }
+  measures:
+    - { name: pa_request_count, entity: pa_requests, agg: count,
+        description: "Rx prior-auth requests" }
+    - { name: pa_approved_count, entity: pa_requests, agg: count,
+        filters: "status = 'approved'",
+        description: "Rx PAs approved" }
+    - { name: pa_denied_count, entity: pa_requests, agg: count,
+        filters: "status = 'denied'",
+        description: "Rx PAs denied (human pharmacist decision)" }
+    - { name: pa_pending_count, entity: pa_requests, agg: count,
+        filters: "status = 'pending'",
+        description: "Rx PAs pending coverage determination" }
+    - { name: expedited_pa_count, entity: pa_requests, agg: count,
+        filters: "urgency = 'expedited'",
+        description: "Expedited PAs (24-hour CMS Part D window)" }
+    - { name: controlled_pa_count, entity: pa_requests, agg: count,
+        filters: "controlled_substance = 'yes'",
+        description: "PAs for controlled substances (never auto-approved)" }
+    - { name: agent_auto_approve_count, entity: pa_requests, agg: count,
+        filters: "agent_recommendation = 'approve'",
+        description: "PAs the copilot recommended for one-click approval" }
+    - { name: avg_pa_turnaround_hours, entity: pa_requests, agg: avg,
+        expr: "cast(turnaround_hours as double)", format: decimal,
+        description: "RX-FR-020 pa_turnaround: mean hours to decision (elapsed for pending)" }
+    - { name: max_pa_turnaround_hours, entity: pa_requests, agg: max,
+        expr: "cast(turnaround_hours as double)", format: decimal,
+        description: "Worst-case turnaround hours (SLA breach check)" }
+    - { name: avg_agent_confidence, entity: pa_requests, agg: avg,
+        expr: "cast(agent_confidence as double)", format: decimal,
+        description: "Mean PA-copilot confidence" }
+    - { name: pa_approval_rate,
+        expr_metric: "pa_approved_count / nullif(pa_request_count, 0)",
+        format: percent,
+        description: "Rx PA approval rate" }
+    - { name: pa_denial_rate,
+        expr_metric: "pa_denied_count / nullif(pa_request_count, 0)",
+        format: percent,
+        description: "Rx PA denial rate" }
+    - { name: agent_auto_approve_share,
+        expr_metric: "agent_auto_approve_count / nullif(pa_request_count, 0)",
+        format: percent,
+        description: "RX-FR-020 pa_auto_approve_rate precursor: share of PAs copilot-recommended for one-click approval" }

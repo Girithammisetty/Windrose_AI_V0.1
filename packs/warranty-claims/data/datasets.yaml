@@ -1,0 +1,24 @@
+# Pack datasets (ingestion-service file_upload, stable names for idempotency).
+# In production these tables arrive via the OEM's warranty system and dealer
+# management system connectors (deferred until pack-service ships connector
+# materialization); this seed data is REAL rows in the same landing shape,
+# encoding genuine warranty-adjudication patterns so every downstream
+# component runs against real signal from day one: a dealer running ~3x peer
+# claims-per-unit on stacked electrical labor ops (audit escalation), a
+# powertrain crank-seal failure cluster on one build batch (early-warning
+# signal + supplier cost recovery), an out-of-warranty goodwill request from
+# a loyal fleet customer, a high-dollar hydraulics replacement with photo
+# evidence pending, a repeat-repair comeback (same unit, third HVAC visit),
+# and a recall-adjacent brake claim that must route to the safety campaign.
+- identity: wa_dealers
+  name: wa-dealers
+  file: data/wa_dealers.csv
+  format: csv
+- identity: wa_units
+  name: wa-units
+  file: data/wa_units.csv
+  format: csv
+- identity: wa_claims
+  name: wa-claims
+  file: data/wa_claims.csv
+  format: csv

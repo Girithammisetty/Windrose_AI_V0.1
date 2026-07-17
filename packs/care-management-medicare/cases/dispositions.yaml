@@ -1,0 +1,13 @@
+# Disposition taxonomy for the care-management review workflows (CMM-FR-141
+# state machines expressed in today's case-service disposition catalog).
+# Cases here are auditor-flagged billing candidates and agent-drafted
+# notes/plans: approving a flagged bill means the flag was a false positive;
+# confirming the documentation gap is a true positive (CMM-FR-070/071).
+- { code: bill_approved,           label: "Bill approved codes",                    category: false_positive, requires_note: false }
+- { code: bill_held,               label: "Hold for missing documentation",         category: true_positive,  requires_note: true }
+- { code: bill_adjusted,           label: "Code adjusted before billing",           category: other,          requires_note: true }
+- { code: consent_issue_confirmed, label: "Consent missing or revoked — do not bill", category: true_positive, requires_note: true }
+- { code: activity_note_approved,  label: "Care activity note approved",            category: benign,         requires_note: false }
+- { code: care_plan_approved,      label: "Care plan approved as plan of record",   category: benign,         requires_note: false }
+- { code: rpm_review_signed,       label: "RPM review note signed",                 category: benign,         requires_note: false }
+- { code: escalate_md,             label: "Escalate to clinician reviewer",         category: inconclusive,   requires_note: false }

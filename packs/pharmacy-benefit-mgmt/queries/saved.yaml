@@ -1,0 +1,24 @@
+# Saved queries (query-service) — includes the network-chart edge source
+# (DUR conflict code -> pharmacist action flow) plus a plan-paid-per-member
+# workbench query (PMPM drilldown).
+- identity: dur_action_edges
+  name: "PBM: DUR conflict to pharmacist action"
+  description: >-
+    DUR alert counts by (conflict code -> pharmacist action) — edge list for
+    network-family charts and ad-hoc alert-fatigue analysis.
+  sql: >-
+    SELECT conflict_code AS parent, pharmacist_action AS child, count(*) AS n
+    FROM {{dataset('pbm-dur-alerts')}}
+    GROUP BY conflict_code, pharmacist_action
+  tags: [pharmacy, dur, network, pack]
+- identity: plan_paid_per_member
+  name: "PBM: plan paid per member per month"
+  description: "PMPM drilldown: plan-paid dollars per utilizing member by fill month."
+  sql: >-
+    SELECT fill_month, member_id,
+           round(sum(cast(plan_paid AS double)), 2) AS plan_paid
+    FROM {{dataset('pbm-rx-claims')}}
+    WHERE claim_status = 'paid'
+    GROUP BY fill_month, member_id
+    ORDER BY fill_month, plan_paid DESC
+  tags: [pharmacy, pmpm, cost, pack]

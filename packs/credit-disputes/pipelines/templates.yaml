@@ -1,0 +1,17 @@
+# Pipeline seeds (expressed against the real pipeline-orchestrator algorithm
+# catalog): an unsupervised tradeline-anomaly detector (duplicate-tradeline /
+# re-aged-delinquency / mixed-file surface scan over the furnished book) and
+# a supervised dispute-outcome scorer trained on human determinations (the
+# deterministic-first pre-router for reinvestigation triage). Trained models
+# require review before promotion — the Dispute Operations Manager approves
+# promotions.
+- identity: cr_tradeline_anomaly_isolation_forest
+  name: "Furnished tradeline anomaly detector (isolation forest)"
+  algorithm: isolation_forest
+  mode: train
+  dataset: cr_tradelines
+- identity: cr_dispute_outcome_xgboost
+  name: "Dispute outcome scorer (xgboost)"
+  algorithm: xgboost
+  mode: train
+  dataset: cr_disputes

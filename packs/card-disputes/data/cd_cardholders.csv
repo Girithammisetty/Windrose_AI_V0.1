@@ -1,0 +1,13 @@
+cardholder_id,cardholder_name,segment,card_product,home_state,tenure_months,risk_tier,prior_dispute_count,account_age_bucket
+C-2001,Dana Whitfield,consumer,debit,FL,26,high,6,established
+C-2002,Marcus Nguyen,consumer,credit,TX,48,low,0,established
+C-2003,Priya Raman,consumer,credit,CA,9,medium,1,established
+C-2004,Robert Ellison,consumer,debit,OH,3,medium,0,new
+C-2005,Lena Kowalski,small_business,credit,IL,60,low,1,established
+C-2006,Tomas Rivera,consumer,debit,AZ,17,low,0,established
+C-2007,Grace Adeyemi,consumer,credit,GA,32,low,1,established
+C-2008,Hank Sorensen,consumer,debit,MN,72,low,0,established
+C-2009,Yuki Tanaka,consumer,credit,WA,21,medium,2,established
+C-2010,Bella Fontaine,consumer,debit,NY,5,high,3,new
+C-2011,Omar Haddad,small_business,credit,NJ,38,medium,1,established
+C-2012,Cindy Park,consumer,debit,CO,14,low,0,established

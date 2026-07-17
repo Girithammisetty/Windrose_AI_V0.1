@@ -1,0 +1,25 @@
+# Pack datasets (ingestion-service file_upload, stable names for idempotency).
+# In production these tables arrive via e-OSCAR/ACDV feeds and the furnisher's
+# systems of record (deferred until pack-service ships connector
+# materialization); this seed data is REAL rows in the same landing shape,
+# encoding genuine FCRA credit-reporting dispute patterns so every downstream
+# component runs against real signal from day one: an e-OSCAR ACDV sitting on
+# day 26 of the 30-day reinvestigation window, an identity-theft block request
+# with an FTC report attached (FCRA 605B 4-business-day clock), a "not mine"
+# dispute where the furnisher's data matches but the consumer has litigation
+# history (reasonable-investigation depth), a duplicate collection tradeline
+# reported by two different collectors, an obsolete 7+ year charge-off still
+# reporting, and a serial disputer's sixth round on the same accurate
+# tradeline (frivolous candidate that still must be documented).
+- identity: cr_consumers
+  name: cr-consumers
+  file: data/cr_consumers.csv
+  format: csv
+- identity: cr_tradelines
+  name: cr-tradelines
+  file: data/cr_tradelines.csv
+  format: csv
+- identity: cr_disputes
+  name: cr-disputes
+  file: data/cr_disputes.csv
+  format: csv

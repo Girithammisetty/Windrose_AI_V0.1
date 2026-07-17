@@ -1,0 +1,315 @@
+{
+  "pack": "credit-disputes",
+  "version": "1.0.0",
+  "workspace_id": "019f6a74-9943-7a0e-aff9-ae0e076fcdb0",
+  "tenant_id": "019f6a74-98d8-787b-a76d-6bac9ef7c30f",
+  "started_at": "2026-07-16T10:24:14Z",
+  "finished_at": "2026-07-16T10:24:24Z",
+  "actions": [
+    {
+      "kind": "datasets",
+      "identity": "cr_consumers",
+      "action": "create",
+      "urn": "wr:019f6a74-98d8-787b-a76d-6bac9ef7c30f:dataset:dataset/019f6a74-9cc7-7f81-ae71-9e788a55ad4e",
+      "detail": "'cr-consumers' ingested rows=12 snapshot=1223395966218686379"
+    },
+    {
+      "kind": "datasets",
+      "identity": "cr_tradelines",
+      "action": "create",
+      "urn": "wr:019f6a74-98d8-787b-a76d-6bac9ef7c30f:dataset:dataset/019f6a74-9e28-78e9-bbe1-5aaa218576ea",
+      "detail": "'cr-tradelines' ingested rows=30 snapshot=1551624210004199528"
+    },
+    {
+      "kind": "datasets",
+      "identity": "cr_disputes",
+      "action": "create",
+      "urn": "wr:019f6a74-98d8-787b-a76d-6bac9ef7c30f:dataset:dataset/019f6a74-9f50-7ebf-9b2a-2d0a3a9162b9",
+      "detail": "'cr-disputes' ingested rows=26 snapshot=7832098912447458576"
+    },
+    {
+      "kind": "semantic_models",
+      "identity": "credit_disputes_core",
+      "action": "create",
+      "urn": "wr:019f6a74-98d8-787b-a76d-6bac9ef7c30f:semantic:model/019f6a74-a07a-7251-854a-3cff34756767",
+      "detail": "'credit_disputes_core' published"
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_0",
+      "action": "create",
+      "urn": "wr:019f6a74-98d8-787b-a76d-6bac9ef7c30f:semantic:verified_query/019f6a74-aac3-76ad-bd09-99d993b3f34f",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_1",
+      "action": "create",
+      "urn": "wr:019f6a74-98d8-787b-a76d-6bac9ef7c30f:semantic:verified_query/019f6a74-ab86-7987-96e2-ba50d3a6cd2b",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_2",
+      "action": "create",
+      "urn": "wr:019f6a74-98d8-787b-a76d-6bac9ef7c30f:semantic:verified_query/019f6a74-ac47-759a-bbd8-baf8ba0ab512",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_3",
+      "action": "create",
+      "urn": "wr:019f6a74-98d8-787b-a76d-6bac9ef7c30f:semantic:verified_query/019f6a74-ad0d-77e4-8e28-ab0a64c69b2a",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_4",
+      "action": "create",
+      "urn": "wr:019f6a74-98d8-787b-a76d-6bac9ef7c30f:semantic:verified_query/019f6a74-adcb-7190-9003-32a9e46a31eb",
+      "detail": ""
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "consumer_creditor_edges",
+      "action": "create",
+      "urn": "wr:019f6a74-98d8-787b-a76d-6bac9ef7c30f:query:query/019f6a74-ae74-7c63-bf85-04da6ab09b56",
+      "detail": "Credit disputes: consumer-creditor network edges"
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "deadline_ranked_open_docket",
+      "action": "create",
+      "urn": "wr:019f6a74-98d8-787b-a76d-6bac9ef7c30f:query:query/019f6a74-aec4-7c7b-a55a-074a0f5f5461",
+      "detail": "Credit disputes: deadline-ranked open docket"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "dispute_operations_center",
+      "action": "create",
+      "urn": "wr:019f6a74-98d8-787b-a76d-6bac9ef7c30f:chart:dashboard/019f6a74-af2e-7eb5-ac8b-a2f3d0104116",
+      "detail": "Dispute Operations Center"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "dispute_operations_center",
+      "action": "verify",
+      "urn": "wr:019f6a74-98d8-787b-a76d-6bac9ef7c30f:chart:dashboard/019f6a74-af2e-7eb5-ac8b-a2f3d0104116",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "fcra_clock_channels",
+      "action": "create",
+      "urn": "wr:019f6a74-98d8-787b-a76d-6bac9ef7c30f:chart:dashboard/019f6a74-b110-73fb-a3ba-7dca5de55bb2",
+      "detail": "FCRA Clock & Channels"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "fcra_clock_channels",
+      "action": "verify",
+      "urn": "wr:019f6a74-98d8-787b-a76d-6bac9ef7c30f:chart:dashboard/019f6a74-b110-73fb-a3ba-7dca5de55bb2",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "accuracy_outcomes",
+      "action": "create",
+      "urn": "wr:019f6a74-98d8-787b-a76d-6bac9ef7c30f:chart:dashboard/019f6a74-b2d2-7382-be65-f2a04873c6de",
+      "detail": "Accuracy & Outcomes"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "accuracy_outcomes",
+      "action": "verify",
+      "urn": "wr:019f6a74-98d8-787b-a76d-6bac9ef7c30f:chart:dashboard/019f6a74-b2d2-7382-be65-f2a04873c6de",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "correct_tradeline"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "verify_accurate_as_reported"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "delete_unverifiable"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "escalate_identity_theft_review"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "close_frivolous_documented"
+    },
+    {
+      "kind": "cases",
+      "identity": "reinvestigation_queue",
+      "action": "create",
+      "urn": "wr:019f6a74-98d8-787b-a76d-6bac9ef7c30f:dataset:dataset/019f6a74-9f50-7ebf-9b2a-2d0a3a9162b9",
+      "detail": "6 open cases (reindexed)"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Dispute Investigator'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Dispute Investigator' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Furnisher Data Analyst'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Furnisher Data Analyst' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Identity Theft Specialist'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Identity Theft Specialist' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Dispute Operations Manager'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Dispute Operations Manager' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'FCRA Compliance Auditor'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'FCRA Compliance Auditor' bound to permission group"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "case-triage prompt_params set"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "analytics prompt_params set"
+    },
+    {
+      "kind": "memories",
+      "identity": "grounding",
+      "action": "create",
+      "urn": null,
+      "detail": "10 grounding records written, 0 already present"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "create",
+      "urn": null,
+      "detail": "'Furnished tradeline anomaly detector (isolation forest)' (isolation_forest, train)"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "create",
+      "urn": null,
+      "detail": "'Dispute outcome scorer (xgboost)' (xgboost, train)"
+    }
+  ],
+  "deferred": [
+    {
+      "kind": "guardrails",
+      "reason": "Credit-reporting-domain policies (no outcome promised to a consumer before the human determination; frivolous closures only with the 5-business-day notice stating reasons; no verify-accurate response without documented record-level evidence \u2014 the anti-\"data matching only\" rule; no reinsertion without furnisher certification; pattern-of-verification monitoring for CFPB furnisher-accuracy scrutiny) require guardrail-service / OPA policy materialization, which Core does not expose as a pack surface yet. The behavioral core is partially covered today by Core invariants: every pack-configured agent is proposal-mode with four-eyes approval (agent-runtime), and the agent instructions + disposition taxonomy route final determinations exclusively to human investigators with the Dispute Operations Manager as approver."
+    },
+    {
+      "kind": "agent_recipes",
+      "reason": "Bespoke LangGraph recipes (Reinvestigation Copilot, ACDV Response Builder, 605B Block Sentinel, Obsolescence Auditor, Duplicate- Tradeline Resolver) require agent-runtime graph-module registration (BRD 23 BR-12). This pack specializes the existing case-triage + analytics agents via TenantAgentConfig prompt_params + tenant-scope RAG grounding instead."
+    },
+    {
+      "kind": "connection_templates",
+      "reason": "Production read connectors (e-OSCAR ACDV/AUD feeds; Metro 2 furnishing extracts from core banking, card, auto, mortgage, student-loan and collections servicing platforms; FTC IdentityTheft.gov report intake; credit-monitoring dispute portals; letter-vendor mail intake) require customer credentials and pack-service connector materialization. The pack ships seed datasets in the exact landing shape; production connectors are configured through the product Data > Connections UI."
+    },
+    {
+      "kind": "write_adapters",
+      "reason": "Write adapters (answer an ACDV via e-OSCAR, furnish Metro 2 corrections/deletions to the CRAs, apply or rescind a 605B block, mark an account disputed, send the reinvestigation-results and frivolous- determination notices) execute only behind pack-service's materialization contract and customer credentials; every such write stays proposal-mode with human approval \u2014 no autonomous change to what is reported about a consumer, ever."
+    },
+    {
+      "kind": "eval_sets",
+      "reason": "Golden eval sets (reinvestigation triage, deadline-risk ranking, reasonable-investigation depth selection, frivolous-determination justification quality) require eval-service write APIs whose action names are not yet in the rbac canonical catalog (Core follow-up noted in rbac catalog.go)."
+    },
+    {
+      "kind": "ontology",
+      "reason": "Ontology registration (Consumer, Tradeline, Furnisher, CRA, Dispute, ACDV, IdentityTheftReport, Block, DeadlineClock, ReinvestigationNotice, FrivolousNotice, MixedFile) awaits pack-service; entity semantics are carried today by the credit_disputes_core semantic model and dataset schemas."
+    },
+    {
+      "kind": "case_schemas",
+      "reason": "Typed case schemas (reinvestigation, acdv_response, identity_theft_block_review, obsolescence_review, duplicate_tradeline_review, frivolous_determination) await case-service schema materialization; today's cases carry the same fields via display_projection + the disposition taxonomy."
+    },
+    {
+      "kind": "model_archetypes",
+      "reason": "Model archetypes (dispute_outcome_confidence, tradeline_accuracy_risk_score) await experiment-service archetype APIs; the scoring capability ships as pipeline seeds instead (isolation_forest tradeline anomaly + xgboost dispute-outcome scorer) with model-governance expectations noted in grounding memories."
+    },
+    {
+      "kind": "display_labels",
+      "reason": "Display-label overlays (\"Reinvestigation\", \"ACDV\", \"605B block due\", \"Deadline at risk\", entity templates) require the BFF label-registry endpoints (BFF-FR-082/088) which are pack-service-tier features."
+    }
+  ],
+  "result": "installed"
+}

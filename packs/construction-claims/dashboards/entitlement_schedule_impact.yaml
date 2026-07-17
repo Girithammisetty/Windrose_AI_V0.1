@@ -1,0 +1,69 @@
+# Entitlement & Schedule Impact: what the open book asserts and how hard it
+# hits the critical path — the view the review board walks before every
+# determination session (notice timeliness, deadline runway, delay intake).
+name: "Entitlement & Schedule Impact"
+module: insights
+semantic_model: construction_claims_core
+description: >-
+  Entitlement posture of the claim book: open claims by asserted
+  entitlement basis, schedule-impact mix, contractual response-deadline
+  runway on the open book, notice-timeliness mix, and the delay-claim
+  intake trend.
+tags: [construction, claims, entitlement, schedule, pack]
+charts:
+  - name: "Open claims by entitlement basis"
+    chart_type: vertical_bar_chart
+    description: "Open backlog split by asserted basis (design change, owner directive, site conditions, ...)"
+    config:
+      x: { dimension: entitlement_basis }
+      y: [ { measure: open_claim_count, agg_fn: count } ]
+    sources: [ { measure: open_claim_count } ]
+    w: 6
+    h: 4
+  - name: "Schedule-impact mix"
+    chart_type: pie_chart
+    description: "Claims asserting no impact vs up-to-15 vs 30+ days on the critical path"
+    config:
+      x: { dimension: schedule_impact }
+      y: [ { measure: claim_count, agg_fn: count } ]
+    sources: [ { measure: claim_count } ]
+    w: 6
+    h: 4
+  - name: "Deadline runway (open book)"
+    chart_type: vertical_bar_chart
+    description: "Open claims by days remaining to the contractual response deadline"
+    config:
+      x: { dimension: deadline_bucket }
+      y: [ { measure: open_claim_count, agg_fn: count } ]
+    sources: [ { measure: open_claim_count } ]
+    w: 6
+    h: 4
+  - name: "Delay-claim intake trend"
+    chart_type: line_chart
+    description: "Schedule delay claims filed by month"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: delay_claim_count, agg_fn: count } ]
+    sources: [ { measure: delay_claim_count } ]
+    w: 6
+    h: 4
+  - name: "Entitlement basis grid"
+    chart_type: grid_chart
+    description: "Volume, open backlog, approvals, rejections and claimed dollars by entitlement basis"
+    config:
+      columns: [entitlement_basis, claim_count, open_claim_count, approved_count, rejected_count, total_claimed_amount]
+      x: { dimension: entitlement_basis }
+      y:
+        - { measure: claim_count, agg_fn: count }
+        - { measure: open_claim_count, agg_fn: count }
+        - { measure: approved_count, agg_fn: count }
+        - { measure: rejected_count, agg_fn: count }
+        - { measure: total_claimed_amount, agg_fn: sum }
+    sources:
+      - { measure: claim_count }
+      - { measure: open_claim_count }
+      - { measure: approved_count }
+      - { measure: rejected_count }
+      - { measure: total_claimed_amount }
+    w: 12
+    h: 4

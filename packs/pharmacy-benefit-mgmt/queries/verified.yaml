@@ -1,0 +1,60 @@
+# Verified NL<->SQL queries (BRD 28 RX-FR-020 canonical questions; four-eyes
+# approved at install). SQL uses {{dataset('<name>')}} macros — the only table
+# references query-service's tenant-namespace guard admits. DuckDB SQL,
+# numerics cast() from bronze strings.
+- nl_text: "What's our generic dispensing rate by fill month?"
+  sql_text: >-
+    SELECT fill_month,
+           count(*) AS fills,
+           sum(CASE WHEN brand_generic = 'generic' THEN 1 ELSE 0 END) AS generic_fills,
+           round(sum(CASE WHEN brand_generic = 'generic' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS generic_dispensing_rate
+    FROM {{dataset('pbm-rx-claims')}}
+    GROUP BY fill_month
+    ORDER BY fill_month
+  model: pbm_core
+  tags: [gdr, kpi, pack]
+- nl_text: "PA turnaround by urgency against the CMS Part D windows"
+  sql_text: >-
+    SELECT urgency,
+           count(*) AS requests,
+           round(avg(cast(turnaround_hours AS double)), 1) AS avg_hours,
+           max(cast(turnaround_hours AS double)) AS max_hours
+    FROM {{dataset('pbm-pa-requests')}}
+    GROUP BY urgency
+  model: pbm_pa
+  tags: [prior-auth, sla, cms-part-d, pack]
+- nl_text: "Which NCPDP reject codes are rejecting the most Rx claims?"
+  sql_text: >-
+    SELECT reject_code, count(*) AS rejected_claims,
+           round(sum(cast(ingredient_cost AS double)), 2) AS ingredient_cost_at_risk
+    FROM {{dataset('pbm-rx-claims')}}
+    WHERE claim_status = 'rejected'
+    GROUP BY reject_code
+    ORDER BY rejected_claims DESC
+  model: pbm_core
+  tags: [ncpdp, rejects, pack]
+- nl_text: "Rebate capture rate by therapeutic class"
+  sql_text: >-
+    SELECT f.therapeutic_class,
+           round(sum(cast(c.rebate_expected AS double)), 2) AS rebate_expected,
+           round(sum(cast(c.rebate_collected AS double)), 2) AS rebate_collected,
+           round(sum(cast(c.rebate_collected AS double))
+                 / nullif(sum(cast(c.rebate_expected AS double)), 0), 4) AS capture_rate
+    FROM {{dataset('pbm-rx-claims')}} c
+    LEFT JOIN {{dataset('pbm-formulary')}} f ON c.gpi_class = f.gpi_class
+    WHERE cast(c.rebate_expected AS double) > 0
+    GROUP BY f.therapeutic_class
+    ORDER BY rebate_expected DESC
+  model: pbm_core
+  tags: [rebates, kpi, pack]
+- nl_text: "DUR alerts by conflict code and severity with open counts"
+  sql_text: >-
+    SELECT conflict_code, severity_level,
+           count(*) AS alerts,
+           sum(CASE WHEN status = 'open' THEN 1 ELSE 0 END) AS open_alerts
+    FROM {{dataset('pbm-dur-alerts')}}
+    GROUP BY conflict_code, severity_level
+    ORDER BY severity_level, alerts DESC
+  model: pbm_core
+  tags: [dur, safety, pack]

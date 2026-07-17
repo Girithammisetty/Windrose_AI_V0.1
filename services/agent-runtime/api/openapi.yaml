@@ -1,0 +1,113 @@
+openapi: 3.0.3
+info:
+  title: agent-runtime + agent-registry
+  version: 0.1.0
+  description: >
+    Agent execution (LangGraph-in-Temporal), the proposal/HITL framework, the
+    agent registry, and the signed proposal-execution grant issuer (BRD 14).
+    All errors use the MASTER-FR-024 envelope {error:{code,message,details?,trace_id}}.
+servers:
+  - url: /
+paths:
+  /healthz:
+    get: { summary: Liveness, responses: { "200": { description: ok } } }
+  /readyz:
+    get: { summary: Readiness, responses: { "200": { description: ready } } }
+  /api/v1/.well-known/jwks.json:
+    get:
+      summary: JWKS — public keys for proposal-execution grants + A2A card signatures
+      description: >
+        tool-plane fetches this (PROPOSAL_JWKS_URL) to verify grants issued by this
+        service (iss=windrose-agent-runtime). RSA public keys only.
+      responses: { "200": { description: JWKS document } }
+  /api/v1/agents/{agent_key}/chat/completions:
+    post:
+      summary: OpenAI-compatible chat; creates/resumes a session, starts a run
+      parameters: [{ name: agent_key, in: path, required: true, schema: { type: string } }]
+      security: [{ bearer: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                messages: { type: array, items: { type: object } }
+                stream: { type: boolean }
+                metadata:
+                  type: object
+                  properties:
+                    session_id: { type: string }
+                    context_urn: { type: string }
+                    case_id: { type: string }
+      responses:
+        "200":
+          description: run started (stream via realtime-hub topic in x-windrose-stream-topic)
+        "402": { description: BUDGET_EXHAUSTED }
+        "409": { description: SESSION_EXPIRED }
+        "423": { description: AGENT_KILLED }
+        "429": { description: OVER_CAPACITY }
+  /api/v1/sessions:
+    post: { summary: Create session, security: [{ bearer: [] }], responses: { "200": { description: session } } }
+  /api/v1/sessions/{session_id}:
+    get: { summary: Get session, security: [{ bearer: [] }], parameters: [{ name: session_id, in: path, required: true, schema: { type: string } }], responses: { "200": { description: session }, "404": { description: not found } } }
+  /api/v1/sessions/{session_id}/terminate:
+    post: { summary: Terminate session (state sanitized), security: [{ bearer: [] }], parameters: [{ name: session_id, in: path, required: true, schema: { type: string } }], responses: { "200": { description: terminated } } }
+  /api/v1/runs/{run_id}:
+    get: { summary: Run status, security: [{ bearer: [] }], parameters: [{ name: run_id, in: path, required: true, schema: { type: string } }], responses: { "200": { description: run } } }
+  /api/v1/runs/{run_id}/trace:
+    get: { summary: Run trace (tool tree, reflections, citations), security: [{ bearer: [] }], parameters: [{ name: run_id, in: path, required: true, schema: { type: string } }], responses: { "200": { description: trace } } }
+  /api/v1/proposals:
+    get:
+      summary: Approval inbox (paginated, scoped to approvable)
+      security: [{ bearer: [] }]
+      parameters:
+        - { name: "filter[status]", in: query, schema: { type: string } }
+        - { name: "filter[agent_key]", in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, default: 50, maximum: 200 } }
+      responses: { "200": { description: proposals } }
+  /api/v1/proposals/{proposal_id}:
+    get: { summary: Get proposal, security: [{ bearer: [] }], parameters: [{ name: proposal_id, in: path, required: true, schema: { type: string } }], responses: { "200": { description: proposal }, "404": { description: not found } } }
+  /api/v1/proposals/{proposal_id}/decide:
+    post:
+      summary: Decide (approve|reject|edit_args|respond) — idempotent, first-wins
+      security: [{ bearer: [] }]
+      parameters: [{ name: proposal_id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action: { type: string, enum: [approve, reject, edit_args, respond] }
+                message: { type: string }
+                edited_args: { type: object }
+      responses:
+        "200": { description: decided; on approve/edit a signed grant executes the tool }
+        "403": { description: PERMISSION_DENIED (approver eligibility / self-approval) }
+        "409": { description: CONFLICT (already decided) }
+        "410": { description: PROPOSAL_EXPIRED }
+        "422": { description: VALIDATION_FAILED (edited args) }
+  /api/v1/registry/agents:
+    post: { summary: Define agent, security: [{ bearer: [] }], responses: { "200": { description: created } } }
+  /api/v1/registry/agents/{agent_key}/versions:
+    post: { summary: Create version, security: [{ bearer: [] }], parameters: [{ name: agent_key, in: path, required: true, schema: { type: string } }], responses: { "200": { description: created }, "409": { description: exists } } }
+  /api/v1/registry/agents/{agent_key}/versions/{version}/publish:
+    post: { summary: Publish (eval-gated), security: [{ bearer: [] }], parameters: [{ name: agent_key, in: path, required: true, schema: { type: string } }, { name: version, in: path, required: true, schema: { type: integer } }], responses: { "200": { description: published }, "422": { description: EVAL_GATE_FAILED } } }
+  /api/v1/registry/tenants/self/agents/{agent_key}:
+    put: { summary: Tenant config (pin/enable/auto-exec/prompt-params), security: [{ bearer: [] }], parameters: [{ name: agent_key, in: path, required: true, schema: { type: string } }], responses: { "200": { description: ok }, "422": { description: destructive/admin auto rejected } } }
+  /api/v1/registry/rollouts:
+    post: { summary: Start rollout (direct|canary|shadow), security: [{ bearer: [] }], responses: { "200": { description: created } } }
+  /api/v1/registry/rollouts/{rollout_id}/promote:
+    post: { summary: Promote rollout, security: [{ bearer: [] }], parameters: [{ name: rollout_id, in: path, required: true, schema: { type: string } }], responses: { "200": { description: promoted } } }
+  /api/v1/registry/rollouts/{rollout_id}/rollback:
+    post: { summary: Rollback rollout (one call), security: [{ bearer: [] }], parameters: [{ name: rollout_id, in: path, required: true, schema: { type: string } }], responses: { "200": { description: rolled_back } } }
+  /api/v1/registry/kill-switches:
+    post: { summary: Kill switch (agent|version|version×tenant), security: [{ bearer: [] }], responses: { "200": { description: created } } }
+  /api/v1/registry/kill-switches/{kill_id}:
+    delete: { summary: Unkill, security: [{ bearer: [] }], parameters: [{ name: kill_id, in: path, required: true, schema: { type: string } }], responses: { "200": { description: unkilled } } }
+  /api/v1/a2a/cards/{agent_key}:
+    get: { summary: Signed A2A v1.0 agent card (latest published version), parameters: [{ name: agent_key, in: path, required: true, schema: { type: string } }], responses: { "200": { description: card } } }
+components:
+  securitySchemes:
+    bearer: { type: http, scheme: bearer, bearerFormat: JWT }

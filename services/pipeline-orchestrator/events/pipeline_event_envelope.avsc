@@ -1,0 +1,20 @@
+{
+  "type": "record",
+  "name": "PipelineEnvelope",
+  "namespace": "ai.windrose.pipeline.events.v1",
+  "doc": "Master event envelope (MASTER-FR-031) carried on pipeline.events.v1. Payload is the per-type map serialized as a JSON object. Emitted event_type values (BRD 09 §6): pipeline.template.created|updated|archived|restored|version_activated|compiled, pipeline.run.submitted|started|status_changed|component_status_changed|succeeded|failed|cancelled|output_registered|outputs_invalidated|quota_queued|quota_dequeued.",
+  "fields": [
+    {"name": "event_id", "type": {"type": "string", "logicalType": "uuid"}},
+    {"name": "event_type", "type": "string"},
+    {"name": "tenant_id", "type": {"type": "string", "logicalType": "uuid"}},
+    {"name": "actor", "type": {"type": "record", "name": "Actor", "fields": [
+      {"name": "type", "type": "string"}, {"name": "id", "type": "string"}]}},
+    {"name": "via_agent", "type": ["null", {"type": "record", "name": "ViaAgent", "fields": [
+      {"name": "agent_id", "type": "string"}, {"name": "version", "type": "string"}]}],
+      "default": null, "doc": "Dual attribution for OBO/agent-proposal actions (MASTER-FR-041)."},
+    {"name": "resource_urn", "type": "string", "doc": "wr:<tenant>:pipeline:run/<id> or template/<id>"},
+    {"name": "occurred_at", "type": "string", "doc": "ISO-8601 timestamp"},
+    {"name": "trace_id", "type": "string"},
+    {"name": "payload", "type": "string", "doc": "JSON object; per-type fields per BRD 09 §6."}
+  ]
+}

@@ -1,0 +1,66 @@
+# Fraud & Vendor Risk: BEC / shell-vendor / split-invoicing surface plus the
+# vendor-master control posture (tenure, TIN verification, sanctions
+# screening) — the view an internal-controls reviewer walks first.
+name: "Fraud & Vendor Risk"
+module: insights
+semantic_model: ap_audit_core
+description: >-
+  Invoice-fraud posture: open exceptions by fraud indicator, three-way-match
+  gap mix, fraud-escalation trend, vendor tenure mix, and the vendor-master
+  compliance grid (TIN verification, sanctions screening, new vendors).
+tags: [finance, accounts_payable, fraud, vendor_risk, pack]
+charts:
+  - name: "Open exceptions by fraud indicator"
+    chart_type: vertical_bar_chart
+    description: "Open backlog split by BEC suspect vs shell-vendor suspect vs split invoicing vs none"
+    config:
+      x: { dimension: fraud_indicator }
+      y: [ { measure: open_exception_count, agg_fn: count } ]
+    sources: [ { measure: open_exception_count } ]
+    w: 6
+    h: 4
+  - name: "Three-way-match gap mix"
+    chart_type: pie_chart
+    description: "Matched vs PO gap vs receipt gap vs price gap across all exceptions"
+    config:
+      x: { dimension: three_way_match }
+      y: [ { measure: exception_count, agg_fn: count } ]
+    sources: [ { measure: exception_count } ]
+    w: 6
+    h: 4
+  - name: "Fraud escalations by month"
+    chart_type: line_chart
+    description: "Exceptions escalated to fraud investigation by filed month"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: fraud_escalated_count, agg_fn: count } ]
+    sources: [ { measure: fraud_escalated_count } ]
+    w: 6
+    h: 4
+  - name: "Vendor tenure mix"
+    chart_type: vertical_bar_chart
+    description: "Vendor master by tenure band — new vendors are the elevated fraud surface"
+    config:
+      x: { dimension: vendor_tenure }
+      y: [ { measure: vendor_count, agg_fn: count } ]
+    sources: [ { measure: vendor_count } ]
+    w: 6
+    h: 4
+  - name: "Vendor-master compliance grid"
+    chart_type: grid_chart
+    description: "Vendors, new vendors, unverified TINs and unscreened vendors by country"
+    config:
+      columns: [vendor_country, vendor_count, new_vendor_count, unverified_tin_vendor_count, unscreened_vendor_count]
+      x: { dimension: vendor_country }
+      y:
+        - { measure: vendor_count, agg_fn: count }
+        - { measure: new_vendor_count, agg_fn: count }
+        - { measure: unverified_tin_vendor_count, agg_fn: count }
+        - { measure: unscreened_vendor_count, agg_fn: count }
+    sources:
+      - { measure: vendor_count }
+      - { measure: new_vendor_count }
+      - { measure: unverified_tin_vendor_count }
+      - { measure: unscreened_vendor_count }
+    w: 12
+    h: 4

@@ -1,0 +1,315 @@
+{
+  "pack": "background-screening",
+  "version": "1.0.0",
+  "workspace_id": "019f6a74-c9f7-7b89-9147-d2549697f353",
+  "tenant_id": "019f6a74-c5c0-71ad-be3d-a6e11f590680",
+  "started_at": "2026-07-16T10:24:26Z",
+  "finished_at": "2026-07-16T10:24:36Z",
+  "actions": [
+    {
+      "kind": "datasets",
+      "identity": "bs_applicants",
+      "action": "create",
+      "urn": "wr:019f6a74-c5c0-71ad-be3d-a6e11f590680:dataset:dataset/019f6a74-cb23-748f-b4d6-c9814cf480ed",
+      "detail": "'bs-applicants' ingested rows=12 snapshot=6920767684815191039"
+    },
+    {
+      "kind": "datasets",
+      "identity": "bs_orders",
+      "action": "create",
+      "urn": "wr:019f6a74-c5c0-71ad-be3d-a6e11f590680:dataset:dataset/019f6a74-cc61-7352-9d90-4e5f17b27cd6",
+      "detail": "'bs-orders' ingested rows=30 snapshot=3476496033087677140"
+    },
+    {
+      "kind": "datasets",
+      "identity": "bs_reviews",
+      "action": "create",
+      "urn": "wr:019f6a74-c5c0-71ad-be3d-a6e11f590680:dataset:dataset/019f6a74-cd6c-7559-80b0-071f9dc42e50",
+      "detail": "'bs-reviews' ingested rows=26 snapshot=2877085889369723728"
+    },
+    {
+      "kind": "semantic_models",
+      "identity": "screening_core",
+      "action": "create",
+      "urn": "wr:019f6a74-c5c0-71ad-be3d-a6e11f590680:semantic:model/019f6a74-ce96-7d7b-bfb2-a9fb9b14c7f2",
+      "detail": "'screening_core' published"
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_0",
+      "action": "create",
+      "urn": "wr:019f6a74-c5c0-71ad-be3d-a6e11f590680:semantic:verified_query/019f6a74-d7f4-7731-831c-813dd3fa3c85",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_1",
+      "action": "create",
+      "urn": "wr:019f6a74-c5c0-71ad-be3d-a6e11f590680:semantic:verified_query/019f6a74-d8b2-70dc-b6d6-4087c6b492d2",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_2",
+      "action": "create",
+      "urn": "wr:019f6a74-c5c0-71ad-be3d-a6e11f590680:semantic:verified_query/019f6a74-d996-7cef-8688-6c1a2919bb28",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_3",
+      "action": "create",
+      "urn": "wr:019f6a74-c5c0-71ad-be3d-a6e11f590680:semantic:verified_query/019f6a74-da5a-7e01-82d9-6631bc1a8437",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_4",
+      "action": "create",
+      "urn": "wr:019f6a74-c5c0-71ad-be3d-a6e11f590680:semantic:verified_query/019f6a74-db16-746e-adc5-85eacd7fc408",
+      "detail": ""
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "screening_order_edges",
+      "action": "create",
+      "urn": "wr:019f6a74-c5c0-71ad-be3d-a6e11f590680:query:query/019f6a74-dbb4-7140-b071-79927fae1146",
+      "detail": "Screening: applicant-employer network edges"
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "priority_open_reviews",
+      "action": "create",
+      "urn": "wr:019f6a74-c5c0-71ad-be3d-a6e11f590680:query:query/019f6a74-dbf9-74ca-9354-83acf9ddc514",
+      "detail": "Screening: priority open adjudication queue"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "screening_adjudication_center",
+      "action": "create",
+      "urn": "wr:019f6a74-c5c0-71ad-be3d-a6e11f590680:chart:dashboard/019f6a74-dc5c-7520-a9c5-8b174492d36d",
+      "detail": "Screening Adjudication Center"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "screening_adjudication_center",
+      "action": "verify",
+      "urn": "wr:019f6a74-c5c0-71ad-be3d-a6e11f590680:chart:dashboard/019f6a74-dc5c-7520-a9c5-8b174492d36d",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "adverse_action_clocks",
+      "action": "create",
+      "urn": "wr:019f6a74-c5c0-71ad-be3d-a6e11f590680:chart:dashboard/019f6a74-de56-7dcb-9515-7576e20132db",
+      "detail": "Adverse Action & Clocks"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "adverse_action_clocks",
+      "action": "verify",
+      "urn": "wr:019f6a74-c5c0-71ad-be3d-a6e11f590680:chart:dashboard/019f6a74-de56-7dcb-9515-7576e20132db",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "accuracy_identity_watch",
+      "action": "create",
+      "urn": "wr:019f6a74-c5c0-71ad-be3d-a6e11f590680:chart:dashboard/019f6a74-e01c-7196-90f5-cb9d008d934f",
+      "detail": "Accuracy & Identity Watch"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "accuracy_identity_watch",
+      "action": "verify",
+      "urn": "wr:019f6a74-c5c0-71ad-be3d-a6e11f590680:chart:dashboard/019f6a74-e01c-7196-90f5-cb9d008d934f",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "clear_report_eligible"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "report_adverse_finding"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "suppress_not_reportable"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "request_identity_verification"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "individualized_assessment_review"
+    },
+    {
+      "kind": "cases",
+      "identity": "adjudication_queue",
+      "action": "create",
+      "urn": "wr:019f6a74-c5c0-71ad-be3d-a6e11f590680:dataset:dataset/019f6a74-cd6c-7559-80b0-071f9dc42e50",
+      "detail": "6 open cases (reindexed)"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Screening Adjudicator'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Screening Adjudicator' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Identity Resolution Specialist'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Identity Resolution Specialist' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Adverse Action Coordinator'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Adverse Action Coordinator' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Screening Operations Manager'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Screening Operations Manager' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'FCRA Compliance Auditor'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'FCRA Compliance Auditor' bound to permission group"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "case-triage prompt_params set"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "analytics prompt_params set"
+    },
+    {
+      "kind": "memories",
+      "identity": "grounding",
+      "action": "create",
+      "urn": null,
+      "detail": "9 grounding records written, 0 already present"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "create",
+      "urn": null,
+      "detail": "'Screening order anomaly detector (isolation forest)' (isolation_forest, train)"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "create",
+      "urn": null,
+      "detail": "'Screening-hit outcome scorer (xgboost)' (xgboost, train)"
+    }
+  ],
+  "deferred": [
+    {
+      "kind": "guardrails",
+      "reason": "Screening-domain policies (no adverse-action notice before the pre-adverse response window has run; no report containing a hit whose identity match is below standard or whose record is 605(a)-obsolete; adjudication-matrix consistency and pattern-level adverse-rate disparity watch) require guardrail-service / OPA policy materialization, which Core does not expose as a pack surface yet. The behavioral core is partially covered today by Core invariants: every pack-configured agent is proposal-mode with four-eyes approval (agent-runtime), and the agent instructions + disposition taxonomy route final determinations exclusively to human adjudicators with the Screening Operations Manager as approver."
+    },
+    {
+      "kind": "agent_recipes",
+      "reason": "Bespoke LangGraph recipes (Hit Adjudication Copilot, Identity Resolution Assistant, Adverse Action Clock Sentinel, Individualized Assessment Builder) require agent-runtime graph-module registration (BRD 23 BR-12). This pack specializes the existing case-triage + analytics agents via TenantAgentConfig prompt_params + tenant-scope RAG grounding instead."
+    },
+    {
+      "kind": "connection_templates",
+      "reason": "Production read connectors (court-record aggregators and county/state repositories, DMV/MVR rails, education clearinghouses and registrar verification services, employment-verification bureaus, sanctions and registry lists, and the customer's ATS/HRIS for order intake) require customer credentials and pack-service connector materialization. The pack ships seed datasets in the exact landing shape; production connectors are configured through the product Data > Connections UI."
+    },
+    {
+      "kind": "write_adapters",
+      "reason": "Write adapters (send the pre-adverse-action packet \u2014 report copy + Summary of Rights \u2014 and the final adverse-action notice, publish the finished report to the employer's ATS, update the consumer file after a 611 reinvestigation, open a furnisher dispute) execute only behind pack-service's materialization contract and customer credentials; every such write stays proposal-mode with human approval \u2014 no autonomous notice, report release, or file change, ever."
+    },
+    {
+      "kind": "eval_sets",
+      "reason": "Golden eval sets (identity-match adjudication, 605(a) obsolescence screening, job-relatedness analysis, individualized-assessment assembly) require eval-service write APIs whose action names are not yet in the rbac canonical catalog (Core follow-up noted in rbac catalog.go)."
+    },
+    {
+      "kind": "ontology",
+      "reason": "Ontology registration (Applicant, ScreeningOrder, Package, ScreeningCheck, Hit, SourceRecord, Court, Employer, Position, AdverseActionNotice, ResponseWindow, Dispute, Reinvestigation) awaits pack-service; entity semantics are carried today by the screening_core semantic model and dataset schemas."
+    },
+    {
+      "kind": "case_schemas",
+      "reason": "Typed case schemas (hit_adjudication, identity_resolution, adverse_action_tracking, applicant_dispute, individualized_assessment) await case-service schema materialization; today's cases carry the same fields via display_projection + the disposition taxonomy."
+    },
+    {
+      "kind": "model_archetypes",
+      "reason": "Model archetypes (identity_match_confidence, hit_outcome_confidence) await experiment-service archetype APIs; the scoring capability ships as pipeline seeds instead (isolation_forest order anomaly + xgboost hit-outcome scorer) with model-governance expectations noted in grounding memories."
+    },
+    {
+      "kind": "display_labels",
+      "reason": "Display-label overlays (\"Screening hit\", \"Pre-adverse sent\", \"Response window closing\", \"Obsolete record\", entity templates) require the BFF label-registry endpoints (BFF-FR-082/088) which are pack-service-tier features."
+    }
+  ],
+  "result": "installed"
+}

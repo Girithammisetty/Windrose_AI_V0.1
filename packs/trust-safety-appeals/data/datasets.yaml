@@ -1,0 +1,25 @@
+# Pack datasets (ingestion-service file_upload, stable names for idempotency).
+# In production these tables arrive via the platform's moderation/enforcement
+# systems and appeal-intake surfaces (deferred until pack-service ships
+# connector materialization); this seed data is REAL rows in the same landing
+# shape, encoding genuine trust-and-safety appeal patterns so every downstream
+# component runs against real signal from day one: an automated hate-speech
+# removal of counter-speech (classic classifier false positive), a
+# repeat-infringer counterfeit seller appealing with new authorization
+# documents, a mass-reported creator whose reach restriction rode a
+# coordinated report wave (brigading suspicion), a satire channel demonetized
+# under the misinformation policy (policy-gap escalation), an account
+# suspension triggered by a spam blast from a compromised account (restore
+# path), and a duplicate second appeal filed while the first is pending.
+- identity: ts_appeals
+  name: ts-appeals
+  file: data/ts_appeals.csv
+  format: csv
+- identity: ts_enforcements
+  name: ts-enforcements
+  file: data/ts_enforcements.csv
+  format: csv
+- identity: ts_accounts
+  name: ts-accounts
+  file: data/ts_accounts.csv
+  format: csv

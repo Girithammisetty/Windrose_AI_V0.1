@@ -1,0 +1,125 @@
+# Semantic model `pbm_core` — BRD 28 RX-FR-020 PBM KPI catalog, expressed in
+# the Core semantic grammar (agg whitelist, measure filters, derived
+# expr_metric with nullif; join_paths left/many_to_one, acyclic).
+#
+# Star schema: rx_claims (fact) -> formulary (dim, many_to_one on gpi_class),
+# dur_alerts (fact) -> rx_claims (many_to_one on rx_claim_id). entity.table is
+# main.<safe_relation(dataset name)>; `dataset:` refs are rebound to live
+# dataset URNs by packctl at install. Amount columns ingest as bronze strings,
+# so numeric measures cast(... as double).
+name: pbm_core
+description: >-
+  PBM Rx-claims KPI model (BRD 28 RX-FR-020): generic dispensing rate,
+  formulary tier mix, plan-paid PMPM, rebate capture, NCPDP reject mix, and
+  DUR safety alert measures — Rx claims joined to the formulary by GPI class
+  with DUR alerts joined per claim.
+definition:
+  entities:
+    - name: rx_claims
+      dataset: pbm_rx_claims
+      table: main.pbm_rx_claims
+      primary_key: [rx_claim_id]
+      dataset_version_policy: { policy: latest }
+    - name: formulary
+      dataset: pbm_formulary
+      table: main.pbm_formulary
+      primary_key: [formulary_row_id]
+      dataset_version_policy: { policy: latest }
+    - name: dur_alerts
+      dataset: pbm_dur_alerts
+      table: main.pbm_dur_alerts
+      primary_key: [dur_id]
+      dataset_version_policy: { policy: latest }
+  join_paths:
+    - name: rx_claims_formulary
+      from_entity: rx_claims
+      to_entity: formulary
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: gpi_class, to_column: gpi_class }]
+    - name: dur_alerts_rx_claims
+      from_entity: dur_alerts
+      to_entity: rx_claims
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: rx_claim_id, to_column: rx_claim_id }]
+  dimensions:
+    - { name: gpi_class, entity: rx_claims, type: categorical, column: gpi_class }
+    - { name: brand_generic, entity: rx_claims, type: categorical, column: brand_generic }
+    - { name: formulary_tier, entity: rx_claims, type: categorical, column: formulary_tier }
+    - { name: daw_code, entity: rx_claims, type: categorical, column: daw_code }
+    - { name: fill_month, entity: rx_claims, type: categorical, column: fill_month }
+    - { name: channel, entity: rx_claims, type: categorical, column: channel }
+    - { name: claim_status, entity: rx_claims, type: categorical, column: claim_status }
+    - { name: reject_code, entity: rx_claims, type: categorical, column: reject_code }
+    - { name: member_state, entity: rx_claims, type: categorical, column: member_state }
+    - { name: therapeutic_class, entity: formulary, type: categorical, column: therapeutic_class }
+    - { name: preferred_tier, entity: formulary, type: categorical, column: preferred_tier }
+    - { name: pa_required, entity: formulary, type: categorical, column: pa_required }
+    - { name: step_therapy, entity: formulary, type: categorical, column: step_therapy }
+    - { name: specialty_flag, entity: formulary, type: categorical, column: specialty_flag }
+    - { name: dur_conflict_code, entity: dur_alerts, type: categorical, column: conflict_code }
+    - { name: dur_severity, entity: dur_alerts, type: categorical, column: severity_level }
+    - { name: dur_status, entity: dur_alerts, type: categorical, column: status }
+    - { name: pharmacist_action, entity: dur_alerts, type: categorical, column: pharmacist_action }
+    - { name: alert_month, entity: dur_alerts, type: categorical, column: alert_month }
+  measures:
+    - { name: rx_claim_count, entity: rx_claims, agg: count,
+        description: "Number of Rx claims" }
+    - { name: generic_fill_count, entity: rx_claims, agg: count,
+        filters: "brand_generic = 'generic'",
+        description: "Fills dispensed as generic" }
+    - { name: brand_fill_count, entity: rx_claims, agg: count,
+        filters: "brand_generic = 'brand'",
+        description: "Fills dispensed as brand" }
+    - { name: paid_claim_count, entity: rx_claims, agg: count,
+        filters: "claim_status = 'paid'",
+        description: "Rx claims paid" }
+    - { name: rejected_claim_count, entity: rx_claims, agg: count,
+        filters: "claim_status = 'rejected'",
+        description: "Rx claims rejected at adjudication (NCPDP reject)" }
+    - { name: total_plan_paid, entity: rx_claims, agg: sum,
+        expr: "cast(plan_paid as double)", format: decimal,
+        description: "Total plan-paid amount" }
+    - { name: total_member_copay, entity: rx_claims, agg: sum,
+        expr: "cast(member_copay as double)", format: decimal,
+        description: "Total member cost share" }
+    - { name: total_ingredient_cost, entity: rx_claims, agg: sum,
+        expr: "cast(ingredient_cost as double)", format: decimal,
+        description: "Total drug ingredient cost" }
+    - { name: avg_days_supply, entity: rx_claims, agg: avg,
+        expr: "cast(days_supply as double)", format: decimal,
+        description: "Average days supply per fill" }
+    - { name: total_rebate_expected, entity: rx_claims, agg: sum,
+        expr: "cast(rebate_expected as double)", format: decimal,
+        description: "Manufacturer rebate contractually expected" }
+    - { name: total_rebate_collected, entity: rx_claims, agg: sum,
+        expr: "cast(rebate_collected as double)", format: decimal,
+        description: "Manufacturer rebate actually collected" }
+    - { name: member_count, entity: rx_claims, agg: count_distinct,
+        expr: "member_id",
+        description: "Distinct members with at least one fill" }
+    - { name: dur_alert_count, entity: dur_alerts, agg: count,
+        description: "Number of DUR alerts fired" }
+    - { name: dur_critical_count, entity: dur_alerts, agg: count,
+        filters: "severity_level = '1'",
+        description: "Clinical-critical (level 1) DUR alerts" }
+    - { name: dur_open_count, entity: dur_alerts, agg: count,
+        filters: "status = 'open'",
+        description: "DUR alerts awaiting pharmacist action" }
+    - { name: generic_dispensing_rate,
+        expr_metric: "generic_fill_count / nullif(rx_claim_count, 0)",
+        format: percent,
+        description: "RX-FR-020 generic dispensing rate (GDR, benchmark >= 90%)" }
+    - { name: rejection_rate,
+        expr_metric: "rejected_claim_count / nullif(rx_claim_count, 0)",
+        format: percent,
+        description: "NCPDP rejection rate over submitted Rx claims" }
+    - { name: rebate_capture_rate,
+        expr_metric: "total_rebate_collected / nullif(total_rebate_expected, 0)",
+        format: percent,
+        description: "RX-FR-020 rebate capture: collected over expected rebates" }
+    - { name: plan_paid_per_member,
+        expr_metric: "total_plan_paid / nullif(member_count, 0)",
+        format: decimal,
+        description: "Plan paid per utilizing member over the selected window (PMPM when grouped by fill_month)" }

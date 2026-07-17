@@ -1,0 +1,11 @@
+denial_id,claim_id,carc_code,rarc_code,denial_reason_text,denial_category,cpt_code,service_line,payer_name,denial_month,denied_amount,appeal_status,appeal_deadline_days
+DEN-6001,CLM-9003,CO-197,M62,Precertification/authorization absent,administrative,29881,orthopedics,UnitedHealthcare,2026-02,7350.00,appeal_pending,180
+DEN-6002,CLM-9007,CO-50,N386,Not medically necessary per National Coverage Determination,coverage,70450,radiology,Medicare,2026-03,238.00,overturned,120
+DEN-6003,CLM-9009,CO-197,M62,Prior authorization absent for specialty drug administration,administrative,96413,oncology,Aetna,2026-03,6250.00,appeal_pending,180
+DEN-6004,CLM-9011,CO-16,N290,Claim lacks information: missing rendering provider identifier,documentation,27447,orthopedics,BCBS of Texas,2026-03,16520.00,corrected_resubmit,95
+DEN-6005,CLM-9013,CO-16,M127,Missing patient medical record documentation for E/M level billed,documentation,99215,primary_care,Cigna,2026-04,214.00,corrected_resubmit,90
+DEN-6006,CLM-9015,CO-97,M15,Payment for this service is bundled into the primary procedure (NCCI edit),bundling,97110,physical_therapy,Aetna,2026-04,112.00,not_appealed,90
+DEN-6007,CLM-9018,CO-29,N211,Claim received after the timely filing limit,timely_filing,99283,emergency,Texas Medicaid,2026-04,276.00,upheld,30
+DEN-6008,CLM-9020,CO-11,M76,Diagnosis inconsistent with the procedure billed,documentation,99214,primary_care,Cigna,2026-05,153.00,appeal_pending,90
+DEN-6009,CLM-9021,CO-50,N115,Non-covered service per Local Coverage Determination,coverage,72148,radiology,Medicare,2026-06,463.00,not_appealed,120
+DEN-6010,CLM-9016,CO-97,M15,Infusion administration line bundled into J1745 drug line,bundling,96365,infusion,Medicare,2026-05,182.00,not_appealed,120

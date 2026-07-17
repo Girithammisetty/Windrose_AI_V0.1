@@ -1,0 +1,65 @@
+# Verified NL<->SQL queries (four-eyes approved at install). SQL uses
+# {{dataset('<name>')}} macros — the only table references query-service's
+# tenant-namespace guard admits.
+- nl_text: "What's our correction rate by dispute reason?"
+  sql_text: >-
+    SELECT dispute_reason,
+           count(*) AS closed_disputes,
+           sum(CASE WHEN disposition = 'correct_tradeline' THEN 1 ELSE 0 END) AS corrections,
+           round(sum(CASE WHEN disposition = 'correct_tradeline' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS correction_rate
+    FROM {{dataset('cr-disputes')}}
+    WHERE status = 'closed'
+    GROUP BY dispute_reason
+    ORDER BY correction_rate DESC
+  model: credit_disputes_core
+  tags: [credit_reporting, fcra, accuracy, kpi, pack]
+- nl_text: "Which open disputes are closest to breaching the FCRA reinvestigation deadline?"
+  sql_text: >-
+    SELECT dispute_id, tradeline_id, channel, dispute_reason, fcra_flag,
+           severity,
+           cast(days_to_deadline AS double) AS days_to_deadline,
+           cast(age_days AS double) AS age_days
+    FROM {{dataset('cr-disputes')}}
+    WHERE status = 'open'
+    ORDER BY days_to_deadline ASC
+  model: credit_disputes_core
+  tags: [credit_reporting, deadlines, fcra_611, backlog, pack]
+- nl_text: "Repeat disputes — tradelines disputed more than once (frivolous-pattern watch)"
+  sql_text: >-
+    SELECT tradeline_id,
+           count(*) AS dispute_count,
+           sum(CASE WHEN disposition = 'verify_accurate_as_reported' THEN 1 ELSE 0 END) AS prior_verified_accurate,
+           sum(CASE WHEN disposition = 'close_frivolous_documented' THEN 1 ELSE 0 END) AS prior_frivolous_closures,
+           sum(CASE WHEN status = 'open' THEN 1 ELSE 0 END) AS open_now
+    FROM {{dataset('cr-disputes')}}
+    GROUP BY tradeline_id
+    HAVING count(*) >= 2
+    ORDER BY dispute_count DESC
+  model: credit_disputes_core
+  tags: [credit_reporting, repeat_disputes, frivolous, pack]
+- nl_text: "Dispute outcome mix by intake channel (direct vs e-OSCAR ACDV vs court document)"
+  sql_text: >-
+    SELECT channel,
+           count(*) AS disputes,
+           sum(CASE WHEN status = 'open' THEN 1 ELSE 0 END) AS open_disputes,
+           sum(CASE WHEN disposition = 'correct_tradeline' THEN 1 ELSE 0 END) AS corrections,
+           sum(CASE WHEN disposition = 'verify_accurate_as_reported' THEN 1 ELSE 0 END) AS verified_accurate,
+           sum(CASE WHEN disposition = 'delete_unverifiable' THEN 1 ELSE 0 END) AS deletions,
+           round(avg(cast(age_days AS double)), 1) AS avg_age_days
+    FROM {{dataset('cr-disputes')}}
+    GROUP BY channel
+    ORDER BY disputes DESC
+  model: credit_disputes_core
+  tags: [credit_reporting, channels, e_oscar, outcomes, pack]
+- nl_text: "Identity-theft docket — 605B block requests and identity-theft claims with clock status"
+  sql_text: >-
+    SELECT dispute_id, tradeline_id, channel, dispute_reason, fcra_flag,
+           status, disposition,
+           cast(days_to_deadline AS double) AS days_to_deadline,
+           cast(age_days AS double) AS age_days
+    FROM {{dataset('cr-disputes')}}
+    WHERE fcra_flag = 'identity_theft_block' OR dispute_reason = 'identity_theft'
+    ORDER BY status DESC, days_to_deadline ASC
+  model: credit_disputes_core
+  tags: [credit_reporting, identity_theft, fcra_605b, pack]

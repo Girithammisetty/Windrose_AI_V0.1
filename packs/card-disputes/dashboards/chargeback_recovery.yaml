@@ -1,0 +1,65 @@
+# Chargeback Recovery: representment effectiveness and the transaction-side
+# fraud surface (CNP / recurring mix) that drives dispute intake.
+name: "Chargeback Recovery"
+module: insights
+semantic_model: disputes_core
+description: >-
+  Merchant-recovery effectiveness: recovered dollars by network, chargeback
+  filing mix, wins by reason code, monthly recovery trend, and the
+  transaction entry-mode mix feeding the dispute pipeline.
+tags: [banking, disputes, chargebacks, recovery, pack]
+charts:
+  - name: "Recovered dollars by network"
+    chart_type: vertical_bar_chart
+    description: "Chargeback recoveries from merchants split by card network"
+    config:
+      x: { dimension: network }
+      y: [ { measure: total_recovered_amount, agg_fn: sum } ]
+    sources: [ { measure: total_recovered_amount } ]
+    w: 6
+    h: 4
+  - name: "Chargeback filing mix"
+    chart_type: pie_chart
+    description: "Disputes taken to a network chargeback vs resolved without one"
+    config:
+      x: { dimension: chargeback_filed }
+      y: [ { measure: dispute_count, agg_fn: count } ]
+    sources: [ { measure: dispute_count } ]
+    w: 6
+    h: 4
+  - name: "Chargebacks won by reason code"
+    chart_type: vertical_bar_chart
+    description: "Winning reason codes — where representment evidence holds up"
+    config:
+      x: { dimension: reason_code }
+      y: [ { measure: chargeback_won_count, agg_fn: count } ]
+    sources: [ { measure: chargeback_won_count } ]
+    w: 6
+    h: 4
+  - name: "Transaction entry-mode mix"
+    chart_type: vertical_bar_chart
+    description: "Card transactions by entry mode (ecommerce/recurring/chip/contactless) — the fraud surface"
+    config:
+      x: { dimension: entry_mode }
+      y: [ { measure: txn_count, agg_fn: count } ]
+    sources: [ { measure: txn_count } ]
+    w: 6
+    h: 4
+  - name: "Network recovery grid"
+    chart_type: grid_chart
+    description: "Filings, wins, losses and recovered dollars by network"
+    config:
+      columns: [network, chargeback_filed_count, chargeback_won_count, chargeback_lost_count, total_recovered_amount]
+      x: { dimension: network }
+      y:
+        - { measure: chargeback_filed_count, agg_fn: count }
+        - { measure: chargeback_won_count, agg_fn: count }
+        - { measure: chargeback_lost_count, agg_fn: count }
+        - { measure: total_recovered_amount, agg_fn: sum }
+    sources:
+      - { measure: chargeback_filed_count }
+      - { measure: chargeback_won_count }
+      - { measure: chargeback_lost_count }
+      - { measure: total_recovered_amount }
+    w: 12
+    h: 4

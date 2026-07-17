@@ -1,0 +1,123 @@
+# mortgage-loss-mitigation capability pack — Core-neutral edition: RESPA
+# Reg X (12 CFR 1024.39-.41) loss-mitigation decisioning for US mortgage
+# servicers and subservicers, banks, and credit unions. Installable TODAY
+# against Windrose Core's public APIs via packctl; the manifest envelope
+# follows BRD 23 (PKG-FR-001/003). Components the current Core cannot
+# materialize are declared under `deferred` — recorded in the install
+# ledger, never faked.
+pack_manifest: 1
+name: mortgage-loss-mitigation
+version: 1.0.0
+publisher: { id: pub-windrose, name: "Windrose Inc." }
+description: >-
+  AI-assisted mortgage-servicing loss-mitigation workflow for US servicers:
+  application intake triage with Reg X regulatory-clock awareness (30-day
+  complete-application evaluation, 5-business-day acknowledgment),
+  dual-tracking hold enforcement, investor-waterfall-ordered workout
+  evaluation (GSE/FHA/VA/portfolio), denial-appeal handling with independent
+  review, loss-mit operations KPI semantic model and dashboards (workout
+  approval rate, denial rate, doc-completion rate, deadline runway,
+  dual-track holds, arrearage exposure), investor-workout network analytics,
+  Reg X + waterfall grounding memories, and loan-anomaly + workout-outcome
+  training pipelines.
+categories: [mortgage, servicing, loss_mitigation, default_servicing, banking]
+regulatory: [respa_reg_x, ecoa_reg_b, cfpb, gse_servicing_guides, fha_servicing]
+components:
+  datasets:
+    - { file: "data/datasets.yaml", identity: "datasets" }
+  semantic_models:
+    - { file: "semantic/lossmit_core.yaml", identity: "lossmit_core" }
+  verified_queries:
+    - { file: "queries/verified.yaml", identity: "canonical_questions" }
+  saved_queries:
+    - { file: "queries/saved.yaml", identity: "saved_queries" }
+  dashboards:
+    - { file: "dashboards/lossmit_command_center.yaml", identity: "lossmit_command_center" }
+    - { file: "dashboards/regx_clock_dual_track.yaml", identity: "regx_clock_dual_track" }
+    - { file: "dashboards/workout_outcomes.yaml", identity: "workout_outcomes" }
+  dispositions:
+    - { file: "cases/dispositions.yaml", identity: "dispositions" }
+  cases:
+    - { file: "cases/queue.yaml", identity: "lossmit_queue" }
+  roles:
+    - { file: "rbac/roles.yaml", identity: "roles" }
+  agent_configs:
+    - { file: "agents/configs.yaml", identity: "agent_configs" }
+  memories:
+    - { file: "memories/grounding.yaml", identity: "grounding" }
+  pipelines:
+    - { file: "pipelines/templates.yaml", identity: "pipelines" }
+deferred:
+  - kind: guardrails
+    reason: >-
+      Loss-mit-domain policies (no foreclosure referral or advancement while
+      a timely complete application is pending; no outcome promised to a
+      borrower before the human determination; denial letters must state the
+      specific reasons and any investor requirement relied upon; appeal
+      reviews routed to personnel independent of the original decision;
+      fair-servicing pattern-of-denial watch) require guardrail-service /
+      OPA policy materialization, which Core does not expose as a pack
+      surface yet. The behavioral core is partially covered today by Core
+      invariants: every pack-configured agent is proposal-mode with
+      four-eyes approval (agent-runtime), and the agent instructions +
+      disposition taxonomy route final determinations exclusively to human
+      specialists with the Loss Mitigation Manager as approver.
+  - kind: agent_recipes
+    reason: >-
+      Bespoke LangGraph recipes (Loss Mit Intake Copilot, Investor Waterfall
+      Evaluator, Reg X Clock Sentinel, Document Chase Coordinator) require
+      agent-runtime graph-module registration (BRD 23 BR-12). This pack
+      specializes the existing case-triage + analytics agents via
+      TenantAgentConfig prompt_params + tenant-scope RAG grounding instead.
+  - kind: connection_templates
+    reason: >-
+      Production read connectors (servicing systems of record: Black Knight
+      MSP, Sagent LoanServ, FICS; default-management platforms; document
+      intake/OCR pipelines for hardship packages; GSE servicing portals and
+      HUD/FHA reporting rails; credit and income-verification vendors)
+      require customer credentials and pack-service connector
+      materialization. The pack ships seed datasets in the exact landing
+      shape; production connectors are configured through the product
+      Data > Connections UI.
+  - kind: write_adapters
+    reason: >-
+      Write adapters (send acknowledgment/decision/denial letters, book
+      forbearance plans and trial modifications on the servicing system,
+      place and release foreclosure-process holds, submit workout cases to
+      GSE/FHA/VA investor portals) execute only behind pack-service's
+      materialization contract and customer credentials; every such write
+      stays proposal-mode with human approval — no autonomous foreclosure
+      action, letter issuance, or investor filing, ever.
+  - kind: eval_sets
+    reason: >-
+      Golden eval sets (application triage, deadline-risk ranking, waterfall
+      option selection, denial-reason specificity, dual-track hold
+      detection) require eval-service write APIs whose action names are not
+      yet in the rbac canonical catalog (Core follow-up noted in rbac
+      catalog.go).
+  - kind: ontology
+    reason: >-
+      Ontology registration (Borrower, Loan, LossMitApplication,
+      HardshipClaim, WorkoutOffer, TrialPlan, ForbearancePlan,
+      ForeclosureAction, DeadlineClock, DenialNotice, Appeal, Investor,
+      SPOCAssignment) awaits pack-service; entity semantics are carried
+      today by the lossmit_core semantic model and dataset schemas.
+  - kind: case_schemas
+    reason: >-
+      Typed case schemas (lossmit_intake, document_chase, dual_track_review,
+      denial_appeal, forbearance_exit_review) await case-service schema
+      materialization; today's cases carry the same fields via
+      display_projection + the disposition taxonomy.
+  - kind: model_archetypes
+    reason: >-
+      Model archetypes (workout_outcome_confidence, redefault_risk_score)
+      await experiment-service archetype APIs; the scoring capability ships
+      as pipeline seeds instead (isolation_forest loan anomaly + xgboost
+      workout-outcome scorer) with model-governance expectations noted in
+      grounding memories.
+  - kind: display_labels
+    reason: >-
+      Display-label overlays ("Application", "Workout offer", "Evaluation
+      due", "Dual-track hold", entity templates) require the BFF
+      label-registry endpoints (BFF-FR-082/088) which are pack-service-tier
+      features.

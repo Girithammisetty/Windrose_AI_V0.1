@@ -1,0 +1,69 @@
+# Compensability Clock & Reserves: statutory decision-deadline runway and
+# reserve/paid exposure — the compliance view a state auditor or reinsurer
+# walks first.
+name: "Compensability Clock & Reserves"
+module: insights
+semantic_model: wc_claims_core
+description: >-
+  Statutory compliance and financial posture: open claims by jurisdiction,
+  decision-deadline runway buckets on the open book, medical-only vs
+  indemnity mix, indemnity intake trend, and reserve/paid/litigation exposure
+  by jurisdiction state.
+tags: [insurance, workers_comp, compensability, reserves, compliance, pack]
+charts:
+  - name: "Open claims by jurisdiction"
+    chart_type: vertical_bar_chart
+    description: "Open adjudication backlog split by jurisdiction state"
+    config:
+      x: { dimension: jurisdiction_state }
+      y: [ { measure: open_claim_count, agg_fn: count } ]
+    sources: [ { measure: open_claim_count } ]
+    w: 6
+    h: 4
+  - name: "Decision-deadline runway (open book)"
+    chart_type: vertical_bar_chart
+    description: "Open claims by days remaining to the statutory accept/deny deadline"
+    config:
+      x: { dimension: deadline_bucket }
+      y: [ { measure: open_claim_count, agg_fn: count } ]
+    sources: [ { measure: open_claim_count } ]
+    w: 6
+    h: 4
+  - name: "Medical-only vs indemnity mix"
+    chart_type: pie_chart
+    description: "Claim-type mix — lost-time (indemnity) vs medical-only exposure"
+    config:
+      x: { dimension: claim_type }
+      y: [ { measure: claim_count, agg_fn: count } ]
+    sources: [ { measure: claim_count } ]
+    w: 6
+    h: 4
+  - name: "Indemnity claim intake trend"
+    chart_type: line_chart
+    description: "Lost-time (indemnity) claims filed by month"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: indemnity_claim_count, agg_fn: count } ]
+    sources: [ { measure: indemnity_claim_count } ]
+    w: 6
+    h: 4
+  - name: "Jurisdiction exposure grid"
+    chart_type: grid_chart
+    description: "Volume, open backlog, litigation and reserve/paid exposure by jurisdiction"
+    config:
+      columns: [jurisdiction_state, claim_count, open_claim_count, litigated_claim_count, total_incurred_reserve, total_paid_to_date]
+      x: { dimension: jurisdiction_state }
+      y:
+        - { measure: claim_count, agg_fn: count }
+        - { measure: open_claim_count, agg_fn: count }
+        - { measure: litigated_claim_count, agg_fn: count }
+        - { measure: total_incurred_reserve, agg_fn: sum }
+        - { measure: total_paid_to_date, agg_fn: sum }
+    sources:
+      - { measure: claim_count }
+      - { measure: open_claim_count }
+      - { measure: litigated_claim_count }
+      - { measure: total_incurred_reserve }
+      - { measure: total_paid_to_date }
+    w: 12
+    h: 4

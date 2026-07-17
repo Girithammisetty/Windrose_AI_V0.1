@@ -1,0 +1,43 @@
+# Appeals Analytics dashboard (INS-FR-070 #2): appeal volume by level and
+# status, overturn concentration by denial reason (the over-denied-procedure
+# signal, INS-FR-020 over_denied_procedure_score in grid form).
+name: "Appeals Analytics"
+module: insights
+semantic_model: payer_claims
+description: >-
+  Appeal volumes, verdict mix, and overturn concentration by denial reason
+  (BRD 24 appeals analytics).
+tags: [insurance, payer, appeals, pack]
+charts:
+  - name: "Appeals by level"
+    chart_type: vertical_bar_chart
+    description: "Appeal volume by escalation level"
+    config:
+      x: { dimension: appeal_level }
+      y: [ { measure: appeal_count, agg_fn: count } ]
+    sources: [ { measure: appeal_count } ]
+    w: 6
+    h: 4
+  - name: "Appeal verdict mix"
+    chart_type: pie_chart
+    description: "Overturned vs upheld vs pending"
+    config:
+      x: { dimension: appeal_status }
+      y: [ { measure: appeal_count, agg_fn: count } ]
+    sources: [ { measure: appeal_count } ]
+    w: 6
+    h: 4
+  - name: "Overturns by denial reason"
+    chart_type: grid_chart
+    description: "Appeals and overturns per denial reason code — flags over-denied procedures"
+    config:
+      columns: [denial_reason_code, appeal_count, overturned_count]
+      x: { dimension: denial_reason_code }
+      y:
+        - { measure: appeal_count, agg_fn: count }
+        - { measure: overturned_count, agg_fn: count }
+    sources:
+      - { measure: appeal_count }
+      - { measure: overturned_count }
+    w: 12
+    h: 4

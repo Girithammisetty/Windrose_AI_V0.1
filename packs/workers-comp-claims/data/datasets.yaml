@@ -1,0 +1,24 @@
+# Pack datasets (ingestion-service file_upload, stable names for idempotency).
+# In production these tables arrive via the carrier/TPA's claims
+# administration system and state EDI / bill-review connectors (deferred until
+# pack-service ships connector materialization); this seed data is REAL rows
+# in the same landing shape, encoding genuine workers'-comp patterns so every
+# downstream component runs against real signal from day one: a
+# Monday-morning unwitnessed back strain reported right after a layoff notice
+# (SIU red-flag cluster), a compensability claim 2 days from its statutory
+# decision deadline, a catastrophic scaffold fall with fast-rising reserves,
+# a medical-only knee claim converting to indemnity, a pain-management
+# provider billing far above the fee schedule across four claims, and a
+# litigated repetitive-stress claim with attorney representation.
+- identity: wc_claims
+  name: wc-claims
+  file: data/wc_claims.csv
+  format: csv
+- identity: wc_medical_bills
+  name: wc-medical-bills
+  file: data/wc_medical_bills.csv
+  format: csv
+- identity: wc_employers
+  name: wc-employers
+  file: data/wc_employers.csv
+  format: csv

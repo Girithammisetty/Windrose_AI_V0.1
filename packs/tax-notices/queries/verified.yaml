@@ -1,0 +1,66 @@
+# Verified NL<->SQL queries (four-eyes approved at install). SQL uses
+# {{dataset('<name>')}} macros — the only table references query-service's
+# tenant-namespace guard admits.
+- nl_text: "What's our abatement rate by notice type?"
+  sql_text: >-
+    SELECT notice_type,
+           count(*) AS closed_notices,
+           sum(CASE WHEN disposition = 'abate_penalty_resolved' THEN 1 ELSE 0 END) AS abated,
+           round(sum(CASE WHEN disposition = 'abate_penalty_resolved' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS abatement_rate
+    FROM {{dataset('tx-notices')}}
+    WHERE status = 'closed'
+    GROUP BY notice_type
+    ORDER BY abatement_rate DESC
+  model: tax_notices_core
+  tags: [tax_notices, abatement, outcomes, kpi, pack]
+- nl_text: "Which open notices are closest to a response deadline?"
+  sql_text: >-
+    SELECT notice_id, account_id, notice_type, jurisdiction_level, tax_type,
+           severity,
+           cast(days_to_deadline AS double) AS days_to_deadline,
+           cast(age_days AS double) AS age_days,
+           cast(assessed_amount AS double) AS assessed_amount
+    FROM {{dataset('tx-notices')}}
+    WHERE status = 'open'
+    ORDER BY days_to_deadline ASC
+  model: tax_notices_core
+  tags: [tax_notices, deadlines, backlog, pack]
+- nl_text: "Assessed versus abated dollars by jurisdiction level and tax type"
+  sql_text: >-
+    SELECT jurisdiction_level, tax_type,
+           count(*) AS notices,
+           sum(cast(assessed_amount AS double)) AS assessed,
+           sum(cast(abated_amount AS double)) AS abated,
+           round(sum(cast(abated_amount AS double)) * 1.0
+                 / nullif(sum(cast(assessed_amount AS double)), 0), 4) AS recovery_rate
+    FROM {{dataset('tx-notices')}}
+    GROUP BY jurisdiction_level, tax_type
+    ORDER BY assessed DESC
+  model: tax_notices_core
+  tags: [tax_notices, exposure, recovery, jurisdiction, pack]
+- nl_text: "Repeat-notice accounts — tax accounts with multiple notices (systemic root-cause watch)"
+  sql_text: >-
+    SELECT account_id,
+           count(*) AS notice_count,
+           sum(CASE WHEN status = 'open' THEN 1 ELSE 0 END) AS open_notices,
+           sum(cast(assessed_amount AS double)) AS total_assessed
+    FROM {{dataset('tx-notices')}}
+    GROUP BY account_id
+    HAVING count(*) >= 2
+    ORDER BY notice_count DESC, total_assessed DESC
+  model: tax_notices_core
+  tags: [tax_notices, repeat_accounts, root_cause, pack]
+- nl_text: "Root-cause mix and average resolution age on closed notices"
+  sql_text: >-
+    SELECT root_cause,
+           count(*) AS closed_notices,
+           round(avg(cast(age_days AS double)), 1) AS avg_age_days,
+           sum(cast(assessed_amount AS double)) AS assessed,
+           sum(cast(abated_amount AS double)) AS abated
+    FROM {{dataset('tx-notices')}}
+    WHERE status = 'closed'
+    GROUP BY root_cause
+    ORDER BY closed_notices DESC
+  model: tax_notices_core
+  tags: [tax_notices, root_cause, cycle_time, pack]

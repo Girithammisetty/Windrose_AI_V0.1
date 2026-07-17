@@ -1,0 +1,38 @@
+{
+  "name": "bff-graphql",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Windrose GraphQL Backend-For-Frontend: UI-shaped aggregation over the domain services' REST APIs. JWT passthrough, no business logic, no authz.",
+  "type": "module",
+  "engines": {
+    "node": ">=20 <21"
+  },
+  "packageManager": "pnpm@9.15.9",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@apollo/server": "^4.11.2",
+    "dataloader": "^2.2.3",
+    "graphql": "^16.9.0",
+    "graphql-tag": "^2.12.6",
+    "jose": "^5.9.6"
+  },
+  "devDependencies": {
+    "@types/node": "^20.16.11",
+    "@typescript-eslint/eslint-plugin": "^8.15.0",
+    "@typescript-eslint/parser": "^8.15.0",
+    "eslint": "^9.15.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
+  }
+}

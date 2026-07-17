@@ -1,0 +1,37 @@
+{{- /* Optional HPA per service, guarded by `.autoscale` on the service entry. */}}
+{{- $root := . -}}
+{{- range $svc := .Values.services }}
+{{- if $svc.autoscale }}
+{{- $hpa := $svc.autoscale }}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ $svc.name }}
+  labels:
+    {{- include "windrose.labels" $root | nindent 4 }}
+    {{- include "windrose.selectorLabels" (dict "svc" $svc "root" $root) | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ $svc.name }}
+  minReplicas: {{ default 1 $hpa.minReplicas }}
+  maxReplicas: {{ default 5 $hpa.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ default 75 $hpa.targetCPUUtilizationPercentage }}
+    {{- if $hpa.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ $hpa.targetMemoryUtilizationPercentage }}
+    {{- end }}
+{{- end }}
+{{- end }}

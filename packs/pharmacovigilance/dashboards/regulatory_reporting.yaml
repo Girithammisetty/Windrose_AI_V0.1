@@ -1,0 +1,67 @@
+# Regulatory Reporting: the compliance view — deadline runway on the open
+# book, expedited filing trend, therapeutic-area exposure.
+name: "Regulatory Reporting"
+module: insights
+semantic_model: pv_core
+description: >-
+  Reporting compliance posture: open-case deadline runway buckets, expedited
+  filings by month, case volume by therapeutic area, seriousness mix, and
+  the per-product reporting grid.
+tags: [pharma, pharmacovigilance, reporting, compliance, pack]
+charts:
+  - name: "Deadline runway (open book)"
+    chart_type: vertical_bar_chart
+    description: "Open cases by days remaining to the regulatory reporting deadline"
+    config:
+      x: { dimension: deadline_bucket }
+      y: [ { measure: open_case_count, agg_fn: count } ]
+    sources: [ { measure: open_case_count } ]
+    w: 6
+    h: 4
+  - name: "Seriousness criteria mix"
+    chart_type: pie_chart
+    description: "ICH E2A seriousness criteria distribution across the case book"
+    config:
+      x: { dimension: seriousness_criteria }
+      y: [ { measure: case_count, agg_fn: count } ]
+    sources: [ { measure: case_count } ]
+    w: 6
+    h: 4
+  - name: "Expedited filings by month"
+    chart_type: line_chart
+    description: "Expedited (15-day / 7-day) reports submitted by received month"
+    config:
+      x: { dimension: received_month }
+      y: [ { measure: expedited_filed_count, agg_fn: count } ]
+    sources: [ { measure: expedited_filed_count } ]
+    w: 6
+    h: 4
+  - name: "Cases by therapeutic area"
+    chart_type: vertical_bar_chart
+    description: "ICSR volume by product therapeutic area"
+    config:
+      x: { dimension: therapeutic_area }
+      y: [ { measure: case_count, agg_fn: count } ]
+    sources: [ { measure: case_count } ]
+    w: 6
+    h: 4
+  - name: "Product reporting grid"
+    chart_type: grid_chart
+    description: "Cases, serious, unlisted, expedited filings and open backlog by product"
+    config:
+      columns: [product_name, case_count, serious_case_count, unlisted_case_count, expedited_filed_count, open_case_count]
+      x: { dimension: product_name }
+      y:
+        - { measure: case_count, agg_fn: count }
+        - { measure: serious_case_count, agg_fn: count }
+        - { measure: unlisted_case_count, agg_fn: count }
+        - { measure: expedited_filed_count, agg_fn: count }
+        - { measure: open_case_count, agg_fn: count }
+    sources:
+      - { measure: case_count }
+      - { measure: serious_case_count }
+      - { measure: unlisted_case_count }
+      - { measure: expedited_filed_count }
+      - { measure: open_case_count }
+    w: 12
+    h: 4

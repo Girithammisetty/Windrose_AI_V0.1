@@ -1,0 +1,156 @@
+# Semantic model `wc_claims_core` — workers'-comp claim-operations KPI catalog
+# (compensability acceptance/denial rates, SIU referral share, reserve
+# exposure, litigation rate, medical-bill fee-schedule variance, deadline
+# runway, backlog aging), expressed in the Core semantic grammar (agg
+# whitelist, equality measure filters, derived expr_metric with nullif;
+# join_paths left/many_to_one, acyclic chain bills -> claims -> employers).
+#
+# entity.table is main.<safe_relation(dataset name)>; `dataset:` refs are
+# rebound to live dataset URNs by packctl at install. Amount columns ingest
+# as bronze strings, so numeric measures cast(... as double) (the proven
+# claims_core pattern).
+name: wc_claims_core
+description: >-
+  Workers' compensation claim-operations KPI model for carriers, TPAs, and
+  self-insured employers: FNOL claim volumes and backlog aging, compensability
+  disposition mix, acceptance and denial rates, SIU referral share, reserve
+  and paid exposure, litigation and return-to-work posture, statutory
+  decision-deadline runway, and medical-bill fee-schedule variance — medical
+  bills joined to claims joined to the employer book.
+definition:
+  entities:
+    - name: claims
+      dataset: wc_claims
+      table: main.wc_claims
+      primary_key: [claim_id]
+      dataset_version_policy: { policy: latest }
+    - name: medical_bills
+      dataset: wc_medical_bills
+      table: main.wc_medical_bills
+      primary_key: [bill_id]
+      dataset_version_policy: { policy: latest }
+    - name: employers
+      dataset: wc_employers
+      table: main.wc_employers
+      primary_key: [employer_id]
+      dataset_version_policy: { policy: latest }
+  join_paths:
+    - name: bills_claims
+      from_entity: medical_bills
+      to_entity: claims
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: claim_id, to_column: claim_id }]
+    - name: claims_employers
+      from_entity: claims
+      to_entity: employers
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: employer_id, to_column: employer_id }]
+  dimensions:
+    - { name: injury_type, entity: claims, type: categorical, column: injury_type }
+    - { name: body_part, entity: claims, type: categorical, column: body_part }
+    - { name: cause_code, entity: claims, type: categorical, column: cause_code }
+    - { name: claim_type, entity: claims, type: categorical, column: claim_type }
+    - { name: severity, entity: claims, type: categorical, column: severity }
+    - { name: claim_status, entity: claims, type: categorical, column: status }
+    - { name: claim_disposition, entity: claims, type: categorical, column: disposition }
+    - { name: siu_flag, entity: claims, type: categorical, column: siu_flag }
+    - { name: litigation_flag, entity: claims, type: categorical, column: litigation_flag }
+    - { name: rtw_status, entity: claims, type: categorical, column: rtw_status }
+    - { name: jurisdiction_state, entity: claims, type: categorical, column: jurisdiction_state }
+    - { name: deadline_bucket, entity: claims, type: categorical, column: deadline_bucket }
+    - { name: filed_month, entity: claims, type: categorical, column: filed_month }
+    - { name: provider_type, entity: medical_bills, type: categorical, column: provider_type }
+    - { name: service_category, entity: medical_bills, type: categorical, column: service_category }
+    - { name: fee_schedule_flag, entity: medical_bills, type: categorical, column: fee_schedule_flag }
+    - { name: bill_month, entity: medical_bills, type: categorical, column: bill_month }
+    - { name: industry, entity: employers, type: categorical, column: industry }
+    - { name: class_code_group, entity: employers, type: categorical, column: class_code_group }
+    - { name: employer_state, entity: employers, type: categorical, column: state }
+    - { name: safety_program, entity: employers, type: categorical, column: safety_program }
+    - { name: experience_mod_tier, entity: employers, type: categorical, column: experience_mod_tier }
+  measures:
+    - { name: claim_count, entity: claims, agg: count,
+        description: "Number of workers' comp claims" }
+    - { name: open_claim_count, entity: claims, agg: count,
+        filters: "status = 'open'",
+        description: "Claims still open (adjudication backlog)" }
+    - { name: closed_claim_count, entity: claims, agg: count,
+        filters: "status = 'closed'",
+        description: "Claims closed with a final disposition" }
+    - { name: accepted_count, entity: claims, agg: count,
+        filters: "disposition = 'accept_compensable'",
+        description: "Claims accepted as compensable (AOE/COE established)" }
+    - { name: denied_count, entity: claims, agg: count,
+        filters: "disposition = 'deny_not_compensable'",
+        description: "Claims denied — compensability not established" }
+    - { name: siu_referral_count, entity: claims, agg: count,
+        filters: "disposition = 'escalate_siu_fraud'",
+        description: "Claims referred to SIU for fraud investigation" }
+    - { name: ur_referral_count, entity: claims, agg: count,
+        filters: "disposition = 'refer_utilization_review'",
+        description: "Claims routed to utilization review of medical treatment" }
+    - { name: rtw_closure_count, entity: claims, agg: count,
+        filters: "disposition = 'close_return_to_work'",
+        description: "Claims closed on a successful return to work" }
+    - { name: indemnity_claim_count, entity: claims, agg: count,
+        filters: "claim_type = 'indemnity'",
+        description: "Lost-time (indemnity) claims — wage-replacement exposure" }
+    - { name: litigated_claim_count, entity: claims, agg: count,
+        filters: "litigation_flag = 'yes'",
+        description: "Claims with attorney representation / active litigation" }
+    - { name: siu_flagged_count, entity: claims, agg: count,
+        filters: "siu_flag = 'yes'",
+        description: "Claims carrying fraud red-flag indicators" }
+    - { name: avg_claim_age_days, entity: claims, agg: avg,
+        expr: "cast(age_days as double)", format: decimal,
+        description: "Average claim age in days (cycle time / backlog aging)" }
+    - { name: total_incurred_reserve, entity: claims, agg: sum,
+        expr: "cast(incurred_reserve as double)", format: decimal,
+        description: "Total incurred reserve on the claim book" }
+    - { name: avg_incurred_reserve, entity: claims, agg: avg,
+        expr: "cast(incurred_reserve as double)", format: decimal,
+        description: "Average incurred reserve per claim (reserve adequacy watch)" }
+    - { name: total_paid_to_date, entity: claims, agg: sum,
+        expr: "cast(paid_to_date as double)", format: decimal,
+        description: "Total benefits and medical paid to date" }
+    - { name: bill_count, entity: medical_bills, agg: count,
+        description: "Number of medical bills received" }
+    - { name: above_fee_schedule_count, entity: medical_bills, agg: count,
+        filters: "fee_schedule_flag = 'above'",
+        description: "Bills priced above the state fee schedule (bill-review flag)" }
+    - { name: total_billed_amount, entity: medical_bills, agg: sum,
+        expr: "cast(billed_amount as double)", format: decimal,
+        description: "Total provider-billed dollars" }
+    - { name: total_bill_paid_amount, entity: medical_bills, agg: sum,
+        expr: "cast(paid_amount as double)", format: decimal,
+        description: "Total fee-schedule-allowed dollars paid on medical bills" }
+    - { name: avg_billed_amount, entity: medical_bills, agg: avg,
+        expr: "cast(billed_amount as double)", format: decimal,
+        description: "Average billed amount per medical bill" }
+    - { name: employer_count, entity: employers, agg: count,
+        description: "Number of insured employers on the book" }
+    - { name: safety_program_employer_count, entity: employers, agg: count,
+        filters: "safety_program = 'yes'",
+        description: "Employers with an active workplace safety program" }
+    - { name: compensability_acceptance_rate,
+        expr_metric: "accepted_count / nullif(closed_claim_count, 0)",
+        format: percent,
+        description: "Claims accepted as compensable over all closures" }
+    - { name: denial_rate,
+        expr_metric: "denied_count / nullif(closed_claim_count, 0)",
+        format: percent,
+        description: "Claims denied (compensability not established) over all closures" }
+    - { name: siu_referral_share,
+        expr_metric: "siu_referral_count / nullif(claim_count, 0)",
+        format: percent,
+        description: "Share of claim volume referred to SIU" }
+    - { name: litigation_rate,
+        expr_metric: "litigated_claim_count / nullif(claim_count, 0)",
+        format: percent,
+        description: "Share of claims with attorney representation / litigation" }
+    - { name: fee_schedule_variance_rate,
+        expr_metric: "above_fee_schedule_count / nullif(bill_count, 0)",
+        format: percent,
+        description: "Medical bills above the state fee schedule over all bills" }

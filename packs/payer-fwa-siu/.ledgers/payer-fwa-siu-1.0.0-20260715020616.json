@@ -1,0 +1,427 @@
+{
+  "pack": "payer-fwa-siu",
+  "version": "1.0.0",
+  "workspace_id": "019f6461-e821-7cd9-ac57-d34ea4b8751d",
+  "tenant_id": "019f6461-e3f8-75c4-b773-9123836c8033",
+  "started_at": "2026-07-15T06:06:08Z",
+  "finished_at": "2026-07-15T06:06:16Z",
+  "actions": [
+    {
+      "kind": "dispositions",
+      "identity": "lifecycle_dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "inv_dismissed"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "lifecycle_dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "inv_handed_off"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "lifecycle_dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "inv_needs_deeper"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "lifecycle_dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "inv_evidence_incomplete"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "lifecycle_dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "inv_confirmed"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "lifecycle_dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "inv_referred_external"
+    },
+    {
+      "kind": "roles",
+      "identity": "investigation_roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Investigator'"
+    },
+    {
+      "kind": "roles",
+      "identity": "investigation_roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Investigator' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "investigation_roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Investigation Supervisor'"
+    },
+    {
+      "kind": "roles",
+      "identity": "investigation_roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Investigation Supervisor' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "investigation_roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Evidence Custodian'"
+    },
+    {
+      "kind": "roles",
+      "identity": "investigation_roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Evidence Custodian' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "investigation_roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Investigation Quality Reviewer'"
+    },
+    {
+      "kind": "roles",
+      "identity": "investigation_roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Investigation Quality Reviewer' bound to permission group"
+    },
+    {
+      "kind": "memories",
+      "identity": "methodology",
+      "action": "create",
+      "urn": null,
+      "detail": "8 grounding records written, 0 already present"
+    },
+    {
+      "kind": "datasets",
+      "identity": "fwa_claim_lines",
+      "action": "create",
+      "urn": "wr:019f6461-e3f8-75c4-b773-9123836c8033:dataset:dataset/019f6461-f3fd-7492-8ca9-14ded35d2824",
+      "detail": "'fwa-claim-lines' ingested rows=28 snapshot=3765464441339645022"
+    },
+    {
+      "kind": "datasets",
+      "identity": "fwa_provider_profiles",
+      "action": "create",
+      "urn": "wr:019f6461-e3f8-75c4-b773-9123836c8033:dataset:dataset/019f6461-f54b-7f27-b0c3-4f144bde5c28",
+      "detail": "'fwa-provider-profiles' ingested rows=12 snapshot=8881330691313767451"
+    },
+    {
+      "kind": "datasets",
+      "identity": "fwa_leads",
+      "action": "create",
+      "urn": "wr:019f6461-e3f8-75c4-b773-9123836c8033:dataset:dataset/019f6461-f692-765c-93df-3c4f945b8169",
+      "detail": "'fwa-leads' ingested rows=14 snapshot=8786983034055529959"
+    },
+    {
+      "kind": "datasets",
+      "identity": "fwa_recoveries",
+      "action": "create",
+      "urn": "wr:019f6461-e3f8-75c4-b773-9123836c8033:dataset:dataset/019f6461-f82a-71a0-ac32-44cfa0c1122f",
+      "detail": "'fwa-recoveries' ingested rows=10 snapshot=458512414911190732"
+    },
+    {
+      "kind": "semantic_models",
+      "identity": "fwa_claims",
+      "action": "create",
+      "urn": "wr:019f6461-e3f8-75c4-b773-9123836c8033:semantic:model/019f6461-f972-7613-85be-0e6540563ee2",
+      "detail": "'fwa_claims' published"
+    },
+    {
+      "kind": "semantic_models",
+      "identity": "siu_operations",
+      "action": "create",
+      "urn": "wr:019f6461-e3f8-75c4-b773-9123836c8033:semantic:model/019f6461-fafb-7146-bcc5-e261d4322bcd",
+      "detail": "'siu_operations' published"
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_0",
+      "action": "create",
+      "urn": "wr:019f6461-e3f8-75c4-b773-9123836c8033:semantic:verified_query/019f6461-fc6f-733e-87b2-cdadb70203f7",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_1",
+      "action": "create",
+      "urn": "wr:019f6461-e3f8-75c4-b773-9123836c8033:semantic:verified_query/019f6461-fd3b-7342-81e1-1c9c2af1830b",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_2",
+      "action": "create",
+      "urn": "wr:019f6461-e3f8-75c4-b773-9123836c8033:semantic:verified_query/019f6461-fdf3-74b8-af9d-2119213ced93",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_3",
+      "action": "create",
+      "urn": "wr:019f6461-e3f8-75c4-b773-9123836c8033:semantic:verified_query/019f6461-feb8-703f-86c7-3a4bd57c96fd",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_4",
+      "action": "create",
+      "urn": "wr:019f6461-e3f8-75c4-b773-9123836c8033:semantic:verified_query/019f6461-ff86-70af-8224-560dfc4e7a14",
+      "detail": ""
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "provider_cpt_edges",
+      "action": "create",
+      "urn": "wr:019f6461-e3f8-75c4-b773-9123836c8033:query:query/019f6462-0020-7071-909b-811882cb867c",
+      "detail": "SIU: provider to CPT billing graph"
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "open_lead_exposure",
+      "action": "create",
+      "urn": "wr:019f6461-e3f8-75c4-b773-9123836c8033:query:query/019f6462-0064-7eec-b071-0894ead2db1b",
+      "detail": "SIU: open leads by dollar exposure"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "siu_command_center",
+      "action": "create",
+      "urn": "wr:019f6461-e3f8-75c4-b773-9123836c8033:chart:dashboard/019f6462-00cb-7298-a7c2-933cdc25200b",
+      "detail": "SIU Command Center"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "siu_command_center",
+      "action": "verify",
+      "urn": "wr:019f6461-e3f8-75c4-b773-9123836c8033:chart:dashboard/019f6462-00cb-7298-a7c2-933cdc25200b",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "provider_outliers",
+      "action": "create",
+      "urn": "wr:019f6461-e3f8-75c4-b773-9123836c8033:chart:dashboard/019f6462-028c-7553-97f4-867ab6c0060e",
+      "detail": "Provider Outlier Analytics"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "provider_outliers",
+      "action": "verify",
+      "urn": "wr:019f6461-e3f8-75c4-b773-9123836c8033:chart:dashboard/019f6462-028c-7553-97f4-867ab6c0060e",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "open_investigation"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "referred_siu"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "recovery_initiated"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "education_letter"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "no_findings"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "pend_evidence"
+    },
+    {
+      "kind": "cases",
+      "identity": "siu_lead_queue",
+      "action": "create",
+      "urn": "wr:019f6461-e3f8-75c4-b773-9123836c8033:dataset:dataset/019f6461-f692-765c-93df-3c4f945b8169",
+      "detail": "6 open cases (reindexed)"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'SIU Investigator'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'SIU Investigator' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'SIU Supervisor'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'SIU Supervisor' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'SIU Director'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'SIU Director' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Payment Integrity Analyst'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Payment Integrity Analyst' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Compliance Auditor'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Compliance Auditor' bound to permission group"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "case-triage prompt_params set"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "analytics prompt_params set"
+    },
+    {
+      "kind": "memories",
+      "identity": "grounding",
+      "action": "create",
+      "urn": null,
+      "detail": "9 grounding records written, 0 already present"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "create",
+      "urn": null,
+      "detail": "'FWA claim-line outlier detector (isolation_forest)' (isolation_forest, train)"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "create",
+      "urn": null,
+      "detail": "'FWA lead outcome classifier (xgboost)' (xgboost, train)"
+    }
+  ],
+  "deferred": [
+    {
+      "kind": "ontology",
+      "reason": "FWA-FR-010 ontology registration (Provider, Member, Claim, SIUCase, Evidence, Sanction, NPDBRecord, LawEnforcementReferral, Recovery) awaits pack-service; entity semantics are carried today by the fwa_claims / siu_operations semantic models and the dataset schemas."
+    },
+    {
+      "kind": "guardrails",
+      "reason": "FWA-FR-090 policies (chain-of-custody hash+timestamp+access log, FCA evidentiary standards, DOJ referral format, state DOI reporting, whistleblower pseudonymization) require guardrail-service / OPA materialization. Core invariants cover part of the intent today: proposal-mode + four-eyes approval enforce BR-1/BR-3 human sign-off for every pack-configured agent action."
+    },
+    {
+      "kind": "agent_recipes",
+      "reason": "FWA-FR-030..070 bespoke recipes (FWA Scorer, Provider Outlier Detector, SIU Case Builder, Evidence Gatherer, Prosecution-Referral Packet Drafter) require agent-runtime graph-module registration (BRD 23 BR-12). This pack specializes the existing case-triage + analytics agents via TenantAgentConfig prompt_params + tenant-scope RAG grounding instead."
+    },
+    {
+      "kind": "connection_templates",
+      "reason": "FWA-FR-080 read connectors (Facets/HealthEdge/QNXT/Amisys, EDI 837/835, NPPES, LEIE, OIG-CIA, state exclusion lists, NPDB, SAM.gov, NHCAA feeds, member CRM, provider directory) require customer credentials and pack-service connector materialization. The pack ships seed datasets in the exact landing shape those connectors produce; production connectors are configured via Data > Connections."
+    },
+    {
+      "kind": "write_adapters",
+      "reason": "FWA-FR-080 write adapters (core-admin case flag, recovery record, DOJ e-referral delivery, provider sanction flag, member payback notification) execute only behind pack-service's materialization contract and customer credentials; BR-1/BR-8 keep every platform-side write proposal-mode, and AC-8 forbids autonomous recovery writes."
+    },
+    {
+      "kind": "eval_sets",
+      "reason": "BRD 27 \u00a74 golden sets (FWA scoring, outlier detection, packet drafting, evidence completeness) require eval-service write APIs whose action names are not yet in the rbac canonical catalog."
+    },
+    {
+      "kind": "model_archetypes",
+      "reason": "BRD 27 \u00a74 archetypes (fwa_ensemble_v1, provider_outlier_v1) await experiment-service archetype APIs; the detector ships today as pipeline seeds (isolation_forest claim-line outlier detector + xgboost lead classifier per FWA-FR-030/040)."
+    },
+    {
+      "kind": "display_labels",
+      "reason": "BRD 27 \u00a74 display labels (FWA candidate / Investigation / Referral / Recovery, agent names, provider/member entity templates) require the BFF label-registry endpoints, a pack-service-tier feature."
+    },
+    {
+      "kind": "case_schemas",
+      "reason": "FWA-FR-100 typed case schemas (fwa_review, siu_investigation, prosecution_referral_review, recovery_action_case) await case-service schema materialization; today's SIU lead queue carries the same fields via display_projection + the disposition taxonomy."
+    }
+  ],
+  "result": "installed"
+}

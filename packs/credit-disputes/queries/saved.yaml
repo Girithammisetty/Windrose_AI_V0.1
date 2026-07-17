@@ -1,0 +1,29 @@
+# Saved queries (query-service) — includes the consumer->creditor edge source
+# (parent/child/n) for network-family charts: duplicate-tradeline clusters
+# (one consumer, the same debt at two collectors) and furnisher concentration
+# from the tradeline book.
+- identity: consumer_creditor_edges
+  name: "Credit disputes: consumer-creditor network edges"
+  description: >-
+    Consumer -> creditor edge list (parent/child/n) from the furnished
+    tradeline book — network-chart source for spotting duplicate collection
+    tradelines (one consumer linked to two collectors for the same debt) and
+    creditor concentration across the disputed book.
+  sql: >-
+    SELECT consumer_id AS parent, creditor_name AS child,
+           count(*) AS n
+    FROM {{dataset('cr-tradelines')}}
+    GROUP BY consumer_id, creditor_name
+  tags: [credit_reporting, network, tradelines, pack]
+- identity: deadline_ranked_open_docket
+  name: "Credit disputes: deadline-ranked open docket"
+  description: "Open disputes ranked by days remaining on the governing FCRA clock (605B blocks and day-26 ACDVs first) — the investigator ranked-queue seed (deadline x severity, not FIFO)."
+  sql: >-
+    SELECT dispute_id, tradeline_id, channel, dispute_reason, tradeline_type,
+           fcra_flag, severity,
+           cast(days_to_deadline AS double) AS days_to_deadline,
+           cast(age_days AS double) AS age_days
+    FROM {{dataset('cr-disputes')}}
+    WHERE status = 'open'
+    ORDER BY days_to_deadline ASC
+  tags: [credit_reporting, queue, deadlines, pack]

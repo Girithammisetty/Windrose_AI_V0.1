@@ -1,0 +1,124 @@
+# warranty-claims capability pack — Core-neutral edition: OEM warranty-claims
+# adjudication for manufacturers paying dealer/service-network claims (auto
+# OEMs, heavy-equipment/ag OEMs, appliance/electronics manufacturers,
+# extended-warranty administrators). Installable TODAY against Windrose
+# Core's public APIs via packctl; the manifest envelope follows BRD 23
+# (PKG-FR-001/003). Components the current Core cannot materialize are
+# declared under `deferred` — recorded in the install ledger, never faked.
+pack_manifest: 1
+name: warranty-claims
+version: 1.0.0
+publisher: { id: pub-windrose, name: "Windrose Inc." }
+description: >-
+  AI-assisted OEM warranty-claims adjudication for dealer/service-network
+  claims: claim intake triage with payment-decision deadline awareness,
+  dealer claim-padding surveillance with audit escalation, component
+  failure early-warning signal detection by build batch, supplier cost
+  recovery (warranty chargebacks), goodwill governance and safety-recall
+  routing, warranty-operations KPI semantic model and dashboards (approval/
+  denial rates, adjustment share, cost per claim, audit-escalation share,
+  supplier recovery, deadline runway), dealer-component network analytics,
+  Magnuson-Moss / recall-interplay / reserve-accounting grounding memories,
+  and unit-anomaly + claim-outcome training pipelines.
+categories: [manufacturing, warranty, claims, dealers, aftersales]
+regulatory: [magnuson_moss, ftc_warranty_rules, ucc_article_2, nhtsa_safety_act, tread_act]
+components:
+  datasets:
+    - { file: "data/datasets.yaml", identity: "datasets" }
+  semantic_models:
+    - { file: "semantic/warranty_core.yaml", identity: "warranty_core" }
+  verified_queries:
+    - { file: "queries/verified.yaml", identity: "canonical_questions" }
+  saved_queries:
+    - { file: "queries/saved.yaml", identity: "saved_queries" }
+  dashboards:
+    - { file: "dashboards/warranty_command_center.yaml", identity: "warranty_command_center" }
+    - { file: "dashboards/dealer_audit_watch.yaml", identity: "dealer_audit_watch" }
+    - { file: "dashboards/component_failure_signals.yaml", identity: "component_failure_signals" }
+  dispositions:
+    - { file: "cases/dispositions.yaml", identity: "dispositions" }
+  cases:
+    - { file: "cases/queue.yaml", identity: "claim_queue" }
+  roles:
+    - { file: "rbac/roles.yaml", identity: "roles" }
+  agent_configs:
+    - { file: "agents/configs.yaml", identity: "agent_configs" }
+  memories:
+    - { file: "memories/grounding.yaml", identity: "grounding" }
+  pipelines:
+    - { file: "pipelines/templates.yaml", identity: "pipelines" }
+deferred:
+  - kind: guardrails
+    reason: >-
+      Warranty-domain policies (no denial or warranty-exclusion routing of a
+      claim implicating an open safety campaign; no denial conditioned on
+      branded parts/service without causation evidence — the Magnuson-Moss
+      tie-in rule; goodwill only within the documented matrix and approval
+      tier; no supplier debit without attribution evidence) require
+      guardrail-service / OPA policy materialization, which Core does not
+      expose as a pack surface yet. The behavioral core is partially covered
+      today by Core invariants: every pack-configured agent is proposal-mode
+      with four-eyes approval (agent-runtime), and the agent instructions +
+      disposition taxonomy route final determinations exclusively to human
+      analysts with the Warranty Operations Manager as approver.
+  - kind: agent_recipes
+    reason: >-
+      Bespoke LangGraph recipes (Claim Intake Copilot, Dealer Audit
+      Analyzer, Early-Warning Signal Detector, Supplier Recovery Builder,
+      Goodwill Advisor) require agent-runtime graph-module registration
+      (BRD 23 BR-12). This pack specializes the existing case-triage +
+      analytics agents via TenantAgentConfig prompt_params + tenant-scope
+      RAG grounding instead.
+  - kind: connection_templates
+    reason: >-
+      Production read connectors (OEM warranty systems: SAP Warranty
+      Management / Oracle depot-repair-class modules; dealer management
+      systems (DMS) claim feeds; telematics/hour-meter platforms;
+      parts-return and failure-analysis tracking; supplier quality portals;
+      NHTSA campaign feeds for vehicle OEMs) require customer credentials
+      and pack-service connector materialization. The pack ships seed
+      datasets in the exact landing shape; production connectors are
+      configured through the product Data > Connections UI.
+  - kind: write_adapters
+    reason: >-
+      Write adapters (post claim payment/denial to the warranty system,
+      issue supplier debit memos, route a claim to a recall campaign, send
+      dealer decision notices, order parts return for failure analysis)
+      execute only behind pack-service's materialization contract and
+      customer credentials; every such write stays proposal-mode with human
+      approval — no autonomous claim payment, denial, or supplier debit,
+      ever.
+  - kind: eval_sets
+    reason: >-
+      Golden eval sets (claim triage, deadline-risk ranking, padding-signal
+      detection, supplier-attribution classification, recall-routing
+      accuracy) require eval-service write APIs whose action names are not
+      yet in the rbac canonical catalog (Core follow-up noted in rbac
+      catalog.go).
+  - kind: ontology
+    reason: >-
+      Ontology registration (Unit, Dealer, WarrantyPlan, Claim, LaborOp,
+      Part, ComponentSystem, FailureMode, Supplier, SupplierChargeback,
+      RecallCampaign, GoodwillRequest, AuditFinding) awaits pack-service;
+      entity semantics are carried today by the warranty_core semantic
+      model and dataset schemas.
+  - kind: case_schemas
+    reason: >-
+      Typed case schemas (claim_adjudication, dealer_audit,
+      supplier_recovery, goodwill_review, early_warning_investigation,
+      recall_routing_review) await case-service schema materialization;
+      today's cases carry the same fields via display_projection + the
+      disposition taxonomy.
+  - kind: model_archetypes
+    reason: >-
+      Model archetypes (claim_approval_confidence, dealer_padding_score,
+      component_failure_hazard) await experiment-service archetype APIs;
+      the scoring capability ships as pipeline seeds instead
+      (isolation_forest unit anomaly + xgboost claim-outcome scorer) with
+      model-governance expectations noted in grounding memories.
+  - kind: display_labels
+    reason: >-
+      Display-label overlays ("Claim", "Supplier chargeback", "Payment
+      decision due", "Deadline at risk", "Recall routing", entity
+      templates) require the BFF label-registry endpoints (BFF-FR-082/088)
+      which are pack-service-tier features.

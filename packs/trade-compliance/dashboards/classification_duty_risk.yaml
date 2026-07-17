@@ -1,0 +1,64 @@
+# Classification & Duty Risk: HS-chapter review mix, duty-risk exposure,
+# deadline runway on the open queue, and the entered-value shipment surface
+# (mode / lane) that drives classification and valuation exposure.
+name: "Classification & Duty Risk"
+module: insights
+semantic_model: trade_core
+description: >-
+  Classification and duty exposure: classification reviews by declared HS
+  chapter, duty-risk mix across the review book, deadline runway on the open
+  queue, entered value by transport mode, and the lane-level shipment grid.
+tags: [trade, classification, hts, duty_risk, pack]
+charts:
+  - name: "Classification reviews by declared HS chapter"
+    chart_type: vertical_bar_chart
+    description: "HS classification reviews by the chapter declared at entry"
+    config:
+      x: { dimension: declared_hs_chapter }
+      y: [ { measure: classification_review_count, agg_fn: count } ]
+    sources: [ { measure: classification_review_count } ]
+    w: 6
+    h: 4
+  - name: "Duty-risk mix"
+    chart_type: pie_chart
+    description: "Review items by duty/penalty exposure tier"
+    config:
+      x: { dimension: duty_risk }
+      y: [ { measure: review_item_count, agg_fn: count } ]
+    sources: [ { measure: review_item_count } ]
+    w: 6
+    h: 4
+  - name: "Deadline runway (open queue)"
+    chart_type: vertical_bar_chart
+    description: "Open review items by days remaining to the next action deadline"
+    config:
+      x: { dimension: deadline_bucket }
+      y: [ { measure: open_item_count, agg_fn: count } ]
+    sources: [ { measure: open_item_count } ]
+    w: 6
+    h: 4
+  - name: "Entered value by transport mode"
+    chart_type: vertical_bar_chart
+    description: "Total entered value (USD) by ocean/air/truck/rail"
+    config:
+      x: { dimension: mode }
+      y: [ { measure: total_entered_value, agg_fn: sum } ]
+    sources: [ { measure: total_entered_value } ]
+    w: 6
+    h: 4
+  - name: "Lane shipment grid"
+    chart_type: grid_chart
+    description: "Shipments, total and average entered value by trade lane"
+    config:
+      columns: [lane, shipment_count, total_entered_value, avg_entered_value]
+      x: { dimension: lane }
+      y:
+        - { measure: shipment_count, agg_fn: count }
+        - { measure: total_entered_value, agg_fn: sum }
+        - { measure: avg_entered_value, agg_fn: avg }
+    sources:
+      - { measure: shipment_count }
+      - { measure: total_entered_value }
+      - { measure: avg_entered_value }
+    w: 12
+    h: 4

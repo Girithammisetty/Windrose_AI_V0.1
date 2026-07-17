@@ -1,0 +1,138 @@
+# Tenant-scope RAG grounding records (memory-service). This is the
+# due-process / program-rule / integrity-methodology domain knowledge the
+# triage copilot retrieves when reasoning about a determination. Every
+# record is factual regulatory or operational reference material; where
+# specific numbers vary by state or program year, the record stays
+# qualitative.
+- content: >-
+    Goldberg v. Kelly (U.S. Supreme Court, 1970): welfare benefits may not
+    be terminated without due process — a pre-termination evidentiary
+    hearing. The claimant is entitled to timely and adequate written notice
+    detailing the reasons for the proposed action, an effective opportunity
+    to be heard and present evidence orally, the ability to confront and
+    cross-examine adverse witnesses, the right to retain counsel, an
+    impartial decision-maker, and a decision resting solely on the legal
+    rules and the evidence adduced at the hearing. This is the constitutional
+    floor for adverse actions on ongoing public benefits; states implement
+    it through advance-notice periods and fair-hearing systems.
+  tags: [due_process, goldberg_v_kelly, termination, hearing_rights]
+  confidence: 0.95
+- content: >-
+    Unemployment insurance nonmonetary determinations resolve eligibility
+    issues other than wage sufficiency — separation issues (voluntary quit
+    vs. discharge for misconduct vs. layoff) and non-separation issues
+    (work search, able-and-available, refusal of suitable work). Federal
+    promptness standards apply: the DOL first-payment timeliness core
+    measure expects the great majority of first payments to issue within 14
+    days of the first compensable week's ending date (21 days in states
+    with a waiting week), and nonmonetary determinations are also measured
+    for promptness from the date the issue is detected. Payment promptness
+    is a federal requirement rooted in the Social Security Act's
+    "when due" clause — investigation quality never justifies indefinite
+    delay of a payable claim.
+  tags: [unemployment, nonmonetary_determination, timeliness, dol_standards]
+  confidence: 0.9
+- content: >-
+    SNAP processing standards: eligible households must receive an
+    opportunity to participate within 30 days of application, and
+    households meeting the expedited-service criteria (very low gross
+    income and liquid resources, or destitute migrant/seasonal farmworker
+    households) within 7 days. Under expedited service, verification other
+    than identity may be postponed to after issuance — the first allotment
+    is not held for outstanding documents. Missing a processing standard is
+    itself a compliance failure measured in state performance reporting.
+  tags: [snap, expedited_service, processing_deadlines, verification]
+  confidence: 0.92
+- content: >-
+    Benefit-overpayment waivers: recovery of a non-fraud overpayment can
+    generally be waived where the overpayment was not the claimant's fault
+    and recovery would be contrary to equity and good conscience (or would
+    defeat the purpose of the program) — exact standards are set by state
+    law and program rules. Agency error (miscalculated benefit rate,
+    misapplied policy) with accurate claimant reporting is the archetypal
+    waiver case. During the pandemic UI programs, federal guidance
+    explicitly authorized states to waive non-fraud overpayments created by
+    agency or program error. Fault analysis and hardship assessment must be
+    documented before recovery action; fraud overpayments are never waived
+    and carry penalties after due process.
+  tags: [overpayments, waiver, equity_good_conscience, agency_error]
+  confidence: 0.9
+- content: >-
+    Pandemic-era UI identity fraud: organized criminal rings filed
+    unemployment claims at national scale using stolen identities,
+    producing historic improper-payment losses. Signatures include claim
+    clusters sharing addresses, bank accounts, devices, or IP ranges;
+    mismatched or missing verification documents; and out-of-pattern
+    high-benefit filings. The equally important lesson is the false-positive
+    harm: blunt cross-match and identity filters froze or denied large
+    numbers of legitimate claimants. An identity flag is a verification
+    lead — route it through an identity-verification pathway with a human
+    decision, never an automatic denial or suspension.
+  tags: [identity_fraud, unemployment, integrity, false_positives]
+  confidence: 0.9
+- content: >-
+    Automated-adjudication failure lesson (Michigan's MiDAS era,
+    qualitative): a state UI system that issued fraud determinations and
+    penalties through unreviewed automated logic produced erroneous fraud
+    findings at a very high rate, leading to wage garnishments and tax
+    intercepts against innocent claimants, mass reversals, refunds, and
+    years of litigation. The operational mandate that followed: automated
+    systems may flag and score, but every fraud finding and every adverse
+    eligibility action requires individualized human review of the
+    evidence, and notices must reflect the actual findings — not template
+    accusations.
+  tags: [automation_risk, human_in_loop, fraud_determinations, midas_lesson]
+  confidence: 0.9
+- content: >-
+    Adverse-action notice standards for public benefits: the written notice
+    must state the intended action, the specific factual reasons and the
+    policy or regulation relied upon, and the claimant's appeal/fair-hearing
+    rights and deadlines. For terminations and reductions of ongoing
+    benefits, advance notice is generally required, and benefits typically
+    continue unchanged pending the hearing when the claimant appeals before
+    the effective date (aid-paid-pending), subject to recoupment if the
+    agency prevails. A notice that omits the specific reasons or the appeal
+    rights is defective and is an independent ground for reversal at
+    hearing.
+  tags: [notice_standards, aid_paid_pending, appeal_rights, due_process]
+  confidence: 0.9
+- content: >-
+    Appeal-hearing evidence packets and burden allocation: the hearing
+    packet assembles the determination notice, the wage/income and
+    verification records relied upon, employer or collateral statements,
+    and the examiner's file, disclosed to the claimant before the hearing;
+    the hearing officer decides on the record made. In UI separation
+    appeals the employer generally bears the burden of proving misconduct
+    on a discharge, while the claimant bears the burden of proving good
+    cause on a voluntary quit. Hearsay a party cannot examine carries
+    reduced weight — evidence quality in the original determination is what
+    survives appeal.
+  tags: [appeals, hearing_packet, burden_of_proof, evidence]
+  confidence: 0.88
+- content: >-
+    Language and equitable access: under Title VI of the Civil Rights Act
+    and federal limited-English-proficiency (LEP) guidance, agencies
+    administering federally assisted benefit programs must provide
+    meaningful access for LEP individuals — translated vital documents
+    (including adverse-action notices), competent interpretation, and
+    accessible filing channels. Equitable-access obligations also cover
+    disability accommodations and, in UI, states are expected to ensure
+    access for workers regardless of language or technology barriers. A
+    procedurally perfect denial delivered in a language the claimant cannot
+    read still fails due process in practice.
+  tags: [language_access, title_vi, lep, equitable_access]
+  confidence: 0.92
+- content: >-
+    Improper-payment measurement and AI governance: federal payment-
+    integrity law requires agencies to measure and report improper payments
+    in major benefit programs — UI uses Benefit Accuracy Measurement (BAM)
+    sampling, SNAP runs a Quality Control (QC) error-rate system, and
+    Medicaid uses PERM reviews. Improper payments include underpayments and
+    procedural errors, not just fraud. Every AI-assisted determination must
+    preserve a provenance chain (data version, model version, prompt,
+    reviewer identity, timestamp), and disparate-impact monitoring of
+    denial and fraud-referral patterns across counties, languages, and
+    populations is part of defensible model governance for eligibility
+    systems.
+  tags: [improper_payments, bam, snap_qc, governance, provenance]
+  confidence: 0.9

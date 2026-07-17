@@ -1,0 +1,29 @@
+# Saved queries (query-service) — includes the claimant->program edge source
+# (parent/child/n) for network-family charts: cross-program filing fans and
+# shared-identity clusters from the claim book.
+- identity: gb_claimant_program_edges
+  name: "Benefits: claimant-program network edges"
+  description: >-
+    Claimant -> program edge list (parent/child/n) from the benefit claim
+    book — network-chart source for spotting cross-program filing fans (one
+    claimant, many programs) and identity-ring clusters (multiple high-band
+    claims fanning out from the same claimant or shared address).
+  sql: >-
+    SELECT claimant_id AS parent, program AS child,
+           count(*) AS n
+    FROM {{dataset('gb-claims')}}
+    GROUP BY claimant_id, program
+  tags: [benefits, network, integrity, pack]
+- identity: gb_deadline_critical_open
+  name: "Benefits: deadline-critical open determinations"
+  description: "Open determinations ranked by deadline runway — the examiner ranked-queue seed (deadline x severity x due-process exposure, not FIFO)."
+  sql: >-
+    SELECT determination_id, claimant_id, program, determination_type,
+           issue_type, severity, benefit_amount_band,
+           cast(days_to_deadline AS double) AS days_to_deadline,
+           cast(age_days AS double) AS age_days,
+           cast(overpayment_amount AS double) AS overpayment_amount
+    FROM {{dataset('gb-determinations')}}
+    WHERE status = 'open'
+    ORDER BY days_to_deadline ASC
+  tags: [benefits, queue, deadlines, backlog, pack]

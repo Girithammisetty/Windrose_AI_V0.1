@@ -1,0 +1,138 @@
+# Tenant-scope RAG grounding records (memory-service). This is the IRS-
+# practice / state-DOR / multi-state sales-tax domain knowledge the triage
+# copilot retrieves when reasoning about a notice. Every record is factual
+# regulatory or operational reference material; jurisdiction-specific
+# numbers are stated qualitatively where they vary by state.
+- content: >-
+    Notice response deadlines are the controlling constraint in tax-notice
+    work: agency notices carry response windows that are commonly 30, 60, or
+    90 days from the notice date (jurisdiction- and notice-type-specific),
+    and missing the window typically forfeits administrative appeal rights
+    and lets a proposed assessment become final by default — after which the
+    remedies narrow to pay-and-claim-refund or litigation. The federal
+    statutory notice of deficiency gives 90 days to petition the US Tax
+    Court before assessment. Operational rule: respond or request an
+    extension on time, every time; substance can be supplemented, a blown
+    deadline cannot.
+  tags: [deadlines, appeal_rights, response_windows, notice_management]
+  confidence: 0.92
+- content: >-
+    IRS first-time abatement (FTA) is an administrative penalty waiver for
+    failure-to-file, failure-to-pay, and failure-to-deposit penalties,
+    generally available when the taxpayer has a clean penalty history for
+    the prior three years, all required returns filed (or on extension), and
+    the tax paid or arranged. Reasonable-cause abatement is the
+    facts-and-circumstances alternative under the ordinary-business-care-
+    and-prudence standard (events like disaster, serious illness, or
+    inability to obtain records; reliance on a tax professional is limited
+    for filing deadlines). Request the stronger ground first and preserve
+    the other; document the specific facts — an abatement request must cite
+    the taxpayer's actual compliance history, never boilerplate.
+  tags: [irs, first_time_abatement, reasonable_cause, penalties]
+  confidence: 0.93
+- content: >-
+    Penalties versus interest: penalties are generally abatable for
+    reasonable cause or under administrative waivers, but interest is
+    statutory and generally cannot be abated — the main exception is
+    interest attributable to unreasonable agency errors or delays (a narrow
+    remedy). Set expectations accordingly in abatement work: a won penalty
+    abatement usually leaves interest on the underlying tax standing, and
+    interest keeps accruing during the controversy, which argues for paying
+    undisputed tax early even while contesting penalties.
+  tags: [penalties, interest, abatement, expectations]
+  confidence: 0.9
+- content: >-
+    CP2000-style information-mismatch notices come from automated matching
+    of third-party information returns (W-2s, 1099s, K-1s) against the
+    filed return. They are PROPOSED adjustments — not a bill, not an audit,
+    and not a final assessment: the taxpayer responds agree or disagree by
+    the response date (typically around 30 days) with documentation.
+    Common false-positive causes: income reported under two identifiers
+    (e.g., duplicate filings after a merger or EIN change), broker basis
+    not reflected, or amounts reported in the wrong period. A disagree
+    response with clean documentation resolves many mismatches without
+    assessment; ignoring the notice converts the proposal into an
+    assessment.
+  tags: [irs, cp2000, information_mismatch, proposed_adjustment]
+  confidence: 0.92
+- content: >-
+    Economic nexus after South Dakota v. Wayfair (2018): physical presence
+    is no longer required for a state to impose sales-tax collection duties
+    on a remote seller. States adopted economic-nexus thresholds patterned
+    on South Dakota's $100,000-in-sales or 200-transactions test, but the
+    exact thresholds, measurement periods, and whether the transaction
+    count applies vary by state and change over time — always confirm the
+    current rule for the specific state. Once a threshold is crossed, the
+    obligation to register and collect begins on the state's effective
+    schedule; monitor thresholds continuously so registration leads (not
+    follows) the first agency questionnaire.
+  tags: [wayfair, economic_nexus, sales_use, registration]
+  confidence: 0.93
+- content: >-
+    Exemption and resale certificate practice: a seller accepting a
+    properly completed certificate in good faith is generally relieved of
+    collection liability, so certificate hygiene is the audit defense.
+    Certificates must be complete, timely collected, and appropriate to the
+    claimed exemption; some states treat certificates as expiring or
+    require periodic renewal, while others honor them until revoked —
+    jurisdiction-specific. Multi-state instruments exist (the MTC Uniform
+    Sales & Use Tax Certificate and the Streamlined Sales Tax exemption
+    certificate) but not every state accepts them for every exemption. In
+    an audit, missing or expired certificates make the SELLER liable for
+    the tax; auditors commonly allow a cure window to re-solicit valid
+    certificates from customers — run remediation sprints early in the
+    audit, not after assessment.
+  tags: [exemption_certificates, resale, sales_use, audit_defense, mtc, sst]
+  confidence: 0.9
+- content: >-
+    Voluntary disclosure agreements (VDAs): most states offer a program in
+    which an unregistered taxpayer that comes forward before being
+    contacted gets a limited lookback (commonly a few years rather than all
+    open periods) and full or partial penalty relief in exchange for
+    registering, filing, and paying the lookback liability (interest
+    usually still due). VDA relief is generally UNAVAILABLE once the state
+    has contacted the taxpayer — a nexus questionnaire usually counts as
+    contact for that state — so nexus-exposure decisions must be made
+    before the letters arrive. Prior VDA history with a state also shapes
+    what relief is realistic on a new notice.
+  tags: [vda, voluntary_disclosure, nexus, lookback, penalty_relief]
+  confidence: 0.88
+- content: >-
+    Trust-fund taxes and responsible-person liability: payroll withholding
+    and collected sales tax are trust-fund taxes — money held for the
+    government, not the business. Individuals who are responsible for
+    collecting and paying them over and who willfully fail can be held
+    PERSONALLY liable (the federal trust fund recovery penalty under IRC
+    section 6672 reaches the unpaid trust-fund portion; many states have
+    analogous responsible-person statutes for withholding and sales tax).
+    Operational consequence: trust-fund notices are triaged ahead of
+    same-dollar income or franchise notices, and payment of the trust-fund
+    portion is never deferred as a cash-management tactic.
+  tags: [trust_fund, responsible_person, payroll, sales_use, tfrp]
+  confidence: 0.9
+- content: >-
+    Statute-of-limitations awareness: the federal assessment window is
+    generally three years from filing, extended to six years for
+    substantial (over 25%) omissions of income, and unlimited for fraud or
+    non-filing; refund claims have their own windows. State periods differ
+    (three to four years is common) and non-filing typically leaves periods
+    open indefinitely — which is exactly the exposure VDAs cap. Agencies
+    routinely request statute waivers or extensions during examinations:
+    signing one is a strategic decision that trades time for finality and
+    requires manager approval — never a default.
+  tags: [statute_of_limitations, assessment, waivers, exam_strategy]
+  confidence: 0.9
+- content: >-
+    Notice-management operational standard and AI governance: every agency
+    notice is logged within days of receipt into a central register with
+    its jurisdiction, type, amount, and calendared response deadline
+    (jurisdictional deadline calendars, not analyst memory, drive the
+    queue); the deadline outranks FIFO in work order. Every AI-assisted
+    disposition preserves a provenance chain — data version, model version,
+    prompt hash, reviewer identity, timestamp — and the human note must
+    contain the facts the response or abatement request will actually cite.
+    Pattern-level errors (systematically paying invalid assessments, or
+    boilerplate abatement claims) are a governance and audit-committee
+    risk even when each file individually looks defensible.
+  tags: [sla, notice_register, deadline_calendar, governance, provenance]
+  confidence: 0.9

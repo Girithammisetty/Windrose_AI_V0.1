@@ -1,0 +1,129 @@
+# Tenant-scope RAG grounding records (memory-service). This is the
+# workers'-comp domain knowledge the triage copilot retrieves when reasoning
+# about a claim. Every record is factual regulatory or methodological
+# reference material; workers' compensation is state law, so state-varying
+# numbers are stated qualitatively rather than invented.
+- content: >-
+    Compensability standard: workers' compensation is governed by state law,
+    and in every US jurisdiction a compensable injury must both "arise out
+    of" the employment (causal connection to a work risk) and occur "in the
+    course of" employment (time, place, and circumstances of work) — the
+    AOE/COE test. Common defenses that defeat compensability include purely
+    idiopathic (personal-condition) injuries, off-duty or going-and-coming
+    injuries outside recognized exceptions, intoxication, and injuries from
+    horseplay or willful misconduct — each with jurisdiction-specific
+    contours. Workers' comp is no-fault: negligence of the worker or
+    employer is generally irrelevant to compensability, and it is the
+    exclusive remedy against the employer for covered injuries.
+  tags: [compensability, aoe_coe, state_law, defenses]
+  confidence: 0.95
+- content: >-
+    Statutory decision windows: states impose deadlines on the
+    carrier/TPA to accept, deny, or formally dispute a claim after notice
+    or the first report of injury — commonly in the 14-to-30-day range,
+    with some states shorter and some allowing a longer investigation
+    period only if a delay/investigation notice is issued to the claimant.
+    Missing the window can waive defenses, trigger late-payment penalties
+    and interest, or create a presumption of compensability depending on
+    the state. Operationally: decide on the evidence in file before the
+    deadline, or issue the jurisdiction's delay notice — never let the
+    clock lapse silently.
+  tags: [deadlines, compensability_clock, penalties, state_law]
+  confidence: 0.9
+- content: >-
+    Medical fee schedules: most states publish a workers'-comp medical fee
+    schedule (many derived from Medicare's resource-based methodology with a
+    state conversion factor) that caps what providers may collect for
+    treating injured workers; in fee-schedule states providers generally may
+    not balance-bill the worker. Bill review compares billed charges to the
+    schedule (or to usual-and-customary in non-schedule states) and to
+    treatment guidelines. Systematic above-schedule billing by one provider
+    across multiple claims is a bill-review audit trigger and, combined with
+    medical-necessity concerns, a utilization-review referral.
+  tags: [fee_schedule, bill_review, medical_costs, providers]
+  confidence: 0.9
+- content: >-
+    Utilization review and independent medical examinations: UR is the
+    payer-side process for evaluating whether requested or delivered medical
+    treatment is reasonable and necessary under adopted treatment guidelines,
+    with state-specific timelines and appeal paths. An independent medical
+    examination (IME) is an evaluation by a physician other than the treating
+    provider, used where causation, extent of disability, or further
+    treatment need is contested — commonly on litigated claims and before
+    disputing a treating physician's opinion. Both are evidence-development
+    tools: neither suspends statutory benefit deadlines by itself.
+  tags: [utilization_review, ime, medical_necessity, evidence]
+  confidence: 0.9
+- content: >-
+    Maximum medical improvement (MMI) and impairment ratings: MMI is the
+    point at which the injured worker's condition has stabilized and further
+    material recovery is not expected. At MMI, permanent impairment is rated
+    — most states prescribe the AMA Guides to the Evaluation of Permanent
+    Impairment (the adopted edition varies by state; some states use their
+    own schedules) — and the rating drives permanent partial/total disability
+    benefits and settlement valuation. Temporary disability benefits
+    generally end at MMI or on release to work, per state rules.
+  tags: [mmi, impairment_rating, ama_guides, benefits]
+  confidence: 0.9
+- content: >-
+    Return-to-work practice: early, medically appropriate return to work —
+    including transitional/modified duty within documented restrictions — is
+    the best-evidenced lever on claim duration and total cost, and the
+    likelihood of ever returning to work falls the longer a claimant remains
+    off work. Adjuster levers: confirm modified-duty availability with the
+    employer early, keep restrictions current with the treating physician,
+    and document RTW offers; a bona fide offer of suitable modified work can
+    affect wage-loss benefit entitlement under many states' rules.
+  tags: [return_to_work, modified_duty, claim_duration, best_practice]
+  confidence: 0.9
+- content: >-
+    Fraud red flags (SIU referral signals): the injury is reported Monday
+    morning for an alleged Friday/weekend event; no witnesses to the injury;
+    the claim is filed immediately after discipline, demotion, layoff notice,
+    or the end of seasonal work; the claimant is hard to reach or the story
+    changes across retellings; treatment is concentrated in known
+    provider/attorney mill patterns. These are risk signals, not proof —
+    red-flagged claims are referred to the Special Investigation Unit while
+    statutory benefit and decision deadlines continue to run, and many states
+    require insurers to maintain SIU/anti-fraud plans and to report suspected
+    fraud to the state fraud bureau.
+  tags: [fraud, siu, red_flags, monday_morning]
+  confidence: 0.9
+- content: >-
+    Medicare Set-Aside awareness: under the Medicare Secondary Payer rules,
+    Medicare does not pay for medical expenses that are the responsibility of
+    a workers' compensation plan. When settling future medical exposure on a
+    claim involving a Medicare beneficiary (or someone with a reasonable
+    expectation of near-term Medicare enrollment), the settlement must
+    reasonably consider Medicare's interests — commonly via a Workers'
+    Compensation Medicare Set-Aside (WCMSA) allocation, which CMS will review
+    for approval above its published workload thresholds. Flag MSA/MSP review
+    on any settlement discussion involving Medicare status.
+  tags: [medicare_set_aside, msp, settlements, cms]
+  confidence: 0.9
+- content: >-
+    Reserve adequacy and documentation: the incurred reserve is the adjuster's
+    best estimate of ultimate claim cost (medical + indemnity + expense) and
+    must be established promptly, reviewed at defined triggers (surgery,
+    litigation, claim-type conversion, MMI), and changed only with a
+    documented rationale. Under-reserving distorts pricing and reinsurance
+    reporting; stair-stepping reserves erodes actuarial credibility. Claim
+    files must document the investigation, the basis for each compensability
+    determination, benefit calculations, and all claimant contacts — state
+    claim-handling regulations and market-conduct exams test file
+    documentation directly, and denial notices must state the specific
+    grounds for denial.
+  tags: [reserves, documentation, claim_handling, market_conduct]
+  confidence: 0.9
+- content: >-
+    AI governance and provenance: every AI-assisted claim disposition must
+    preserve a provenance chain — data version, model version, prompt hash,
+    reviewer identity, and timestamp — and a human adjuster/manager makes the
+    final determination (proposal mode with four-eyes approval on denials).
+    Regulators expect governance of AI used in insurance claim handling: the
+    NAIC's model bulletin on insurers' use of AI systems calls for a written
+    AI governance program, and several states have adopted it or issued their
+    own guidance. Pattern-level over-denial or biased outcomes are an
+    examination risk even when each file individually appears defensible.
+  tags: [ai_governance, provenance, naic, audit]
+  confidence: 0.88

@@ -1,0 +1,53 @@
+# Sanctions & Screening dashboard (BRD 30 §4 Sanctions Ops + US-5 OFAC-CO
+# view): near-match hit trend, match-score signal by verdict, and the KYC
+# risk book the screening runs against.
+name: "Sanctions & Screening"
+module: insights
+semantic_model: aml_core
+description: >-
+  Sanctions screening operations (BRD 30 AML-FR-040): near-match hit volumes
+  over time, name-match score by adjudication verdict, party risk-rating mix
+  and high-risk (EDD) concentration by jurisdiction.
+tags: [banking, sanctions, ofac, screening, pack]
+charts:
+  - name: "Sanctions hits by month"
+    chart_type: line_chart
+    description: "Sanctions near-match alert volume trend"
+    config:
+      x: { dimension: alert_month }
+      y: [ { measure: sanctions_hit_count, agg_fn: count } ]
+    sources: [ { measure: sanctions_hit_count } ]
+    w: 6
+    h: 4
+  - name: "Match score by verdict"
+    chart_type: vertical_bar_chart
+    description: "Average name-match score by disposition (adjudication tuning)"
+    config:
+      x: { dimension: alert_disposition }
+      y: [ { measure: avg_match_score, agg_fn: avg } ]
+    sources: [ { measure: avg_match_score } ]
+    w: 6
+    h: 4
+  - name: "Party risk-rating mix"
+    chart_type: pie_chart
+    description: "Customer book by risk rating (EDD population share)"
+    config:
+      x: { dimension: risk_rating }
+      y: [ { measure: party_count, agg_fn: count } ]
+    sources: [ { measure: party_count } ]
+    w: 6
+    h: 4
+  - name: "Risk book by jurisdiction"
+    chart_type: grid_chart
+    description: "Parties and high-risk parties by jurisdiction"
+    config:
+      columns: [party_jurisdiction, party_count, high_risk_party_count]
+      x: { dimension: party_jurisdiction }
+      y:
+        - { measure: party_count, agg_fn: count }
+        - { measure: high_risk_party_count, agg_fn: count }
+    sources:
+      - { measure: party_count }
+      - { measure: high_risk_party_count }
+    w: 12
+    h: 4

@@ -1,0 +1,24 @@
+# Pack datasets (ingestion-service file_upload, stable names for idempotency).
+# In production these tables arrive via the servicer's system-of-record and
+# default-management connectors (deferred until pack-service ships connector
+# materialization); this seed data is REAL rows in the same landing shape,
+# encoding genuine loss-mitigation patterns so every downstream component runs
+# against real signal from day one: a complete application on day 27 of the
+# Reg X 30-day evaluation clock, a dual-tracking hold (foreclosure referral
+# pending while a timely complete application is under review), a
+# disaster-forbearance exit needing a deferral evaluation, an incomplete
+# application with three documents missing and follow-up attempts logged, a
+# denial appeal carrying new income evidence, and a repeat modification
+# request after a broken trial plan.
+- identity: lm_applications
+  name: lm-applications
+  file: data/lm_applications.csv
+  format: csv
+- identity: lm_loans
+  name: lm-loans
+  file: data/lm_loans.csv
+  format: csv
+- identity: lm_borrowers
+  name: lm-borrowers
+  file: data/lm_borrowers.csv
+  format: csv

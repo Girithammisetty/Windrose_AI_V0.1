@@ -1,0 +1,55 @@
+# Rebate & Cost dashboard (BRD 28 RX-FR-020 rebate capture + cost measures):
+# expected vs collected rebates by therapeutic class, collection trend, member
+# cost share by tier, plan-paid channel mix.
+name: "Rebate & Cost"
+module: insights
+semantic_model: pbm_core
+description: >-
+  Rebate capture and drug-spend view (BRD 28): expected vs collected
+  manufacturer rebates by therapeutic class, monthly collection trend, member
+  copay by formulary tier, and plan-paid mix by channel.
+tags: [pharmacy, pbm, rebates, cost, pack]
+charts:
+  - name: "Rebate capture grid"
+    chart_type: grid_chart
+    description: "Expected vs collected rebate and plan paid by therapeutic class"
+    config:
+      columns: [therapeutic_class, total_rebate_expected, total_rebate_collected, total_plan_paid]
+      x: { dimension: therapeutic_class }
+      y:
+        - { measure: total_rebate_expected, agg_fn: sum }
+        - { measure: total_rebate_collected, agg_fn: sum }
+        - { measure: total_plan_paid, agg_fn: sum }
+    sources:
+      - { measure: total_rebate_expected }
+      - { measure: total_rebate_collected }
+      - { measure: total_plan_paid }
+    w: 12
+    h: 4
+  - name: "Rebate collection trend"
+    chart_type: line_chart
+    description: "Rebate dollars collected by fill month"
+    config:
+      x: { dimension: fill_month }
+      y: [ { measure: total_rebate_collected, agg_fn: sum } ]
+    sources: [ { measure: total_rebate_collected } ]
+    w: 6
+    h: 4
+  - name: "Member copay by tier"
+    chart_type: vertical_bar_chart
+    description: "Member cost share by formulary tier"
+    config:
+      x: { dimension: formulary_tier }
+      y: [ { measure: total_member_copay, agg_fn: sum } ]
+    sources: [ { measure: total_member_copay } ]
+    w: 6
+    h: 4
+  - name: "Plan paid by channel"
+    chart_type: pie_chart
+    description: "Retail / mail / specialty plan-paid mix"
+    config:
+      x: { dimension: channel }
+      y: [ { measure: total_plan_paid, agg_fn: sum } ]
+    sources: [ { measure: total_plan_paid } ]
+    w: 6
+    h: 4

@@ -1,0 +1,137 @@
+# Tenant-scope RAG grounding records (memory-service). This is the DSA/OSA
+# complaint-handling and content-moderation-methodology knowledge the appeals
+# copilot retrieves when reasoning about an appeal. Every record is factual
+# regulatory or operational reference material.
+- content: >-
+    EU Digital Services Act statement of reasons (Regulation (EU) 2022/2065,
+    Art. 17): when a provider restricts content or an account (removal,
+    demotion/visibility restriction, demonetization or suspension of monetary
+    payments, suspension or termination of the account or service), it must
+    give the affected user a clear and specific statement of reasons —
+    including the facts and circumstances relied on, whether automated means
+    were used in detection or decision, the legal ground or the contractual
+    (terms-of-service) ground with an explanation of why the content or
+    behavior infringes it, and information about the redress possibilities
+    available (internal complaint handling, out-of-court dispute settlement,
+    judicial redress).
+  tags: [dsa, statement_of_reasons, transparency, enforcement]
+  confidence: 0.95
+- content: >-
+    DSA internal complaint-handling system (Art. 20): online platforms must
+    provide an effective internal complaint-handling system, electronically
+    and free of charge, for at least six months after an enforcement
+    decision — covering decisions to remove or restrict content, suspend or
+    terminate accounts or service, and restrict monetization. Complaints
+    must be handled in a timely, non-discriminatory, diligent and
+    non-arbitrary manner; the platform must reverse its decision where the
+    complaint shows sufficient grounds; and decisions on complaints must be
+    taken under the supervision of appropriately qualified staff — NOT
+    solely by automated means.
+  tags: [dsa, complaint_handling, appeals, human_review, deadlines]
+  confidence: 0.95
+- content: >-
+    DSA out-of-court dispute settlement (Art. 21): users (including
+    reporters whose notices were rejected) may refer disputes about
+    enforcement or complaint decisions to a certified out-of-court dispute
+    settlement body of their choice; platforms must engage in good faith and
+    may not refuse the mechanism, though the body's decisions are not
+    binding on the parties. This sits alongside, not instead of, the
+    internal appeal and judicial redress — the internal appeal record is
+    typically what an ODS body reviews first.
+  tags: [dsa, out_of_court, dispute_settlement, redress]
+  confidence: 0.9
+- content: >-
+    DSA transparency reporting (Arts. 15/24): providers must publish, at
+    least annually, reports on their content moderation — including notices
+    received and actions taken by category, moderation initiated on the
+    provider's own initiative, use of automated tools with qualitative
+    indicators of accuracy and possible error rates and applied safeguards,
+    and the number of complaints received through the internal
+    complaint-handling system, the basis for those complaints, the decisions
+    taken, and the median time needed to decide them. Appeal-outcome
+    statistics (overturn/uphold counts and timing) are therefore reportable
+    figures, not just internal KPIs. The UK Online Safety Act imposes
+    comparable duties to operate accessible complaints procedures and, for
+    the largest services, transparency reporting overseen by Ofcom.
+  tags: [dsa, osa, transparency_reports, metrics, ofcom]
+  confidence: 0.9
+- content: >-
+    Overturn rate as the classifier-quality feedback loop: appeal outcomes
+    are ground-truth labels for enforcement quality. Segment overturns by
+    policy area, policy version, enforcement source, and classifier score
+    band — an overturn rate rising in one segment (e.g. high-confidence
+    hate-speech removals of counter-speech) indicates threshold drift, a
+    training-data gap, or a policy-text gap rather than random error. Every
+    overturned decision should be routed back to the enforcement team with
+    the corrected label and the reviewer's findings; a classifier retrained
+    on uncorrected labels re-learns its own mistakes.
+  tags: [overturn_rate, classifier_quality, feedback_loop, retraining]
+  confidence: 0.92
+- content: >-
+    Reviewer inter-rater reliability practice: mature appeals programs run
+    blind double-review on a sample of decisions and track agreement
+    (commonly with chance-corrected statistics such as Cohen's kappa),
+    hold regular calibration sessions on disagreement clusters, and treat
+    systematic disagreement as a signal of ambiguous policy language — a
+    policy-clarification request to the policy team — rather than
+    individual reviewer error. Precedent decisions and policy clarifications
+    should be recorded and retrievable so the same edge case (satire,
+    counter-speech, newsworthiness, documentary context) is not re-litigated
+    case-by-case with divergent outcomes.
+  tags: [inter_rater_reliability, calibration, precedent, policy_clarification]
+  confidence: 0.88
+- content: >-
+    Strike systems and proportionality: graduated enforcement (warn,
+    restrict, temporary suspension, termination) with severity weighting and
+    strike expiry is the accepted proportionality mechanism; the enforcement
+    action should match the severity and repetition of the violation, and
+    account-level penalties should distinguish first-strike users from
+    repeat violators. Under the DSA (Art. 23), suspension of frequent
+    violators must follow a prior warning and be for a reasonable period,
+    assessed case by case — and the same misuse article requires acting
+    against users who frequently submit manifestly unfounded notices or
+    complaints. partial_modify_action is the appeals-side proportionality
+    lever: the violation stands, the action is reduced.
+  tags: [strikes, proportionality, graduated_enforcement, dsa]
+  confidence: 0.9
+- content: >-
+    Brigading / mass-report abuse: coordinated reporting campaigns weaponize
+    user-report channels against targeted creators — report volume is not
+    independent evidence of a violation. Signals: report bursts concentrated
+    in a short window, reporting accounts that are new, dormant, or cluster
+    by network/behavior, off-platform calls-to-report, and report-to-view
+    ratios far outside the account's baseline. The enforcement decision (and
+    the appeal) must rest on assessment of the content itself; confirmed
+    coordinated abuse should be routed to report-integrity review, and
+    repeat submitters of manifestly unfounded reports may themselves be
+    suspended from reporting after warning.
+  tags: [brigading, mass_reports, report_integrity, abuse_patterns]
+  confidence: 0.9
+- content: >-
+    Compromised-account enforcement: a violation burst (typically spam or
+    scam content) from an account with a clean history, coinciding with a
+    credential change, new-device or new-geography logins, or session
+    anomalies, indicates account takeover rather than owner misconduct.
+    The remediation path is restore-and-secure — verify the owner, force
+    credential reset, revoke active sessions, and expunge strikes accrued
+    during the compromise window — not strikes or termination against the
+    legitimate owner. Moderator wellness is a parallel operational duty:
+    sustained exposure to graphic or abusive material is managed with
+    rotation limits on high-severity queues, exposure controls (blurring,
+    grayscale, audio-off defaults), and access to psychological support.
+  tags: [compromised_accounts, account_takeover, remediation, moderator_wellness]
+  confidence: 0.88
+- content: >-
+    AI governance and provenance for appeals: every AI-assisted appeal
+    determination must preserve a provenance chain — enforcement policy
+    version, classifier model version and score, data version, prompt hash,
+    reviewer identity, and timestamps — because appeal decisions become
+    training labels for enforcement classifiers and reportable statistics in
+    transparency reports. Regulators and auditors expect two-way
+    traceability: from a published statistic back to the decisions behind
+    it, and from a retrained model back to the human-reviewed labels it
+    learned from. Pattern-level disparities in appeal outcomes across user
+    groups or geographies are a discrimination and non-arbitrariness risk
+    even when each individual file appears defensible.
+  tags: [ai_governance, provenance, audit, training_labels, non_discrimination]
+  confidence: 0.9

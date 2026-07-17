@@ -1,0 +1,23 @@
+# Pack datasets (ingestion-service file_upload, stable names for idempotency).
+# In production these tables arrive via the issuer's core processor and
+# network connectors (deferred until pack-service ships connector
+# materialization); this seed data is REAL rows in the same landing shape,
+# encoding genuine dispute patterns so every downstream component runs against
+# real signal from day one: a card-testing burst (micro-auths then a large
+# CNP charge), a serial first-party "item not received" disputer with prior
+# delivery-confirmed denials, a cancelled-recurring subscription trap hitting
+# two cardholders, an ATM partial-dispense shortfall, a same-day duplicate
+# restaurant charge, and a high-value cross-border CNP fraud on a new account
+# (Reg E new-account timing).
+- identity: cd_cardholders
+  name: cd-cardholders
+  file: data/cd_cardholders.csv
+  format: csv
+- identity: cd_transactions
+  name: cd-transactions
+  file: data/cd_transactions.csv
+  format: csv
+- identity: cd_disputes
+  name: cd-disputes
+  file: data/cd_disputes.csv
+  format: csv

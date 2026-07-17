@@ -1,0 +1,26 @@
+# Saved queries (query-service) — includes the network-chart edge source
+# (provider -> CPT code billing graph), the pattern proven by the claims demo.
+- identity: provider_cpt_edges
+  name: "SIU: provider to CPT billing graph"
+  description: >-
+    Claim-line counts by (provider NPI -> CPT code) — edge list for
+    network-family charts; billing-pattern shape makes upcoding and
+    unbundling clusters visible at a glance (FWA-FR-040).
+  sql: >-
+    SELECT provider_npi AS parent, cpt_code AS child, count(*) AS n
+    FROM {{dataset('fwa-claim-lines')}}
+    GROUP BY provider_npi, cpt_code
+  tags: [insurance, fwa, network, providers, pack]
+- identity: open_lead_exposure
+  name: "SIU: open leads by dollar exposure"
+  description: >-
+    New / triage / open-investigation SIU leads ranked by exposure — the
+    investigator worklist ordering per US-1 (probability x dollars).
+  sql: >-
+    SELECT lead_id, provider_npi, fwa_typology, lead_source, priority,
+           cast(fwa_score AS double) AS fwa_score,
+           cast(exposure_amount AS double) AS exposure
+    FROM {{dataset('fwa-leads')}}
+    WHERE status IN ('new', 'triage', 'open_investigation')
+    ORDER BY exposure DESC
+  tags: [insurance, fwa, siu, worklist, pack]

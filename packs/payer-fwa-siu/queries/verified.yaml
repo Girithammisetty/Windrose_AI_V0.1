@@ -1,0 +1,65 @@
+# Verified NL<->SQL queries (BRD 27 FWA-FR-020 KPI catalog; four-eyes approved
+# at install). SQL uses {{dataset('<name>')}} macros — the only table
+# references query-service's tenant-namespace guard admits. DuckDB dialect,
+# cast() on every bronze numeric.
+- nl_text: "What is our SIU hit rate and false-positive rate by lead source?"
+  sql_text: >-
+    SELECT lead_source,
+           count(*) AS leads,
+           sum(CASE WHEN outcome = 'confirmed' THEN 1 ELSE 0 END) AS confirmed,
+           sum(CASE WHEN outcome = 'false_positive' THEN 1 ELSE 0 END) AS false_positives,
+           round(sum(CASE WHEN outcome = 'confirmed' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS hit_rate,
+           round(sum(CASE WHEN outcome = 'false_positive' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS false_positive_rate
+    FROM {{dataset('fwa-leads')}}
+    GROUP BY lead_source
+    ORDER BY hit_rate DESC
+  model: siu_operations
+  tags: [siu, hit-rate, false-positive, kpi, pack]
+- nl_text: "Which providers deviate more than two sigma from their peer group?"
+  sql_text: >-
+    SELECT provider_npi, provider_specialty, peer_group, leie_status,
+           cast(peer_deviation_sigma AS double) AS sigma,
+           cast(em_level5_share AS double) AS level5_share,
+           cast(max_visits_single_day AS integer) AS max_visits_single_day,
+           cast(total_paid AS double) AS total_paid
+    FROM {{dataset('fwa-provider-profiles')}}
+    WHERE cast(peer_deviation_sigma AS double) > 2.0
+    ORDER BY sigma DESC
+  model: fwa_claims
+  tags: [providers, outliers, peer-group, pack]
+- nl_text: "How much have we recovered by recovery method?"
+  sql_text: >-
+    SELECT recovery_method,
+           count(*) AS actions,
+           sum(cast(demanded_amount AS double)) AS demanded,
+           sum(cast(recovered_amount AS double)) AS recovered,
+           round(avg(cast(cycle_days AS double)), 1) AS avg_cycle_days
+    FROM {{dataset('fwa-recoveries')}}
+    GROUP BY recovery_method
+    ORDER BY recovered DESC
+  model: siu_operations
+  tags: [recoveries, dollars, kpi, pack]
+- nl_text: "Which providers have the highest E/M level-5 billing share (upcoding screen)?"
+  sql_text: >-
+    SELECT provider_npi, provider_specialty, peer_group,
+           cast(em_level5_share AS double) AS level5_share,
+           cast(peer_deviation_sigma AS double) AS sigma,
+           outlier_flag
+    FROM {{dataset('fwa-provider-profiles')}}
+    WHERE cast(em_level5_share AS double) > 0.0
+    ORDER BY level5_share DESC
+  model: fwa_claims
+  tags: [upcoding, em-coding, providers, pack]
+- nl_text: "What is the paid exposure on unbundled claim lines by provider?"
+  sql_text: >-
+    SELECT provider_npi, provider_specialty,
+           count(*) AS unbundled_lines,
+           sum(cast(paid_amount AS double)) AS paid_exposure
+    FROM {{dataset('fwa-claim-lines')}}
+    WHERE fwa_flag = 'unbundling'
+    GROUP BY provider_npi, provider_specialty
+    ORDER BY paid_exposure DESC
+  model: fwa_claims
+  tags: [unbundling, ncci, exposure, pack]

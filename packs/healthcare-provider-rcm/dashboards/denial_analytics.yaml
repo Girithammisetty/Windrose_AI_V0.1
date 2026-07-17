@@ -1,0 +1,56 @@
+# Denial Analytics dashboard (RCM-FR-100 "Denial Analytics", BRD 26 US-2/US-4
+# and BR-4 denial-category triage): denial volumes by category and payer,
+# appeal outcomes, and the per-CPT denial/overturn grid feeding the
+# over_denied_procedure_score review.
+name: "Denial Analytics"
+module: insights
+semantic_model: rcm_claims
+description: >-
+  Denial management analytics (BRD 26): denial volume by category
+  (coverage / documentation / medical necessity / administrative), denied
+  dollars by payer, appeal outcome mix, and per-CPT denial vs overturn detail.
+tags: [healthcare, provider, rcm, denials, appeals, pack]
+charts:
+  - name: "Denials by category"
+    chart_type: vertical_bar_chart
+    description: "Denial worklist volume by BR-4 denial category"
+    config:
+      x: { dimension: denial_category }
+      y: [ { measure: denial_count, agg_fn: count } ]
+    sources: [ { measure: denial_count } ]
+    w: 6
+    h: 4
+  - name: "Denied dollars by payer"
+    chart_type: vertical_bar_chart
+    description: "Denied net-charge dollars by payer"
+    config:
+      x: { dimension: denial_payer }
+      y: [ { measure: total_denied_amount, agg_fn: sum } ]
+    sources: [ { measure: total_denied_amount } ]
+    w: 6
+    h: 4
+  - name: "Appeal outcome mix"
+    chart_type: pie_chart
+    description: "Denials by appeal status (pending / overturned / upheld / resubmitted / not appealed)"
+    config:
+      x: { dimension: appeal_status }
+      y: [ { measure: denial_count, agg_fn: count } ]
+    sources: [ { measure: denial_count } ]
+    w: 6
+    h: 4
+  - name: "Denials by procedure code"
+    chart_type: grid_chart
+    description: "Per-CPT denial volume, denied dollars, and overturned appeals (over-denied procedure review)"
+    config:
+      columns: [denial_cpt_code, denial_count, total_denied_amount, overturned_appeal_count]
+      x: { dimension: denial_cpt_code }
+      y:
+        - { measure: denial_count, agg_fn: count }
+        - { measure: total_denied_amount, agg_fn: sum }
+        - { measure: overturned_appeal_count, agg_fn: count }
+    sources:
+      - { measure: denial_count }
+      - { measure: total_denied_amount }
+      - { measure: overturned_appeal_count }
+    w: 12
+    h: 4

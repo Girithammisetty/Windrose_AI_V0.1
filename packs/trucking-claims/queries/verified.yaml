@@ -1,0 +1,67 @@
+# Verified NL<->SQL queries (four-eyes approved at install). SQL uses
+# {{dataset('<name>')}} macros — the only table references query-service's
+# tenant-namespace guard admits.
+- nl_text: "What's our cargo claim pay rate by claim type?"
+  sql_text: >-
+    SELECT claim_type,
+           count(*) AS closed_claims,
+           sum(CASE WHEN disposition = 'accept_pay_claim' THEN 1 ELSE 0 END) AS paid,
+           sum(CASE WHEN disposition = 'deny_claim_documented' THEN 1 ELSE 0 END) AS denied,
+           sum(CASE WHEN disposition = 'file_carrier_recovery' THEN 1 ELSE 0 END) AS recovery_filed,
+           round(sum(CASE WHEN disposition = 'accept_pay_claim' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS pay_rate
+    FROM {{dataset('tl-claims')}}
+    WHERE status = 'closed' AND claim_kind = 'cargo_osd'
+    GROUP BY claim_type
+    ORDER BY pay_rate DESC
+  model: trucking_claims_core
+  tags: [claims, cargo, outcomes, kpi, pack]
+- nl_text: "Which open claims and reviews are closest to a filing or response deadline?"
+  sql_text: >-
+    SELECT claim_id, shipment_id, claim_kind, claim_type, liability_band,
+           severity,
+           cast(days_to_deadline AS double) AS days_to_deadline,
+           cast(age_days AS double) AS age_days,
+           cast(amount AS double) AS amount
+    FROM {{dataset('tl-claims')}}
+    WHERE status = 'open'
+    ORDER BY days_to_deadline ASC
+  model: trucking_claims_core
+  tags: [claims, deadlines, carmack, backlog, pack]
+- nl_text: "Recovery performance by liability band — dollars claimed vs recovered"
+  sql_text: >-
+    SELECT liability_band,
+           count(*) AS claims,
+           sum(cast(amount AS double)) AS claimed,
+           sum(cast(recovery_amount AS double)) AS recovered,
+           round(sum(cast(recovery_amount AS double))
+                 / nullif(sum(cast(amount AS double)), 0), 4) AS recovery_rate
+    FROM {{dataset('tl-claims')}}
+    WHERE claim_kind = 'cargo_osd'
+    GROUP BY liability_band
+    ORDER BY claimed DESC
+  model: trucking_claims_core
+  tags: [claims, recovery, liability, carmack, pack]
+- nl_text: "Carrier watchlist — carriers with fraud, insurance, or safety flags"
+  sql_text: >-
+    SELECT carrier_id, carrier_name, type, safety_tier, authority_age,
+           insurance_ok, fraud_risk
+    FROM {{dataset('tl-carriers')}}
+    WHERE fraud_risk = 'high' OR insurance_ok = 'no' OR safety_tier = 'watch'
+    ORDER BY fraud_risk DESC, carrier_id
+  model: trucking_claims_core
+  tags: [carriers, vetting, fraud, watchlist, pack]
+- nl_text: "Safety-event coaching closure by month"
+  sql_text: >-
+    SELECT filed_month,
+           count(*) AS safety_events,
+           sum(CASE WHEN disposition = 'close_coaching_completed' THEN 1 ELSE 0 END) AS coaching_closed,
+           sum(CASE WHEN status = 'open' THEN 1 ELSE 0 END) AS still_open,
+           round(sum(CASE WHEN disposition = 'close_coaching_completed' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS coaching_closure_rate
+    FROM {{dataset('tl-claims')}}
+    WHERE claim_kind = 'safety_event'
+    GROUP BY filed_month
+    ORDER BY filed_month
+  model: trucking_claims_core
+  tags: [safety, coaching, telematics, kpi, pack]

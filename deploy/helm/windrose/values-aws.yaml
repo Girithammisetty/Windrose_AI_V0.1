@@ -1,0 +1,44 @@
+# AWS (EKS) overrides. Cloud-specific only — everything else comes from values.yaml.
+# Infra endpoints below are PLACEHOLDERS; the CD workflow overrides them with
+# Terraform outputs (deploy/terraform/aws) via --set / -f.
+
+global:
+  # ECR registry for the account/region.
+  registry: 123456789012.dkr.ecr.us-east-1.amazonaws.com
+
+serviceAccount:
+  create: true
+  annotations:
+    # IRSA: bind the SA to an IAM role for keyless S3/Secrets access.
+    eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/windrose-workload  # PLACEHOLDER
+
+ingress:
+  className: alb
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    # alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:...  # PLACEHOLDER
+
+# Persistent volumes (if any stateful add-on charts are enabled) use gp3.
+storageClass: gp3
+
+externalSecrets:
+  enabled: true
+  secretStoreRef:
+    name: windrose-aws-secrets
+    kind: ClusterSecretStore   # backed by AWS Secrets Manager
+  remoteKeyPrefix: windrose/prod
+
+# Managed-infra endpoints — PLACEHOLDERS overridden by CD from Terraform outputs.
+config:
+  ICEBERG_WAREHOUSE: s3://windrose-prod-warehouse/
+  OBJECTSTORE_REGION_HINT: us-east-1   # informational; real creds via windrose-secrets
+  # POSTGRES_HOST / REDIS_URL / KAFKA_BOOTSTRAP etc. are SECRETS (windrose-secrets),
+  # populated from Secrets Manager — not set here.
+  #
+  # BYO observability backend (opt-in — uncomment + point at your own collector):
+  # WINDROSE_OTEL_ENABLED: "true"
+  # OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector.observability.svc:4317   # in-cluster collector
+  # OTEL_EXPORTER_OTLP_ENDPOINT: <your-datadog-agent>:4317               # or a vendor OTLP/gRPC endpoint

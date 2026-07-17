@@ -1,0 +1,315 @@
+{
+  "pack": "utility-inspections",
+  "version": "1.0.0",
+  "workspace_id": "019f6a76-aa06-7651-a05d-9fb19f6f1d05",
+  "tenant_id": "019f6a76-a5cc-76ed-8ca8-16f06be4e3ce",
+  "started_at": "2026-07-16T10:33:07Z",
+  "finished_at": "2026-07-16T10:33:13Z",
+  "actions": [
+    {
+      "kind": "datasets",
+      "identity": "ui_circuits",
+      "action": "create",
+      "urn": "wr:019f6a76-a5cc-76ed-8ca8-16f06be4e3ce:dataset:dataset/019f6a7c-bc4b-7b3c-a516-b3fc2a8b2d4d",
+      "detail": "'ui-circuits' ingested rows=12 snapshot=1077944628608385007"
+    },
+    {
+      "kind": "datasets",
+      "identity": "ui_assets",
+      "action": "create",
+      "urn": "wr:019f6a76-a5cc-76ed-8ca8-16f06be4e3ce:dataset:dataset/019f6a7c-bd54-7aae-8a61-ed14af344a17",
+      "detail": "'ui-assets' ingested rows=30 snapshot=4001444519073302204"
+    },
+    {
+      "kind": "datasets",
+      "identity": "ui_findings",
+      "action": "create",
+      "urn": "wr:019f6a76-a5cc-76ed-8ca8-16f06be4e3ce:dataset:dataset/019f6a7c-be54-7ced-b5de-6cb9bef0a793",
+      "detail": "'ui-findings' ingested rows=26 snapshot=4078601586586638219"
+    },
+    {
+      "kind": "semantic_models",
+      "identity": "inspections_core",
+      "action": "create",
+      "urn": "wr:019f6a76-a5cc-76ed-8ca8-16f06be4e3ce:semantic:model/019f6a7c-bf5c-7589-9f89-870cf7448d16",
+      "detail": "'inspections_core' published"
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_0",
+      "action": "create",
+      "urn": "wr:019f6a76-a5cc-76ed-8ca8-16f06be4e3ce:semantic:verified_query/019f6a7c-c067-76ef-8f5b-58e89a282625",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_1",
+      "action": "create",
+      "urn": "wr:019f6a76-a5cc-76ed-8ca8-16f06be4e3ce:semantic:verified_query/019f6a7c-c12f-7279-b5de-26f36c11e6d1",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_2",
+      "action": "create",
+      "urn": "wr:019f6a76-a5cc-76ed-8ca8-16f06be4e3ce:semantic:verified_query/019f6a7c-c20e-7247-808a-c7754b4c9168",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_3",
+      "action": "create",
+      "urn": "wr:019f6a76-a5cc-76ed-8ca8-16f06be4e3ce:semantic:verified_query/019f6a7c-c2e2-79e7-8bbd-bf419610510c",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_4",
+      "action": "create",
+      "urn": "wr:019f6a76-a5cc-76ed-8ca8-16f06be4e3ce:semantic:verified_query/019f6a7c-c3d7-78d6-abe1-fbd086dfd2f8",
+      "detail": ""
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "asset_finding_edges",
+      "action": "create",
+      "urn": "wr:019f6a76-a5cc-76ed-8ca8-16f06be4e3ce:query:query/019f6a7c-c483-7be2-a84b-fa78f50f3720",
+      "detail": "Inspections: asset-finding-type network edges"
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "high_cost_open_findings",
+      "action": "create",
+      "urn": "wr:019f6a76-a5cc-76ed-8ca8-16f06be4e3ce:query:query/019f6a7c-c4b9-7add-9508-74f9af36c43d",
+      "detail": "Inspections: high-exposure open queue"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "inspection_triage_center",
+      "action": "create",
+      "urn": "wr:019f6a76-a5cc-76ed-8ca8-16f06be4e3ce:chart:dashboard/019f6a7c-c51b-715f-a514-18207a72053a",
+      "detail": "Inspection Triage Center"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "inspection_triage_center",
+      "action": "verify",
+      "urn": "wr:019f6a76-a5cc-76ed-8ca8-16f06be4e3ce:chart:dashboard/019f6a7c-c51b-715f-a514-18207a72053a",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "wildfire_risk_zones",
+      "action": "create",
+      "urn": "wr:019f6a76-a5cc-76ed-8ca8-16f06be4e3ce:chart:dashboard/019f6a7c-c6d3-74c6-ab66-f6bb2afdaa01",
+      "detail": "Wildfire & Risk Zones"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "wildfire_risk_zones",
+      "action": "verify",
+      "urn": "wr:019f6a76-a5cc-76ed-8ca8-16f06be4e3ce:chart:dashboard/019f6a7c-c6d3-74c6-ab66-f6bb2afdaa01",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "detection_quality_backlog",
+      "action": "create",
+      "urn": "wr:019f6a76-a5cc-76ed-8ca8-16f06be4e3ce:chart:dashboard/019f6a7c-c8a3-73b1-a462-db655c6b8602",
+      "detail": "Detection Quality & Backlog"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "detection_quality_backlog",
+      "action": "verify",
+      "urn": "wr:019f6a76-a5cc-76ed-8ca8-16f06be4e3ce:chart:dashboard/019f6a7c-c8a3-73b1-a462-db655c6b8602",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "dispatch_immediate_repair"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "close_false_detection"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "schedule_planned_work"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "request_field_verification"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "close_monitored_stable"
+    },
+    {
+      "kind": "cases",
+      "identity": "finding_queue",
+      "action": "create",
+      "urn": "wr:019f6a76-a5cc-76ed-8ca8-16f06be4e3ce:dataset:dataset/019f6a7c-be54-7ced-b5de-6cb9bef0a793",
+      "detail": "6 open cases (reindexed)"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Inspection Triage Analyst'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Inspection Triage Analyst' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Field Verification Engineer'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Field Verification Engineer' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Vegetation Program Specialist'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Vegetation Program Specialist' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Asset Risk Manager'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Asset Risk Manager' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Regulatory Compliance Auditor'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Regulatory Compliance Auditor' bound to permission group"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "case-triage prompt_params set"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "analytics prompt_params set"
+    },
+    {
+      "kind": "memories",
+      "identity": "grounding",
+      "action": "create",
+      "urn": null,
+      "detail": "10 grounding records written, 0 already present"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "create",
+      "urn": null,
+      "detail": "'Asset condition anomaly detector (isolation forest)' (isolation_forest, train)"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "create",
+      "urn": null,
+      "detail": "'Finding disposition scorer (xgboost)' (xgboost, train)"
+    }
+  ],
+  "deferred": [
+    {
+      "kind": "guardrails",
+      "reason": "Inspection-domain policies (no work order created, cancelled, or deferred without a human determination; deferrals must carry a documented engineering rationale and program window; a repeat finding on an asset with a prior monitor decision may never be re-monitored silently; pattern-of-deferral watch in Tier-3 HFTD zones) require guardrail-service / OPA policy materialization, which Core does not expose as a pack surface yet. The behavioral core is partially covered today by Core invariants: every pack-configured agent is proposal-mode with four-eyes approval (agent-runtime), and the agent instructions + disposition taxonomy route final repair/defer determinations exclusively to human analysts with the Asset Risk Manager as approver."
+    },
+    {
+      "kind": "agent_recipes",
+      "reason": "Bespoke LangGraph recipes (Finding Triage Copilot, Deadline & Make-Safe Sentinel, False-Detection Screener, Vegetation Clearance Planner, Deferral Rationale Builder) require agent-runtime graph-module registration (BRD 23 BR-12). This pack specializes the existing case-triage + analytics agents via TenantAgentConfig prompt_params + tenant-scope RAG grounding instead."
+    },
+    {
+      "kind": "connection_templates",
+      "reason": "Production read connectors (asset registries / GIS: Esri ArcGIS Utility Network-class systems; work management: Maximo/SAP PM-class EAM; drone/aerial-AI analytics platforms; LiDAR vegetation-analytics vendors; SCADA/historian feeds; leak-survey instrument exports) require customer credentials and pack-service connector materialization. The pack ships seed datasets in the exact landing shape; production connectors are configured through the product Data > Connections UI."
+    },
+    {
+      "kind": "write_adapters",
+      "reason": "Write adapters (create/schedule/close work orders in the EAM, dispatch field crews, update GIS asset condition records, file regulator notifications) execute only behind pack-service's materialization contract and customer credentials; every such write stays proposal-mode with human approval \u2014 no autonomous work-order creation, deferral, or crew dispatch, ever."
+    },
+    {
+      "kind": "eval_sets",
+      "reason": "Golden eval sets (finding triage, false-detection screening, deadline-risk ranking, deferral-rationale quality) require eval-service write APIs whose action names are not yet in the rbac canonical catalog (Core follow-up noted in rbac catalog.go)."
+    },
+    {
+      "kind": "ontology",
+      "reason": "Ontology registration (Asset, Circuit, District, Finding, Detection, WorkOrder, Deferral, RiskZone, InspectionCycle, LeakGrade, VegetationSpan, PSPSEvent) awaits pack-service; entity semantics are carried today by the inspections_core semantic model and dataset schemas."
+    },
+    {
+      "kind": "case_schemas",
+      "reason": "Typed case schemas (finding_triage, field_verification, leak_grading, vegetation_clearance, deferral_engineering_review) await case-service schema materialization; today's cases carry the same fields via display_projection + the disposition taxonomy."
+    },
+    {
+      "kind": "model_archetypes",
+      "reason": "Model archetypes (finding_disposition_confidence, detection_false_positive_score) await experiment-service archetype APIs; the scoring capability ships as pipeline seeds instead (isolation_forest asset-condition anomaly + xgboost finding-disposition scorer) with model-governance expectations noted in grounding memories."
+    },
+    {
+      "kind": "display_labels",
+      "reason": "Display-label overlays (\"Finding\", \"Make-safe deadline\", \"HFTD Tier 3\", \"Deferral pending engineering review\", entity templates) require the BFF label-registry endpoints (BFF-FR-082/088) which are pack-service-tier features."
+    }
+  ],
+  "result": "installed"
+}

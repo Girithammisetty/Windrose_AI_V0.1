@@ -1,0 +1,69 @@
+# Marketplace Integrity Center: review mix by type, backlog aging, outcome
+# mix, intake trend. Chart families restricted to the render-verified set
+# (vertical_bar / grid / pie / line); expr_metric measures (rates) are
+# query/NL surfaces, never charted directly.
+name: "Marketplace Integrity Center"
+module: insights
+semantic_model: seller_vetting_core
+description: >-
+  Top-line marketplace trust-and-safety KPIs: review volumes by type,
+  adjudication backlog aging by severity, human disposition outcome mix,
+  and GMV exposure per review type.
+tags: [marketplace, trust_safety, seller_vetting, pack]
+charts:
+  - name: "Reviews by type"
+    chart_type: vertical_bar_chart
+    description: "Review volume by workflow type (vetting, counterfeit, IP claim, fraud alert, reinstatement)"
+    config:
+      x: { dimension: review_type }
+      y: [ { measure: review_count, agg_fn: count } ]
+    sources: [ { measure: review_count } ]
+    w: 6
+    h: 4
+  - name: "Backlog aging by severity"
+    chart_type: vertical_bar_chart
+    description: "Average review age in days by severity (cycle-time watch)"
+    config:
+      x: { dimension: severity }
+      y: [ { measure: avg_review_age_days, agg_fn: avg } ]
+    sources: [ { measure: avg_review_age_days } ]
+    w: 6
+    h: 4
+  - name: "Disposition outcome mix"
+    chart_type: pie_chart
+    description: "Enforced vs claim rejected vs evidence requested vs ring suspended vs reinstated vs pending"
+    config:
+      x: { dimension: review_disposition }
+      y: [ { measure: review_count, agg_fn: count } ]
+    sources: [ { measure: review_count } ]
+    w: 6
+    h: 4
+  - name: "Review intake by month"
+    chart_type: line_chart
+    description: "Review filings trend by filed month"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: review_count, agg_fn: count } ]
+    sources: [ { measure: review_count } ]
+    w: 6
+    h: 4
+  - name: "Review-type worklist grid"
+    chart_type: grid_chart
+    description: "Reviews, closures, enforcement actions, evidence requests and GMV at risk by type"
+    config:
+      columns: [review_type, review_count, closed_review_count, enforced_count, evidence_requested_count, total_gmv_at_risk]
+      x: { dimension: review_type }
+      y:
+        - { measure: review_count, agg_fn: count }
+        - { measure: closed_review_count, agg_fn: count }
+        - { measure: enforced_count, agg_fn: count }
+        - { measure: evidence_requested_count, agg_fn: count }
+        - { measure: total_gmv_at_risk, agg_fn: sum }
+    sources:
+      - { measure: review_count }
+      - { measure: closed_review_count }
+      - { measure: enforced_count }
+      - { measure: evidence_requested_count }
+      - { measure: total_gmv_at_risk }
+    w: 12
+    h: 4

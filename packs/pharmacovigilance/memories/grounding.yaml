@@ -1,0 +1,110 @@
+# Tenant-scope RAG grounding records (memory-service). This is the FDA/ICH/
+# GVP domain knowledge the case-processing copilot retrieves when reasoning
+# about an ICSR. Every record is factual regulatory or methodological
+# reference material.
+- content: >-
+    FDA postmarketing expedited reporting (21 CFR 314.80): an adverse
+    experience that is both SERIOUS and UNEXPECTED must be reported within
+    15 calendar days of initial receipt ("15-day Alert report"), whether the
+    source is spontaneous, literature, or a postmarketing study with a
+    reasonable causal possibility. Follow-up information to a 15-day report
+    is itself due within 15 days of receipt. Day zero is the day ANY
+    employee or agent of the applicant first receives a minimally valid
+    case.
+  tags: [fda, expedited, fifteen_day, deadlines]
+  confidence: 0.98
+- content: >-
+    IND safety reporting for clinical cases (21 CFR 312.32): a suspected
+    adverse reaction that is serious and unexpected (a SUSAR) must be
+    reported to FDA and all participating investigators within 15 calendar
+    days; if it is FATAL or LIFE-THREATENING, initial notification is due
+    within 7 calendar days, with a complete follow-up report within 8
+    additional days. Unexpected means not listed in the investigator's
+    brochure at the observed specificity or severity.
+  tags: [ind, susar, seven_day, clinical, deadlines]
+  confidence: 0.98
+- content: >-
+    Minimum criteria for a valid ICSR (ICH E2D): (1) an identifiable
+    reporter, (2) an identifiable patient, (3) a suspect medicinal product,
+    and (4) an adverse event. A report missing any element is not yet a
+    valid case — it triggers documented follow-up (due diligence, typically
+    at least two attempts), not dismissal. The regulatory clock starts when
+    the four elements are first available, and identifiability is a low
+    bar: patient initials, age group, or sex can each suffice.
+  tags: [valid_case, icsr, minimum_criteria, e2d]
+  confidence: 0.95
+- content: >-
+    Seriousness per ICH E2A: an adverse event is serious when it results in
+    death, is life-threatening (the patient was at risk of death at the
+    time of the event, not hypothetically), requires or prolongs inpatient
+    hospitalization, results in persistent or significant disability or
+    incapacity, is a congenital anomaly or birth defect, or is another
+    medically important condition requiring intervention to prevent one of
+    the above. Seriousness is event-driven and objective — it is distinct
+    from severity (mild/moderate/severe intensity grading).
+  tags: [seriousness, ich_e2a, definitions]
+  confidence: 0.98
+- content: >-
+    Expectedness (labeledness): an event is unexpected/unlisted when it is
+    not included in the product's reference safety information — the USPI
+    for US expectedness, the CCDS/CCSI for global, the investigator's
+    brochure for clinical trials — or when it occurs with greater severity
+    or specificity than described (label lists 'hepatitis', case is
+    'hepatic failure' = unexpected). Expectedness is assessed against the
+    RSI version in force when the case was received.
+  tags: [expectedness, listedness, rsi, ccds]
+  confidence: 0.95
+- content: >-
+    Causality assessment: the WHO-UMC system grades certain, probable,
+    possible, unlikely, conditional, and unassessable using temporal
+    relationship, dechallenge/rechallenge, alternative etiology, and known
+    pharmacology; the Naranjo questionnaire is a common structured
+    alternative. For regulatory reporting the operative threshold is
+    "reasonable possibility" of a causal relationship — spontaneous reports
+    are presumed to carry an implied causal suspicion by the reporter.
+  tags: [causality, who_umc, naranjo, assessment]
+  confidence: 0.95
+- content: >-
+    MedDRA coding: adverse events are coded to Preferred Terms (PTs)
+    organized under System Organ Classes (SOCs), with reporter language
+    captured as Lowest Level Terms (LLTs). Code what the reporter said, not
+    an interpretation; diagnosis-plus-signs cases code the diagnosis and
+    omit redundant signs/symptoms. Coding consistency directly drives
+    signal detection quality — the same clinical concept coded to scattered
+    PTs dilutes disproportionality statistics.
+  tags: [meddra, coding, pt, soc, data_quality]
+  confidence: 0.95
+- content: >-
+    Periodic aggregate reporting: US PADERs are due quarterly for the first
+    3 years after approval and annually thereafter (21 CFR 314.80(c)(2));
+    the ICH E2C PBRER/PSUR serves the EU and most other regions on the
+    EURD-list cadence. Non-expedited reportable cases route to the periodic
+    report; non-serious EEA cases go to EudraVigilance within 90 days,
+    while serious ICSRs are due in 15 days regardless of region under EU
+    GVP Module VI.
+  tags: [pader, psur, pbrer, periodic, eudravigilance]
+  confidence: 0.9
+- content: >-
+    Duplicate detection: intake channels routinely double-feed cases (the
+    same event arriving from a consumer, their HCP, a partner, and
+    literature). Match on patient identifiers (initials, sex, age/DOB),
+    event terms and onset dates, product and country before assessment;
+    nullify only with the retained case id documented. A nullified duplicate
+    is a data-quality action, not a safety judgement — if the "duplicate"
+    contains new information, merge it into the retained case as follow-up
+    instead.
+  tags: [duplicates, intake, data_quality]
+  confidence: 0.9
+- content: >-
+    Signal detection: quantitative screening uses disproportionality
+    statistics — PRR, ROR, or EBGM — over the product-event matrix; a
+    classic screening threshold is PRR >= 2 with chi-squared >= 4 and at
+    least 3 cases, always followed by clinical review (statistics screen,
+    physicians assess). Qualitative triggers matter equally at small
+    volumes: repeated unlisted terms in one organ class on one product
+    (e.g., a hepatobiliary cluster) warrant a signal evaluation even before
+    disproportionality is computable. Special situations — pregnancy
+    exposure, overdose, medication error, lack of efficacy — are collected
+    and assessed even without an adverse event.
+  tags: [signal_detection, prr, disproportionality, clusters]
+  confidence: 0.9

@@ -1,0 +1,68 @@
+# Root Cause & Abatement: why notices happen (rate-table lags, filing gaps,
+# expired certs, data mismatches) and how much assessed exposure the team
+# recovers through abatement, withdrawal, and amended returns.
+name: "Root Cause & Abatement"
+module: insights
+semantic_model: tax_notices_core
+description: >-
+  Systemic-fix view: notice volume by root cause, abated dollars by tax
+  type, jurisdiction-level mix, the abatement-closure trend, and the
+  root-cause recovery grid (assessed vs abated).
+tags: [tax, notices, root_cause, abatement, pack]
+charts:
+  - name: "Notices by root cause"
+    chart_type: vertical_bar_chart
+    description: "Volume by root cause (filing gap, rate change, nexus, certs, data mismatch, timing)"
+    config:
+      x: { dimension: root_cause }
+      y: [ { measure: notice_count, agg_fn: count } ]
+    sources: [ { measure: notice_count } ]
+    w: 6
+    h: 4
+  - name: "Abated dollars by tax type"
+    chart_type: vertical_bar_chart
+    description: "Dollars abated, withdrawn, or reduced via amendment by tax type"
+    config:
+      x: { dimension: tax_type }
+      y: [ { measure: total_abated_amount, agg_fn: sum } ]
+    sources: [ { measure: total_abated_amount } ]
+    w: 6
+    h: 4
+  - name: "Jurisdiction-level mix"
+    chart_type: pie_chart
+    description: "Notice volume by issuing level: IRS vs state DOR vs county/city"
+    config:
+      x: { dimension: jurisdiction_level }
+      y: [ { measure: notice_count, agg_fn: count } ]
+    sources: [ { measure: notice_count } ]
+    w: 6
+    h: 4
+  - name: "Abatement closures by month"
+    chart_type: line_chart
+    description: "Notices closed via won abatement/withdrawal by filed month"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: abated_count, agg_fn: count } ]
+    sources: [ { measure: abated_count } ]
+    w: 6
+    h: 4
+  - name: "Root-cause recovery grid"
+    chart_type: grid_chart
+    description: "Notices, closures, abatements, assessed and abated dollars by root cause"
+    config:
+      columns: [root_cause, notice_count, closed_notice_count, abated_count, total_assessed_amount, total_abated_amount]
+      x: { dimension: root_cause }
+      y:
+        - { measure: notice_count, agg_fn: count }
+        - { measure: closed_notice_count, agg_fn: count }
+        - { measure: abated_count, agg_fn: count }
+        - { measure: total_assessed_amount, agg_fn: sum }
+        - { measure: total_abated_amount, agg_fn: sum }
+    sources:
+      - { measure: notice_count }
+      - { measure: closed_notice_count }
+      - { measure: abated_count }
+      - { measure: total_assessed_amount }
+      - { measure: total_abated_amount }
+    w: 12
+    h: 4

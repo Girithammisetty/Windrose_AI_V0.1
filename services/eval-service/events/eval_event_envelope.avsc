@@ -1,0 +1,17 @@
+{
+  "type": "record",
+  "name": "EvalEventEnvelope",
+  "namespace": "windrose.eval.events.v1",
+  "doc": "Master event envelope (MASTER-FR-031) for eval.events.v1: gate.completed, canary.scored, canary.failed_early, dataset.version_frozen, case.promoted, slo.budget_burn, eval_run.completed|failed.",
+  "fields": [
+    {"name": "event_id", "type": "string"},
+    {"name": "event_type", "type": "string"},
+    {"name": "tenant_id", "type": "string"},
+    {"name": "actor", "type": {"type": "map", "values": ["string", "null"]}},
+    {"name": "via_agent", "type": ["null", {"type": "map", "values": ["string", "null"]}], "default": null},
+    {"name": "resource_urn", "type": "string"},
+    {"name": "occurred_at", "type": "string"},
+    {"name": "trace_id", "type": ["null", "string"], "default": null},
+    {"name": "payload", "type": {"type": "map", "values": ["null", "boolean", "double", "string"]}}
+  ]
+}

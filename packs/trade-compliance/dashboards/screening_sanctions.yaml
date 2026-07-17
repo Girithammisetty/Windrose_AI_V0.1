@@ -1,0 +1,66 @@
+# Screening & Sanctions: denied-party alert posture (SDN / Entity List),
+# match-score quality, partner risk mix, and the alert intake trend — the
+# view a sanctions officer and an OFAC/BIS examiner walk first.
+name: "Screening & Sanctions"
+module: insights
+semantic_model: trade_core
+description: >-
+  Denied-party screening posture: alert volumes by list (OFAC SDN vs BIS
+  Entity List), average match score by list, trading-partner denied-party
+  risk mix, monthly alert intake, and adjudication outcomes per list.
+tags: [trade, sanctions, screening, ofac, pack]
+charts:
+  - name: "Screening alerts by list"
+    chart_type: vertical_bar_chart
+    description: "Alert volume by watch list (SDN vs Entity List; unlisted = no alert)"
+    config:
+      x: { dimension: screening_list }
+      y: [ { measure: screening_alert_count, agg_fn: count } ]
+    sources: [ { measure: screening_alert_count } ]
+    w: 6
+    h: 4
+  - name: "Average match score by list"
+    chart_type: vertical_bar_chart
+    description: "Fuzzy-match score quality by watch list (classification rows carry 0)"
+    config:
+      x: { dimension: screening_list }
+      y: [ { measure: avg_match_score, agg_fn: avg } ]
+    sources: [ { measure: avg_match_score } ]
+    w: 6
+    h: 4
+  - name: "Partner denied-party risk mix"
+    chart_type: pie_chart
+    description: "Trading partners by denied-party risk tier (high/medium/low)"
+    config:
+      x: { dimension: denied_party_risk }
+      y: [ { measure: partner_count, agg_fn: count } ]
+    sources: [ { measure: partner_count } ]
+    w: 6
+    h: 4
+  - name: "Screening alert intake trend"
+    chart_type: line_chart
+    description: "Denied-party screening alerts filed per month"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: screening_alert_count, agg_fn: count } ]
+    sources: [ { measure: screening_alert_count } ]
+    w: 6
+    h: 4
+  - name: "Screening adjudication grid"
+    chart_type: grid_chart
+    description: "Alerts, open backlog, false-positive releases and confirmed true hits by watch list"
+    config:
+      columns: [screening_list, screening_alert_count, open_item_count, screening_released_count, sanctions_true_hit_count]
+      x: { dimension: screening_list }
+      y:
+        - { measure: screening_alert_count, agg_fn: count }
+        - { measure: open_item_count, agg_fn: count }
+        - { measure: screening_released_count, agg_fn: count }
+        - { measure: sanctions_true_hit_count, agg_fn: count }
+    sources:
+      - { measure: screening_alert_count }
+      - { measure: open_item_count }
+      - { measure: screening_released_count }
+      - { measure: sanctions_true_hit_count }
+    w: 12
+    h: 4

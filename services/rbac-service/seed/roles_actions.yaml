@@ -1,0 +1,671 @@
+# Default role -> action matrix for the 10 system roles (RBC-FR-024).
+# Derived from V1 role/permission intent; one row per binding, reviewed seed data.
+#
+# V1 -> V2 role-name mapping (RBC-FR-020; names otherwise preserved verbatim):
+#   Admin                  -> Admin
+#   Use case Admin         -> Use case Admin
+#   IDO User               -> Data User        (renamed)
+#   Model Builder          -> Model Builder
+#   Data Integration User  -> Data Integration User
+#   Insights User          -> Insights User
+#   Insights Ad-Hoc User   -> Insights Ad-Hoc User
+#   Case Analyst           -> Case Analyst
+#   Case Manager           -> Case Manager
+#   Case Executive         -> Case Executive
+#
+# NOTE: "Admin" (tenant admin) bypasses action checks via the projection admin
+# flag (RBC-FR-041, BR-7); its explicit bindings below exist only so that
+# explain-chains and the SQL fallback ground truth stay readable.
+roles:
+  - name: Admin
+    actions:
+      # In-app inbox + own notification preferences (every human persona).
+      - notification.inbox.read
+      - notification.preference.read
+      - notification.preference.update
+      - rbac.workspace.read
+      - rbac.workspace.list
+      - rbac.workspace.create
+      - rbac.workspace.update
+      - rbac.workspace.admin
+      - rbac.group.read
+      - rbac.group.list
+      - rbac.group.create
+      - rbac.group.update
+      - rbac.group.delete
+      - rbac.group.assign
+      - rbac.role.read
+      - rbac.role.list
+      - rbac.role.create
+      - rbac.role.update
+      - rbac.role.delete
+      - rbac.grant.read
+      - rbac.grant.list
+      - rbac.grant.create
+      - rbac.grant.delete
+      - rbac.grant.share
+      - identity.user.read
+      - identity.user.list
+      - identity.user.admin
+      - identity.service_account.admin
+      - identity.credential.read
+      - identity.tenant.read
+      - identity.tenant.update
+      - identity.tenant.admin
+      - audit.log.read
+      - audit.log.list
+      - audit.log.export
+      - usage.report.read
+      - usage.report.list
+      - usage.budget.read
+      - usage.budget.update
+      # Operator views/controls (tenant-scoped): query stats/limits, realtime
+      # connection ops, tool-plane administration. (Admin bypasses checks via
+      # the projection admin flag; bindings kept for explain-chain readability.)
+      - query.stats.read
+      - query.limits.read
+      - query.limits.update
+      - realtime.connection.admin
+      - tool.tool.read
+      - tool.tool.create
+      - tool.tool.update
+      - tool.tool.delete
+      - tool.enablement.update
+      - tool.kill.create
+      - tool.kill.delete
+      - tool.byo.create
+      - tool.byo.approve
+      # eval-service (Tier 2a): explicit for explain-chain readability, same
+      # as every other Admin binding — Admin itself bypasses via the
+      # projection admin flag. READ-ONLY subset for now: eval.dataset.write,
+      # eval.suite.write, eval.case.curate, eval.canary.manage, eval.slo.operator
+      # are real actions eval-service's own routes require, but their verbs
+      # (write/curate/manage/operator) aren't in rbac's closed verb set
+      # (domain.AllVerbs: read/list/create/update/delete/execute/assign/
+      # approve/admin/export/share) — eval-service predates that grammar and
+      # was never fixed. Binding them here would fail EnsureSystemRoles at
+      # boot. Flagged as a follow-up: rename eval-service's action verbs to
+      # the closed set (its own registration.py + require() calls), or
+      # relax the grammar — a real decision, not made here.
+      - eval.run.read
+      - eval.run.execute
+      - eval.case.read
+      - eval.dataset.read
+      - eval.gate.read
+      - eval.scorer.admin
+      - eval.slo.read
+      - eval.trends.read
+      # ai-gateway admin (Tier 2a): LLM-infra control plane (providers,
+      # routing ladders, ai-gateway's OWN spend budgets — distinct from
+      # usage.budget.* above, virtual keys, guardrails). READ-ONLY subset for
+      # now — same closed-verb-grammar issue as eval-service above:
+      # ai.provider.write, ai.ladder.write, ai.budget.write, ai.key.write,
+      # ai.guardrail.write, ai.cache.invalidate all use non-conforming verbs.
+      - ai.provider.read
+      - ai.ladder.read
+      - ai.budget.read
+      - ai.spend.read
+      - ai.key.read
+      - ai.guardrail.read
+      - ai.platform.admin
+
+  - name: Use case Admin
+    actions:
+      # In-app inbox + own notification preferences (every human persona).
+      - notification.inbox.read
+      - notification.preference.read
+      - notification.preference.update
+      - rbac.workspace.read
+      - rbac.workspace.list
+      - rbac.workspace.update
+      - rbac.grant.read
+      - rbac.grant.list
+      - rbac.grant.create
+      - rbac.grant.delete
+      - rbac.grant.share
+      - ingestion.connection.read
+      - ingestion.connection.list
+      - ingestion.ingestion.read
+      - ingestion.ingestion.list
+      - dataset.dataset.read
+      - dataset.dataset.list
+      - dataset.dataset.create
+      - dataset.dataset.update
+      - dataset.dataset.delete
+      - dataset.dataset.export
+      - dataset.dataset.share
+      - dataset.profile.read
+      - dataset.profile.execute
+      - dataset.lineage.read
+      - query.query.read
+      - query.query.list
+      - query.query.create
+      - query.query.update
+      - query.query.delete
+      - query.query.execute
+      # /sql/run + saved-query run guard (ad-hoc SQL).
+      - query.execution.execute
+      - query.query.share
+      - query.execution.read
+      - query.execution.list
+      - semantic.model.read
+      - semantic.model.list
+      - semantic.model.create
+      - semantic.model.update
+      - semantic.model.delete
+      - semantic.model.approve
+      - semantic.measure.read
+      - semantic.measure.list
+      - semantic.measure.create
+      - semantic.measure.update
+      - semantic.measure.delete
+      - semantic.verified_query.read
+      - semantic.verified_query.list
+      - semantic.verified_query.create
+      - semantic.verified_query.update
+      - semantic.verified_query.delete
+      - semantic.verified_query.approve
+      - chart.dashboard.read
+      - chart.dashboard.list
+      - chart.dashboard.create
+      - chart.dashboard.update
+      - chart.dashboard.delete
+      - chart.dashboard.share
+      - chart.dashboard.export
+      - chart.chart.read
+      - chart.chart.list
+      - chart.chart.create
+      - chart.chart.update
+      - chart.chart.delete
+      - case.case.read
+      - case.case.list
+      - case.case.create
+      - case.case.update
+      - case.case.assign
+      - case.case.execute
+      - case.disposition.read
+      - case.disposition.create
+      - case.disposition.update
+      - case.disposition.approve
+      - case.bulk.execute
+      - case.bulk.approve
+      - pipeline.template.read
+      - pipeline.template.list
+      - pipeline.run.read
+      - pipeline.run.list
+      - experiment.experiment.read
+      - experiment.experiment.list
+      - experiment.run.read
+      - experiment.run.list
+      - experiment.model.read
+      - experiment.model.list
+      - inference.job.read
+      - inference.job.list
+      - inference.schedule.read
+      - inference.schedule.list
+      - ai.agent_session.read
+      - ai.agent_session.list
+      - ai.agent_session.create
+      - ai.agent_session.execute
+      - ai.proposal.read
+      - ai.proposal.list
+      - ai.proposal.approve
+      - ai.memory.read
+      - ai.memory.update
+      - ai.memory.delete
+      # memory-service (agent/user memories + RAG corpora + policy/erasure/stats):
+      # the use-case admin curates the workspace's memory + knowledge base.
+      - memory.memory.read
+      - memory.memory.create
+      - memory.memory.update
+      - memory.memory.delete
+      - memory.corpus.admin
+      - memory.policy.read
+      - memory.policy.update
+      - memory.erasure.read
+      - memory.erasure.create
+      - memory.stats.read
+      # use-case admin approves model promotions (four-eyes)
+      - experiment.promotion.approve
+      # eval-service (Tier 2a): use-case admin's eval access — READ-ONLY for
+      # now (same non-conforming-verb issue as Admin's block above: dataset/
+      # suite write, case curate, canary manage, slo operator can't be bound
+      # until eval-service's action verbs are reconciled with rbac's closed
+      # set). Model Builder gets the same read/run subset, below.
+      - eval.run.read
+      - eval.run.execute
+      - eval.case.read
+      - eval.dataset.read
+      - eval.gate.read
+      - eval.scorer.admin
+      - eval.slo.read
+      - eval.trends.read
+      # ai-gateway admin (Tier 2a): use-case admin's LLM-infra access —
+      # READ-ONLY for now, same non-conforming-verb issue (provider/ladder/
+      # budget/key/guardrail write, cache invalidate). Excludes
+      # ai.platform.admin (cross-tenant platform operator scope, Admin only).
+      - ai.provider.read
+      - ai.ladder.read
+      - ai.budget.read
+      - ai.spend.read
+      - ai.key.read
+      - ai.guardrail.read
+
+  - name: Data User # V1 "IDO User"
+    actions:
+      # In-app inbox + own notification preferences (every human persona).
+      - notification.inbox.read
+      - notification.preference.read
+      - notification.preference.update
+      - rbac.workspace.read
+      - rbac.workspace.list
+      # Copilot sessions + AI proposal inbox + memory grounding via OBO (same
+      # contract as Case Analyst): the onboarding copilot runs on behalf of
+      # this persona, so its projection needs session, proposal, and
+      # memory-retrieval capabilities.
+      - ai.agent_session.read
+      - ai.agent_session.create
+      - ai.agent_session.execute
+      - ai.proposal.read
+      - ai.proposal.list
+      - ai.proposal.approve
+      - memory.memory.read
+      # Source connections: a Data User onboards data, so the UI's "New
+      # connection" control (registry FEATURE_GATES.createConnection ->
+      # ingestion.connection.create) must be unlocked for this role.
+      - ingestion.connection.read
+      - ingestion.connection.list
+      - ingestion.connection.create
+      # File-upload data source: onboarding a CSV/JSON/Parquet/Avro/XML file needs
+      # the ingestion run (ingestion.ingestion.create/execute) plus the resumable
+      # upload session actions (registry FEATURE_GATES.createUpload ->
+      # ingestion.upload.create). Without these only Admin could upload a file.
+      - ingestion.ingestion.create
+      - ingestion.ingestion.execute
+      - ingestion.upload.create
+      - ingestion.upload.read
+      - ingestion.upload.update
+      - ingestion.upload.execute
+      - ingestion.upload.delete
+      - dataset.dataset.read
+      - dataset.dataset.list
+      - dataset.dataset.create
+      - dataset.dataset.update
+      - dataset.dataset.export
+      - dataset.dataset.share
+      - dataset.profile.read
+      - dataset.profile.execute
+      - dataset.lineage.read
+      - query.query.read
+      - query.query.list
+      - query.query.create
+      - query.query.execute
+      # /sql/run + saved-query run guard (ad-hoc SQL).
+      - query.execution.execute
+      - query.execution.read
+      - query.execution.list
+      - semantic.model.read
+      - semantic.model.list
+
+  - name: Model Builder
+    actions:
+      # In-app inbox + own notification preferences (every human persona).
+      - notification.inbox.read
+      - notification.preference.read
+      - notification.preference.update
+      - rbac.workspace.read
+      - rbac.workspace.list
+      # Copilot sessions + AI proposal inbox + memory grounding via OBO (same
+      # contract as Case Analyst): the model-training and inference copilots
+      # run on behalf of this persona.
+      - ai.agent_session.read
+      - ai.agent_session.create
+      - ai.agent_session.execute
+      - ai.proposal.read
+      - ai.proposal.list
+      - ai.proposal.approve
+      - memory.memory.read
+      - dataset.dataset.read
+      - dataset.dataset.list
+      - dataset.profile.read
+      - dataset.lineage.read
+      - experiment.experiment.read
+      - experiment.experiment.list
+      - experiment.experiment.create
+      - experiment.experiment.update
+      - experiment.experiment.delete
+      - experiment.run.read
+      - experiment.run.list
+      - experiment.run.create
+      - experiment.run.execute
+      - experiment.model.read
+      - experiment.model.list
+      # promote requester (four-eyes: request only; approval is a DISTINCT role).
+      - experiment.model.update
+      - experiment.model_card.update
+      # eval-service (Tier 2a): practitioner half — run evals, view results/
+      # gates/trends. Curation/admin actions (case.curate, dataset.write,
+      # scorer.admin, canary.manage, slo.operator) are Use case Admin only.
+      - eval.run.read
+      - eval.run.execute
+      - eval.case.read
+      - eval.dataset.read
+      - eval.gate.read
+      - eval.slo.read
+      - eval.trends.read
+      - pipeline.template.read
+      - pipeline.template.list
+      - pipeline.template.create
+      - pipeline.template.update
+      - pipeline.component.read
+      - pipeline.algorithm.read
+      - pipeline.run.read
+      - pipeline.run.list
+      - pipeline.run.create
+      - pipeline.run.execute
+      - inference.job.read
+      - inference.job.list
+      - inference.job.create
+      - inference.job.execute
+      # Live updates: pipeline/experiment run-status + proposal SSE topics.
+      - realtime.run_status.read
+      - realtime.proposal.read
+      - realtime.stream.execute
+      # Dashboards: the data-science persona's sidebar includes Dashboards
+      # (registry NAV_ITEMS "dashboards" -> chart.dashboard.read). Model Builder
+      # also AUTHORS charts/dashboards (no-code chart editor).
+      - chart.dashboard.read
+      - chart.dashboard.list
+      - chart.dashboard.create
+      - chart.dashboard.update
+      - chart.dashboard.delete
+      - chart.chart.read
+      - chart.chart.list
+      - chart.chart.create
+      - chart.chart.update
+      - chart.chart.delete
+      # Chart rendering forwards the caller token to semantic-service (compile)
+      # + query-service (execute the compiled SQL + read results).
+      - semantic.model.read
+      - semantic.model.list
+      - semantic.compile.execute
+      - query.execution.execute
+      - query.execution.read
+      # Scheduled dashboard report subscriptions (NOTIF-FR-060) — mirrors this
+      # role's own chart.dashboard.* authoring grant above.
+      - notification.report.create
+      - notification.report.read
+      - notification.report.update
+      - notification.report.delete
+
+  - name: Data Integration User
+    actions:
+      # In-app inbox + own notification preferences (every human persona).
+      - notification.inbox.read
+      - notification.preference.read
+      - notification.preference.update
+      - rbac.workspace.read
+      - rbac.workspace.list
+      # Copilot sessions + AI proposal inbox + memory grounding via OBO (same
+      # contract as Case Analyst): the onboarding copilot runs on behalf of
+      # this persona.
+      - ai.agent_session.read
+      - ai.agent_session.create
+      - ai.agent_session.execute
+      - ai.proposal.read
+      - ai.proposal.list
+      - ai.proposal.approve
+      - memory.memory.read
+      - ingestion.connection.read
+      - ingestion.connection.list
+      - ingestion.connection.create
+      - ingestion.connection.update
+      - ingestion.connection.delete
+      - ingestion.connection.execute
+      - ingestion.ingestion.read
+      - ingestion.ingestion.list
+      - ingestion.ingestion.create
+      - ingestion.ingestion.execute
+      # File-upload data source (resumable upload session).
+      - ingestion.upload.create
+      - ingestion.upload.read
+      - ingestion.upload.update
+      - ingestion.upload.execute
+      - ingestion.upload.delete
+      - dataset.dataset.read
+      - dataset.dataset.list
+
+  - name: Insights User
+    actions:
+      # In-app inbox + own notification preferences (every human persona).
+      - notification.inbox.read
+      - notification.preference.read
+      - notification.preference.update
+      - rbac.workspace.read
+      - rbac.workspace.list
+      # Copilot sessions + AI proposal inbox + memory grounding via OBO (same
+      # contract as Case Analyst): the dashboard-designer copilot runs on
+      # behalf of this persona.
+      - ai.agent_session.read
+      - ai.agent_session.create
+      - ai.agent_session.execute
+      - ai.proposal.read
+      - ai.proposal.list
+      - ai.proposal.approve
+      - memory.memory.read
+      - chart.dashboard.read
+      - chart.dashboard.list
+      - chart.dashboard.create
+      - chart.dashboard.update
+      - chart.dashboard.share
+      - chart.dashboard.export
+      - chart.chart.read
+      - chart.chart.list
+      - chart.chart.create
+      - chart.chart.update
+      - chart.chart.delete
+      - query.query.read
+      - query.query.list
+      - query.query.execute
+      # /sql/run + saved-query run guard (ad-hoc SQL).
+      - query.execution.execute
+      - semantic.model.read
+      - semantic.model.list
+      - semantic.measure.read
+      - semantic.measure.list
+      - semantic.verified_query.read
+      - semantic.verified_query.list
+      # Scheduled dashboard report subscriptions (NOTIF-FR-060) — mirrors this
+      # role's own chart.dashboard.* authoring grant above.
+      - notification.report.create
+      - notification.report.read
+      - notification.report.update
+      - notification.report.delete
+
+  - name: Insights Ad-Hoc User
+    actions:
+      # In-app inbox + own notification preferences (every human persona).
+      - notification.inbox.read
+      - notification.preference.read
+      - notification.preference.update
+      - rbac.workspace.read
+      - rbac.workspace.list
+      # Copilot sessions + AI proposal inbox + memory grounding via OBO (same
+      # contract as Case Analyst): the analytics/dashboard copilots run on
+      # behalf of this persona.
+      - ai.agent_session.read
+      - ai.agent_session.create
+      - ai.agent_session.execute
+      - ai.proposal.read
+      - ai.proposal.list
+      - ai.proposal.approve
+      - memory.memory.read
+      - query.query.read
+      - query.query.list
+      - query.query.create
+      - query.query.execute
+      # /sql/run + saved-query run guard (ad-hoc SQL).
+      - query.execution.execute
+      - chart.chart.read
+      - chart.chart.list
+      - chart.chart.create
+      - chart.dashboard.read
+      - chart.dashboard.list
+      - semantic.model.read
+      - semantic.model.list
+      - semantic.measure.read
+      - semantic.measure.list
+
+  - name: Case Analyst
+    actions:
+      # In-app inbox + own notification preferences (every human persona).
+      - notification.inbox.read
+      - notification.preference.read
+      - notification.preference.update
+      - rbac.workspace.read
+      - rbac.workspace.list
+      - case.case.read
+      - case.case.list
+      - case.case.update
+      - case.disposition.read
+      - case.disposition.create
+      - case.disposition.update
+      # Inbox + approvals: a Case Analyst triages the AI proposal queue
+      # (registry NAV_ITEMS "inbox" -> ai.proposal.read; FEATURE_GATES
+      # .approveProposal -> ai.proposal.approve).
+      - ai.proposal.read
+      - ai.proposal.list
+      - ai.proposal.approve
+      # Copilot triage sessions (agent-runtime enforces natively; granting the
+      # capability keeps the projection consistent with the UX gate).
+      - ai.agent_session.read
+      - ai.agent_session.create
+      - ai.agent_session.execute
+      # Copilot grounding: agent-runtime retrieves resolved-case memories from
+      # memory-service ON BEHALF OF the analyst (OBO token), so the analyst's
+      # own projection must allow memory retrieval (memory.memory.read).
+      - memory.memory.read
+      # Dashboards nav (registry "dashboards" -> chart.dashboard.read).
+      - chart.dashboard.read
+      - chart.dashboard.list
+      # Anyone who can VIEW dashboards must be able to render the charts on
+      # them: chart reads + the render path (semantic compile -> query execute
+      # -> read results), same block Case Manager has. Authoring
+      # (create/update/delete) stays OFF for the analyst.
+      - chart.chart.read
+      - chart.chart.list
+      - semantic.model.read
+      - semantic.model.list
+      - semantic.compile.execute
+      - query.execution.execute
+      - query.execution.read
+      # Case row evidence (GET /cases/{id}?with_row=true → query-service /rows
+      # resolves the dataset under the caller's token).
+      - dataset.dataset.read
+      # Live updates: run-status/proposal SSE topics + stream connect.
+      - realtime.run_status.read
+      - realtime.proposal.read
+      - realtime.stream.execute
+      # Copilot tool access (OBO): the copilot invokes read tools as the analyst.
+      - tool.tool.read
+      - tool.tool.execute
+
+  - name: Case Manager
+    actions:
+      # In-app inbox + own notification preferences (every human persona).
+      - notification.inbox.read
+      - notification.preference.read
+      - notification.preference.update
+      - rbac.workspace.read
+      - rbac.workspace.list
+      - case.case.read
+      - case.case.list
+      - case.case.create
+      - case.case.update
+      - case.case.assign
+      - case.case.execute
+      - case.disposition.read
+      - case.disposition.create
+      - case.disposition.update
+      - case.disposition.approve
+      - case.bulk.execute
+      - case.bulk.approve
+      # Inbox + four-eyes approvals (registry "inbox" -> ai.proposal.read;
+      # FEATURE_GATES.approveProposal -> ai.proposal.approve).
+      - ai.proposal.read
+      - ai.proposal.list
+      - ai.proposal.approve
+      - ai.agent_session.read
+      - ai.agent_session.create
+      - ai.agent_session.execute
+      # Copilot grounding retrieval via OBO (see Case Analyst).
+      - memory.memory.read
+      # Dashboards nav (registry "dashboards" -> chart.dashboard.read). The
+      # manager oversees AND authors dashboards (no-code chart editor).
+      - chart.dashboard.read
+      - chart.dashboard.list
+      - chart.dashboard.create
+      - chart.dashboard.update
+      - chart.dashboard.delete
+      - chart.chart.read
+      - chart.chart.list
+      - chart.chart.create
+      - chart.chart.update
+      - chart.chart.delete
+      # Chart rendering forwards the caller token to semantic-service (compile)
+      # + query-service (execute the compiled SQL + read results).
+      - semantic.model.read
+      - semantic.model.list
+      - semantic.compile.execute
+      - query.execution.execute
+      - query.execution.read
+      # Oversight: the manager sidebar adds Reports + the cost panel
+      # (registry "reports"/FEATURE_GATES.viewCostPanel -> usage.report.read).
+      - usage.report.read
+      - usage.report.list
+      - usage.budget.read
+      # Scheduled dashboard report subscriptions (NOTIF-FR-060) — mirrors this
+      # role's own chart.dashboard.* authoring grant above.
+      - notification.report.create
+      - notification.report.read
+      - notification.report.update
+      - notification.report.delete
+      # Case row evidence (with_row → query-service /rows under the caller token).
+      - dataset.dataset.read
+      # Live updates: run-status/proposal SSE topics + stream connect.
+      - realtime.run_status.read
+      - realtime.proposal.read
+      - realtime.stream.execute
+      # Copilot tool access (OBO).
+      - tool.tool.read
+      - tool.tool.execute
+      # manager oversees + can approve model promotions (four-eyes)
+      - experiment.promotion.approve
+      - experiment.model.read
+      - experiment.model.list
+
+  - name: Case Executive
+    actions:
+      # In-app inbox + own notification preferences (every human persona).
+      - notification.inbox.read
+      - notification.preference.read
+      - notification.preference.update
+      - rbac.workspace.read
+      - rbac.workspace.list
+      - case.case.read
+      - case.case.list
+      - case.disposition.read
+      - chart.dashboard.read
+      - chart.dashboard.list
+      # Dashboard viewers need the chart-read + render path too (semantic
+      # compile -> query execute -> read results) or the dashboard renders
+      # EMPTY (the bff swallows the 403). View-only: no authoring actions.
+      - chart.chart.read
+      - chart.chart.list
+      - semantic.model.read
+      - semantic.model.list
+      - semantic.compile.execute
+      - query.execution.execute
+      - query.execution.read
+      - usage.report.read
+      - usage.report.list

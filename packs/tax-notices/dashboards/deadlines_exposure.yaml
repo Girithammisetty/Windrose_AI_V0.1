@@ -1,0 +1,57 @@
+# Deadlines & Exposure: jurisdictional response-deadline runway and
+# assessed-dollar exposure — the view a tax compliance manager walks first
+# (a missed response window forfeits administrative appeal rights).
+name: "Deadlines & Exposure"
+module: insights
+semantic_model: tax_notices_core
+description: >-
+  Deadline and dollar posture: open notices by jurisdiction level, deadline
+  runway buckets on the open book, assessed exposure by tax type,
+  amount-band mix, and the high-severity intake trend.
+tags: [tax, notices, deadlines, exposure, pack]
+charts:
+  - name: "Open notices by jurisdiction level"
+    chart_type: vertical_bar_chart
+    description: "Open backlog split by IRS vs state DOR vs county/city"
+    config:
+      x: { dimension: jurisdiction_level }
+      y: [ { measure: open_notice_count, agg_fn: count } ]
+    sources: [ { measure: open_notice_count } ]
+    w: 6
+    h: 4
+  - name: "Deadline runway (open book)"
+    chart_type: vertical_bar_chart
+    description: "Open notices by days remaining to the response deadline"
+    config:
+      x: { dimension: deadline_bucket }
+      y: [ { measure: open_notice_count, agg_fn: count } ]
+    sources: [ { measure: open_notice_count } ]
+    w: 6
+    h: 4
+  - name: "Assessed exposure by tax type"
+    chart_type: vertical_bar_chart
+    description: "Dollars assessed across sales/use, payroll, income, franchise and property"
+    config:
+      x: { dimension: tax_type }
+      y: [ { measure: total_assessed_amount, agg_fn: sum } ]
+    sources: [ { measure: total_assessed_amount } ]
+    w: 6
+    h: 4
+  - name: "Amount-band mix"
+    chart_type: pie_chart
+    description: "Notice volume by assessed-amount band (incl. no-assessment questionnaires)"
+    config:
+      x: { dimension: amount_band }
+      y: [ { measure: notice_count, agg_fn: count } ]
+    sources: [ { measure: notice_count } ]
+    w: 6
+    h: 4
+  - name: "High-severity intake trend"
+    chart_type: line_chart
+    description: "High-severity notices logged by month"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: high_severity_count, agg_fn: count } ]
+    sources: [ { measure: high_severity_count } ]
+    w: 6
+    h: 4

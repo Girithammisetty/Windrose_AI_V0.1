@@ -1,0 +1,85 @@
+# Seeded denials + underpayment review queue (BRD 26 US-2/US-3/US-6,
+# RCM-FR-120 denial_response_review / underpayment_dispute_review): the
+# high-dollar open denials and below-contract remit lines from the seed
+# datasets become OPEN cases so a denials specialist logging in sees a real
+# worklist on day one. row_pk values are real denial_id / remit_id rows in the
+# seed CSVs (the payer-pack precedent for mixed-source queues).
+dataset: rcm_denials
+due_days: 5
+rows:
+  - row_pk: DEN-6001
+    severity: high
+    display_projection:
+      denial_id: DEN-6001
+      claim_id: CLM-9003
+      payer_name: UnitedHealthcare
+      carc_code: CO-197
+      denial_category: administrative
+      cpt_code: "29881"
+      denied_amount: "7350.00"
+      appeal_deadline_days: "180"
+      agent_recommendation: appeal_submitted
+      note: "Knee arthroscopy denied CO-197 (precert absent) — PA was on file per the encounter record; administrative overturn precedent, draft appeal packet"
+  - row_pk: DEN-6003
+    severity: high
+    display_projection:
+      denial_id: DEN-6003
+      claim_id: CLM-9009
+      payer_name: Aetna
+      carc_code: CO-197
+      denial_category: administrative
+      cpt_code: "96413"
+      denied_amount: "6250.00"
+      appeal_deadline_days: "180"
+      agent_recommendation: appeal_submitted
+      note: "Chemo administration denied CO-197 — verify retro-authorization eligibility; specialty-drug denials carry elevated overturn rates and high dollars"
+  - row_pk: DEN-6008
+    severity: medium
+    display_projection:
+      denial_id: DEN-6008
+      claim_id: CLM-9020
+      payer_name: Cigna
+      carc_code: CO-11
+      denial_category: documentation
+      cpt_code: "99214"
+      denied_amount: "153.00"
+      appeal_deadline_days: "90"
+      agent_recommendation: corrected_resubmit
+      note: "CO-11 diagnosis/procedure mismatch on E/M visit — coder review of ICD-10 linkage, then corrected resubmit within timely filing"
+  - row_pk: DEN-6009
+    severity: medium
+    display_projection:
+      denial_id: DEN-6009
+      claim_id: CLM-9021
+      payer_name: Medicare
+      carc_code: CO-50
+      denial_category: coverage
+      cpt_code: "72148"
+      denied_amount: "463.00"
+      appeal_deadline_days: "120"
+      agent_recommendation: escalate_payer
+      note: "LCD non-coverage denial (N115) on lumbar MRI — BR-4 coverage sub-workflow: appeal only if clinical case exists, otherwise recommend write-off"
+  - row_pk: RMT-5015
+    severity: high
+    display_projection:
+      remit_id: RMT-5015
+      claim_id: CLM-9017
+      payer_name: UnitedHealthcare
+      carc_code: CO-45
+      expected_paid: "2890.00"
+      actual_paid: "2450.00"
+      payment_variance: "440.00"
+      agent_recommendation: escalate_payer
+      note: "Radiation oncology remit paid $440 below the contracted rate — within the contract dispute window (BR-5), draft underpayment dispute citing the fee schedule"
+  - row_pk: RMT-5006
+    severity: medium
+    display_projection:
+      remit_id: RMT-5006
+      claim_id: CLM-9006
+      payer_name: Cigna
+      carc_code: CO-45
+      expected_paid: "1470.00"
+      actual_paid: "1170.00"
+      payment_variance: "300.00"
+      agent_recommendation: escalate_payer
+      note: "Colonoscopy remit short-paid $300 via excess CO-45 adjustment — dispute filed, awaiting payer response; escalate if no response in 30 days"

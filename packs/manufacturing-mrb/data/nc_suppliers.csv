@@ -1,0 +1,13 @@
+supplier_id,supplier_name,tier,certification,scorecard,prior_scars,approved
+S-1001,Precision Aerofab,tier_1,as9100,green,none,yes
+S-1002,Vector Machining Co,tier_2,as9100,green,1_2,yes
+S-1003,Castwell Foundry,tier_2,as9100,red,3_plus,yes
+S-1004,Kestrel Castings,tier_2,iso9001,yellow,1_2,yes
+S-1005,CircuitCore Assembly,tier_1,iatf,yellow,1_2,yes
+S-1006,BrightPath Electronics,tier_2,iso9001,green,none,yes
+S-1007,HarnessPro Interconnect,tier_2,as9100,green,1_2,yes
+S-1008,PolyForm Medical Molding,tier_1,iso13485,yellow,1_2,yes
+S-1009,MedSeal Polymers,tier_2,iso13485,green,none,yes
+S-1010,FastenRight Corp,tier_3,iso9001,green,none,yes
+S-1011,TorqueTite Fasteners,tier_3,iatf,yellow,1_2,no
+S-1012,Ridgeline Machining,tier_3,iso9001,red,3_plus,no

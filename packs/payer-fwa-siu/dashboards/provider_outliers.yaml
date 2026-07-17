@@ -1,0 +1,67 @@
+# Provider Outlier Analytics (BRD 27 FWA-FR-040 + US-2): billing-pattern
+# outliers vs peer group, flagged-line typology mix, paid-dollar trend.
+name: "Provider Outlier Analytics"
+module: insights
+semantic_model: fwa_claims
+description: >-
+  Provider peer-group outlier analytics (BRD 27 FWA-FR-040): flagged claim
+  lines by typology and specialty, paid-dollar trend, and per-specialty
+  flag/score grid for investigator drill-down.
+tags: [insurance, payer, fwa, providers, pack]
+charts:
+  - name: "Claim lines by FWA flag"
+    chart_type: vertical_bar_chart
+    description: "Line volume by detected typology (none = clean)"
+    config:
+      x: { dimension: fwa_flag }
+      y: [ { measure: line_count, agg_fn: count } ]
+    sources: [ { measure: line_count } ]
+    w: 6
+    h: 4
+  - name: "Flagged vs clean mix"
+    chart_type: pie_chart
+    description: "Share of adjudicated lines carrying an FWA flag"
+    config:
+      x: { dimension: flagged }
+      y: [ { measure: line_count, agg_fn: count } ]
+    sources: [ { measure: line_count } ]
+    w: 6
+    h: 4
+  - name: "Billed dollars by specialty"
+    chart_type: vertical_bar_chart
+    description: "Billed exposure by provider specialty"
+    config:
+      x: { dimension: provider_specialty }
+      y: [ { measure: total_billed, agg_fn: sum } ]
+    sources: [ { measure: total_billed } ]
+    w: 6
+    h: 4
+  - name: "Paid dollars by service month"
+    chart_type: line_chart
+    description: "Post-payment dollars at risk over time"
+    config:
+      x: { dimension: service_month }
+      y: [ { measure: total_paid, agg_fn: sum } ]
+    sources: [ { measure: total_paid } ]
+    w: 6
+    h: 4
+  - name: "Specialty outlier grid"
+    chart_type: grid_chart
+    description: "Lines, flagged lines, dollars, and average FWA score by specialty"
+    config:
+      columns: [provider_specialty, line_count, flagged_line_count, total_billed, total_paid, avg_fwa_score]
+      x: { dimension: provider_specialty }
+      y:
+        - { measure: line_count, agg_fn: count }
+        - { measure: flagged_line_count, agg_fn: count }
+        - { measure: total_billed, agg_fn: sum }
+        - { measure: total_paid, agg_fn: sum }
+        - { measure: avg_fwa_score, agg_fn: avg }
+    sources:
+      - { measure: line_count }
+      - { measure: flagged_line_count }
+      - { measure: total_billed }
+      - { measure: total_paid }
+      - { measure: avg_fwa_score }
+    w: 12
+    h: 4

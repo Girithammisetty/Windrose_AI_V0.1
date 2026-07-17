@@ -1,0 +1,68 @@
+# Wildfire & Risk Zones: HFTD-tier posture, circuit wildfire-risk exposure,
+# PSPS-history concentration and the vegetation-encroachment trend — the view
+# a wildfire-mitigation program manager (and a safety regulator) walks first.
+name: "Wildfire & Risk Zones"
+module: insights
+semantic_model: inspections_core
+description: >-
+  Wildfire-mitigation posture: open findings by high fire-threat district
+  tier, finding exposure by circuit wildfire-risk tier and PSPS history, the
+  vegetation-encroachment trend, and repair-cost exposure per risk zone.
+tags: [utilities, inspections, wildfire, hftd, pack]
+charts:
+  - name: "Open findings by risk zone"
+    chart_type: vertical_bar_chart
+    description: "Open triage backlog split by HFTD Tier 3 vs Tier 2 vs standard zones"
+    config:
+      x: { dimension: risk_zone }
+      y: [ { measure: open_finding_count, agg_fn: count } ]
+    sources: [ { measure: open_finding_count } ]
+    w: 6
+    h: 4
+  - name: "Findings by circuit wildfire risk"
+    chart_type: vertical_bar_chart
+    description: "Finding volume by the circuit book's wildfire-risk tier (extreme/elevated/standard)"
+    config:
+      x: { dimension: wildfire_risk }
+      y: [ { measure: finding_count, agg_fn: count } ]
+    sources: [ { measure: finding_count } ]
+    w: 6
+    h: 4
+  - name: "PSPS-history circuit exposure"
+    chart_type: pie_chart
+    description: "Findings on circuits with vs without public-safety power-shutoff history"
+    config:
+      x: { dimension: psps_history }
+      y: [ { measure: finding_count, agg_fn: count } ]
+    sources: [ { measure: finding_count } ]
+    w: 6
+    h: 4
+  - name: "Vegetation-encroachment trend"
+    chart_type: line_chart
+    description: "Vegetation-encroachment findings filed by month (clearance-deficit surface)"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: vegetation_finding_count, agg_fn: count } ]
+    sources: [ { measure: vegetation_finding_count } ]
+    w: 6
+    h: 4
+  - name: "Risk-zone grid"
+    chart_type: grid_chart
+    description: "Volume, open backlog, immediate dispatches, vegetation findings and cost exposure by risk zone"
+    config:
+      columns: [risk_zone, finding_count, open_finding_count, immediate_dispatch_count, vegetation_finding_count, total_est_repair_cost]
+      x: { dimension: risk_zone }
+      y:
+        - { measure: finding_count, agg_fn: count }
+        - { measure: open_finding_count, agg_fn: count }
+        - { measure: immediate_dispatch_count, agg_fn: count }
+        - { measure: vegetation_finding_count, agg_fn: count }
+        - { measure: total_est_repair_cost, agg_fn: sum }
+    sources:
+      - { measure: finding_count }
+      - { measure: open_finding_count }
+      - { measure: immediate_dispatch_count }
+      - { measure: vegetation_finding_count }
+      - { measure: total_est_repair_cost }
+    w: 12
+    h: 4

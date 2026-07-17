@@ -1,0 +1,29 @@
+# Saved queries (query-service) — includes the seller->category edge source
+# (parent/child/n) for network-family charts: seller-cluster and ring-surface
+# views from the listing book (a seller fanning across many categories at
+# deep discounts is a classic counterfeit-network shape).
+- identity: seller_category_edges
+  name: "Seller vetting: seller-category network edges"
+  description: >-
+    Seller -> listing-category edge list (parent/child/n) from the listing
+    book — network-chart source for spotting counterfeit clusters (several
+    sellers concentrated in one high-risk category) and wide-fan sellers
+    (one account listing across many verticals, a ring-resurrection shape).
+  sql: >-
+    SELECT seller_id AS parent, category AS child,
+           count(*) AS n
+    FROM {{dataset('sv-listings')}}
+    GROUP BY seller_id, category
+  tags: [seller_vetting, network, rings, pack]
+- identity: high_exposure_open_reviews
+  name: "Seller vetting: high-exposure open queue"
+  description: "Open reviews ranked by listing GMV at risk — the analyst ranked-queue seed (deadline x GMV x severity, not FIFO)."
+  sql: >-
+    SELECT review_id, listing_id, review_type, trigger_source, claim_basis,
+           severity,
+           cast(days_to_deadline AS double) AS days_to_deadline,
+           cast(gmv_at_risk AS double) AS gmv_at_risk
+    FROM {{dataset('sv-reviews')}}
+    WHERE status = 'open'
+    ORDER BY gmv_at_risk DESC
+  tags: [seller_vetting, queue, backlog, pack]

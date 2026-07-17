@@ -1,0 +1,69 @@
+# Detection Quality & Backlog: detection-source mix, false-detection watch
+# (the drone-AI precision loop), priority mix and the deadline runway on the
+# open book.
+name: "Detection Quality & Backlog"
+module: insights
+semantic_model: inspections_core
+description: >-
+  Detection-pipeline quality and backlog posture: finding volume by detection
+  source, false detections by source (detector-precision watch), triage
+  priority mix, deadline runway buckets on the open book, and per-source
+  closure/verification/confidence detail.
+tags: [utilities, inspections, detection_quality, drone_ai, pack]
+charts:
+  - name: "Findings by detection source"
+    chart_type: vertical_bar_chart
+    description: "Finding volume by detection source (drone AI, foot patrol, LiDAR, infrared, customer report)"
+    config:
+      x: { dimension: detection_source }
+      y: [ { measure: finding_count, agg_fn: count } ]
+    sources: [ { measure: finding_count } ]
+    w: 6
+    h: 4
+  - name: "False detections by source"
+    chart_type: vertical_bar_chart
+    description: "Findings closed as false detections split by detection source — where the detector needs retraining"
+    config:
+      x: { dimension: detection_source }
+      y: [ { measure: false_detection_count, agg_fn: count } ]
+    sources: [ { measure: false_detection_count } ]
+    w: 6
+    h: 4
+  - name: "Triage priority mix"
+    chart_type: pie_chart
+    description: "Findings by triage priority (immediate / scheduled / monitor)"
+    config:
+      x: { dimension: priority }
+      y: [ { measure: finding_count, agg_fn: count } ]
+    sources: [ { measure: finding_count } ]
+    w: 6
+    h: 4
+  - name: "Deadline runway (open book)"
+    chart_type: vertical_bar_chart
+    description: "Open findings by days remaining to the repair/decision deadline"
+    config:
+      x: { dimension: deadline_bucket }
+      y: [ { measure: open_finding_count, agg_fn: count } ]
+    sources: [ { measure: open_finding_count } ]
+    w: 6
+    h: 4
+  - name: "Detection-source quality grid"
+    chart_type: grid_chart
+    description: "Findings, closures, false detections, verification routings and average confidence by source"
+    config:
+      columns: [detection_source, finding_count, closed_finding_count, false_detection_count, field_verification_count, avg_detection_confidence]
+      x: { dimension: detection_source }
+      y:
+        - { measure: finding_count, agg_fn: count }
+        - { measure: closed_finding_count, agg_fn: count }
+        - { measure: false_detection_count, agg_fn: count }
+        - { measure: field_verification_count, agg_fn: count }
+        - { measure: avg_detection_confidence, agg_fn: avg }
+    sources:
+      - { measure: finding_count }
+      - { measure: closed_finding_count }
+      - { measure: false_detection_count }
+      - { measure: field_verification_count }
+      - { measure: avg_detection_confidence }
+    w: 12
+    h: 4

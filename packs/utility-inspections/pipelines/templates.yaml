@@ -1,0 +1,18 @@
+# Pipeline seeds (expressed against the real pipeline-orchestrator algorithm
+# catalog): an unsupervised asset-condition anomaly detector (which assets in
+# the registry look unlike their peers — age/material/criticality/inspection
+# recency outliers, the proactive-inspection surface scan) and a supervised
+# finding-disposition scorer trained on human repair/defer decisions (the
+# deterministic-first pre-router for inspection triage). Trained models
+# require review before promotion — the Asset Risk Manager approves
+# promotions.
+- identity: ui_asset_anomaly_isolation_forest
+  name: "Asset condition anomaly detector (isolation forest)"
+  algorithm: isolation_forest
+  mode: train
+  dataset: ui_assets
+- identity: ui_finding_disposition_xgboost
+  name: "Finding disposition scorer (xgboost)"
+  algorithm: xgboost
+  mode: train
+  dataset: ui_findings

@@ -1,0 +1,24 @@
+# Pack datasets (ingestion-service file_upload, stable names for idempotency).
+# In production these tables arrive via the marketplace's catalog, seller
+# onboarding, and brand-protection connectors (deferred until pack-service
+# ships connector materialization); this seed data is REAL rows in the same
+# landing shape, encoding genuine marketplace trust-and-safety patterns so
+# every downstream component runs against real signal from day one: a
+# luxury-goods listing at a deep discount with reused stock images (test buy
+# in flight), a brand trademark claim against an apparently genuine reseller
+# (first-sale tension), a KYB banking-name mismatch on a high-GMV new seller,
+# a linked-account ring resurrecting a previously banned seller, a
+# safety-flagged toy listing, and a reinstatement request backed by a
+# plan-of-action and distributor invoices.
+- identity: sv_sellers
+  name: sv-sellers
+  file: data/sv_sellers.csv
+  format: csv
+- identity: sv_listings
+  name: sv-listings
+  file: data/sv_listings.csv
+  format: csv
+- identity: sv_reviews
+  name: sv-reviews
+  file: data/sv_reviews.csv
+  format: csv

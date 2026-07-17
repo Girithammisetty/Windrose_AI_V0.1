@@ -1,0 +1,69 @@
+# Submission Intake Center: submission mix by line, triage aging, intake
+# outcome mix, monthly flow. Chart families restricted to the render-verified
+# set (vertical_bar / grid / pie / line); expr_metric measures (rates) are
+# query/NL surfaces, never charted directly.
+name: "Submission Intake Center"
+module: insights
+semantic_model: underwriting_core
+description: >-
+  Top-line submission-intake KPIs: submission volumes by line of business,
+  triage backlog aging by severity, intake disposition outcome mix, and the
+  monthly submission flow.
+tags: [insurance, underwriting, intake, pack]
+charts:
+  - name: "Submissions by line of business"
+    chart_type: vertical_bar_chart
+    description: "Submission volume by line (GL, property, workers comp, cyber, auto, professional)"
+    config:
+      x: { dimension: line_of_business }
+      y: [ { measure: submission_count, agg_fn: count } ]
+    sources: [ { measure: submission_count } ]
+    w: 6
+    h: 4
+  - name: "Triage aging by severity"
+    chart_type: vertical_bar_chart
+    description: "Average submission age in days by severity (speed-to-first-touch watch)"
+    config:
+      x: { dimension: severity }
+      y: [ { measure: avg_triage_age_days, agg_fn: avg } ]
+    sources: [ { measure: avg_triage_age_days } ]
+    w: 6
+    h: 4
+  - name: "Intake disposition mix"
+    chart_type: pie_chart
+    description: "Accepted vs declined vs info-requested vs specialty-referred vs withdrawn vs pending"
+    config:
+      x: { dimension: submission_disposition }
+      y: [ { measure: submission_count, agg_fn: count } ]
+    sources: [ { measure: submission_count } ]
+    w: 6
+    h: 4
+  - name: "Submission flow by month"
+    chart_type: line_chart
+    description: "Submissions received per filed month"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: submission_count, agg_fn: count } ]
+    sources: [ { measure: submission_count } ]
+    w: 6
+    h: 4
+  - name: "Line-of-business worklist grid"
+    chart_type: grid_chart
+    description: "Submissions, closures, accepts, declinations and info requests by line"
+    config:
+      columns: [line_of_business, submission_count, closed_submission_count, accepted_count, declined_count, info_requested_count]
+      x: { dimension: line_of_business }
+      y:
+        - { measure: submission_count, agg_fn: count }
+        - { measure: closed_submission_count, agg_fn: count }
+        - { measure: accepted_count, agg_fn: count }
+        - { measure: declined_count, agg_fn: count }
+        - { measure: info_requested_count, agg_fn: count }
+    sources:
+      - { measure: submission_count }
+      - { measure: closed_submission_count }
+      - { measure: accepted_count }
+      - { measure: declined_count }
+      - { measure: info_requested_count }
+    w: 12
+    h: 4

@@ -1,0 +1,69 @@
+# Trade Compliance Command Center: review-queue mix, backlog aging, human
+# disposition outcomes, intake trend. Chart families restricted to the
+# render-verified set (vertical_bar / grid / pie / line); expr_metric
+# measures (rates) are query/NL surfaces, never charted directly.
+name: "Trade Compliance Command Center"
+module: insights
+semantic_model: trade_core
+description: >-
+  Top-line trade-compliance operations KPIs: review-queue volume by item
+  type, adjudication backlog aging by severity, human disposition outcome
+  mix, and the monthly review intake trend with a per-category worklist.
+tags: [trade, customs, compliance, pack]
+charts:
+  - name: "Review items by type"
+    chart_type: vertical_bar_chart
+    description: "Queue volume split: HS classification reviews vs denied-party screening alerts"
+    config:
+      x: { dimension: item_type }
+      y: [ { measure: review_item_count, agg_fn: count } ]
+    sources: [ { measure: review_item_count } ]
+    w: 6
+    h: 4
+  - name: "Backlog aging by severity"
+    chart_type: vertical_bar_chart
+    description: "Average review-item age in days by severity (cycle-time watch)"
+    config:
+      x: { dimension: severity }
+      y: [ { measure: avg_item_age_days, agg_fn: avg } ]
+    sources: [ { measure: avg_item_age_days } ]
+    w: 6
+    h: 4
+  - name: "Disposition outcome mix"
+    chart_type: pie_chart
+    description: "Confirmed vs reclassified vs released vs true hits vs licensing escalations vs pending"
+    config:
+      x: { dimension: review_disposition }
+      y: [ { measure: review_item_count, agg_fn: count } ]
+    sources: [ { measure: review_item_count } ]
+    w: 6
+    h: 4
+  - name: "Review intake by month"
+    chart_type: line_chart
+    description: "Review items filed per month"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: review_item_count, agg_fn: count } ]
+    sources: [ { measure: review_item_count } ]
+    w: 6
+    h: 4
+  - name: "Product-category worklist grid"
+    chart_type: grid_chart
+    description: "Review items, open backlog, closures, corrected entries and high duty-risk exposure by product category"
+    config:
+      columns: [product_category, review_item_count, open_item_count, closed_item_count, reclassified_entry_count, high_duty_risk_count]
+      x: { dimension: product_category }
+      y:
+        - { measure: review_item_count, agg_fn: count }
+        - { measure: open_item_count, agg_fn: count }
+        - { measure: closed_item_count, agg_fn: count }
+        - { measure: reclassified_entry_count, agg_fn: count }
+        - { measure: high_duty_risk_count, agg_fn: count }
+    sources:
+      - { measure: review_item_count }
+      - { measure: open_item_count }
+      - { measure: closed_item_count }
+      - { measure: reclassified_entry_count }
+      - { measure: high_duty_risk_count }
+    w: 12
+    h: 4

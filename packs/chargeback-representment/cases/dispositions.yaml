@@ -1,0 +1,15 @@
+# Disposition taxonomy for the merchant chargeback-response workflow.
+# Categories are the Core's closed set {true_positive,false_positive,benign,
+# inconclusive,other} (CASE-FR-020). represent_with_evidence is the "fight"
+# decision (requires_note captures the reason code + compelling evidence the
+# second presentment will cite); accept_liability_refund is the "don't fight"
+# decision (weak evidence or below fight economics — the note records why);
+# pre_arbitration_escalate covers issuer pre-arbs on big-ticket wins;
+# flag_friendly_fraud_pattern feeds the block-list/prevention loop; and
+# close_duplicate_or_resolved retires chargebacks already refunded through
+# pre-dispute rails (RDR/Ethoca-style alerts) — never refund twice.
+- { code: represent_with_evidence,      label: "Represent — fight with compelling evidence",              category: true_positive,  requires_note: true }
+- { code: accept_liability_refund,      label: "Accept liability — refund, fight not warranted",          category: false_positive, requires_note: true }
+- { code: pre_arbitration_escalate,     label: "Escalate to pre-arbitration / arbitration",               category: other,          requires_note: true }
+- { code: flag_friendly_fraud_pattern,  label: "Flag friendly-fraud pattern (block-list / prevention)",   category: inconclusive,   requires_note: true }
+- { code: close_duplicate_or_resolved,  label: "Close — duplicate or already resolved via alert/refund",  category: benign,         requires_note: true }

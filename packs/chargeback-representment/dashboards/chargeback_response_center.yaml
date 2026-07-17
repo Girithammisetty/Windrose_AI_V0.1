@@ -1,0 +1,70 @@
+# Chargeback Response Center: incoming volume by reason family, response
+# runway on the open book, fight/accept decision mix, intake trend. Chart
+# families restricted to the render-verified set (vertical_bar / grid / pie /
+# line); expr_metric measures (rates) are query/NL surfaces, never charted
+# directly.
+name: "Chargeback Response Center"
+module: insights
+semantic_model: representment_core
+description: >-
+  Top-line merchant chargeback-response KPIs: incoming chargebacks by reason
+  family, response-deadline runway on the open book, human fight/accept
+  decision mix, and the monthly intake trend.
+tags: [payments, merchants, chargebacks, representment, pack]
+charts:
+  - name: "Chargebacks by reason family"
+    chart_type: vertical_bar_chart
+    description: "Incoming chargeback volume by reason family (fraud, consumer dispute, processing error)"
+    config:
+      x: { dimension: reason_family }
+      y: [ { measure: chargeback_count, agg_fn: count } ]
+    sources: [ { measure: chargeback_count } ]
+    w: 6
+    h: 4
+  - name: "Response runway (open book)"
+    chart_type: vertical_bar_chart
+    description: "Open chargebacks by days remaining to the acquirer response deadline"
+    config:
+      x: { dimension: deadline_bucket }
+      y: [ { measure: open_chargeback_count, agg_fn: count } ]
+    sources: [ { measure: open_chargeback_count } ]
+    w: 6
+    h: 4
+  - name: "Fight/accept decision mix"
+    chart_type: pie_chart
+    description: "Represent vs accept liability vs pre-arb vs friendly-fraud flag vs duplicate/resolved vs pending"
+    config:
+      x: { dimension: chargeback_disposition }
+      y: [ { measure: chargeback_count, agg_fn: count } ]
+    sources: [ { measure: chargeback_count } ]
+    w: 6
+    h: 4
+  - name: "Chargeback intake by month"
+    chart_type: line_chart
+    description: "Incoming chargebacks trend by filed month"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: chargeback_count, agg_fn: count } ]
+    sources: [ { measure: chargeback_count } ]
+    w: 6
+    h: 4
+  - name: "Reason-family worklist grid"
+    chart_type: grid_chart
+    description: "Volume, open backlog, representments, wins and dollars under chargeback by reason family"
+    config:
+      columns: [reason_family, chargeback_count, open_chargeback_count, represented_count, won_count, total_chargeback_amount]
+      x: { dimension: reason_family }
+      y:
+        - { measure: chargeback_count, agg_fn: count }
+        - { measure: open_chargeback_count, agg_fn: count }
+        - { measure: represented_count, agg_fn: count }
+        - { measure: won_count, agg_fn: count }
+        - { measure: total_chargeback_amount, agg_fn: sum }
+    sources:
+      - { measure: chargeback_count }
+      - { measure: open_chargeback_count }
+      - { measure: represented_count }
+      - { measure: won_count }
+      - { measure: total_chargeback_amount }
+    w: 12
+    h: 4

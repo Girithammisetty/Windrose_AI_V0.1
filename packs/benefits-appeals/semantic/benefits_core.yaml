@@ -1,0 +1,156 @@
+# Semantic model `benefits_core` — government benefits eligibility &
+# appeals KPI catalog (approval/denial rates, verification-request share,
+# fraud-referral share, appeal overturn share, overpayment exposure,
+# deadline runway, backlog aging), expressed in the Core semantic grammar
+# (agg whitelist, equality measure filters, derived expr_metric with nullif;
+# join_paths left/many_to_one, acyclic chain:
+# determinations -> claims -> claimants).
+#
+# entity.table is main.<safe_relation(dataset name)>; `dataset:` refs are
+# rebound to live dataset URNs by packctl at install. Amount columns ingest
+# as bronze strings, so numeric measures cast(... as double) (the proven
+# claims_core pattern).
+name: benefits_core
+description: >-
+  Government benefits eligibility adjudication & appeals KPI model
+  (unemployment insurance, SNAP, Medicaid eligibility, TANF, state
+  disability): determination volumes and backlog aging, disposition outcome
+  mix, approval/denial and verification-request rates, fraud-referral share,
+  appeal overturn share, overpayment exposure and processing-deadline
+  runway — determinations joined to the benefit claims they adjudicate and
+  to the claimant book.
+definition:
+  entities:
+    - name: determinations
+      dataset: gb_determinations
+      table: main.gb_determinations
+      primary_key: [determination_id]
+      dataset_version_policy: { policy: latest }
+    - name: claims
+      dataset: gb_claims
+      table: main.gb_claims
+      primary_key: [claim_id]
+      dataset_version_policy: { policy: latest }
+    - name: claimants
+      dataset: gb_claimants
+      table: main.gb_claimants
+      primary_key: [claimant_id]
+      dataset_version_policy: { policy: latest }
+  join_paths:
+    - name: determinations_claims
+      from_entity: determinations
+      to_entity: claims
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: claim_id, to_column: claim_id }]
+    - name: claims_claimants
+      from_entity: claims
+      to_entity: claimants
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: claimant_id, to_column: claimant_id }]
+  dimensions:
+    - { name: program, entity: determinations, type: categorical, column: program }
+    - { name: determination_type, entity: determinations, type: categorical, column: determination_type }
+    - { name: issue_type, entity: determinations, type: categorical, column: issue_type }
+    - { name: severity, entity: determinations, type: categorical, column: severity }
+    - { name: determination_status, entity: determinations, type: categorical, column: status }
+    - { name: determination_disposition, entity: determinations, type: categorical, column: disposition }
+    - { name: appeal_outcome, entity: determinations, type: categorical, column: appeal_outcome }
+    - { name: deadline_bucket, entity: determinations, type: categorical, column: deadline_bucket }
+    - { name: filed_month, entity: determinations, type: categorical, column: filed_month }
+    - { name: benefit_amount_band, entity: determinations, type: categorical, column: benefit_amount_band }
+    - { name: claim_program, entity: claims, type: categorical, column: program }
+    - { name: filing_month, entity: claims, type: categorical, column: filing_month }
+    - { name: weekly_amount_band, entity: claims, type: categorical, column: weekly_amount_band }
+    - { name: claim_context, entity: claims, type: categorical, column: claim_context }
+    - { name: verification_docs, entity: claims, type: categorical, column: verification_docs }
+    - { name: county, entity: claimants, type: categorical, column: county }
+    - { name: prior_claims_band, entity: claimants, type: categorical, column: prior_claims_band }
+    - { name: identity_verified, entity: claimants, type: categorical, column: identity_verified }
+    - { name: vulnerable_population, entity: claimants, type: categorical, column: vulnerable_population }
+    - { name: language, entity: claimants, type: categorical, column: language }
+  measures:
+    - { name: determination_count, entity: determinations, agg: count,
+        description: "Number of eligibility determinations" }
+    - { name: open_determination_count, entity: determinations, agg: count,
+        filters: "status = 'open'",
+        description: "Determinations still open (adjudication backlog)" }
+    - { name: closed_determination_count, entity: determinations, agg: count,
+        filters: "status = 'closed'",
+        description: "Determinations closed with a final human decision" }
+    - { name: approved_count, entity: determinations, agg: count,
+        filters: "disposition = 'approve_benefits'",
+        description: "Determinations approving benefits (eligibility confirmed or appeal overturned or waiver granted)" }
+    - { name: denied_count, entity: determinations, agg: count,
+        filters: "disposition = 'deny_with_findings'",
+        description: "Determinations denied with written findings and appeal rights" }
+    - { name: verification_request_count, entity: determinations, agg: count,
+        filters: "disposition = 'request_verification_documents'",
+        description: "Determinations deferred pending verification documents" }
+    - { name: fraud_referral_count, entity: determinations, agg: count,
+        filters: "disposition = 'refer_fraud_investigation'",
+        description: "Determinations referred to program-integrity fraud investigation" }
+    - { name: withdrawn_count, entity: determinations, agg: count,
+        filters: "disposition = 'close_withdrawn'",
+        description: "Determinations closed because the application or claim was withdrawn" }
+    - { name: appeal_prep_count, entity: determinations, agg: count,
+        filters: "determination_type = 'appeal_hearing_prep'",
+        description: "Appeal-hearing preparation determinations (fair-hearing docket)" }
+    - { name: appeal_overturned_count, entity: determinations, agg: count,
+        filters: "appeal_outcome = 'overturned'",
+        description: "Appeals where the original determination was overturned at hearing" }
+    - { name: appeal_upheld_count, entity: determinations, agg: count,
+        filters: "appeal_outcome = 'upheld'",
+        description: "Appeals where the original determination was upheld at hearing" }
+    - { name: overpayment_case_count, entity: determinations, agg: count,
+        filters: "determination_type = 'overpayment'",
+        description: "Overpayment determinations (establishment and waiver reviews)" }
+    - { name: identity_issue_count, entity: determinations, agg: count,
+        filters: "issue_type = 'identity'",
+        description: "Determinations raising an identity-verification issue" }
+    - { name: avg_determination_age_days, entity: determinations, agg: avg,
+        expr: "cast(age_days as double)", format: decimal,
+        description: "Average determination age in days (cycle time / backlog aging)" }
+    - { name: total_overpayment_amount, entity: determinations, agg: sum,
+        expr: "cast(overpayment_amount as double)", format: decimal,
+        description: "Total dollars in established or alleged benefit overpayments" }
+    - { name: claim_count, entity: claims, agg: count,
+        description: "Number of benefit claims/applications on file" }
+    - { name: contested_claim_count, entity: claims, agg: count,
+        filters: "claim_context = 'employer_contested'",
+        description: "UI claims where the employer contests the separation" }
+    - { name: shared_address_claim_count, entity: claims, agg: count,
+        filters: "claim_context = 'shared_address'",
+        description: "Claims filed from a shared address (identity-ring surface — verify, never auto-deny)" }
+    - { name: missing_docs_claim_count, entity: claims, agg: count,
+        filters: "verification_docs = 'missing'",
+        description: "Claims with verification documents missing" }
+    - { name: claimant_count, entity: claimants, agg: count,
+        description: "Number of claimants on the book" }
+    - { name: vulnerable_claimant_count, entity: claimants, agg: count,
+        filters: "vulnerable_population = 'yes'",
+        description: "Claimants flagged as a vulnerable population (heightened due-process care)" }
+    - { name: unverified_identity_claimant_count, entity: claimants, agg: count,
+        filters: "identity_verified = 'no'",
+        description: "Claimants whose identity verification is not yet complete" }
+    - { name: approval_rate,
+        expr_metric: "approved_count / nullif(closed_determination_count, 0)",
+        format: percent,
+        description: "Determinations approving benefits over all closures" }
+    - { name: denial_rate,
+        expr_metric: "denied_count / nullif(closed_determination_count, 0)",
+        format: percent,
+        description: "Determinations denied with findings over all closures" }
+    - { name: verification_request_share,
+        expr_metric: "verification_request_count / nullif(closed_determination_count, 0)",
+        format: percent,
+        description: "Closures deferred to a verification-document request over all closures" }
+    - { name: fraud_referral_share,
+        expr_metric: "fraud_referral_count / nullif(closed_determination_count, 0)",
+        format: percent,
+        description: "Closures referred to fraud investigation over all closures" }
+    - { name: appeal_overturn_share,
+        expr_metric: "appeal_overturned_count / nullif(appeal_prep_count, 0)",
+        format: percent,
+        description: "Appeal-type determinations overturned at hearing over all appeal-type determinations (due-process quality signal)" }

@@ -1,0 +1,30 @@
+# Saved queries (query-service) — includes the broker->line-of-business edge
+# source (parent/child/n) for network-family charts: which brokers feed which
+# lines, where the out-of-appetite flow concentrates, and which relationships
+# are one-line vs full-book.
+- identity: broker_lob_network_edges
+  name: "Underwriting: broker-line network edges"
+  description: >-
+    Broker -> line-of-business edge list (parent/child/n) from the
+    submission flow — network-chart source for spotting brokers who
+    concentrate in single lines, full-book tier-1 relationships, and the
+    habitual out-of-appetite fan (one broker, repeated mis-targeted lines).
+  sql: >-
+    SELECT broker_name AS parent, line_of_business AS child,
+           count(*) AS n
+    FROM {{dataset('uw-submissions')}}
+    GROUP BY broker_name, line_of_business
+  tags: [underwriting, network, brokers, pack]
+- identity: priority_open_submissions
+  name: "Underwriting: priority open triage queue"
+  description: "Open submissions ranked by deadline runway then priority — the intake analyst ranked-queue seed (needed-by date x priority x premium band, not FIFO)."
+  sql: >-
+    SELECT submission_id, account_id, broker_name, broker_tier,
+           line_of_business, segment, appetite_fit, completeness,
+           priority_band, severity, premium_band,
+           cast(days_to_deadline AS double) AS days_to_deadline,
+           cast(age_days AS double) AS age_days
+    FROM {{dataset('uw-submissions')}}
+    WHERE status = 'open'
+    ORDER BY days_to_deadline ASC, age_days DESC
+  tags: [underwriting, queue, worklist, pack]

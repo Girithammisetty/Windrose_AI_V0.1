@@ -1,0 +1,181 @@
+# Inspection-operations role catalog as tenant CUSTOM roles composing the
+# Core's closed action catalog (rbac never mints new verbs; packctl also
+# creates a same-named permission group and binds the role so it's
+# assignable). Separation of duties: the Triage Analyst reviews detections
+# and proposes, the Field Verification Engineer confirms or refutes
+# detections in the field (and feeds the detector-training loop), the
+# Vegetation Program Specialist owns the clearance program, the Asset Risk
+# Manager alone approves dispositions (immediate dispatch vs deferral is a
+# four-eyes decision — deferred-maintenance records are discoverable), and
+# the Regulatory Compliance Auditor reviews everything with no case-write
+# power (WMP / inspection-cycle audit readiness).
+- name: "Inspection Triage Analyst"
+  actions:
+    - case.case.read
+    - case.case.list
+    - case.case.update
+    - case.disposition.read
+    - case.disposition.create
+    - ai.proposal.read
+    - ai.proposal.list
+    - ai.proposal.approve
+    - ai.agent_session.read
+    - ai.agent_session.list
+    - ai.agent_session.create
+    - ai.agent_session.execute
+    - memory.memory.read
+    - chart.dashboard.read
+    - chart.dashboard.list
+    - chart.chart.read
+    - semantic.model.read
+    - semantic.compile.execute
+    - query.query.read
+    - query.execution.read
+    - query.execution.execute
+    - dataset.dataset.read
+    - notification.inbox.read
+- name: "Field Verification Engineer"
+  actions:
+    - case.case.read
+    - case.case.list
+    - case.case.update
+    - case.case.assign
+    - case.case.execute
+    - case.disposition.read
+    - case.disposition.create
+    - case.disposition.update
+    - ai.proposal.read
+    - ai.proposal.list
+    - ai.proposal.approve
+    - ai.agent_session.read
+    - ai.agent_session.list
+    - ai.agent_session.create
+    - ai.agent_session.execute
+    - memory.memory.read
+    - chart.dashboard.read
+    - chart.dashboard.list
+    - chart.chart.read
+    - chart.chart.list
+    - semantic.model.read
+    - semantic.model.list
+    - semantic.measure.read
+    - semantic.compile.execute
+    - query.query.read
+    - query.query.list
+    - query.query.create
+    - query.query.execute
+    - query.execution.read
+    - query.execution.execute
+    - query.execution.export
+    - dataset.dataset.read
+    - dataset.dataset.list
+    - dataset.profile.read
+    - dataset.lineage.read
+    - notification.inbox.read
+- name: "Vegetation Program Specialist"
+  actions:
+    - case.case.read
+    - case.case.list
+    - case.case.update
+    - case.disposition.read
+    - case.disposition.create
+    - ai.proposal.read
+    - ai.proposal.list
+    - ai.proposal.approve
+    - ai.agent_session.read
+    - ai.agent_session.list
+    - ai.agent_session.create
+    - ai.agent_session.execute
+    - memory.memory.read
+    - chart.dashboard.read
+    - chart.dashboard.list
+    - chart.chart.read
+    - semantic.model.read
+    - semantic.compile.execute
+    - query.query.read
+    - query.execution.read
+    - query.execution.execute
+    - dataset.dataset.read
+    - ingestion.connection.read
+    - ingestion.connection.list
+    - ingestion.ingestion.read
+    - ingestion.ingestion.list
+    - notification.inbox.read
+- name: "Asset Risk Manager"
+  actions:
+    - case.case.read
+    - case.case.list
+    - case.case.update
+    - case.case.assign
+    - case.disposition.read
+    - case.disposition.create
+    - case.disposition.update
+    - case.disposition.approve
+    - case.bulk.execute
+    - case.bulk.approve
+    - ai.proposal.read
+    - ai.proposal.list
+    - ai.proposal.approve
+    - ai.agent_session.read
+    - ai.agent_session.list
+    - ai.agent_session.create
+    - ai.agent_session.execute
+    - memory.memory.read
+    - chart.dashboard.read
+    - chart.dashboard.list
+    - chart.dashboard.export
+    - chart.chart.read
+    - semantic.model.read
+    - semantic.compile.execute
+    - query.query.read
+    - query.execution.read
+    - query.execution.execute
+    - query.execution.export
+    - dataset.dataset.read
+    - dataset.lineage.read
+    - usage.report.read
+    - usage.report.list
+    - audit.log.read
+    - audit.log.list
+    - audit.log.export
+    - experiment.promotion.read
+    - experiment.promotion.approve
+    - notification.inbox.read
+- name: "Regulatory Compliance Auditor"
+  actions:
+    - case.case.read
+    - case.case.list
+    - case.disposition.read
+    - experiment.experiment.read
+    - experiment.experiment.list
+    - experiment.run.read
+    - experiment.run.list
+    - experiment.model.read
+    - experiment.model.list
+    - experiment.promotion.read
+    - pipeline.template.read
+    - pipeline.template.list
+    - pipeline.run.read
+    - pipeline.run.list
+    - pipeline.component.read
+    - pipeline.component.list
+    - pipeline.algorithm.read
+    - pipeline.algorithm.list
+    - eval.run.read
+    - eval.trends.read
+    - dataset.dataset.read
+    - dataset.dataset.list
+    - dataset.profile.read
+    - dataset.profile.execute
+    - dataset.lineage.read
+    - semantic.model.read
+    - semantic.model.list
+    - semantic.measure.read
+    - chart.dashboard.read
+    - chart.chart.read
+    - audit.log.read
+    - audit.log.list
+    - usage.report.read
+    - usage.report.list
+    - usage.report.export
+    - notification.inbox.read

@@ -1,0 +1,111 @@
+# healthcare-provider-rcm capability pack (BRD 26) — Core-neutral edition.
+# Installable TODAY against Windrose Core's public APIs via packctl; the
+# manifest envelope follows BRD 23 (PKG-FR-001/003). Components the current
+# Core cannot materialize are declared under `deferred` with the exact BRD 26
+# requirement they trace to — recorded in the install ledger, never faked.
+pack_manifest: 1
+name: healthcare-provider-rcm
+version: 1.0.0
+publisher: { id: pub-windrose, name: "Windrose Inc." }
+description: >-
+  Provider-side revenue cycle management for medical groups, hospitals, and
+  RCM outsourcers (BRD 26): claim/remit/denial/AR semantic models with the
+  RCM KPI catalog (clean-claim rate, denial rate, days in A/R, net collection
+  rate), an RCM command center plus denial-analytics and A/R-aging dashboards,
+  a denials + underpayment review queue with RCM dispositions, the provider
+  revenue-cycle role catalog, denial-specialist and revenue-cycle-analyst
+  copilot grounding, and a denial-prediction training pipeline.
+categories: [healthcare, provider, revenue-cycle, coding, denial-mgmt, ar]
+regulatory: [hipaa, cms_billing, lcd_ncd, ncci, no_surprises_act, rac_audit_defensible]
+components:
+  datasets:
+    - { file: "data/datasets.yaml", identity: "datasets" }
+  semantic_models:
+    - { file: "semantic/rcm_claims.yaml", identity: "rcm_claims" }
+    - { file: "semantic/rcm_ar.yaml", identity: "rcm_ar" }
+  verified_queries:
+    - { file: "queries/verified.yaml", identity: "canonical_questions" }
+  saved_queries:
+    - { file: "queries/saved.yaml", identity: "saved_queries" }
+  dashboards:
+    - { file: "dashboards/rcm_command_center.yaml", identity: "rcm_command_center" }
+    - { file: "dashboards/denial_analytics.yaml", identity: "denial_analytics" }
+    - { file: "dashboards/ar_aging_actions.yaml", identity: "ar_aging_actions" }
+  dispositions:
+    - { file: "cases/dispositions.yaml", identity: "dispositions" }
+  cases:
+    - { file: "cases/queue.yaml", identity: "denial_queue" }
+  roles:
+    - { file: "rbac/roles.yaml", identity: "roles" }
+  agent_configs:
+    - { file: "agents/configs.yaml", identity: "agent_configs" }
+  memories:
+    - { file: "memories/grounding.yaml", identity: "grounding" }
+  pipelines:
+    - { file: "pipelines/templates.yaml", identity: "pipelines" }
+deferred:
+  - kind: ontology
+    reason: >-
+      RCM-FR-010 ontology (Patient, Encounter, Charge, Claim, Denial,
+      Remittance 835, Appeal, PayerContract, PatientAccount, ClinicalDocument,
+      CodeAssignment, PayerPolicy — with phi:true field tags) awaits
+      pack-service ontology registration; entity semantics are carried today
+      by the semantic models and dataset schemas.
+  - kind: guardrails
+    reason: >-
+      RCM-FR-110 policies (HIPAA baseline, CMS LCD/NCD/NCCI billing edits,
+      No Surprises Act balance-billing, state balance-billing configs,
+      TILA/FDCPA payment-plan disclosures, RAC/MAC audit posture) require
+      guardrail-service / OPA materialization, which Core does not expose as a
+      pack surface yet. Proposal-mode + four-eyes approval in agent-runtime
+      already satisfies the human-review guarantee (BRD 26 BR-1) for every
+      pack-configured agent.
+  - kind: agent_recipes
+    reason: >-
+      RCM-FR-030..080 bespoke LangGraph recipes (coding_copilot,
+      denial_response, underpayment_detector, ar_prioritizer,
+      patient_collections, coding_audit_prep) require agent-runtime
+      graph-module registration (BRD 23 BR-12). This pack specializes the
+      existing case-triage + analytics agents via TenantAgentConfig
+      prompt_params + tenant-scope RAG grounding instead; all writes remain
+      proposal-mode per BR-1 (RCM_AUTONOMOUS_BILLING_FORBIDDEN).
+  - kind: connection_templates
+    reason: >-
+      RCM-FR-090 read connectors (Epic Resolute FHIR/HL7v2, Athenahealth
+      Collector, eCW, NextGen, Cerner Millennium, EDI 837/835/276/277/275,
+      Waystar, Change Healthcare, Availity) require customer credentials and
+      pack-service connector materialization. The pack ships seed datasets in
+      the exact landing shape (837 claims, 835 remit lines, denials, A/R
+      aging); production connectors are configured through Data > Connections.
+  - kind: write_adapters
+    reason: >-
+      RCM-FR-090 write adapters (Epic charge/claim/note, Athena/eCW/Cerner
+      claim update, Waystar/Availity submission, outbound EDI 837 corrected
+      claim + EDI 276 status inquiry) execute only behind pack-service's
+      materialization contract and customer credentials; per BRD 26 BR-1 the
+      coding-write adapter refuses without a signed grant and all
+      platform-side writes remain proposal-mode.
+  - kind: eval_sets
+    reason: >-
+      BRD 26 §4 golden sets (coding, denial-response, underpayment,
+      collections) require eval-service write APIs whose action names are not
+      yet in the rbac canonical catalog (Core follow-up noted in rbac
+      catalog.go).
+  - kind: model_archetypes
+    reason: >-
+      BRD 26 §4 archetypes (denial_reversal_probability,
+      patient_affordability_score) await experiment-service archetype APIs;
+      the denial-prediction capability ships today as a pipeline seed
+      (denial_prediction_classifier) instead.
+  - kind: case_schemas
+    reason: >-
+      RCM-FR-120 typed case schemas (coding_review, denial_response_review,
+      underpayment_dispute_review, ar_worklist_item, patient_collection_case,
+      coding_audit_prep) await case-service schema materialization; today's
+      cases carry the same fields via display_projection + the disposition
+      taxonomy.
+  - kind: display_labels
+    reason: >-
+      BRD 26 §4 display-label overlays ("Denial appeal", "Underpayment",
+      "AR item", entity templates) require the BFF label-registry endpoints
+      (BFF-FR-082/088) which are pack-service-tier features.

@@ -1,0 +1,9 @@
+appeal_id,denial_id,claim_id,level,submitted_by,submitted_month,status,verdict_by,member_state,denial_reason_code,cpt_code,potential_value
+APL-5001,DEN-3001,CLM-20002,1,provider,2026-02,overturned,md_reviewer,NY,CO-50,70553,1850.00
+APL-5002,DEN-3002,CLM-20006,1,provider,2026-03,overturned,md_reviewer,FL,CO-197,27447,28900.00
+APL-5003,DEN-3004,CLM-20011,1,member,2026-03,upheld,md_reviewer,NY,CO-50,22551,36400.00
+APL-5004,DEN-3005,CLM-20014,1,provider,2026-04,overturned,appeals_analyst,CA,CO-151,70553,1890.00
+APL-5005,DEN-3006,CLM-20017,1,provider,2026-04,pending,,FL,CO-197,J1745,9800.00
+APL-5006,DEN-3008,CLM-20023,1,member,2026-06,upheld,md_reviewer,NY,CO-151,64483,1920.00
+APL-5007,DEN-3009,CLM-20026,1,provider,2026-06,pending,,CA,CO-50,96413,6600.00
+APL-5008,DEN-3004,CLM-20011,2,member,2026-05,overturned,external_reviewer,NY,CO-50,22551,36400.00

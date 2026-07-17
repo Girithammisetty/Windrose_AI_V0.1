@@ -1,0 +1,15 @@
+# Disposition taxonomy for the claims-and-safety adjudication workflow.
+# Categories are the Core's closed set {true_positive,false_positive,benign,
+# inconclusive,other} (CASE-FR-020). accept_pay_claim and
+# deny_claim_documented are the Carmack investigation outcomes (a denial
+# note must carry the documented findings and the bill-of-lading defense
+# relied upon — it feeds the declination letter); file_carrier_recovery is
+# the upstream-carrier recovery action (requires_note captures the evidence
+# the recovery filing will cite); close_coaching_completed closes telematics
+# safety events with the coaching record that must survive litigation
+# discovery.
+- { code: accept_pay_claim,             label: "Accept — pay claim, liability confirmed",                 category: true_positive,  requires_note: true }
+- { code: deny_claim_documented,        label: "Deny claim / clear flag — documented findings",           category: false_positive, requires_note: true }
+- { code: file_carrier_recovery,        label: "File recovery against responsible carrier",               category: other,          requires_note: true }
+- { code: escalate_fraud_investigation, label: "Escalate to fraud investigation (double-broker / staged-loss watch)", category: inconclusive, requires_note: true }
+- { code: close_coaching_completed,     label: "Close safety event — coaching completed & documented",    category: benign,         requires_note: true }

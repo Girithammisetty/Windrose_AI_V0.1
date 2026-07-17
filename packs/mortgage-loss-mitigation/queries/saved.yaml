@@ -1,0 +1,28 @@
+# Saved queries (query-service) — includes the investor->workout edge source
+# (parent/child/n) for network-family charts: which workout types each
+# investor's book is actually producing (waterfall-mix drift by investor).
+- identity: lm_investor_workout_edges
+  name: "Loss mit: investor-workout network edges"
+  description: >-
+    Investor -> request-type edge list (parent/child/n) from the application
+    book — network-chart source for spotting waterfall-mix drift by investor
+    (a GSE book skewing to short sales, an FHA book skewing to repeat
+    modifications) and concentration of non-retention outcomes.
+  sql: >-
+    SELECT investor AS parent, request_type AS child,
+           count(*) AS n
+    FROM {{dataset('lm-applications')}}
+    GROUP BY investor, request_type
+  tags: [loss_mitigation, network, investor, pack]
+- identity: lm_high_arrearage_open_queue
+  name: "Loss mit: high-arrearage open queue"
+  description: "Open applications ranked by arrearage exposure — the specialist ranked-queue seed (deadline x arrearage x severity, not FIFO)."
+  sql: >-
+    SELECT app_id, loan_id, request_type, hardship_reason, severity,
+           investor, doc_status, dual_track_hold,
+           cast(days_to_deadline AS double) AS days_to_deadline,
+           cast(arrearage_amount AS double) AS arrearage_amount
+    FROM {{dataset('lm-applications')}}
+    WHERE status = 'open'
+    ORDER BY arrearage_amount DESC
+  tags: [loss_mitigation, queue, backlog, pack]

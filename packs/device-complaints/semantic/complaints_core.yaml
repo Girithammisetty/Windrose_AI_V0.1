@@ -1,0 +1,163 @@
+# Semantic model `complaints_core` — medical-device complaint-handling and
+# MDR-reportability KPI catalog (MDR filing rate, not-reportable rate,
+# CAPA-open share, deadline runway, backlog aging, device-problem and harm
+# mix), expressed in the Core semantic grammar (agg whitelist, equality
+# measure filters, derived expr_metric with nullif; join_paths
+# left/many_to_one, acyclic chain: complaints -> devices -> products).
+#
+# entity.table is main.<safe_relation(dataset name)>; `dataset:` refs are
+# rebound to live dataset URNs by packctl at install. Numeric columns ingest
+# as bronze strings, so numeric measures cast(... as double).
+name: complaints_core
+description: >-
+  Medical-device manufacturer complaint-handling KPI model (21 CFR 803 MDR /
+  21 CFR 820.198 complaint files / EU MDR vigilance): complaint volumes by
+  source and event type, MDR reportability decision mix, filing and
+  not-reportable rates, CAPA-open share, regulatory deadline runway, backlog
+  aging, and device-problem signal surfaces — complaints joined to the
+  device fleet joined to the product catalog.
+definition:
+  entities:
+    - name: complaints
+      dataset: dc_complaints
+      table: main.dc_complaints
+      primary_key: [complaint_id]
+      dataset_version_policy: { policy: latest }
+    - name: devices
+      dataset: dc_devices
+      table: main.dc_devices
+      primary_key: [device_id]
+      dataset_version_policy: { policy: latest }
+    - name: products
+      dataset: dc_products
+      table: main.dc_products
+      primary_key: [product_id]
+      dataset_version_policy: { policy: latest }
+  join_paths:
+    - name: complaints_devices
+      from_entity: complaints
+      to_entity: devices
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: device_id, to_column: device_id }]
+    - name: devices_products
+      from_entity: devices
+      to_entity: products
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: product_id, to_column: product_id }]
+  dimensions:
+    - { name: complaint_source, entity: complaints, type: categorical, column: complaint_source }
+    - { name: event_type, entity: complaints, type: categorical, column: event_type }
+    - { name: device_problem, entity: complaints, type: categorical, column: device_problem }
+    - { name: patient_harm, entity: complaints, type: categorical, column: patient_harm }
+    - { name: reportability, entity: complaints, type: categorical, column: reportability }
+    - { name: investigation_status, entity: complaints, type: categorical, column: investigation_status }
+    - { name: severity, entity: complaints, type: categorical, column: severity }
+    - { name: complaint_status, entity: complaints, type: categorical, column: status }
+    - { name: complaint_disposition, entity: complaints, type: categorical, column: disposition }
+    - { name: deadline_bucket, entity: complaints, type: categorical, column: deadline_bucket }
+    - { name: filed_month, entity: complaints, type: categorical, column: filed_month }
+    - { name: lot_batch, entity: devices, type: categorical, column: lot_batch }
+    - { name: manufacture_year, entity: devices, type: categorical, column: manufacture_year }
+    - { name: region_sold, entity: devices, type: categorical, column: region_sold }
+    - { name: software_version, entity: devices, type: categorical, column: software_version }
+    - { name: service_history, entity: devices, type: categorical, column: service_history }
+    - { name: product_name, entity: products, type: categorical, column: product_name }
+    - { name: device_class, entity: products, type: categorical, column: device_class }
+    - { name: therapeutic_area, entity: products, type: categorical, column: therapeutic_area }
+    - { name: regulatory_pathway, entity: products, type: categorical, column: regulatory_pathway }
+    - { name: recall_history, entity: products, type: categorical, column: recall_history }
+  measures:
+    - { name: complaint_count, entity: complaints, agg: count,
+        description: "Number of complaints received" }
+    - { name: open_complaint_count, entity: complaints, agg: count,
+        filters: "status = 'open'",
+        description: "Complaints still open (reportability-decision backlog)" }
+    - { name: closed_complaint_count, entity: complaints, agg: count,
+        filters: "status = 'closed'",
+        description: "Complaints closed with a documented disposition" }
+    - { name: mdr_reportable_count, entity: complaints, agg: count,
+        filters: "reportability = 'mdr_reportable'",
+        description: "Complaints assessed MDR-reportable under 21 CFR 803" }
+    - { name: not_reportable_count, entity: complaints, agg: count,
+        filters: "reportability = 'not_reportable'",
+        description: "Complaints assessed not reportable (rationale documented)" }
+    - { name: pending_reportability_count, entity: complaints, agg: count,
+        filters: "reportability = 'pending'",
+        description: "Complaints whose reportability decision is still pending" }
+    - { name: mdr_filed_count, entity: complaints, agg: count,
+        filters: "disposition = 'file_mdr_report'",
+        description: "Complaints closed with an MDR report filed to FDA" }
+    - { name: not_reportable_closure_count, entity: complaints, agg: count,
+        filters: "disposition = 'close_not_reportable'",
+        description: "Complaints closed not-reportable with documented rationale" }
+    - { name: capa_opened_count, entity: complaints, agg: count,
+        filters: "disposition = 'open_capa_investigation'",
+        description: "Complaints closed into a CAPA investigation (820.100 trend trigger)" }
+    - { name: return_info_requested_count, entity: complaints, agg: count,
+        filters: "disposition = 'request_device_return_info'",
+        description: "Complaints closed pending returned-device analysis / added information" }
+    - { name: duplicate_closed_count, entity: complaints, agg: count,
+        filters: "disposition = 'close_duplicate_complaint'",
+        description: "Complaints closed as duplicates of an already-processed complaint" }
+    - { name: death_event_count, entity: complaints, agg: count,
+        filters: "event_type = 'death'",
+        description: "Complaints reporting a patient death (reportability presumption)" }
+    - { name: serious_injury_count, entity: complaints, agg: count,
+        filters: "event_type = 'serious_injury'",
+        description: "Complaints reporting a serious injury" }
+    - { name: malfunction_count, entity: complaints, agg: count,
+        filters: "event_type = 'malfunction'",
+        description: "Malfunction complaints (could-recur-and-cause-harm MDR surface)" }
+    - { name: use_error_count, entity: complaints, agg: count,
+        filters: "event_type = 'use_error'",
+        description: "Use-error complaints (human-factors / design-input surface)" }
+    - { name: serious_harm_count, entity: complaints, agg: count,
+        filters: "patient_harm = 'serious'",
+        description: "Complaints with serious patient harm" }
+    - { name: alarm_failure_count, entity: complaints, agg: count,
+        filters: "device_problem = 'alarm_failure'",
+        description: "Alarm-failure device-problem complaints (trending watch)" }
+    - { name: software_anomaly_count, entity: complaints, agg: count,
+        filters: "device_problem = 'software_anomaly'",
+        description: "Software-anomaly device-problem complaints (rollout-cluster watch)" }
+    - { name: avg_complaint_age_days, entity: complaints, agg: avg,
+        expr: "cast(age_days as double)", format: decimal,
+        description: "Average complaint age in days (investigation cycle time / backlog aging)" }
+    - { name: avg_days_to_deadline, entity: complaints, agg: avg,
+        expr: "cast(days_to_deadline as double)", format: decimal,
+        description: "Average days remaining to the MDR reporting deadline (open book)" }
+    - { name: device_count, entity: devices, agg: count,
+        description: "Number of devices in the tracked fleet" }
+    - { name: multi_repair_device_count, entity: devices, agg: count,
+        filters: "service_history = 'multiple_repairs'",
+        description: "Devices with multiple repairs on record (reliability watch)" }
+    - { name: product_count, entity: products, agg: count,
+        description: "Number of products in the catalog" }
+    - { name: class_iii_product_count, entity: products, agg: count,
+        filters: "device_class = 'iii'",
+        description: "Class III (PMA) products — highest-risk portfolio segment" }
+    - { name: recalled_product_count, entity: products, agg: count,
+        filters: "recall_history = 'yes'",
+        description: "Products with a prior recall / field action on record" }
+    - { name: mdr_filing_rate,
+        expr_metric: "mdr_filed_count / nullif(closed_complaint_count, 0)",
+        format: percent,
+        description: "Closures that produced an MDR filing over all closures" }
+    - { name: not_reportable_rate,
+        expr_metric: "not_reportable_closure_count / nullif(closed_complaint_count, 0)",
+        format: percent,
+        description: "Closures assessed not reportable over all closures" }
+    - { name: capa_open_share,
+        expr_metric: "capa_opened_count / nullif(closed_complaint_count, 0)",
+        format: percent,
+        description: "Closures escalated into a CAPA investigation over all closures" }
+    - { name: duplicate_rate,
+        expr_metric: "duplicate_closed_count / nullif(closed_complaint_count, 0)",
+        format: percent,
+        description: "Closures nullified as duplicates — intake data-quality watch" }
+    - { name: serious_harm_share,
+        expr_metric: "serious_harm_count / nullif(complaint_count, 0)",
+        format: percent,
+        description: "Complaints with serious patient harm over all complaints" }

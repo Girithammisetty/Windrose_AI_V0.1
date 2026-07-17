@@ -1,0 +1,13 @@
+vendor_id,vendor_name,country,tenure_band,spend_tier,master_data_changes,w9_tin_verified,sanctions_screened
+V-3001,Meridian IT Partners,US,over_3_years,high,one,yes,yes
+V-3002,Cortland Facilities Group,US,over_3_years,medium,none,yes,yes
+V-3003,BlueRidge Logistics,US,1_3_years,high,none,yes,yes
+V-3004,Vantage Marketing Co,US,1_3_years,medium,one,yes,yes
+V-3005,Helix Raw Materials GmbH,DE,over_3_years,high,none,yes,yes
+V-3006,Sterling Consulting Group,GB,1_3_years,medium,none,yes,yes
+V-3007,Apex Office Supply,US,over_3_years,low,none,yes,yes
+V-3008,Nordwind Freight BV,NL,1_3_years,medium,none,yes,yes
+V-3009,Quartzline Services LLC,US,new_under_1y,low,multiple,no,no
+V-3010,Pinnacle Creative Studio,US,new_under_1y,low,none,yes,yes
+V-3011,TransGlobal Components,CN,over_3_years,high,none,yes,yes
+V-3012,Cedar Valley Maintenance,US,1_3_years,low,one,yes,no

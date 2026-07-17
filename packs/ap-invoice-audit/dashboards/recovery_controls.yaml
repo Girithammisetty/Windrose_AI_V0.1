@@ -1,0 +1,69 @@
+# Recovery & Controls: recovered/prevented dollars, payment-run deadline
+# runway on the open book, and the PO-control mix feeding the exception
+# pipeline — the recovery-audit and SOX-controls view.
+name: "Recovery & Controls"
+module: insights
+semantic_model: ap_audit_core
+description: >-
+  Recovery-audit effectiveness and control posture: recovered dollars by
+  exception type, payment-run deadline runway buckets on the open book,
+  PO-backed vs non-PO invoice mix, monthly recovery trend, and the
+  fraud-indicator controls grid.
+tags: [finance, accounts_payable, recovery, sox_controls, pack]
+charts:
+  - name: "Recovered dollars by exception type"
+    chart_type: vertical_bar_chart
+    description: "Dollars recovered or prevented (blocked duplicates, vendor credits) by exception type"
+    config:
+      x: { dimension: exception_type }
+      y: [ { measure: total_recovered_amount, agg_fn: sum } ]
+    sources: [ { measure: total_recovered_amount } ]
+    w: 6
+    h: 4
+  - name: "Deadline runway (open book)"
+    chart_type: vertical_bar_chart
+    description: "Open exceptions by days remaining to the next payment run or discount deadline"
+    config:
+      x: { dimension: deadline_bucket }
+      y: [ { measure: open_exception_count, agg_fn: count } ]
+    sources: [ { measure: open_exception_count } ]
+    w: 6
+    h: 4
+  - name: "PO-control invoice mix"
+    chart_type: pie_chart
+    description: "PO-backed vs non-PO invoices — the non-PO path has no three-way-match anchor"
+    config:
+      x: { dimension: po_flag }
+      y: [ { measure: invoice_count, agg_fn: count } ]
+    sources: [ { measure: invoice_count } ]
+    w: 6
+    h: 4
+  - name: "Recovery trend by month"
+    chart_type: line_chart
+    description: "Recovered/prevented dollars by filed month"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: total_recovered_amount, agg_fn: sum } ]
+    sources: [ { measure: total_recovered_amount } ]
+    w: 6
+    h: 4
+  - name: "Fraud-indicator controls grid"
+    chart_type: grid_chart
+    description: "Exceptions, escalations, blocks, exposure and recoveries by fraud indicator"
+    config:
+      columns: [fraud_indicator, exception_count, fraud_escalated_count, blocked_count, total_exposure_amount, total_recovered_amount]
+      x: { dimension: fraud_indicator }
+      y:
+        - { measure: exception_count, agg_fn: count }
+        - { measure: fraud_escalated_count, agg_fn: count }
+        - { measure: blocked_count, agg_fn: count }
+        - { measure: total_exposure_amount, agg_fn: sum }
+        - { measure: total_recovered_amount, agg_fn: sum }
+    sources:
+      - { measure: exception_count }
+      - { measure: fraud_escalated_count }
+      - { measure: blocked_count }
+      - { measure: total_exposure_amount }
+      - { measure: total_recovered_amount }
+    w: 12
+    h: 4

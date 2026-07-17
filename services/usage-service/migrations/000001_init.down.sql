@@ -1,0 +1,14 @@
+DROP TABLE IF EXISTS outbox;
+DROP TABLE IF EXISTS idempotency_keys;
+DROP TABLE IF EXISTS adjustments;
+DROP TABLE IF EXISTS reconciliations;
+DROP TABLE IF EXISTS anomalies;
+DROP TABLE IF EXISTS rate_card_items;
+DROP TABLE IF EXISTS rate_cards;
+DROP TABLE IF EXISTS budget_states;
+DROP TABLE IF EXISTS budgets;
+DROP TABLE IF EXISTS usage_monthly;
+DROP TABLE IF EXISTS usage_daily;
+DROP TABLE IF EXISTS usage_hourly;
+DROP TABLE IF EXISTS usage_raw;
+DROP TABLE IF EXISTS meters;

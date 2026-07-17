@@ -1,0 +1,12 @@
+DROP TABLE IF EXISTS outbox;
+DROP TABLE IF EXISTS idempotency_keys;
+DROP TABLE IF EXISTS operations;
+DROP TABLE IF EXISTS applied_proposals;
+DROP TABLE IF EXISTS sla_timers;
+DROP TABLE IF EXISTS case_comments;
+DROP TABLE IF EXISTS case_events;
+DROP TABLE IF EXISTS cases;
+DROP TABLE IF EXISTS sla_policies;
+DROP TABLE IF EXISTS case_fields;
+DROP TABLE IF EXISTS dispositions;
+DROP TABLE IF EXISTS case_sequences;

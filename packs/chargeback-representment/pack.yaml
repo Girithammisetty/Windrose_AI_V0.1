@@ -1,0 +1,125 @@
+# chargeback-representment capability pack — Core-neutral edition: merchant/
+# PSP-side chargeback response and representment (the merchant mirror of the
+# issuer card-disputes pack, BRD 32): decide which incoming chargebacks to
+# fight and with what evidence. Installable TODAY against Windrose Core's
+# public APIs via packctl; the manifest envelope follows BRD 23
+# (PKG-FR-001/003). Components the current Core cannot materialize are
+# declared under `deferred` — recorded in the install ledger, never faked.
+pack_manifest: 1
+name: chargeback-representment
+version: 1.0.0
+publisher: { id: pub-windrose, name: "Windrose Inc." }
+description: >-
+  AI-assisted chargeback representment for merchants, PSPs/acquirers offering
+  managed disputes, and marketplaces: incoming-chargeback triage with
+  response-deadline awareness, fight/accept economics, reason-code-matched
+  compelling-evidence assembly (Visa CE 3.0 pre-screen, delivery
+  confirmation, usage logs, policy disclosure), friendly-fraud pattern
+  flagging with block-list feed, pre-arbitration escalation discipline,
+  pre-dispute alert deduplication (RDR/Ethoca-style), dispute-program KPI
+  semantic model and dashboards (fight rate, win rate, net recovery,
+  accept-liability share, monitoring-program mix), network-rule grounding
+  memories, and order-anomaly + win-likelihood training pipelines.
+categories: [payments, merchants, chargebacks, representment, fraud]
+regulatory: [visa_rules, mastercard_rules]
+components:
+  datasets:
+    - { file: "data/datasets.yaml", identity: "datasets" }
+  semantic_models:
+    - { file: "semantic/representment_core.yaml", identity: "representment_core" }
+  verified_queries:
+    - { file: "queries/verified.yaml", identity: "canonical_questions" }
+  saved_queries:
+    - { file: "queries/saved.yaml", identity: "saved_queries" }
+  dashboards:
+    - { file: "dashboards/chargeback_response_center.yaml", identity: "chargeback_response_center" }
+    - { file: "dashboards/win_rates_evidence.yaml", identity: "win_rates_evidence" }
+    - { file: "dashboards/program_health_thresholds.yaml", identity: "program_health_thresholds" }
+  dispositions:
+    - { file: "cases/dispositions.yaml", identity: "dispositions" }
+  cases:
+    - { file: "cases/queue.yaml", identity: "response_queue" }
+  roles:
+    - { file: "rbac/roles.yaml", identity: "roles" }
+  agent_configs:
+    - { file: "agents/configs.yaml", identity: "agent_configs" }
+  memories:
+    - { file: "memories/grounding.yaml", identity: "grounding" }
+  pipelines:
+    - { file: "pipelines/templates.yaml", identity: "pipelines" }
+deferred:
+  - kind: guardrails
+    reason: >-
+      Representment-domain policies (evidence packages may contain only
+      genuine verifiable records — never fabricated or inferred evidence; no
+      refund on an order with an open chargeback without the duplicate
+      check; no representment filing past the acquirer deadline; block-list
+      additions require a confirmed pattern, not a single suspicion) require
+      guardrail-service / OPA policy materialization, which Core does not
+      expose as a pack surface yet. The behavioral core is partially covered
+      today by Core invariants: every pack-configured agent is proposal-mode
+      with four-eyes approval (agent-runtime), and the agent instructions +
+      disposition taxonomy route filings, refunds, and escalations
+      exclusively to human analysts with the Dispute Program Manager as
+      approver.
+  - kind: agent_recipes
+    reason: >-
+      Bespoke LangGraph recipes (Representment Package Builder, CE 3.0
+      Qualifier, Fight/Accept Economics Router, Pre-Arbitration Advisor,
+      Friendly-Fraud Pattern Miner) require agent-runtime graph-module
+      registration (BRD 23 BR-12). This pack specializes the existing
+      case-triage + analytics agents via TenantAgentConfig prompt_params +
+      tenant-scope RAG grounding instead.
+  - kind: connection_templates
+    reason: >-
+      Production read connectors (PSP/acquirer dispute APIs and webhook
+      feeds; network dispute rails via the acquirer — Visa Resolve Online,
+      Mastercom; pre-dispute alert rails — Verifi RDR/Order Insight,
+      Ethoca-style alert feeds; order-management/OMS and e-commerce
+      platforms; carrier tracking APIs for delivery-confirmation evidence;
+      device-fingerprint/antifraud platforms for CE 3.0 elements) require
+      customer credentials and pack-service connector materialization. The
+      pack ships seed datasets in the exact landing shape; production
+      connectors are configured through the product Data > Connections UI.
+  - kind: write_adapters
+    reason: >-
+      Write adapters (submit representment/second presentment via the
+      PSP/acquirer API, accept liability, issue the refund on the commerce
+      platform, respond to pre-dispute alerts, accept or continue
+      pre-arbitration, add a customer to the block-list) execute only behind
+      pack-service's materialization contract and customer credentials;
+      every such write stays proposal-mode with human approval — no
+      autonomous filing, refund, or block-list mutation, ever.
+  - kind: eval_sets
+    reason: >-
+      Golden eval sets (fight/accept triage, reason-code evidence matching,
+      CE 3.0 qualification detection, duplicate/alert-refund detection,
+      pre-arb economics ranking) require eval-service write APIs whose
+      action names are not yet in the rbac canonical catalog (Core follow-up
+      noted in rbac catalog.go).
+  - kind: ontology
+    reason: >-
+      Ontology registration (Merchant, Customer, Order, Payment, Chargeback,
+      ReasonCode, Representment, PreArbitration, EvidencePackage,
+      PreDisputeAlert, BlockListEntry, MonitoringProgramStatus) awaits
+      pack-service; entity semantics are carried today by the
+      representment_core semantic model and dataset schemas.
+  - kind: case_schemas
+    reason: >-
+      Typed case schemas (chargeback_response, evidence_assembly,
+      pre_arbitration_review, friendly_fraud_review, alert_deduplication)
+      await case-service schema materialization; today's cases carry the
+      same fields via display_projection + the disposition taxonomy.
+  - kind: model_archetypes
+    reason: >-
+      Model archetypes (representment_win_probability,
+      friendly_fraud_score) await experiment-service archetype APIs; the
+      scoring capability ships as pipeline seeds instead (isolation_forest
+      order anomaly + xgboost win-likelihood scorer) with model-governance
+      expectations noted in grounding memories.
+  - kind: display_labels
+    reason: >-
+      Display-label overlays ("Chargeback", "Representment", "Response due",
+      "CE 3.0 qualified", "Below fight threshold", entity templates) require
+      the BFF label-registry endpoints (BFF-FR-082/088) which are
+      pack-service-tier features.

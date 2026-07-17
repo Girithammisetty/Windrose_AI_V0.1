@@ -1,0 +1,56 @@
+[project]
+name = "inference-service"
+version = "0.1.0"
+description = "Windrose inference-service: batch scoring jobs, schema-compat validation, scheduled scoring, lineage"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "sqlalchemy[asyncio]>=2.0.30",
+    "asyncpg>=0.29",
+    "alembic>=1.13",
+    "pydantic>=2.7",
+    "pydantic-settings>=2.3",
+    "pandas>=2.2",
+    "pyarrow>=23.0.1",
+    "numpy>=1.26,<2.2",
+    "pyjwt[crypto]>=2.8",
+    "httpx>=0.27",
+    "psycopg[binary]>=3.1",
+    "croniter>=3.0",
+    # real ML model registry + model loading/scoring (MLflow server + sklearn flavor)
+    "mlflow>=3.11,<4",
+    "scikit-learn>=1.4",
+    "windrose-common",
+]
+
+[tool.uv.sources]
+windrose-common = { path = "../../libs/py-common", editable = true }
+
+[dependency-groups]
+dev = [
+    "pytest>=8.2",
+    "pytest-asyncio>=0.23",
+    "testcontainers[postgres]>=4.5",
+    "ruff>=0.5",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+pythonpath = ["."]
+testpaths = ["tests"]
+markers = [
+    "integration: requires the local dev infra (docker-compose.dev.yml) and/or Docker; auto-skips when unreachable",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+ignore = ["B008"]  # FastAPI Depends() in defaults

@@ -1,0 +1,17 @@
+# Pipeline seeds (expressed against the real pipeline-orchestrator algorithm
+# catalog): an unsupervised listing-anomaly detector (deep-discount /
+# image-reuse / ring-surface scan over the listing book) and a supervised
+# review-outcome scorer trained on human dispositions (the
+# deterministic-first pre-router for vetting triage). Trained models require
+# review before promotion — the Marketplace Trust Manager approves
+# promotions.
+- identity: sv_listing_anomaly_isolation_forest
+  name: "Listing anomaly detector (isolation forest)"
+  algorithm: isolation_forest
+  mode: train
+  dataset: sv_listings
+- identity: sv_review_outcome_xgboost
+  name: "Review outcome scorer (xgboost)"
+  algorithm: xgboost
+  mode: train
+  dataset: sv_reviews

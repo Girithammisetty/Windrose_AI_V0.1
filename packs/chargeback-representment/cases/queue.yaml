@@ -1,0 +1,71 @@
+# Seeded chargeback-response queue: the OPEN chargebacks from the seed
+# dataset become cases so an analyst logging in sees a real, pattern-diverse
+# worklist on day one — a CE 3.0-qualified CNP fraud claim, a delivery-
+# confirmed not-received claim on a tight deadline, a weak not-as-described
+# claim where accepting is cheaper, a serial friendly-fraudster's fourth
+# chargeback, an issuer pre-arbitration on a big-ticket win, and a duplicate
+# chargeback already refunded through a pre-dispute alert. due_days=4 keeps
+# triage ahead of the tightest acquirer response deadlines on the open book.
+dataset: mr_chargebacks
+due_days: 4
+rows:
+  - row_pk: MR-5002
+    severity: high
+    display_projection:
+      chargeback_id: MR-5002
+      customer: "Rosa Camacho (CU-3012)"
+      reason_code: "13.1"
+      reason_family: consumer_dispute
+      amount: "486.30"
+      days_to_deadline: "6"
+      note: "Visa 13.1 'merchandise not received' on ORD-9022 ($486.30, home goods): carrier shows signed delivery confirmation to the AVS-matched shipping address — the canonical 13.1 winner. Response deadline in 6 days; assemble POD + AVS/CVV match + order/shipping records and represent. Same evidence profile won MR-4003 and MR-4017"
+  - row_pk: MR-5005
+    severity: high
+    display_projection:
+      chargeback_id: MR-5005
+      customer: "Amara Diallo (CU-3006)"
+      reason_code: "4853"
+      reason_family: consumer_dispute
+      amount: "1980.00"
+      days_to_deadline: "4"
+      note: "Issuer pre-arbitration on ORD-9025 ($1,980 electronics) — our second presentment initially prevailed and the issuer has now escalated with new cardholder documentation. 4 days to respond: big ticket + strong original evidence (delivery confirmed, device match) supports continuing, but weigh pre-arb/arbitration fees and the loss precedent MR-4015 before committing — Dispute Program Manager sign-off required"
+  - row_pk: MR-5004
+    severity: high
+    display_projection:
+      chargeback_id: MR-5004
+      customer: "Devon Marsh (CU-3002)"
+      reason_code: "4837"
+      reason_family: fraud
+      amount: "342.80"
+      days_to_deadline: "11"
+      note: "Fourth chargeback in 12 months from Devon Marsh (prior_chargebacks_band 3_plus): MR-4007 won on delivery + device evidence, MR-4016 lost on weak docs. This 4837 'no authorization' claim on ORD-9024 has device match + delivery confirmation to the address on file — fight with the full pattern history AND flag for block-list/prevention; each claim still stands on its own evidence"
+  - row_pk: MR-5001
+    severity: medium
+    display_projection:
+      chargeback_id: MR-5001
+      customer: "Talia Brooks (CU-3001)"
+      reason_code: "10.4"
+      reason_family: fraud
+      amount: "749.00"
+      days_to_deadline: "25"
+      note: "Visa 10.4 CNP fraud claim on ORD-9021 ($749 electronics) with three prior undisputed orders on the same device fingerprint and shipping address (ORD-9026, ORD-9027, ORD-9028) — assemble the Compelling Evidence 3.0 qualification package and confirm the priors fall inside the 120-365-day qualifying window before filing; CE 3.0-qualified responses shift liability back to the issuer"
+  - row_pk: MR-5003
+    severity: medium
+    display_projection:
+      chargeback_id: MR-5003
+      customer: "Jonas Bergqvist (CU-3011)"
+      reason_code: "13.3"
+      reason_family: consumer_dispute
+      amount: "64.50"
+      days_to_deadline: "14"
+      note: "Visa 13.3 'not as described' on ORD-9023 ($64.50 apparel, marketplace): only evidence is low-quality product photos and no documented refund-policy disclosure at checkout — weak file, below the fight-economics threshold (network + operational fees exceed expected recovery). Recommend accept liability + refund; log the listing-quality gap for the marketplace channel"
+  - row_pk: MR-5006
+    severity: medium
+    display_projection:
+      chargeback_id: MR-5006
+      customer: "Noor Rahimi (CU-3008)"
+      reason_code: "4834"
+      reason_family: processing_error
+      amount: "58.20"
+      days_to_deadline: "16"
+      note: "Second chargeback on ORD-9005 ($58.20 beauty) — MR-4005 on the same order was already resolved via an Ethoca-style pre-dispute alert refund in March. Verify the refund ARN/credit posting, respond with the duplicate/already-credited evidence, and close; never issue a second refund on top of a chargeback (double-loss trap)"

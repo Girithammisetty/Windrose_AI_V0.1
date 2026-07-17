@@ -1,0 +1,27 @@
+# Pack datasets (ingestion-service file_upload, stable names for idempotency).
+# In production these tables arrive via the owner's/GC's project-controls and
+# ERP connectors (deferred until pack-service ships connector
+# materialization); this seed data is REAL rows in the same landing shape,
+# encoding genuine construction-claim patterns so every downstream component
+# runs against real signal from day one: an owner-furnished-equipment delay
+# claim with concurrent contractor delay (TIA requested), a differing-site-
+# conditions rock claim with a boring-log dispute, a change-order request
+# priced ~3x the trade's measured-mile norm, a total-cost productivity claim
+# awaiting substantiation, a roofing defect backcharge with a surety notice
+# pending, and a pay-if-paid payment dispute. Chain shape:
+# cc_claims (main work items) -> cc_contracts (contract book; claim_month is
+# the earliest claim-activity month under the contract, `none` when the
+# contract has no claims) -> cc_parties (subcontractor/supplier/GC/owner-rep
+# register).
+- identity: cc_claims
+  name: cc-claims
+  file: data/cc_claims.csv
+  format: csv
+- identity: cc_contracts
+  name: cc-contracts
+  file: data/cc_contracts.csv
+  format: csv
+- identity: cc_parties
+  name: cc-parties
+  file: data/cc_parties.csv
+  format: csv

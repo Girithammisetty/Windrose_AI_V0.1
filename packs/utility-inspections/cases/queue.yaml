@@ -1,0 +1,76 @@
+# Seeded inspection-triage queue: the OPEN findings from the seed dataset
+# become cases so an analyst logging in sees a real, pattern-diverse worklist
+# on day one — Tier-3 HFTD thermal hotspot, drone-AI shadow artifact,
+# Grade-2-style leak in its window, vegetation cluster on a PSPS-history
+# circuit, 1960s cast-iron corrosion, and a repeat hotspot after a prior
+# monitor decision. due_days=3 keeps triage inside the 2-3 day make-safe
+# deadlines on the tightest Tier-3 rows.
+dataset: ui_findings
+due_days: 3
+rows:
+  - row_pk: FND-9001
+    severity: high
+    display_projection:
+      finding_id: FND-9001
+      asset: "AST-422 transformer (Ridgeline Foothill 12kV, CKT-309)"
+      finding_type: thermal_hotspot
+      detection_source: drone_ai
+      risk_zone: hftd_tier3
+      est_repair_cost: "18500.00"
+      days_to_deadline: "2"
+      note: "Drone-AI thermal survey flagged a hotspot on transformer AST-422 at 0.94 confidence — a critical-tier 1980s unit on CKT-309, a Tier-3 HFTD circuit with PSPS history and bottom-quartile reliability. Immediate-dispatch candidate: make-safe deadline in 2 days, and a Tier-3 thermal signature on aging oil-filled equipment is exactly the pre-ignition profile the wildfire-mitigation plan commits us to clear before fire season"
+  - row_pk: FND-9002
+    severity: medium
+    display_projection:
+      finding_id: FND-9002
+      asset: "AST-414 pole (Almond Junction 12kV, CKT-305)"
+      finding_type: equipment_damage
+      detection_source: drone_ai
+      risk_zone: standard
+      est_repair_cost: "4200.00"
+      days_to_deadline: "12"
+      note: "Drone-AI reports crossarm damage on pole AST-414 at only 0.58 confidence — low-sun imagery angle matches the shadow-artifact signature behind prior false detections FND-8003, FND-8007 and FND-8013 (all closed close_false_detection at 0.52-0.61 confidence). Standard zone, 12-day runway: request field verification rather than dispatch, and log the crew outcome as a detector-retraining label either way"
+  - row_pk: FND-9003
+    severity: medium
+    display_projection:
+      finding_id: FND-9003
+      asset: "AST-429 pipeline segment (Metro Gas District 3, CKT-312)"
+      finding_type: leak_indication
+      detection_source: foot_patrol
+      risk_zone: standard
+      est_repair_cost: "9600.00"
+      days_to_deadline: "21"
+      note: "Foot-patrol instrument survey confirmed a non-hazardous gas reading on 1990s coated-steel segment AST-429 — Grade-2-style: no immediate hazard, but justifies scheduled repair inside the program window (21 days of runway remain). Same segment drew a trace odor customer report in May (FND-8015, routed to field verification); recommend schedule_planned_work with the re-check cadence documented in the note"
+  - row_pk: FND-9004
+    severity: high
+    display_projection:
+      finding_id: FND-9004
+      asset: "AST-408 pole (Madrone Ridge 21kV, CKT-303)"
+      finding_type: vegetation_encroachment
+      detection_source: lidar
+      risk_zone: hftd_tier2
+      est_repair_cost: "7500.00"
+      days_to_deadline: "3"
+      note: "LiDAR sweep shows a clearance-deficit cluster around pole AST-408 on CKT-303 — a Tier-2 HFTD, PSPS-history circuit where the adjacent span AST-409 already needed a trim in April (FND-8006). Fast-growth species inside minimum clearance at 0.91 confidence: immediate vegetation-crew dispatch candidate with a 3-day deadline; clearing it is what keeps PSPS the last resort on this circuit"
+  - row_pk: FND-9005
+    severity: medium
+    display_projection:
+      finding_id: FND-9005
+      asset: "AST-427 pipeline segment (Sierra Gas District 11, CKT-311)"
+      finding_type: corrosion
+      detection_source: foot_patrol
+      risk_zone: hftd_tier2
+      est_repair_cost: "46000.00"
+      days_to_deadline: "30"
+      note: "External corrosion confirmed on AST-427, a critical-tier 1960s cast-iron segment more than 3 years past its last full inspection; June coating-anomaly check FND-8019 on the same segment was already routed to field verification. No immediate hazard, but legacy cast iron is a recognized integrity-management threat: recommend schedule_planned_work with engineering review to scope segment replacement ($46,000 est.) — a deferral here needs a documented risk-based rationale"
+  - row_pk: FND-9006
+    severity: high
+    display_projection:
+      finding_id: FND-9006
+      asset: "AST-405 conductor splice (Bear Hollow 12kV, CKT-302)"
+      finding_type: thermal_hotspot
+      detection_source: infrared
+      risk_zone: hftd_tier3
+      est_repair_cost: "12800.00"
+      days_to_deadline: "3"
+      note: "REPEAT hotspot on the same conductor splice AST-405: April infrared read was closed close_monitored_stable (FND-8010, 0.77 confidence), and the re-fly now shows the signature back at 0.89 — a worsening trend on a critical-tier splice in a Tier-3 HFTD with PSPS history. A second monitor decision is not defensible; escalate to immediate dispatch inside the 3-day deadline and cite FND-8010 in the decision record"

@@ -1,0 +1,71 @@
+# Seeded trade-compliance review queue: the OPEN review items from the seed
+# dataset become cases so an analyst logging in sees a real, pattern-diverse
+# worklist on day one — a repeat tariff-engineering reclassification attempt,
+# an SDN fuzzy match at 0.88 with distinguishing evidence pending, an Entity
+# List match on a new re-export consignee, a misdeclared-origin transshipment
+# suspicion, a high-duty-delta classification on a new product line, and a
+# dual-use license-determination question. due_days=4 keeps triage inside the
+# tightest hold/release windows on the 0_5_days rows.
+dataset: tc_review_items
+due_days: 4
+rows:
+  - row_pk: TC-5001
+    severity: high
+    display_projection:
+      review_id: TC-5001
+      importer: "Veridian Home Goods (P-3003)"
+      item_type: hs_classification
+      declared_hs_chapter: "39"
+      valuation_band: 50k_250k
+      days_to_deadline: "4"
+      note: "Declared chapter 39 'plastic furniture components' on SHP-6015 but the commercial invoice line reads 'steel-frame upholstered office chair kits'; the identical product line was already reclassified 39->94 on TC-4007 (SHP-6012, corrected entry filed 2026-04). A second entry at the lower-duty chapter after a documented correction is a reasonable-care / 19 USC 1592 exposure — reclassify, and assess whether a prior disclosure covering intervening entries is warranted"
+  - row_pk: TC-5002
+    severity: high
+    display_projection:
+      review_id: TC-5002
+      supplier: "Altay Instruments LLC (P-3009)"
+      item_type: screening_alert
+      screening_list: sdn
+      match_score: "0.88"
+      days_to_deadline: "3"
+      note: "SDN fuzzy match 0.88 on supplier Altay Instruments LLC (P-3009, TR) for SHP-6011 against a similarly named SDN-listed entity. Two prior alerts on this supplier were released on address and trade-registry divergence (TC-4010 at 0.79, TC-4013 at 0.81) — this score is materially higher and the distinguishing evidence (registry extract, beneficial-ownership attestation for the OFAC 50% rule) is still pending. Hold the release decision until adjudicated; never clear on alert history alone"
+  - row_pk: TC-5003
+    severity: high
+    display_projection:
+      review_id: TC-5003
+      consignee: "Gulf Horizon Electronics FZE (P-3010)"
+      item_type: screening_alert
+      screening_list: entity_list
+      match_score: "0.93"
+      days_to_deadline: "2"
+      note: "BIS Entity List match 0.93 on Gulf Horizon Electronics FZE (P-3010, AE) — a brand-new consignee named on the planned re-export leg (AEJEA) of SHP-6010; no prior screening history with this party. Entity List entries carry EAR license requirements, frequently with a presumption of denial — verify the specific entry's license requirement, obtain end-use/end-user statements, and treat as hold/escalate, not release"
+  - row_pk: TC-5004
+    severity: high
+    display_projection:
+      review_id: TC-5004
+      importer: "SunPath Solar Distributors (P-3004)"
+      item_type: hs_classification
+      origin_country: MY
+      valuation_band: over_250k
+      days_to_deadline: "9"
+      note: "Origin declared MY on SHP-6019 (USD 276,400 solar modules) but upstream documents reference CN-origin cells, and the supplier facility's stated capacity is inconsistent with the volume shipped across SHP-6016/6018/6019 — transshipment / substantial-transformation question with duty exposure at anti-dumping scale. Mill certificates and production records requested; note the VN-lane origin claim verified clean with full records on TC-4009 as the documentation benchmark"
+  - row_pk: TC-5005
+    severity: medium
+    display_projection:
+      review_id: TC-5005
+      importer: "Keystone Industrial Imports (P-3001)"
+      item_type: hs_classification
+      declared_hs_chapter: "84"
+      valuation_band: 50k_250k
+      days_to_deadline: "16"
+      note: "New product line 'smart sortation units with integrated vision control' entered duty-free under chapter 84 on SHP-6005 (USD 143,750, recurring CN-LAX lane); the integrated control cabinets may be separately classifiable in chapter 85 at a higher rate with CN Section 301 exposure — a high duty delta if the functional-unit analysis fails. Run the GRI 1 heading-terms analysis first and consider a binding-ruling request before the next entry on this line"
+  - row_pk: TC-5006
+    severity: medium
+    display_projection:
+      review_id: TC-5006
+      supplier: "Halstrom Precision GmbH (P-3012)"
+      item_type: hs_classification
+      declared_hs_chapter: "85"
+      valuation_band: 50k_250k
+      days_to_deadline: "12"
+      note: "Infrared thermal camera modules from Halstrom Precision GmbH (P-3012) on SHP-6004: the duty classification is not in question, but the resolution/frame-rate spec sheet raises a dual-use export-control (ECCN) question for any re-export or deemed-export exposure once integrated. Escalate for a license determination before release to the integration line, and capture the ECCN determination and its rationale in the record"

@@ -1,0 +1,17 @@
+# Pipeline seeds (expressed against the real pipeline-orchestrator algorithm
+# catalog): an unsupervised shipment-anomaly detector (double-broker /
+# staged-loss / repeat-claim surface scan over the shipment book) and a
+# supervised claim-outcome scorer trained on human dispositions (the
+# deterministic-first pre-router for claim intake triage). Trained models
+# require review before promotion — the Claims & Safety Manager approves
+# promotions.
+- identity: tl_shipment_anomaly_isolation_forest
+  name: "Shipment anomaly detector (isolation forest)"
+  algorithm: isolation_forest
+  mode: train
+  dataset: tl_shipments
+- identity: tl_claim_outcome_xgboost
+  name: "Claim outcome scorer (xgboost)"
+  algorithm: xgboost
+  mode: train
+  dataset: tl_claims

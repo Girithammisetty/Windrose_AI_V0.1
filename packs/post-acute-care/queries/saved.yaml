@@ -1,0 +1,29 @@
+# Saved queries (query-service) — the readmission watchlist the care team
+# works daily (US-7/BR-7: prioritization only) and the referral-flow edge
+# source for network-family charts.
+- identity: readmission_watchlist
+  name: "Post-acute: active-episode readmission watchlist"
+  description: >-
+    Active episodes ranked by 30-day rehospitalization risk score — the
+    care-team prioritization worklist (BR-7: never used for care denial or
+    discharge decisions).
+  sql: >-
+    SELECT episode_id, patient_id, care_setting, facility,
+           primary_dx_code, primary_dx_desc,
+           cast(readmission_risk_score AS double) AS risk_score,
+           cast(los_days AS double) AS los_days
+    FROM {{dataset('pac-episodes')}}
+    WHERE episode_status = 'active'
+    ORDER BY risk_score DESC
+  tags: [post-acute, readmissions, risk, pack]
+- identity: referral_flow_edges
+  name: "Post-acute: referral flow hospital to setting"
+  description: >-
+    Referral counts by (referring hospital -> requested setting) — edge list
+    for network-family charts and ad-hoc intake-flow analysis.
+  sql: >-
+    SELECT referring_hospital AS parent, requested_setting AS child,
+           count(*) AS n
+    FROM {{dataset('pac-referrals')}}
+    GROUP BY referring_hospital, requested_setting
+  tags: [post-acute, referrals, network, pack]

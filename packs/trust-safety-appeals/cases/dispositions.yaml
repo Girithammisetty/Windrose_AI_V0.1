@@ -1,0 +1,14 @@
+# Disposition taxonomy for the appeals-adjudication workflow. Categories are
+# the Core's closed set {true_positive,false_positive,benign,inconclusive,
+# other} (CASE-FR-020). overturn_restore confirms an enforcement error (the
+# appeal was right — true positive of the appeals process); uphold_enforcement
+# is an appeal without merit; partial_modify_action is the proportionality
+# adjustment (action reduced/changed, not reversed); escalate_policy_team
+# routes policy-gap and precedent questions to policy owners; the note behind
+# every determination feeds the statement-of-reasons the appellant receives
+# and the label that retrains the enforcement classifier.
+- { code: overturn_restore,      label: "Overturn — enforcement error confirmed, restore content/account", category: true_positive,  requires_note: true }
+- { code: uphold_enforcement,    label: "Uphold — appeal without merit, enforcement stands",                category: false_positive, requires_note: true }
+- { code: partial_modify_action, label: "Partial — modify the enforcement action (proportionality)",       category: other,          requires_note: true }
+- { code: escalate_policy_team,  label: "Escalate to policy team (policy gap / precedent question)",       category: inconclusive,   requires_note: true }
+- { code: close_duplicate_appeal, label: "Close — duplicate of an existing appeal on this decision",       category: benign,         requires_note: true }

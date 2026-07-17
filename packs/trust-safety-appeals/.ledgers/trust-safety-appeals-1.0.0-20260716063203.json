@@ -1,0 +1,315 @@
+{
+  "pack": "trust-safety-appeals",
+  "version": "1.0.0",
+  "workspace_id": "019f6a74-f6ce-7b1b-8194-07c91989d7dd",
+  "tenant_id": "019f6a74-f27f-72f1-9489-932d4d188e80",
+  "started_at": "2026-07-16T10:31:53Z",
+  "finished_at": "2026-07-16T10:32:03Z",
+  "actions": [
+    {
+      "kind": "datasets",
+      "identity": "ts_appeals",
+      "action": "noop",
+      "urn": "wr:019f6a74-f27f-72f1-9489-932d4d188e80:dataset:dataset/019f6a74-fa38-72c6-93ce-a2c1089c8b34",
+      "detail": "dataset 'ts-appeals' exists"
+    },
+    {
+      "kind": "datasets",
+      "identity": "ts_enforcements",
+      "action": "noop",
+      "urn": "wr:019f6a74-f27f-72f1-9489-932d4d188e80:dataset:dataset/019f6a74-fbb1-7812-9ac2-1297573f3a0a",
+      "detail": "dataset 'ts-enforcements' exists"
+    },
+    {
+      "kind": "datasets",
+      "identity": "ts_accounts",
+      "action": "create",
+      "urn": "wr:019f6a74-f27f-72f1-9489-932d4d188e80:dataset:dataset/019f6a7b-9d8a-7c92-80f7-269996d5a328",
+      "detail": "'ts-accounts' ingested rows=12 snapshot=2137717625079129457"
+    },
+    {
+      "kind": "semantic_models",
+      "identity": "appeals_core",
+      "action": "create",
+      "urn": "wr:019f6a74-f27f-72f1-9489-932d4d188e80:semantic:model/019f6a7b-a004-7cdc-a8cb-488c8f95569c",
+      "detail": "'appeals_core' published"
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_0",
+      "action": "create",
+      "urn": "wr:019f6a74-f27f-72f1-9489-932d4d188e80:semantic:verified_query/019f6a7b-a99b-75da-914b-1d4a9285ae6c",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_1",
+      "action": "create",
+      "urn": "wr:019f6a74-f27f-72f1-9489-932d4d188e80:semantic:verified_query/019f6a7b-aa75-743d-ab36-3808730a5835",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_2",
+      "action": "create",
+      "urn": "wr:019f6a74-f27f-72f1-9489-932d4d188e80:semantic:verified_query/019f6a7b-ab49-711f-a653-e848f8222a07",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_3",
+      "action": "create",
+      "urn": "wr:019f6a74-f27f-72f1-9489-932d4d188e80:semantic:verified_query/019f6a7b-ac13-76a8-9284-4f0db9af650f",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_4",
+      "action": "create",
+      "urn": "wr:019f6a74-f27f-72f1-9489-932d4d188e80:semantic:verified_query/019f6a7b-acdc-7bbb-aac8-4a081546b5c9",
+      "detail": ""
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "ts_enforcement_edges",
+      "action": "create",
+      "urn": "wr:019f6a74-f27f-72f1-9489-932d4d188e80:query:query/019f6a7b-ad88-7128-8bcf-505e872419d1",
+      "detail": "Appeals: account-enforcement network edges"
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "ts_priority_open_appeals",
+      "action": "create",
+      "urn": "wr:019f6a74-f27f-72f1-9489-932d4d188e80:query:query/019f6a7b-add4-7119-b6c5-814c1f95a5e4",
+      "detail": "Appeals: deadline-ranked open queue"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "appeals_command_center",
+      "action": "create",
+      "urn": "wr:019f6a74-f27f-72f1-9489-932d4d188e80:chart:dashboard/019f6a7b-ae39-74da-ab99-8baafdffa7be",
+      "detail": "Appeals Command Center"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "appeals_command_center",
+      "action": "verify",
+      "urn": "wr:019f6a74-f27f-72f1-9489-932d4d188e80:chart:dashboard/019f6a7b-ae39-74da-ab99-8baafdffa7be",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "overturn_classifier_quality",
+      "action": "create",
+      "urn": "wr:019f6a74-f27f-72f1-9489-932d4d188e80:chart:dashboard/019f6a7b-b04f-79a8-b055-1f0d198970d0",
+      "detail": "Overturn & Classifier Quality"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "overturn_classifier_quality",
+      "action": "verify",
+      "urn": "wr:019f6a74-f27f-72f1-9489-932d4d188e80:chart:dashboard/019f6a7b-b04f-79a8-b055-1f0d198970d0",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "dsa_compliance_transparency",
+      "action": "create",
+      "urn": "wr:019f6a74-f27f-72f1-9489-932d4d188e80:chart:dashboard/019f6a7b-b23b-792f-ac9b-9333eac6def0",
+      "detail": "DSA Compliance & Transparency"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "dsa_compliance_transparency",
+      "action": "verify",
+      "urn": "wr:019f6a74-f27f-72f1-9489-932d4d188e80:chart:dashboard/019f6a7b-b23b-792f-ac9b-9333eac6def0",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "overturn_restore"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "uphold_enforcement"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "partial_modify_action"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "escalate_policy_team"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "close_duplicate_appeal"
+    },
+    {
+      "kind": "cases",
+      "identity": "appeals_queue",
+      "action": "create",
+      "urn": "wr:019f6a74-f27f-72f1-9489-932d4d188e80:dataset:dataset/019f6a74-fa38-72c6-93ce-a2c1089c8b34",
+      "detail": "6 open cases (reindexed)"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Appeals Reviewer'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Appeals Reviewer' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Senior Policy Reviewer'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Senior Policy Reviewer' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Escalations Specialist'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Escalations Specialist' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Appeals Operations Manager'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Appeals Operations Manager' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Transparency & Audit Lead'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Transparency & Audit Lead' bound to permission group"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "case-triage prompt_params set"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "analytics prompt_params set"
+    },
+    {
+      "kind": "memories",
+      "identity": "grounding",
+      "action": "create",
+      "urn": null,
+      "detail": "10 grounding records written, 0 already present"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "create",
+      "urn": null,
+      "detail": "'Enforcement decision anomaly detector (isolation forest)' (isolation_forest, train)"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "create",
+      "urn": null,
+      "detail": "'Appeal outcome scorer (xgboost)' (xgboost, train)"
+    }
+  ],
+  "deferred": [
+    {
+      "kind": "guardrails",
+      "reason": "Appeals-domain policies (no outcome promised to an appellant before the human determination; statements of reasons must cite the actual findings; no complaint decision taken solely by automated means \u2014 DSA Art. 20; report-count evidence never substitutes for content assessment; outcome-disparity watch across user groups and geographies) require guardrail-service / OPA policy materialization, which Core does not expose as a pack surface yet. The behavioral core is partially covered today by Core invariants: every pack-configured agent is proposal-mode with four-eyes approval (agent-runtime), and the agent instructions + disposition taxonomy route final determinations exclusively to human reviewers with the Appeals Operations Manager as approver."
+    },
+    {
+      "kind": "agent_recipes",
+      "reason": "Bespoke LangGraph recipes (Appeal Intake Copilot, Statement-of-Reasons Drafter, Brigading/Report-Integrity Screener, Complaint-Deadline Sentinel) require agent-runtime graph-module registration (BRD 23 BR-12). This pack specializes the existing case-triage + analytics agents via TenantAgentConfig prompt_params + tenant-scope RAG grounding instead."
+    },
+    {
+      "kind": "connection_templates",
+      "reason": "Production read connectors (moderation/enforcement platforms and queues, classifier scoring stores, user-report pipelines, identity and session-anomaly systems for compromised-account evidence, brand-rights registries for counterfeit authorization checks, out-of-court dispute settlement body intake feeds) require customer credentials and pack-service connector materialization. The pack ships seed datasets in the exact landing shape; production connectors are configured through the product Data > Connections UI."
+    },
+    {
+      "kind": "write_adapters",
+      "reason": "Write adapters (restore content or account on the enforcement system, lift or modify an enforcement action, expunge strikes from a compromise window, send the statement-of-reasons / appeal-outcome notice, route corrected labels into classifier retraining sets) execute only behind pack-service's materialization contract and customer credentials; every such write stays proposal-mode with human approval \u2014 no autonomous restoration, removal, or strike change, ever."
+    },
+    {
+      "kind": "eval_sets",
+      "reason": "Golden eval sets (appeal triage, counter-speech/satire false-positive detection, brigading-signal ranking, duplicate-appeal detection) require eval-service write APIs whose action names are not yet in the rbac canonical catalog (Core follow-up noted in rbac catalog.go)."
+    },
+    {
+      "kind": "ontology",
+      "reason": "Ontology registration (Account, Content, EnforcementDecision, Policy, PolicyVersion, Appeal, Report, Reporter, Strike, StatementOfReasons, ComplaintClock, ODSReferral) awaits pack-service; entity semantics are carried today by the appeals_core semantic model and dataset schemas."
+    },
+    {
+      "kind": "case_schemas",
+      "reason": "Typed case schemas (appeal_review, policy_escalation, report_integrity_review, compromised_account_review, duplicate_appeal_check) await case-service schema materialization; today's cases carry the same fields via display_projection + the disposition taxonomy."
+    },
+    {
+      "kind": "model_archetypes",
+      "reason": "Model archetypes (appeal_overturn_likelihood, brigading_risk_score) await experiment-service archetype APIs; the scoring capability ships as pipeline seeds instead (isolation_forest enforcement anomaly + xgboost appeal-outcome scorer) with model-governance expectations noted in grounding memories."
+    },
+    {
+      "kind": "display_labels",
+      "reason": "Display-label overlays (\"Appeal\", \"Enforcement decision\", \"Statement of reasons due\", \"Deadline at risk\", entity templates) require the BFF label-registry endpoints (BFF-FR-082/088) which are pack-service-tier features."
+    }
+  ],
+  "result": "installed"
+}

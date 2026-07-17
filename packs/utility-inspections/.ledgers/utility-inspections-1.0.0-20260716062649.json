@@ -1,0 +1,70 @@
+{
+  "pack": "utility-inspections",
+  "version": "1.0.0",
+  "workspace_id": "019f6a76-aa06-7651-a05d-9fb19f6f1d05",
+  "tenant_id": "019f6a76-a5cc-76ed-8ca8-16f06be4e3ce",
+  "started_at": "2026-07-16T10:26:30Z",
+  "finished_at": "2026-07-16T10:26:49Z",
+  "actions": [
+    {
+      "kind": "datasets",
+      "identity": "ui_circuits",
+      "action": "failed",
+      "urn": null,
+      "detail": "complete 500: {\"error\":{\"code\":\"INTERNAL\",\"message\":\"internal error\",\"trace_id\":\"019f6a76-ad76-7362-9862-206ac244dbf5\"}}"
+    },
+    {
+      "kind": "datasets",
+      "identity": "ui_assets",
+      "action": "failed",
+      "urn": null,
+      "detail": "complete 500: {\"error\":{\"code\":\"INTERNAL\",\"message\":\"internal error\",\"trace_id\":\"019f6a76-c695-790c-923d-e9fec2c5fc9f\"}}"
+    },
+    {
+      "kind": "datasets",
+      "identity": "ui_findings",
+      "action": "failed",
+      "urn": null,
+      "detail": "complete 500: {\"error\":{\"code\":\"INTERNAL\",\"message\":\"internal error\",\"trace_id\":\"019f6a76-df9f-7a3e-845d-0df197fc5d34\"}}"
+    }
+  ],
+  "deferred": [
+    {
+      "kind": "guardrails",
+      "reason": "Inspection-domain policies (no work order created, cancelled, or deferred without a human determination; deferrals must carry a documented engineering rationale and program window; a repeat finding on an asset with a prior monitor decision may never be re-monitored silently; pattern-of-deferral watch in Tier-3 HFTD zones) require guardrail-service / OPA policy materialization, which Core does not expose as a pack surface yet. The behavioral core is partially covered today by Core invariants: every pack-configured agent is proposal-mode with four-eyes approval (agent-runtime), and the agent instructions + disposition taxonomy route final repair/defer determinations exclusively to human analysts with the Asset Risk Manager as approver."
+    },
+    {
+      "kind": "agent_recipes",
+      "reason": "Bespoke LangGraph recipes (Finding Triage Copilot, Deadline & Make-Safe Sentinel, False-Detection Screener, Vegetation Clearance Planner, Deferral Rationale Builder) require agent-runtime graph-module registration (BRD 23 BR-12). This pack specializes the existing case-triage + analytics agents via TenantAgentConfig prompt_params + tenant-scope RAG grounding instead."
+    },
+    {
+      "kind": "connection_templates",
+      "reason": "Production read connectors (asset registries / GIS: Esri ArcGIS Utility Network-class systems; work management: Maximo/SAP PM-class EAM; drone/aerial-AI analytics platforms; LiDAR vegetation-analytics vendors; SCADA/historian feeds; leak-survey instrument exports) require customer credentials and pack-service connector materialization. The pack ships seed datasets in the exact landing shape; production connectors are configured through the product Data > Connections UI."
+    },
+    {
+      "kind": "write_adapters",
+      "reason": "Write adapters (create/schedule/close work orders in the EAM, dispatch field crews, update GIS asset condition records, file regulator notifications) execute only behind pack-service's materialization contract and customer credentials; every such write stays proposal-mode with human approval \u2014 no autonomous work-order creation, deferral, or crew dispatch, ever."
+    },
+    {
+      "kind": "eval_sets",
+      "reason": "Golden eval sets (finding triage, false-detection screening, deadline-risk ranking, deferral-rationale quality) require eval-service write APIs whose action names are not yet in the rbac canonical catalog (Core follow-up noted in rbac catalog.go)."
+    },
+    {
+      "kind": "ontology",
+      "reason": "Ontology registration (Asset, Circuit, District, Finding, Detection, WorkOrder, Deferral, RiskZone, InspectionCycle, LeakGrade, VegetationSpan, PSPSEvent) awaits pack-service; entity semantics are carried today by the inspections_core semantic model and dataset schemas."
+    },
+    {
+      "kind": "case_schemas",
+      "reason": "Typed case schemas (finding_triage, field_verification, leak_grading, vegetation_clearance, deferral_engineering_review) await case-service schema materialization; today's cases carry the same fields via display_projection + the disposition taxonomy."
+    },
+    {
+      "kind": "model_archetypes",
+      "reason": "Model archetypes (finding_disposition_confidence, detection_false_positive_score) await experiment-service archetype APIs; the scoring capability ships as pipeline seeds instead (isolation_forest asset-condition anomaly + xgboost finding-disposition scorer) with model-governance expectations noted in grounding memories."
+    },
+    {
+      "kind": "display_labels",
+      "reason": "Display-label overlays (\"Finding\", \"Make-safe deadline\", \"HFTD Tier 3\", \"Deferral pending engineering review\", entity templates) require the BFF label-registry endpoints (BFF-FR-082/088) which are pack-service-tier features."
+    }
+  ],
+  "result": "failed"
+}

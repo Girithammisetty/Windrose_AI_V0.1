@@ -1,0 +1,72 @@
+# Seeded vetting/enforcement queue: the OPEN reviews from the seed dataset
+# become cases so an analyst logging in sees a real, pattern-diverse worklist
+# on day one — a deep-discount luxury listing with reused stock images (test
+# buy in flight), a brand trademark claim against an apparently genuine
+# reseller (first-sale tension), a KYB banking-name mismatch on a high-GMV
+# new seller, a linked-account ring resurrecting a banned seller, a
+# safety-flagged toy listing, and a plan-of-action reinstatement request.
+# due_days=4 keeps triage inside the tightest response clocks on the open
+# book (1-3 days to deadline on three of the six rows).
+dataset: sv_reviews
+due_days: 4
+rows:
+  - row_pk: RV-9021
+    severity: high
+    display_projection:
+      review_id: RV-9021
+      seller: "GildedHour Boutique (S-3006)"
+      review_type: counterfeit_takedown
+      claim_basis: authenticity
+      gmv_at_risk: "17970.00"
+      days_to_deadline: "5"
+      note: "Listing L-6021: luxury handbag at $599 — roughly 70% below MSRP — with stock imagery reused from the brand's own site (image_reuse flag); seller is NEW, seller-fulfilled, KYB unverified. Same seller already lost L-6013 and L-6014 to confirmed-counterfeit removals (RV-9001, RV-9002 — RV-9002 on a failed test buy). Test buy on L-6021 ordered and in transit — hold enforcement for the authentication result unless the brand supplies direct evidence first"
+  - row_pk: RV-9022
+    severity: medium
+    display_projection:
+      review_id: RV-9022
+      seller: "TrueNorth Resale (S-3005)"
+      review_type: ip_infringement_claim
+      claim_basis: trademark
+      gmv_at_risk: "4650.00"
+      days_to_deadline: "2"
+      note: "Brand-owner trademark claim against L-6022, an apparently genuine resale: established US seller, market pricing, original photography, zero buyer complaints, and two prior claims by the same complainant against this seller already rejected for insufficient evidence (RV-9008, RV-9009). First-sale doctrine protects genuine-goods resale — require the claimant to evidence non-genuineness or a material difference; response clock at 2 days, do not default to takedown on claim volume alone"
+  - row_pk: RV-9023
+    severity: high
+    display_projection:
+      review_id: RV-9023
+      seller: "Kestrel Outlet Co (S-3002)"
+      review_type: onboarding_vetting
+      claim_basis: kyb_mismatch
+      gmv_at_risk: "11370.00"
+      days_to_deadline: "3"
+      note: "KYB re-screen on L-6023's seller: payout bank-account name no longer matches the registered entity after a June banking change — a high-GMV NEW seller that cleared initial verification in May (RV-9016). Two of its listings already carry deep-discount + complaint signals (L-6004 held for authenticity evidence in RV-9013, L-6006 flagged). INFORM-style verification clock running: obtain corrected banking/tax documentation or suspend selling privileges after notice"
+  - row_pk: RV-9024
+    severity: high
+    display_projection:
+      review_id: RV-9024
+      seller: "PrimeSpark Traders (S-3003)"
+      review_type: seller_fraud_alert
+      claim_basis: kyb_mismatch
+      gmv_at_risk: "9095.00"
+      days_to_deadline: "12"
+      note: "Ring-resurrection alert on L-6024: PrimeSpark (S-3003, new account) shares THREE attributes with suspended SwiftCart Global (S-3009, multiple prior violations, suspended via RV-9006/RV-9007) — payout bank account, warehouse address, and device fingerprint — and relists the same deep-discount electronics with reused images (L-6007, L-6008; L-6008 removed on a failed test buy, RV-9019). Three corroborated shared attributes meets the network-suspension evidence bar; assemble the linkage file for Trust Manager approval"
+  - row_pk: RV-9025
+    severity: high
+    display_projection:
+      review_id: RV-9025
+      seller: "PlayWorks Imports (S-3007)"
+      review_type: counterfeit_takedown
+      claim_basis: safety
+      gmv_at_risk: "1875.00"
+      days_to_deadline: "1"
+      note: "Safety-flagged toy listing L-6025: buyer reports of detachable small parts on a toy marketed for under-3s — high complaint band, 1 day to the takedown clock. Seller has a prior safety removal on L-6016 (RV-9005, April) and a later reinstatement of L-6015 with corrective documentation (RV-9018). Child-safety flags are enforce-first: propose immediate removal pending human approval; reinstatement can follow evidence, the listing must not stay live meanwhile"
+  - row_pk: RV-9026
+    severity: medium
+    display_projection:
+      review_id: RV-9026
+      seller: "Cobalt Peak Gear (S-3011)"
+      review_type: reinstatement_request
+      claim_basis: authenticity
+      gmv_at_risk: "6300.00"
+      days_to_deadline: "8"
+      note: "Reinstatement request for L-6026 after an authenticity suspension: seller submitted a plan of action (root cause: mixed-source inventory; corrective: single authorized distributor; preventive: per-batch invoice retention) plus supplier invoices that verify against the distributor. Sister listing L-6030 shows an elevated complaint band — condition reinstatement on invoice verification for BOTH listings and a monitored re-entry period; KYB is verified and the seller has one prior violation"

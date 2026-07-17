@@ -1,0 +1,95 @@
+# Tenant-scope RAG grounding records (memory-service). This is the Medicare
+# care-management domain knowledge the triage copilot retrieves when reasoning
+# about a case — CMS code-family rules (BRD 25 BR-3..BR-13), time thresholds,
+# mutual exclusions, TCM/RPM windows, FQHC and APCM overrides. Every record is
+# factual domain reference material.
+- content: >-
+    CCM time thresholds (CMS): CPT 99490 requires >= 20 minutes of
+    non-face-to-face clinical-staff care-management time per calendar month;
+    99439 is the additional 20-minute block (billable per extra 20 minutes
+    beyond the base, up to two units); 99487 complex CCM requires >= 60
+    minutes with moderate/high-complexity medical decision making; 99489 is
+    the complex add-on block; 99491 is physician/QHP-personal CCM at >= 30
+    minutes. Under-threshold months must be held, not billed.
+  tags: [cms, ccm, time_thresholds]
+  confidence: 0.98
+- content: >-
+    Same-month mutual exclusions (CMS care-management rules): CCM 99490 and
+    PCM 99424 cannot both be billed for the same patient in the same month —
+    select the higher-value, more defensible code. General BHI 99484 and CoCM
+    99492-99494 are likewise mutually exclusive in a month. RPM and RTM cannot
+    both be billed on the same device data set.
+  tags: [cms, mutual_exclusion, billing]
+  confidence: 0.98
+- content: >-
+    TCM windows (CPT 99495/99496): interactive contact with the patient must
+    occur within 2 business days of discharge (weekends and federal holidays
+    excluded; a Friday-evening discharge yields an end-of-day-Tuesday
+    deadline). Face-to-face visit within 14 calendar days for 99495 (moderate
+    complexity) or 7 calendar days for 99496 (high complexity), and medication
+    reconciliation must be documented. The 30-day TCM period counts from the
+    discharge date, not the admit date.
+  tags: [cms, tcm, discharge, sla]
+  confidence: 0.97
+- content: >-
+    RPM rules: CPT 99454 (device supply/transmission) requires >= 16 days
+    with at least one device reading in the 30-day period — fewer days blocks
+    99454. CPT 99457 (>= 20 minutes/month of clinician review with interactive
+    communication) is billable INDEPENDENTLY of the 16-day rule when its time
+    threshold is met; 99458 covers additional 20-minute blocks; 99453 covers
+    initial setup and patient education.
+  tags: [cms, rpm, 16_day_rule]
+  confidence: 0.98
+- content: >-
+    Consent is a hard prerequisite for every care-management program: no code
+    may be billed for a month without an active, non-revoked consent for that
+    program family. Revocation takes effect immediately; the auditor must
+    consult the latest consent state before proposing any bill, and the RAC
+    audit package must include both the enrollment consent event and any
+    revocation event.
+  tags: [cms, consent, compliance]
+  confidence: 0.98
+- content: >-
+    FQHC/RHC billing: Federally Qualified Health Centers and Rural Health
+    Clinics bill HCPCS G0511 (general care management) in place of the
+    standard CCM and BHI CPT codes, per CMS FQHC rules. When the billing
+    provider carries the fqhc_rhc flag, code selection must override 99490/
+    99484-family proposals to G0511.
+  tags: [cms, fqhc, g0511]
+  confidence: 0.95
+- content: >-
+    APCM (2025): HCPCS G0556 (level 1 — one chronic condition), G0557 (level
+    2 — two or more chronic conditions), G0558 (level 3 — QMB beneficiary
+    with two or more chronic conditions). APCM is a BUNDLED monthly code with
+    no time threshold: when a practice opts into APCM, it replaces standard
+    CCM/PCM/TCM billing for those patients that month. Enrollment is
+    per-practice; pre-opt-in CCM/PCM enrollments are grandfathered.
+  tags: [cms, apcm, "2025", tiers]
+  confidence: 0.95
+- content: >-
+    Behavioral health integration: general BHI 99484 requires >= 20 minutes of
+    BH care-manager time per month. CoCM (psychiatric collaborative care)
+    requires a behavioral health care manager plus a psychiatric consultant:
+    99492 initial month >= 70 minutes, 99493 subsequent months >= 60 minutes,
+    99494 each additional 30-minute block.
+  tags: [cms, bhi, cocm, behavioral_health]
+  confidence: 0.96
+- content: >-
+    RTM (98975-98981) covers musculoskeletal, respiratory, and CBT device
+    families and, unlike CCM/RPM (which require physician or NP/PA
+    supervision), may be billed by PT/OT/SLP under general supervision.
+    Device data must originate from an FDA-cleared device on the vendor
+    whitelist — readings from non-cleared devices do not count toward the
+    16-day requirement.
+  tags: [cms, rtm, supervision, fda_whitelist]
+  confidence: 0.93
+- content: >-
+    Billing attribution: care-management time may accumulate across multiple
+    staff (RN + LPN + MA) in a month, but bills under ONE billing provider per
+    patient per month — normally the primary care physician, not the care
+    manager. RAC and MAC audits target care-management codes as high fraud
+    risk: every billed claim needs a complete evidence chain (consent,
+    time-tracked activity log, care-plan review, device data for RPM, reviewer
+    identity) exportable as an audit bundle.
+  tags: [cms, rac_audit, attribution, compliance]
+  confidence: 0.95

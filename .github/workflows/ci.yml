@@ -1,0 +1,483 @@
+# Windrose CI — test/lint every service, enforce the no-stub rule, and build/push
+# one image per service. The build/test matrix is DERIVED at runtime from
+# deploy/services.yaml (the single source of truth) — nothing is hand-listed here.
+name: ci
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+  # Lets someone kick off the live-stack E2E job on demand (it's gated by
+  # path-filtering below, so a PR that doesn't touch a relevant path won't
+  # run it automatically).
+  workflow_dispatch: {}
+
+# Registry + tag come from repo/org config, never hard-coded (see deploy/CONFIG.md).
+#   REGISTRY  -> repo VARIABLE (e.g. ghcr.io/acme, 123.dkr.ecr.us-east-1.amazonaws.com)
+#   IMAGE_TAG -> repo VARIABLE, defaults to the commit SHA below.
+env:
+  REGISTRY: ${{ vars.REGISTRY || format('ghcr.io/{0}', github.repository_owner) }}
+  IMAGE_TAG: ${{ vars.IMAGE_TAG || github.sha }}
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # setup — parse deploy/services.yaml and emit per-language + build matrices as
+  # JSON. Every downstream job ranges over these, so adding a service to the
+  # inventory automatically wires it into test/lint/build with no edits here.
+  # ---------------------------------------------------------------------------
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      go: ${{ steps.matrix.outputs.go }}
+      python: ${{ steps.matrix.outputs.python }}
+      node: ${{ steps.matrix.outputs.node }}
+      build: ${{ steps.matrix.outputs.build }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Derive matrices from deploy/services.yaml
+        id: matrix
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, pathlib, sys
+          try:
+              import yaml
+          except ImportError:
+              import subprocess
+              subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", "pyyaml"])
+              import yaml
+
+          inv = yaml.safe_load(pathlib.Path("deploy/services.yaml").read_text())
+          services = inv["services"]
+
+          def entry(s):
+              return {
+                  "name": s["name"],
+                  "language": s["language"],
+                  "path": s["path"],
+                  "dockerfile": s.get("dockerfile", "Dockerfile"),
+                  "port": s["port"],
+              }
+
+          build = [entry(s) for s in services]
+          by_lang = {"go": [], "python": [], "node": []}
+          for s in services:
+              by_lang[s["language"]].append(entry(s))
+
+          # dedup build contexts by (path,dockerfile) so tool-plane's two images
+          # each build, but a shared context is never built twice for the same file.
+          seen, dedup = set(), []
+          for b in build:
+              key = (b["path"], b["dockerfile"], b["name"])
+              if key not in seen:
+                  seen.add(key)
+                  dedup.append(b)
+
+          print("go=" + json.dumps({"include": by_lang["go"]}))
+          print("python=" + json.dumps({"include": by_lang["python"]}))
+          print("node=" + json.dumps({"include": by_lang["node"]}))
+          print("build=" + json.dumps({"include": dedup}))
+          PY
+      - name: Show derived matrices
+        run: |
+          echo "go=${{ steps.matrix.outputs.go }}"
+          echo "python=${{ steps.matrix.outputs.python }}"
+          echo "node=${{ steps.matrix.outputs.node }}"
+          echo "build=${{ steps.matrix.outputs.build }}"
+
+  # ---------------------------------------------------------------------------
+  # Go lane — vet + test for every go service.
+  # ---------------------------------------------------------------------------
+  test-go:
+    needs: setup
+    if: ${{ needs.setup.outputs.go != '' && fromJSON(needs.setup.outputs.go).include[0] != null }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.setup.outputs.go) }}
+    name: test-go (${{ matrix.name }})
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+          cache-dependency-path: ${{ matrix.path }}/go.sum
+      - name: go vet & test
+        working-directory: ${{ matrix.path }}
+        run: |
+          go vet ./...
+          go test ./...
+
+  # ---------------------------------------------------------------------------
+  # Python lane — ruff + unit tests via uv. Tests are skipped only when a service
+  # genuinely ships no tests/unit dir.
+  # ---------------------------------------------------------------------------
+  test-python:
+    needs: setup
+    if: ${{ needs.setup.outputs.python != '' && fromJSON(needs.setup.outputs.python).include[0] != null }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.setup.outputs.python) }}
+    name: test-python (${{ matrix.name }})
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: ${{ matrix.path }}/uv.lock
+      - name: Sync deps
+        working-directory: ${{ matrix.path }}
+        run: uv sync --group dev || uv sync
+      - name: Ruff
+        working-directory: ${{ matrix.path }}
+        run: uv run ruff check .
+      - name: Pytest (unit)
+        working-directory: ${{ matrix.path }}
+        run: |
+          if [ -d tests/unit ]; then
+            uv run pytest tests/unit -q
+          else
+            echo "no tests/unit dir — skipping unit tests for ${{ matrix.name }}"
+          fi
+
+  # ---------------------------------------------------------------------------
+  # Node lane — pnpm typecheck + lint + test for bff-graphql and ui-web.
+  # ---------------------------------------------------------------------------
+  test-node:
+    needs: setup
+    if: ${{ needs.setup.outputs.node != '' && fromJSON(needs.setup.outputs.node).include[0] != null }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.setup.outputs.node) }}
+    name: test-node (${{ matrix.name }})
+    steps:
+      - uses: actions/checkout@v4
+      - name: Enable corepack (pnpm)
+        run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: pnpm
+          cache-dependency-path: ${{ matrix.path }}/pnpm-lock.yaml
+      - name: Install
+        working-directory: ${{ matrix.path }}
+        run: pnpm install --frozen-lockfile || pnpm install
+      - name: Typecheck
+        working-directory: ${{ matrix.path }}
+        run: pnpm typecheck || pnpm exec tsc --noEmit
+      - name: Lint
+        working-directory: ${{ matrix.path }}
+        run: pnpm lint
+      - name: Test
+        working-directory: ${{ matrix.path }}
+        run: pnpm test
+
+  # ---------------------------------------------------------------------------
+  # no-stub-gate — mirrors the platform's no-stub rule. Advisory-but-FAILING:
+  # fails the build if runtime code reachable from an entrypoint would default to
+  # a fake/mock/stub adapter. Heuristics (each a real footgun, not code smell):
+  #   1. `use_real_adapters` DEFAULTS to False in any app/config.py.
+  #   2. A Fake*/Stub*/Mock* adapter is imported from a service main.py / container.py.
+  # ---------------------------------------------------------------------------
+  no-stub-gate:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assert no stub defaults reachable from entrypoints
+        run: |
+          set -uo pipefail
+          fail=0
+
+          echo "::group::1) use_real_adapters must not DEFAULT to False"
+          if grep -rEn 'use_real_adapters\s*:\s*bool\s*=\s*False' services/*/app/config.py; then
+            echo "::error::a service defaults use_real_adapters=False in app/config.py (stub adapters would ship)"
+            fail=1
+          else
+            echo "ok — every config defaults to real adapters"
+          fi
+          echo "::endgroup::"
+
+          echo "::group::2) no Fake/Stub/Mock adapter imported from an entrypoint"
+          # Only inspect real entrypoints (main.py / container.py), not tests.
+          hits=$(grep -rEn 'import .*(Fake|Stub|Mock).*Adapter|from .*(fake|stub|mock).* import' \
+                   services/*/app/main.py services/*/app/container.py 2>/dev/null || true)
+          if [ -n "$hits" ]; then
+            echo "$hits"
+            echo "::error::a fake/stub/mock adapter is imported from a runtime entrypoint"
+            fail=1
+          else
+            echo "ok — no stub adapters imported from main.py/container.py"
+          fi
+          echo "::endgroup::"
+
+          exit $fail
+
+  # ---------------------------------------------------------------------------
+  # live-e2e-paths — decide whether the (expensive) live-stack E2E job needs to
+  # run at all. Unlike the lanes above, ci.yml otherwise has NO path filtering
+  # (it runs the full matrix on every push/PR) — that's fine for go vet/pytest/
+  # pnpm test, but booting the real 22-service platform + a real local Ollama
+  # is costly enough that it's worth scoping to changes that could plausibly
+  # affect the live stack: any service, the boot/seed scripts tests-live/
+  # depends on, or the service inventory itself.
+  # ---------------------------------------------------------------------------
+  live-e2e-paths:
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.filter.outputs.live }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            live:
+              - 'services/**'
+              - 'deploy/local/**'
+              - 'deploy/e2e/**'
+              - 'deploy/docker-compose.dev.yml'
+              - 'deploy/services.yaml'
+
+  # ---------------------------------------------------------------------------
+  # e2e-live — boots the REAL platform (docker infra + all ~22 services + BFF
+  # + UI, seeded with real personas + demo data, backed by a real local Ollama
+  # for LLM inference) and runs services/ui-web/tests-live/ against it. This is
+  # the suite that proves the services actually compose end to end; the lanes
+  # above only prove each service is internally sound.
+  #
+  # RUNNER SIZING — read before touching `runs-on`: deploy/local/up.sh's own
+  # preflight warns to give Docker >=10GB just for the infra containers
+  # (Postgres/Redis/Redpanda/Keycloak/Temporal/MinIO/Iceberg/OPA/Vault/MLflow/
+  # OpenSearch/ClickHouse/otel-collector). On top of that this job runs ~22
+  # native Go/Python/Node processes AND a real local Ollama serving
+  # llama3.2:latest + qwen2.5:0.5b + nomic-embed-text for genuine CPU
+  # inference. That combination does not reliably fit GitHub's standard
+  # hosted `ubuntu-latest` runner (4 vCPU / 16GB RAM / ~14GB free disk) —
+  # expect OOM kills and disk-pressure flakes under real load. Point the
+  # `E2E_LIVE_RUNNER` repo/org VARIABLE at a larger GitHub-hosted runner
+  # (8+ vCPU / 32GB+ RAM) or a self-hosted runner sized for this stack; see
+  # services/ui-web/tests-live/README.md's "CI" section for the full writeup.
+  # Left defaulted to `ubuntu-latest` so the workflow is valid out of the box
+  # — that default WILL flake under real load, this is a known, called-out
+  # limitation, not a silent gap.
+  # ---------------------------------------------------------------------------
+  e2e-live:
+    needs: [live-e2e-paths, test-go, test-python, test-node, no-stub-gate]
+    if: ${{ always() && needs.live-e2e-paths.result == 'success' && (needs.live-e2e-paths.outputs.run == 'true' || github.event_name == 'workflow_dispatch') && !contains(fromJSON('["failure","cancelled"]'), needs.test-go.result) && !contains(fromJSON('["failure","cancelled"]'), needs.test-python.result) && !contains(fromJSON('["failure","cancelled"]'), needs.test-node.result) && !contains(fromJSON('["failure","cancelled"]'), needs.no-stub-gate.result) }}
+    runs-on: ${{ vars.E2E_LIVE_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 45
+    concurrency:
+      group: e2e-live-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v4
+
+      # The stack pulls ~13 infra images + builds/installs ~22 services +
+      # downloads ~3GB of Ollama models — GitHub-hosted runners ship with
+      # dotnet/android/CodeQL toolchains preinstalled that this job never
+      # touches; reclaim that space up front rather than risk disk-pressure
+      # flakes mid-boot.
+      - name: Free up runner disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL 2>/dev/null || true
+          docker image prune -af 2>/dev/null || true
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Enable corepack (pnpm)
+        run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: pnpm
+          cache-dependency-path: services/ui-web/pnpm-lock.yaml
+
+      # up.sh's preflight hard-fails (die()) if Ollama isn't reachable with
+      # these exact three models present — this is the genuine real-LLM
+      # dependency the platform is built on (Rule: no fake/mock), not
+      # something we substitute or skip in CI.
+      - name: Install Ollama
+        run: curl -fsSL https://ollama.com/install.sh | sh
+      - name: Start Ollama + pull required models
+        run: |
+          nohup ollama serve > /tmp/ollama.log 2>&1 &
+          for i in $(seq 1 60); do curl -s -m2 http://localhost:11434/api/tags >/dev/null 2>&1 && break; sleep 2; done
+          curl -s http://localhost:11434/api/tags >/dev/null || { echo "::error::ollama did not come up"; cat /tmp/ollama.log; exit 1; }
+          ollama pull llama3.2:latest
+          ollama pull qwen2.5:0.5b
+          ollama pull nomic-embed-text
+
+      - name: Install ui-web deps + Playwright chromium
+        working-directory: services/ui-web
+        run: |
+          pnpm install --frozen-lockfile || pnpm install
+          pnpm exec playwright install --with-deps chromium
+
+      # Full platform boot: docker infra -> per-service DBs -> migrate + boot
+      # all 22 services -> seed tenant/personas/claims-demo -> bff -> ui.
+      # Fails closed (die()) on any unrecoverable precondition (docker,
+      # ollama, postgres, opensearch unreachable); non-fatal per-service
+      # degradation is still caught next by tests-live/global-setup.ts.
+      - name: Boot the real platform (deploy/local/up.sh)
+        working-directory: deploy/local
+        run: ./up.sh
+
+      - name: Run live-stack E2E suite (pnpm e2e:live)
+        working-directory: services/ui-web
+        env:
+          CI: "true"
+        run: pnpm e2e:live
+
+      - name: Tail service boot logs on failure
+        if: failure()
+        run: tail -n 100 deploy/e2e/logs/*.log 2>/dev/null || true
+
+      - name: Upload Playwright live HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-live-report
+          path: services/ui-web/playwright-live-report/
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Upload Playwright live traces/results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-live
+          path: services/ui-web/test-results-live/
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Upload service boot logs (diagnostics)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-live-service-logs
+          path: deploy/e2e/logs/
+          retention-days: 14
+          if-no-files-found: ignore
+
+      # Self-hosted runners persist between jobs (unlike ephemeral GitHub-
+      # hosted VMs), so tearing down is not just hygiene here — it prevents
+      # port/state leakage into the next job on the same runner.
+      - name: Tear down the platform
+        if: always()
+        working-directory: deploy/local
+        run: ./down.sh --infra
+
+  # ---------------------------------------------------------------------------
+  # build-push — one image per service, context+dockerfile from the inventory.
+  # Always BUILD (validates the Dockerfile) on every trigger; only PUSH on
+  # push-to-main / tags, and only after all test lanes + the no-stub gate pass.
+  # ---------------------------------------------------------------------------
+  build-push:
+    needs: [setup, test-go, test-python, test-node, no-stub-gate]
+    # Run even if a language lane was skipped (empty matrix), but not if one failed.
+    if: ${{ always() && needs.setup.result == 'success' && needs.no-stub-gate.result == 'success' && !contains(fromJSON('["failure","cancelled"]'), needs.test-go.result) && !contains(fromJSON('["failure","cancelled"]'), needs.test-python.result) && !contains(fromJSON('["failure","cancelled"]'), needs.test-node.result) }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write   # GHCR push via GITHUB_TOKEN
+      id-token: write   # OIDC for ECR/GAR/ACR keyless login (see commented steps)
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.setup.outputs.build) }}
+    name: build-push (${{ matrix.name }})
+    env:
+      # Push only on main-branch pushes and tags — never on pull_request builds.
+      PUSH: ${{ github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # --- Registry login (default: GHCR via GITHUB_TOKEN) --------------------
+      - name: Log in to GHCR
+        if: ${{ env.PUSH == 'true' && startsWith(env.REGISTRY, 'ghcr.io') }}
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # --- Alternative logins (keyless OIDC) — uncomment the one you use -------
+      #
+      # AWS ECR:
+      # - name: Configure AWS credentials (OIDC)
+      #   if: ${{ env.PUSH == 'true' }}
+      #   uses: aws-actions/configure-aws-credentials@v4
+      #   with:
+      #     role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+      #     aws-region: ${{ vars.AWS_REGION }}
+      # - name: Log in to Amazon ECR
+      #   if: ${{ env.PUSH == 'true' }}
+      #   uses: aws-actions/amazon-ecr-login@v2
+      #
+      # Google Artifact Registry:
+      # - name: Authenticate to Google Cloud (WIF)
+      #   if: ${{ env.PUSH == 'true' }}
+      #   uses: google-github-actions/auth@v2
+      #   with:
+      #     workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+      #     service_account: ${{ secrets.GCP_DEPLOY_SA }}
+      # - name: Log in to Google Artifact Registry
+      #   if: ${{ env.PUSH == 'true' }}
+      #   uses: docker/login-action@v3
+      #   with:
+      #     registry: ${{ vars.GAR_HOST }}   # e.g. us-docker.pkg.dev
+      #     username: oauth2accesstoken
+      #     password: ${{ steps.gcp-auth.outputs.access_token }}
+      #
+      # Azure ACR:
+      # - name: Azure login (OIDC)
+      #   if: ${{ env.PUSH == 'true' }}
+      #   uses: azure/login@v2
+      #   with:
+      #     client-id: ${{ secrets.AZURE_CLIENT_ID }}
+      #     tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+      #     subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      # - name: Log in to ACR
+      #   if: ${{ env.PUSH == 'true' }}
+      #   run: az acr login --name ${{ vars.ACR_NAME }}
+
+      - name: Build & (conditionally) push ${{ matrix.name }}
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.path }}
+          file: ${{ matrix.path }}/${{ matrix.dockerfile }}
+          push: ${{ env.PUSH == 'true' }}
+          tags: ${{ env.REGISTRY }}/${{ matrix.name }}:${{ env.IMAGE_TAG }}
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.name }}
+          provenance: false

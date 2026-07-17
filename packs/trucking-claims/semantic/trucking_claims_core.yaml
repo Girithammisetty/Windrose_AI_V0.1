@@ -1,0 +1,166 @@
+# Semantic model `trucking_claims_core` — carrier/broker claims-and-safety
+# KPI catalog (claim pay rate, denial rate, recovery rate, fraud-escalation
+# share, coaching closure, deadline runway, carrier risk mix, on-time share),
+# expressed in the Core semantic grammar (agg whitelist, equality measure
+# filters, derived expr_metric with nullif; join_paths left/many_to_one,
+# acyclic chain claims -> shipments -> carriers).
+#
+# entity.table is main.<safe_relation(dataset name)>; `dataset:` refs are
+# rebound to live dataset URNs by packctl at install. Amount columns ingest
+# as bronze strings, so numeric measures cast(... as double) (the proven
+# claims_core pattern).
+name: trucking_claims_core
+description: >-
+  Trucking/logistics claims & safety KPI model (Carmack cargo liability +
+  FMCSA safety-review practice): cargo OS&D claim volumes and backlog aging,
+  disposition outcome mix, pay/denial and carrier-recovery rates,
+  filing-deadline runway, safety-event coaching closure, and carrier risk
+  posture — claims joined to the shipment book and the carrier roster.
+definition:
+  entities:
+    - name: claims
+      dataset: tl_claims
+      table: main.tl_claims
+      primary_key: [claim_id]
+      dataset_version_policy: { policy: latest }
+    - name: shipments
+      dataset: tl_shipments
+      table: main.tl_shipments
+      primary_key: [shipment_id]
+      dataset_version_policy: { policy: latest }
+    - name: carriers
+      dataset: tl_carriers
+      table: main.tl_carriers
+      primary_key: [carrier_id]
+      dataset_version_policy: { policy: latest }
+  join_paths:
+    - name: claims_shipments
+      from_entity: claims
+      to_entity: shipments
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: shipment_id, to_column: shipment_id }]
+    - name: shipments_carriers
+      from_entity: shipments
+      to_entity: carriers
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: carrier_id, to_column: carrier_id }]
+  dimensions:
+    - { name: claim_kind, entity: claims, type: categorical, column: claim_kind }
+    - { name: claim_type, entity: claims, type: categorical, column: claim_type }
+    - { name: commodity_event, entity: claims, type: categorical, column: commodity_event }
+    - { name: liability_band, entity: claims, type: categorical, column: liability_band }
+    - { name: severity, entity: claims, type: categorical, column: severity }
+    - { name: claim_status, entity: claims, type: categorical, column: status }
+    - { name: claim_disposition, entity: claims, type: categorical, column: disposition }
+    - { name: deadline_bucket, entity: claims, type: categorical, column: deadline_bucket }
+    - { name: filed_month, entity: claims, type: categorical, column: filed_month }
+    - { name: lane, entity: shipments, type: categorical, column: lane }
+    - { name: mode, entity: shipments, type: categorical, column: mode }
+    - { name: service, entity: shipments, type: categorical, column: service }
+    - { name: ship_month, entity: shipments, type: categorical, column: ship_month }
+    - { name: on_time, entity: shipments, type: categorical, column: on_time }
+    - { name: telematics_flags, entity: shipments, type: categorical, column: telematics_flags }
+    - { name: carrier_type, entity: carriers, type: categorical, column: type }
+    - { name: safety_tier, entity: carriers, type: categorical, column: safety_tier }
+    - { name: authority_age, entity: carriers, type: categorical, column: authority_age }
+    - { name: insurance_ok, entity: carriers, type: categorical, column: insurance_ok }
+    - { name: fraud_risk, entity: carriers, type: categorical, column: fraud_risk }
+  measures:
+    - { name: claim_count, entity: claims, agg: count,
+        description: "Number of claims and safety/vetting review items" }
+    - { name: open_claim_count, entity: claims, agg: count,
+        filters: "status = 'open'",
+        description: "Claims and reviews still open (adjudication backlog)" }
+    - { name: closed_claim_count, entity: claims, agg: count,
+        filters: "status = 'closed'",
+        description: "Claims and reviews closed with a final outcome" }
+    - { name: paid_claim_count, entity: claims, agg: count,
+        filters: "disposition = 'accept_pay_claim'",
+        description: "Claims accepted and paid (liability confirmed)" }
+    - { name: denied_claim_count, entity: claims, agg: count,
+        filters: "disposition = 'deny_claim_documented'",
+        description: "Claims denied / flags cleared with documented findings" }
+    - { name: recovery_filed_count, entity: claims, agg: count,
+        filters: "disposition = 'file_carrier_recovery'",
+        description: "Claims closed by filing recovery against the responsible carrier" }
+    - { name: fraud_escalated_count, entity: claims, agg: count,
+        filters: "disposition = 'escalate_fraud_investigation'",
+        description: "Items escalated to fraud investigation (double-brokering / staged-loss watch)" }
+    - { name: coaching_closed_count, entity: claims, agg: count,
+        filters: "disposition = 'close_coaching_completed'",
+        description: "Safety events closed with driver coaching completed" }
+    - { name: cargo_claim_count, entity: claims, agg: count,
+        filters: "claim_kind = 'cargo_osd'",
+        description: "Cargo OS&D claims (shortage / damage / overage / reefer / theft)" }
+    - { name: safety_event_count, entity: claims, agg: count,
+        filters: "claim_kind = 'safety_event'",
+        description: "Telematics/camera safety events under review" }
+    - { name: avg_claim_age_days, entity: claims, agg: avg,
+        expr: "cast(age_days as double)", format: decimal,
+        description: "Average claim age in days (cycle time / backlog aging)" }
+    - { name: total_claim_amount, entity: claims, agg: sum,
+        expr: "cast(amount as double)", format: decimal,
+        description: "Total dollar amount claimed" }
+    - { name: avg_claim_amount, entity: claims, agg: avg,
+        expr: "cast(amount as double)", format: decimal,
+        description: "Average claimed amount" }
+    - { name: total_recovery_amount, entity: claims, agg: sum,
+        expr: "cast(recovery_amount as double)", format: decimal,
+        description: "Total dollars recovered from responsible carriers" }
+    - { name: shipment_count, entity: shipments, agg: count,
+        description: "Number of shipments in the book" }
+    - { name: reefer_shipment_count, entity: shipments, agg: count,
+        filters: "mode = 'reefer'",
+        description: "Temperature-controlled shipments (reefer-claim surface)" }
+    - { name: brokerage_shipment_count, entity: shipments, agg: count,
+        filters: "service = 'brokerage'",
+        description: "Brokered shipments (carrier-vetting and recovery surface)" }
+    - { name: on_time_shipment_count, entity: shipments, agg: count,
+        filters: "on_time = 'yes'",
+        description: "Shipments delivered on time" }
+    - { name: late_shipment_count, entity: shipments, agg: count,
+        filters: "on_time = 'no'",
+        description: "Late shipments (service-failure and claim-correlation surface)" }
+    - { name: total_shipment_value, entity: shipments, agg: sum,
+        expr: "cast(value as double)", format: decimal,
+        description: "Total declared shipment value moved" }
+    - { name: carrier_count, entity: carriers, agg: count,
+        description: "Number of carriers on the roster" }
+    - { name: partner_carrier_count, entity: carriers, agg: count,
+        filters: "type = 'partner_carrier'",
+        description: "Third-party partner carriers (brokerage network)" }
+    - { name: watch_tier_carrier_count, entity: carriers, agg: count,
+        filters: "safety_tier = 'watch'",
+        description: "Carriers in the safety watch tier" }
+    - { name: insurance_lapsed_carrier_count, entity: carriers, agg: count,
+        filters: "insurance_ok = 'no'",
+        description: "Carriers with an insurance gap (certificate lapsed or unverified)" }
+    - { name: high_fraud_risk_carrier_count, entity: carriers, agg: count,
+        filters: "fraud_risk = 'high'",
+        description: "Carriers in the high fraud-risk tier (double-broker / identity-theft watch)" }
+    - { name: claim_pay_rate,
+        expr_metric: "paid_claim_count / nullif(closed_claim_count, 0)",
+        format: percent,
+        description: "Claims accepted and paid over all closures" }
+    - { name: claim_denial_rate,
+        expr_metric: "denied_claim_count / nullif(closed_claim_count, 0)",
+        format: percent,
+        description: "Claims denied with documented findings over all closures" }
+    - { name: recovery_rate,
+        expr_metric: "total_recovery_amount / nullif(total_claim_amount, 0)",
+        format: percent,
+        description: "Dollars recovered from carriers over dollars claimed" }
+    - { name: fraud_escalation_share,
+        expr_metric: "fraud_escalated_count / nullif(claim_count, 0)",
+        format: percent,
+        description: "Share of items escalated to fraud investigation" }
+    - { name: coaching_closure_rate,
+        expr_metric: "coaching_closed_count / nullif(safety_event_count, 0)",
+        format: percent,
+        description: "Safety events closed with completed coaching over all safety events" }
+    - { name: on_time_share,
+        expr_metric: "on_time_shipment_count / nullif(shipment_count, 0)",
+        format: percent,
+        description: "On-time deliveries over all shipments" }

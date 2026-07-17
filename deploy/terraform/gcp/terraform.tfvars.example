@@ -1,0 +1,108 @@
+# terraform.tfvars.example — copy to terraform.tfvars and fill in.
+# Do NOT commit terraform.tfvars (it may hold secrets). Secrets can also be
+# supplied via TF_VAR_secrets or -var-file from your secret store instead.
+
+########################################
+# Required
+########################################
+project_id = "my-gcp-project" # <-- set me
+region     = "us-central1"
+
+########################################
+# Naming / environment (optional overrides)
+########################################
+name_prefix = "windrose"
+environment = "production"
+
+########################################
+# GKE sizing (optional)
+########################################
+gke_node_machine_type = "e2-standard-4"
+gke_node_min_count    = 1
+gke_node_max_count    = 5
+
+########################################
+# Cloud SQL (optional)
+########################################
+cloudsql_tier              = "db-custom-2-8192"
+cloudsql_version           = "POSTGRES_16"
+cloudsql_availability_type = "REGIONAL"
+
+########################################
+# Memorystore (optional)
+########################################
+redis_tier           = "STANDARD_HA"
+redis_memory_size_gb = 4
+
+########################################
+# Kafka (optional). Use "pubsub" only if Managed Kafka is unavailable.
+########################################
+kafka_backend = "managed_kafka"
+
+########################################
+# Registry (optional)
+########################################
+create_registry = true
+
+########################################
+# Secrets — FILL IN LATER. Everything below is credential material and MUST NOT
+# be committed. Prefer TF_VAR_secrets from your secret store / CI. Infra
+# endpoints (POSTGRES_HOST, REDIS_URL, KAFKA_BOOTSTRAP, OBJECTSTORE_*,
+# POSTGRES_ADMIN_*) are injected automatically and are NOT listed here.
+#
+# secrets = {
+#   # One NOBYPASSRLS app-role password per database (see deploy/services.yaml).
+#   POSTGRES_APP_PASSWORD_IDENTITY      = ""
+#   POSTGRES_APP_PASSWORD_RBAC          = ""
+#   POSTGRES_APP_PASSWORD_INGESTION     = ""
+#   POSTGRES_APP_PASSWORD_DATASET       = ""
+#   POSTGRES_APP_PASSWORD_REALTIMEHUB   = ""
+#   POSTGRES_APP_PASSWORD_AGENT_RUNTIME = ""
+#   POSTGRES_APP_PASSWORD_MEMORY        = ""
+#   POSTGRES_APP_PASSWORD_CASE_SVC      = ""
+#   POSTGRES_APP_PASSWORD_TOOL_PLANE    = ""
+#   POSTGRES_APP_PASSWORD_AI_GATEWAY    = ""
+#   POSTGRES_APP_PASSWORD_PIPELINE      = ""
+#   POSTGRES_APP_PASSWORD_EXPERIMENT    = ""
+#   POSTGRES_APP_PASSWORD_INFERENCE     = ""
+#   POSTGRES_APP_PASSWORD_QUERY         = ""
+#   POSTGRES_APP_PASSWORD_SEMANTIC      = ""
+#   POSTGRES_APP_PASSWORD_CHART         = ""
+#   POSTGRES_APP_PASSWORD_USAGE         = ""
+#   POSTGRES_APP_PASSWORD_NOTIFICATION  = ""
+#   POSTGRES_APP_PASSWORD_EVAL          = ""
+#
+#   # Kafka SASL (only if you front Managed Kafka with static SASL; default WI => leave empty).
+#   KAFKA_SASL_USERNAME = ""
+#   KAFKA_SASL_PASSWORD = ""
+#
+#   # Object storage HMAC keys — only if a service needs the S3 protocol; prefer WI.
+#   OBJECTSTORE_ACCESS_KEY = ""
+#   OBJECTSTORE_SECRET_KEY = ""
+#
+#   # Identity / JWT.
+#   JWT_SIGNING_KEY_PEM = ""
+#   JWT_JWKS            = ""
+#
+#   # Keycloak provisioning.
+#   KEYCLOAK_ADMIN_USER     = ""
+#   KEYCLOAK_ADMIN_PASSWORD = ""
+#
+#   # Ingestion connector secret store.
+#   VAULT_ADDR  = ""
+#   VAULT_TOKEN = ""
+#
+#   # Notification SMTP.
+#   SMTP_HOST     = ""
+#   SMTP_PORT     = ""
+#   SMTP_USER     = ""
+#   SMTP_PASSWORD = ""
+#
+#   # Optional LLM providers (omit to run Ollama-only / Vertex via WI).
+#   OPENAI_API_KEY    = ""
+#   ANTHROPIC_API_KEY = ""
+#
+#   # Audit / usage sink.
+#   CLICKHOUSE_URL      = ""
+#   CLICKHOUSE_PASSWORD = ""
+# }

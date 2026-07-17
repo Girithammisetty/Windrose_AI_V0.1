@@ -1,0 +1,70 @@
+openapi: 3.0.3
+info:
+  title: notification-service API
+  version: "1.0"
+  description: >
+    Fan-out from platform events to humans and external systems — in-app, email
+    (provider abstraction), and signed webhooks — governed by subscription
+    rules, digests, versioned templates and per-recipient rate limits (BRD 19).
+    All /api/v1 routes require an RS256 JWT (MASTER-FR-010) and are authorized
+    via the OPA sidecar (MASTER-FR-012). Errors use the master envelope
+    {error:{code,message,details?,trace_id}} (MASTER-FR-024). Collections are
+    cursor-paginated (?limit,?cursor) (MASTER-FR-022).
+servers:
+  - url: /api/v1
+paths:
+  /notifications:
+    get:
+      summary: Inbox list (cursor; ?filter[unread]=true)
+      security: [{bearerAuth: []}]
+      responses: {"200": {description: page of notifications}}
+  /notifications/unread-count:
+    get: {summary: Unread badge count, security: [{bearerAuth: []}], responses: {"200": {description: count}}}
+  /notifications/{id}/read:
+    post: {summary: Mark read, security: [{bearerAuth: []}], responses: {"204": {description: ok}, "404": {description: not found}}}
+  /notifications/{id}/unread:
+    post: {summary: Mark unread, security: [{bearerAuth: []}], responses: {"204": {description: ok}}}
+  /notifications/mark-all-read:
+    post: {summary: Mark all read, security: [{bearerAuth: []}], responses: {"200": {description: count}}}
+  /preferences:
+    get: {summary: Get own preferences, security: [{bearerAuth: []}], responses: {"200": {description: prefs}}}
+    put: {summary: Update own preferences, security: [{bearerAuth: []}], responses: {"200": {description: prefs}, "422": {description: validation}}}
+  /rules:
+    get: {summary: List subscription rules, security: [{bearerAuth: []}], responses: {"200": {description: page}}}
+    post: {summary: Create rule, security: [{bearerAuth: []}], responses: {"201": {description: rule}, "403": {description: scope}, "422": {description: filter field not whitelisted}}}
+  /rules/{id}:
+    get: {summary: Get rule, security: [{bearerAuth: []}], responses: {"200": {description: rule}, "404": {description: not found}}}
+    patch: {summary: Update rule, security: [{bearerAuth: []}], responses: {"200": {description: rule}}}
+    delete: {summary: Delete rule, security: [{bearerAuth: []}], responses: {"204": {description: ok}}}
+  /webhooks:
+    get: {summary: List endpoints, security: [{bearerAuth: []}], responses: {"200": {description: page}}}
+    post: {summary: Register endpoint (triggers verify handshake), security: [{bearerAuth: []}], responses: {"201": {description: endpoint}, "422": {description: VERIFY_FAILED / URL_FORBIDDEN}}}
+  /webhooks/{id}:
+    get: {summary: Get endpoint, security: [{bearerAuth: []}], responses: {"200": {description: endpoint}, "404": {description: not found}}}
+    patch: {summary: Update endpoint, security: [{bearerAuth: []}], responses: {"200": {description: endpoint}}}
+    delete: {summary: Delete endpoint, security: [{bearerAuth: []}], responses: {"204": {description: ok}}}
+  /webhooks/{id}/rotate-secret:
+    post: {summary: Dual-secret rotation, security: [{bearerAuth: []}], responses: {"200": {description: endpoint}}}
+  /webhooks/{id}/deliveries:
+    get: {summary: Delivery log, security: [{bearerAuth: []}], responses: {"200": {description: page}}}
+  /webhooks/{id}/deliveries/{did}/redeliver:
+    post: {summary: Manual redeliver, security: [{bearerAuth: []}], responses: {"202": {description: requeued}, "404": {description: not found}}}
+  /templates:
+    get: {summary: List template versions (?filter[key]), security: [{bearerAuth: []}], responses: {"200": {description: list}}}
+    post: {summary: Create draft template, security: [{bearerAuth: []}], responses: {"201": {description: template}, "422": {description: RENDER_FAILED}}}
+  /templates/{key}/publish:
+    post: {summary: Publish a version, security: [{bearerAuth: []}], responses: {"200": {description: template}}}
+  /templates/{key}/preview:
+    post: {summary: Render preview (no send), security: [{bearerAuth: []}], responses: {"200": {description: rendered}, "422": {description: RENDER_FAILED}}}
+  /admin/stats:
+    get: {summary: Per-tenant delivery stats, security: [{bearerAuth: []}], responses: {"200": {description: stats}, "403": {description: forbidden}}}
+  /admin/suppressions:
+    get: {summary: List suppressions, security: [{bearerAuth: []}], responses: {"200": {description: list}}}
+    delete: {summary: Clear a suppression (?email_hash), security: [{bearerAuth: []}], responses: {"204": {description: ok}}}
+  /providers/{provider}/status:
+    post:
+      summary: Email provider status callback (provider-signed, no JWT; BR-13)
+      responses: {"200": {description: applied count}, "404": {description: unknown provider}}
+components:
+  securitySchemes:
+    bearerAuth: {type: http, scheme: bearer, bearerFormat: JWT}

@@ -1,0 +1,92 @@
+# Tenant-scope RAG grounding records (memory-service). This is the post-acute
+# domain knowledge the triage copilot retrieves when reasoning about a case —
+# PDGM/PDPM payment mechanics, OASIS-E/MDS 3.0 timing rules, hospice LCD
+# criteria, and the BRD's business-rule boundaries. Every record is factual
+# domain reference material traced to BRD 29.
+- content: >-
+    PDGM (Patient Driven Groupings Model, home health, 2020) classifies each
+    30-day payment period by admission source, timing (early/late), one of
+    twelve clinical groupings, functional impairment level from OASIS items,
+    and a comorbidity adjustment (none / low / high) driven by secondary
+    diagnoses. Correct comorbidity capture is worth roughly $100-$700 per
+    episode, so every finalized OASIS should be checked for missed
+    documentation-supported comorbidity codes (PAC-FR-040).
+  tags: [pdgm, home_health, payment, comorbidity]
+  confidence: 0.95
+- content: >-
+    A PDGM period whose visit count falls below the case-mix group's LUPA
+    (Low Utilization Payment Adjustment) threshold is paid per-visit instead
+    of the full 30-day case-mix rate — a revenue cliff. Flag active home
+    health episodes trending under their LUPA visit threshold before the
+    period closes (PAC-FR-100 PDGM rules).
+  tags: [pdgm, lupa, home_health, revenue]
+  confidence: 0.9
+- content: >-
+    PDPM (Patient Driven Payment Model, SNF, 2019) sets the per-diem from five
+    independent case-mix components — PT, OT, SLP, nursing, and NTA
+    (non-therapy ancillaries) — each classified from MDS 3.0 items, with a
+    variable per-diem schedule (PT/OT rates decline after day 20; NTA pays at
+    3x for the first 3 days). Component misassignment swings roughly $500 per
+    day, and MDS Section GG (functional abilities) plus Section K
+    (nutrition/swallowing) are where classification sensitivity is highest
+    (PAC-FR-050/060).
+  tags: [pdpm, snf, payment, mds]
+  confidence: 0.95
+- content: >-
+    OASIS-E is the CMS home health assessment instrument. Start-of-care
+    assessment must be completed within 5 days of SOC, and the assessment must
+    be locked/submitted within 30 days of completion (BR-2 SLA). OASIS answers
+    drive both PDGM functional level and public quality measures, and CMS
+    publishes annual item-set updates (typically October 1) that ship as pack
+    point releases (BR-9).
+  tags: [oasis, home_health, timing, compliance]
+  confidence: 0.95
+- content: >-
+    MDS 3.0 is the SNF comprehensive assessment with a fixed schedule
+    (admission, quarterly, annual, significant change). Completed MDS
+    assessments must be submitted to CMS iQIES within 14 days of completion
+    (BR-2 SLA). Section GG functional scoring must be defensible under medical
+    review — every copilot-drafted answer carries a source citation
+    (PAC-FR-100 MDS rules).
+  tags: [mds, snf, timing, compliance]
+  confidence: 0.95
+- content: >-
+    30-day rehospitalization is a core post-acute quality metric: SNF
+    value-based purchasing and home health star ratings both penalize elevated
+    risk-standardized readmission rates. Risk-model outputs exist to
+    prioritize care-team interventions (medication reconciliation, visit
+    cadence, physician follow-up) — they must never be used for care denial or
+    discharge decisions (BR-7).
+  tags: [readmissions, quality, vbp, risk_model]
+  confidence: 0.95
+- content: >-
+    Hospice eligibility requires a physician-certified terminal prognosis of 6
+    months or less, evaluated against diagnosis-specific LCD (Local Coverage
+    Determination) criteria published per MAC — e.g. dementia eligibility
+    typically cites FAST stage 7A or beyond plus comorbid decline indicators
+    such as weight loss and ADL dependence; a face-to-face encounter is
+    required for recertification. The copilot only drafts the certification
+    narrative — the physician makes every eligibility determination and signs
+    (BR-5, PAC-FR-080). Hospice election revocation is a hard boundary: block
+    downstream hospice-only workflows immediately (BR-10).
+  tags: [hospice, lcd, eligibility, certification]
+  confidence: 0.95
+- content: >-
+    CERT/RAC/UPIC audit defensibility: every case-mix assertion (OASIS answer,
+    MDS item, proposed comorbidity code) must cite its source documentation —
+    discharge summary excerpt, medication list, therapy note, or prior claim.
+    No comorbidity code is added without evidence (BR-3), and therapy
+    increases beyond clinical justification are a known RAC target ("therapy
+    for the sake of case-mix") — PDPM proposals must trace to functional
+    status and care goals (BR-4).
+  tags: [audit, cert, rac, defensibility]
+  confidence: 0.95
+- content: >-
+    Referral triage (PAC-FR-070) scores each inbound hospital referral on
+    acceptance likelihood x expected reimbursement x complexity-vs-capacity
+    fit x care-gap match, and drafts an accept/decline recommendation.
+    Medicare-certified providers face non-discrimination obligations, so every
+    decline recommendation requires a documented operational rationale — e.g.
+    specialty staffing or bed capacity — never patient payer mix (BR-6).
+  tags: [referrals, intake, triage, compliance]
+  confidence: 0.9

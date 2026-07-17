@@ -1,0 +1,19 @@
+{
+  "type": "record",
+  "name": "Envelope",
+  "namespace": "ai.windrose.events.notification",
+  "doc": "notification.events.v1 — ops-grade emitted events (notification.created, notification.delivery.updated, notification.webhook.circuit_opened|closed, notification.endpoint.disabled, notification.audience.truncated). Consumed by audit-service + dashboards only (BRD 19 §6). Master envelope per MASTER-FR-031; payload carried as a JSON string.",
+  "fields": [
+    {"name": "event_id", "type": {"type": "string", "logicalType": "uuid"}},
+    {"name": "event_type", "type": "string"},
+    {"name": "tenant_id", "type": {"type": "string", "logicalType": "uuid"}},
+    {"name": "actor", "type": {"type": "record", "name": "Actor", "fields": [
+      {"name": "type", "type": "string"}, {"name": "id", "type": "string"}]}},
+    {"name": "via_agent", "type": ["null", {"type": "record", "name": "ViaAgent", "fields": [
+      {"name": "agent_id", "type": "string"}, {"name": "version", "type": "string"}]}], "default": null},
+    {"name": "resource_urn", "type": "string"},
+    {"name": "occurred_at", "type": {"type": "long", "logicalType": "timestamp-micros"}},
+    {"name": "trace_id", "type": "string"},
+    {"name": "payload", "type": "string"}
+  ]
+}

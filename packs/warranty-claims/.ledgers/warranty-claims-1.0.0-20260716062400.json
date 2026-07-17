@@ -1,0 +1,315 @@
+{
+  "pack": "warranty-claims",
+  "version": "1.0.0",
+  "workspace_id": "019f6a74-3720-7766-98eb-ec1beef2974c",
+  "tenant_id": "019f6a74-32cc-7700-b9bf-d102bf802e29",
+  "started_at": "2026-07-16T10:23:49Z",
+  "finished_at": "2026-07-16T10:24:00Z",
+  "actions": [
+    {
+      "kind": "datasets",
+      "identity": "wa_dealers",
+      "action": "create",
+      "urn": "wr:019f6a74-32cc-7700-b9bf-d102bf802e29:dataset:dataset/019f6a74-3a67-713c-8981-fcd493f6e65f",
+      "detail": "'wa-dealers' ingested rows=12 snapshot=5238116150729605019"
+    },
+    {
+      "kind": "datasets",
+      "identity": "wa_units",
+      "action": "create",
+      "urn": "wr:019f6a74-32cc-7700-b9bf-d102bf802e29:dataset:dataset/019f6a74-3bed-741d-ad3c-c7c61ae71241",
+      "detail": "'wa-units' ingested rows=30 snapshot=5295651560929164632"
+    },
+    {
+      "kind": "datasets",
+      "identity": "wa_claims",
+      "action": "create",
+      "urn": "wr:019f6a74-32cc-7700-b9bf-d102bf802e29:dataset:dataset/019f6a74-3d43-7c4f-9fa9-ce6b335e2196",
+      "detail": "'wa-claims' ingested rows=26 snapshot=8143221958067058313"
+    },
+    {
+      "kind": "semantic_models",
+      "identity": "warranty_core",
+      "action": "create",
+      "urn": "wr:019f6a74-32cc-7700-b9bf-d102bf802e29:semantic:model/019f6a74-3e75-723c-a70f-229a572e3736",
+      "detail": "'warranty_core' published"
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_0",
+      "action": "create",
+      "urn": "wr:019f6a74-32cc-7700-b9bf-d102bf802e29:semantic:verified_query/019f6a74-47ec-79bf-a322-1d00a3a044ae",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_1",
+      "action": "create",
+      "urn": "wr:019f6a74-32cc-7700-b9bf-d102bf802e29:semantic:verified_query/019f6a74-48bd-7e76-b4d7-b39da0f5d970",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_2",
+      "action": "create",
+      "urn": "wr:019f6a74-32cc-7700-b9bf-d102bf802e29:semantic:verified_query/019f6a74-49ce-74c8-83a8-dab3a33d3e83",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_3",
+      "action": "create",
+      "urn": "wr:019f6a74-32cc-7700-b9bf-d102bf802e29:semantic:verified_query/019f6a74-4aca-7b24-bd9a-f99e6704bc85",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_4",
+      "action": "create",
+      "urn": "wr:019f6a74-32cc-7700-b9bf-d102bf802e29:semantic:verified_query/019f6a74-4be3-7e29-aca2-ffb15a75b25c",
+      "detail": ""
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "warranty_dealer_component_edges",
+      "action": "create",
+      "urn": "wr:019f6a74-32cc-7700-b9bf-d102bf802e29:query:query/019f6a74-4caf-7186-b23b-c677f1d46fe7",
+      "detail": "Warranty: dealer-component network edges"
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "high_dollar_open_claims",
+      "action": "create",
+      "urn": "wr:019f6a74-32cc-7700-b9bf-d102bf802e29:query:query/019f6a74-4ceb-7660-b77c-9ea1e7293fd2",
+      "detail": "Warranty: high-dollar open queue"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "warranty_command_center",
+      "action": "create",
+      "urn": "wr:019f6a74-32cc-7700-b9bf-d102bf802e29:chart:dashboard/019f6a74-4d54-7b7d-8e5f-460d97b19b66",
+      "detail": "Warranty Command Center"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "warranty_command_center",
+      "action": "verify",
+      "urn": "wr:019f6a74-32cc-7700-b9bf-d102bf802e29:chart:dashboard/019f6a74-4d54-7b7d-8e5f-460d97b19b66",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "dealer_audit_watch",
+      "action": "create",
+      "urn": "wr:019f6a74-32cc-7700-b9bf-d102bf802e29:chart:dashboard/019f6a74-4f6f-7829-a155-14e4725bed11",
+      "detail": "Dealer & Audit Watch"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "dealer_audit_watch",
+      "action": "verify",
+      "urn": "wr:019f6a74-32cc-7700-b9bf-d102bf802e29:chart:dashboard/019f6a74-4f6f-7829-a155-14e4725bed11",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "component_failure_signals",
+      "action": "create",
+      "urn": "wr:019f6a74-32cc-7700-b9bf-d102bf802e29:chart:dashboard/019f6a74-5167-73a1-bd04-3e773fac8206",
+      "detail": "Component Failure Signals"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "component_failure_signals",
+      "action": "verify",
+      "urn": "wr:019f6a74-32cc-7700-b9bf-d102bf802e29:chart:dashboard/019f6a74-5167-73a1-bd04-3e773fac8206",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "approve_pay_claim"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "deny_policy_exclusion"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "adjust_partial_pay"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "escalate_dealer_audit"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "close_supplier_recovery"
+    },
+    {
+      "kind": "cases",
+      "identity": "claim_queue",
+      "action": "create",
+      "urn": "wr:019f6a74-32cc-7700-b9bf-d102bf802e29:dataset:dataset/019f6a74-3d43-7c4f-9fa9-ce6b335e2196",
+      "detail": "6 open cases (reindexed)"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Warranty Claims Analyst'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Warranty Claims Analyst' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Technical Assessor'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Technical Assessor' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Supplier Recovery Specialist'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Supplier Recovery Specialist' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Warranty Operations Manager'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Warranty Operations Manager' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Warranty Audit Lead'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Warranty Audit Lead' bound to permission group"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "case-triage prompt_params set"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "analytics prompt_params set"
+    },
+    {
+      "kind": "memories",
+      "identity": "grounding",
+      "action": "create",
+      "urn": null,
+      "detail": "10 grounding records written, 0 already present"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "create",
+      "urn": null,
+      "detail": "'Unit service-pattern anomaly detector (isolation forest)' (isolation_forest, train)"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "create",
+      "urn": null,
+      "detail": "'Warranty claim outcome scorer (xgboost)' (xgboost, train)"
+    }
+  ],
+  "deferred": [
+    {
+      "kind": "guardrails",
+      "reason": "Warranty-domain policies (no denial or warranty-exclusion routing of a claim implicating an open safety campaign; no denial conditioned on branded parts/service without causation evidence \u2014 the Magnuson-Moss tie-in rule; goodwill only within the documented matrix and approval tier; no supplier debit without attribution evidence) require guardrail-service / OPA policy materialization, which Core does not expose as a pack surface yet. The behavioral core is partially covered today by Core invariants: every pack-configured agent is proposal-mode with four-eyes approval (agent-runtime), and the agent instructions + disposition taxonomy route final determinations exclusively to human analysts with the Warranty Operations Manager as approver."
+    },
+    {
+      "kind": "agent_recipes",
+      "reason": "Bespoke LangGraph recipes (Claim Intake Copilot, Dealer Audit Analyzer, Early-Warning Signal Detector, Supplier Recovery Builder, Goodwill Advisor) require agent-runtime graph-module registration (BRD 23 BR-12). This pack specializes the existing case-triage + analytics agents via TenantAgentConfig prompt_params + tenant-scope RAG grounding instead."
+    },
+    {
+      "kind": "connection_templates",
+      "reason": "Production read connectors (OEM warranty systems: SAP Warranty Management / Oracle depot-repair-class modules; dealer management systems (DMS) claim feeds; telematics/hour-meter platforms; parts-return and failure-analysis tracking; supplier quality portals; NHTSA campaign feeds for vehicle OEMs) require customer credentials and pack-service connector materialization. The pack ships seed datasets in the exact landing shape; production connectors are configured through the product Data > Connections UI."
+    },
+    {
+      "kind": "write_adapters",
+      "reason": "Write adapters (post claim payment/denial to the warranty system, issue supplier debit memos, route a claim to a recall campaign, send dealer decision notices, order parts return for failure analysis) execute only behind pack-service's materialization contract and customer credentials; every such write stays proposal-mode with human approval \u2014 no autonomous claim payment, denial, or supplier debit, ever."
+    },
+    {
+      "kind": "eval_sets",
+      "reason": "Golden eval sets (claim triage, deadline-risk ranking, padding-signal detection, supplier-attribution classification, recall-routing accuracy) require eval-service write APIs whose action names are not yet in the rbac canonical catalog (Core follow-up noted in rbac catalog.go)."
+    },
+    {
+      "kind": "ontology",
+      "reason": "Ontology registration (Unit, Dealer, WarrantyPlan, Claim, LaborOp, Part, ComponentSystem, FailureMode, Supplier, SupplierChargeback, RecallCampaign, GoodwillRequest, AuditFinding) awaits pack-service; entity semantics are carried today by the warranty_core semantic model and dataset schemas."
+    },
+    {
+      "kind": "case_schemas",
+      "reason": "Typed case schemas (claim_adjudication, dealer_audit, supplier_recovery, goodwill_review, early_warning_investigation, recall_routing_review) await case-service schema materialization; today's cases carry the same fields via display_projection + the disposition taxonomy."
+    },
+    {
+      "kind": "model_archetypes",
+      "reason": "Model archetypes (claim_approval_confidence, dealer_padding_score, component_failure_hazard) await experiment-service archetype APIs; the scoring capability ships as pipeline seeds instead (isolation_forest unit anomaly + xgboost claim-outcome scorer) with model-governance expectations noted in grounding memories."
+    },
+    {
+      "kind": "display_labels",
+      "reason": "Display-label overlays (\"Claim\", \"Supplier chargeback\", \"Payment decision due\", \"Deadline at risk\", \"Recall routing\", entity templates) require the BFF label-registry endpoints (BFF-FR-082/088) which are pack-service-tier features."
+    }
+  ],
+  "result": "installed"
+}

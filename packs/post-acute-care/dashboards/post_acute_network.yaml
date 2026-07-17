@@ -1,0 +1,67 @@
+# Post-Acute Network dashboard (BRD 29 §4, US-7/FA view): episode volumes,
+# length of stay, and case-mix reimbursement across HHA / SNF / hospice.
+# Chart families restricted to the render-verified set
+# (vertical_bar / grid / pie / line).
+name: "Post-Acute Network"
+module: insights
+semantic_model: pac_episodes
+description: >-
+  Network-level post-acute KPIs (BRD 29): episode volumes by care setting,
+  average length of stay, expected PDGM/PDPM reimbursement by case-mix group,
+  and the comorbidity-capture mix.
+tags: [post-acute, home-health, snf, hospice, pack]
+charts:
+  - name: "Episodes by care setting"
+    chart_type: vertical_bar_chart
+    description: "Episode volume across HHA, SNF, and hospice"
+    config:
+      x: { dimension: care_setting }
+      y: [ { measure: episode_count, agg_fn: count } ]
+    sources: [ { measure: episode_count } ]
+    w: 6
+    h: 4
+  - name: "Average length of stay by care setting"
+    chart_type: vertical_bar_chart
+    description: "Mean LOS days per setting"
+    config:
+      x: { dimension: care_setting }
+      y: [ { measure: avg_los_days, agg_fn: avg } ]
+    sources: [ { measure: avg_los_days } ]
+    w: 6
+    h: 4
+  - name: "Comorbidity capture mix"
+    chart_type: pie_chart
+    description: "Episodes with vs without a comorbidity adjustment (PDGM capture)"
+    config:
+      x: { dimension: comorbidity_adjusted }
+      y: [ { measure: episode_count, agg_fn: count } ]
+    sources: [ { measure: episode_count } ]
+    w: 6
+    h: 4
+  - name: "Expected reimbursement by case-mix group"
+    chart_type: vertical_bar_chart
+    description: "Total expected case-mix reimbursement by PDGM/PDPM group"
+    config:
+      x: { dimension: case_mix_group }
+      y: [ { measure: total_expected_reimbursement, agg_fn: sum } ]
+    sources: [ { measure: total_expected_reimbursement } ]
+    w: 6
+    h: 4
+  - name: "Network episode grid"
+    chart_type: grid_chart
+    description: "Episodes, active census, LOS, and reimbursement by care setting"
+    config:
+      columns: [care_setting, episode_count, active_episode_count, avg_los_days, total_expected_reimbursement]
+      x: { dimension: care_setting }
+      y:
+        - { measure: episode_count, agg_fn: count }
+        - { measure: active_episode_count, agg_fn: count }
+        - { measure: avg_los_days, agg_fn: avg }
+        - { measure: total_expected_reimbursement, agg_fn: sum }
+    sources:
+      - { measure: episode_count }
+      - { measure: active_episode_count }
+      - { measure: avg_los_days }
+      - { measure: total_expected_reimbursement }
+    w: 12
+    h: 4

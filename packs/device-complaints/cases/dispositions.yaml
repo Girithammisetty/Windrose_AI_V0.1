@@ -1,0 +1,15 @@
+# Disposition taxonomy for the complaint-handling / MDR-reportability
+# workflow. Categories are the Core's closed set {true_positive,
+# false_positive,benign,inconclusive,other} (CASE-FR-020). file_mdr_report is
+# the 21 CFR 803 regulatory action (requires_note captures the reportability
+# rationale the eMDR narrative will cite); close_not_reportable notes carry
+# the documented not-reportable rationale 820.198 requires;
+# open_capa_investigation is the 820.100 trend escalation;
+# request_device_return_info documents the follow-up/return attempts behind
+# an inconclusive file; close_duplicate_complaint records the linkage to the
+# already-processed complaint.
+- { code: file_mdr_report,            label: "File MDR report — reportable event confirmed",           category: true_positive,  requires_note: true }
+- { code: close_not_reportable,       label: "Close — not MDR-reportable, rationale documented",       category: false_positive, requires_note: true }
+- { code: open_capa_investigation,    label: "Open CAPA investigation — trend / systemic signal",      category: other,          requires_note: true }
+- { code: request_device_return_info, label: "Request device return / additional information",         category: inconclusive,   requires_note: true }
+- { code: close_duplicate_complaint,  label: "Close — duplicate of an already-processed complaint",    category: benign,         requires_note: true }

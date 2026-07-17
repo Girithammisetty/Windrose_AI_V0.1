@@ -1,0 +1,30 @@
+# Saved queries (query-service) — includes the importer->lane edge source
+# (parent/child/n) for network-family charts: sourcing-network view that
+# surfaces transshipment-suspect lane concentration (one importer suddenly
+# heavy on a low-duty origin) and shared-lane clusters across importers.
+- identity: importer_sourcing_edges
+  name: "Trade: importer-lane sourcing network edges"
+  description: >-
+    Importer -> lane edge list (parent/child/n) from the shipment book —
+    network-chart source for spotting sourcing concentration and
+    transshipment-suspect shifts (an importer's volume migrating to a
+    low-duty origin lane) and lanes shared across importers.
+  sql: >-
+    SELECT importer_id AS parent, lane AS child,
+           count(*) AS n
+    FROM {{dataset('tc-shipments')}}
+    GROUP BY importer_id, lane
+  tags: [trade, network, lanes, sourcing, pack]
+- identity: high_priority_open_reviews
+  name: "Trade: high-priority open review queue"
+  description: "Open review items ranked by deadline runway — the analyst ranked-queue seed (deadline x duty risk x severity, not FIFO)."
+  sql: >-
+    SELECT review_id, shipment_id, item_type, product_category,
+           declared_hs_chapter, origin_country, screening_list,
+           cast(match_score AS double) AS match_score,
+           duty_risk, severity, valuation_band,
+           cast(days_to_deadline AS double) AS days_to_deadline
+    FROM {{dataset('tc-review-items')}}
+    WHERE status = 'open'
+    ORDER BY days_to_deadline ASC
+  tags: [trade, queue, backlog, deadlines, pack]

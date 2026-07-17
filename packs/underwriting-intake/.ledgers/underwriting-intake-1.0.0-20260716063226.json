@@ -1,0 +1,315 @@
+{
+  "pack": "underwriting-intake",
+  "version": "1.0.0",
+  "workspace_id": "019f6a75-613f-71a5-9296-8769e73f14c6",
+  "tenant_id": "019f6a75-5d07-7d56-b83a-fc2b75598d32",
+  "started_at": "2026-07-16T10:32:18Z",
+  "finished_at": "2026-07-16T10:32:26Z",
+  "actions": [
+    {
+      "kind": "datasets",
+      "identity": "uw_submissions",
+      "action": "create",
+      "urn": "wr:019f6a75-5d07-7d56-b83a-fc2b75598d32:dataset:dataset/019f6a7b-fe1b-7081-b867-5d41f5492205",
+      "detail": "'uw-submissions' ingested rows=26 snapshot=566058628316164026"
+    },
+    {
+      "kind": "datasets",
+      "identity": "uw_accounts",
+      "action": "create",
+      "urn": "wr:019f6a75-5d07-7d56-b83a-fc2b75598d32:dataset:dataset/019f6a7b-ffb0-7a4d-9f4b-f77d57f94d8f",
+      "detail": "'uw-accounts' ingested rows=30 snapshot=3783713733176057610"
+    },
+    {
+      "kind": "datasets",
+      "identity": "uw_insureds",
+      "action": "create",
+      "urn": "wr:019f6a75-5d07-7d56-b83a-fc2b75598d32:dataset:dataset/019f6a7c-0177-7736-8d67-64677bae128d",
+      "detail": "'uw-insureds' ingested rows=12 snapshot=1114484347855620566"
+    },
+    {
+      "kind": "semantic_models",
+      "identity": "underwriting_core",
+      "action": "create",
+      "urn": "wr:019f6a75-5d07-7d56-b83a-fc2b75598d32:semantic:model/019f6a7c-02de-7401-85ff-a85556794f3a",
+      "detail": "'underwriting_core' published"
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_0",
+      "action": "create",
+      "urn": "wr:019f6a75-5d07-7d56-b83a-fc2b75598d32:semantic:verified_query/019f6a7c-0420-7412-a736-d0511a57f1db",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_1",
+      "action": "create",
+      "urn": "wr:019f6a75-5d07-7d56-b83a-fc2b75598d32:semantic:verified_query/019f6a7c-04c4-7c35-9bb9-bbe1d9f1caf0",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_2",
+      "action": "create",
+      "urn": "wr:019f6a75-5d07-7d56-b83a-fc2b75598d32:semantic:verified_query/019f6a7c-0574-7baf-a7f6-2515f272fb3e",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_3",
+      "action": "create",
+      "urn": "wr:019f6a75-5d07-7d56-b83a-fc2b75598d32:semantic:verified_query/019f6a7c-0635-78c4-bf98-bf49a1ee963f",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_4",
+      "action": "create",
+      "urn": "wr:019f6a75-5d07-7d56-b83a-fc2b75598d32:semantic:verified_query/019f6a7c-06e6-77b1-a6b6-6e4e2194d58d",
+      "detail": ""
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "broker_lob_network_edges",
+      "action": "create",
+      "urn": "wr:019f6a75-5d07-7d56-b83a-fc2b75598d32:query:query/019f6a7c-079b-7e15-9254-a5d85fc80fb2",
+      "detail": "Underwriting: broker-line network edges"
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "priority_open_submissions",
+      "action": "create",
+      "urn": "wr:019f6a75-5d07-7d56-b83a-fc2b75598d32:query:query/019f6a7c-07d1-78c6-8254-add847cf40eb",
+      "detail": "Underwriting: priority open triage queue"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "submission_intake_center",
+      "action": "create",
+      "urn": "wr:019f6a75-5d07-7d56-b83a-fc2b75598d32:chart:dashboard/019f6a7c-0835-771c-84b9-580308860cad",
+      "detail": "Submission Intake Center"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "submission_intake_center",
+      "action": "verify",
+      "urn": "wr:019f6a75-5d07-7d56-b83a-fc2b75598d32:chart:dashboard/019f6a7c-0835-771c-84b9-580308860cad",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "appetite_clearance",
+      "action": "create",
+      "urn": "wr:019f6a75-5d07-7d56-b83a-fc2b75598d32:chart:dashboard/019f6a7c-0a0a-703a-b44e-53369d2062d1",
+      "detail": "Appetite & Clearance"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "appetite_clearance",
+      "action": "verify",
+      "urn": "wr:019f6a75-5d07-7d56-b83a-fc2b75598d32:chart:dashboard/019f6a7c-0a0a-703a-b44e-53369d2062d1",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "broker_funnel_performance",
+      "action": "create",
+      "urn": "wr:019f6a75-5d07-7d56-b83a-fc2b75598d32:chart:dashboard/019f6a7c-0cee-7e77-aebe-83814dc862e3",
+      "detail": "Broker & Funnel Performance"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "broker_funnel_performance",
+      "action": "verify",
+      "urn": "wr:019f6a75-5d07-7d56-b83a-fc2b75598d32:chart:dashboard/019f6a7c-0cee-7e77-aebe-83814dc862e3",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "accept_route_to_underwriter"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "decline_out_of_appetite"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "request_missing_information"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "refer_specialty_market"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "close_broker_withdrawn"
+    },
+    {
+      "kind": "cases",
+      "identity": "submission_queue",
+      "action": "create",
+      "urn": "wr:019f6a75-5d07-7d56-b83a-fc2b75598d32:dataset:dataset/019f6a7b-fe1b-7081-b867-5d41f5492205",
+      "detail": "6 open cases (reindexed)"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Submission Intake Analyst'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Submission Intake Analyst' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Appetite & Clearance Specialist'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Appetite & Clearance Specialist' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Underwriting Assistant'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Underwriting Assistant' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Underwriting Operations Manager'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Underwriting Operations Manager' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Underwriting Audit Lead'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Underwriting Audit Lead' bound to permission group"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "case-triage prompt_params set"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "analytics prompt_params set"
+    },
+    {
+      "kind": "memories",
+      "identity": "grounding",
+      "action": "create",
+      "urn": null,
+      "detail": "10 grounding records written, 0 already present"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "create",
+      "urn": null,
+      "detail": "'Account book anomaly screen (isolation forest)' (isolation_forest, train)"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "create",
+      "urn": null,
+      "detail": "'Submission triage outcome scorer (xgboost)' (xgboost, train)"
+    }
+  ],
+  "deferred": [
+    {
+      "kind": "guardrails",
+      "reason": "Underwriting-domain policies (no appetite decision communicated to a broker before the human determination; declination notes must carry specific risk-based reasons; no E&S referral without the documented admitted-market declination; unfair-discrimination pattern watch on declines) require guardrail-service / OPA policy materialization, which Core does not expose as a pack surface yet. The behavioral core is partially covered today by Core invariants: every pack-configured agent is proposal-mode with four-eyes approval (agent-runtime), and the agent instructions + disposition taxonomy route final intake determinations exclusively to human analysts with the Underwriting Operations Manager as approver."
+    },
+    {
+      "kind": "agent_recipes",
+      "reason": "Bespoke LangGraph recipes (Submission Clearance Checker, Appetite Fit Scorer, Completeness Chaser, Renewal-Defense Deadline Sentinel) require agent-runtime graph-module registration (BRD 23 BR-12). This pack specializes the existing case-triage + analytics agents via TenantAgentConfig prompt_params + tenant-scope RAG grounding instead."
+    },
+    {
+      "kind": "connection_templates",
+      "reason": "Production read connectors (agency-management and broker-portal systems: Applied Epic, Vertafore AMS360; submission-intake email/ACORD extraction feeds; clearance systems; loss-run retrieval services; D&B/experian-style firmographic enrichment; cat-modeling exposure feeds) require customer credentials and pack-service connector materialization. The pack ships seed datasets in the exact landing shape; production connectors are configured through the product Data > Connections UI."
+    },
+    {
+      "kind": "write_adapters",
+      "reason": "Write adapters (record the clearance block/release in the clearance system, send the declination letter with documented reasons, issue the broker information request, open the underwriting file in the policy admin system, notify the surplus-lines broker on referral) execute only behind pack-service's materialization contract and customer credentials; every such write stays proposal-mode with human approval \u2014 no autonomous declination, referral, or broker communication, ever."
+    },
+    {
+      "kind": "eval_sets",
+      "reason": "Golden eval sets (clearance-conflict detection, appetite-fit calls, completeness gap identification, deadline-risk ranking) require eval-service write APIs whose action names are not yet in the rbac canonical catalog (Core follow-up noted in rbac catalog.go)."
+    },
+    {
+      "kind": "ontology",
+      "reason": "Ontology registration (Insured, Account, Submission, Broker, Brokerage, AppetiteStatement, LossRun, StatementOfValues, Application, ClearanceRecord, NeededByClock, DeclinationLetter) awaits pack-service; entity semantics are carried today by the underwriting_core semantic model and dataset schemas."
+    },
+    {
+      "kind": "case_schemas",
+      "reason": "Typed case schemas (submission_triage, clearance_conflict_review, appetite_referral, completeness_chase, renewal_defense) await case-service schema materialization; today's cases carry the same fields via display_projection + the disposition taxonomy."
+    },
+    {
+      "kind": "model_archetypes",
+      "reason": "Model archetypes (appetite_fit_confidence, submission_priority_score) await experiment-service archetype APIs; the scoring capability ships as pipeline seeds instead (isolation_forest account-book anomaly + xgboost triage-outcome scorer) with NAIC AI-bulletin model-governance expectations noted in grounding memories."
+    },
+    {
+      "kind": "display_labels",
+      "reason": "Display-label overlays (\"Submission\", \"Clearance\", \"Needed-by date\", \"Renewal defense\", entity templates) require the BFF label-registry endpoints (BFF-FR-082/088) which are pack-service-tier features."
+    }
+  ],
+  "result": "installed"
+}

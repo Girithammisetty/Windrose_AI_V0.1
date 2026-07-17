@@ -1,0 +1,30 @@
+# Saved queries (query-service) — includes the applicant->employer edge
+# source (parent/child/n) for network-family charts: shared-employer
+# clustering (many applicants, one employer) and repeat-screened applicant
+# fans (one applicant, many employers — the gig / re-screen surface).
+- identity: screening_order_edges
+  name: "Screening: applicant-employer network edges"
+  description: >-
+    Applicant -> employer edge list (parent/child/n) from the screening-order
+    book — network-chart source for spotting employer volume clusters (many
+    applicants, one employer) and repeat-screened applicant fans (one
+    applicant, many employers: gig multi-apping and continuous-monitoring
+    re-screens).
+  sql: >-
+    SELECT applicant_id AS parent, employer_name AS child,
+           count(*) AS n
+    FROM {{dataset('bs-orders')}}
+    GROUP BY applicant_id, employer_name
+  tags: [screening, network, employers, pack]
+- identity: priority_open_reviews
+  name: "Screening: priority open adjudication queue"
+  description: "Open screening-hit reviews ranked by deadline runway then severity — the adjudicator ranked-queue seed (clock x severity x identity risk, not FIFO)."
+  sql: >-
+    SELECT review_id, order_id, check_type, hit_type, record_age_band,
+           relevance, identity_confidence, severity,
+           cast(days_to_deadline AS double) AS days_to_deadline,
+           cast(age_days AS double) AS age_days
+    FROM {{dataset('bs-reviews')}}
+    WHERE status = 'open'
+    ORDER BY days_to_deadline ASC, severity ASC
+  tags: [screening, queue, backlog, deadlines, pack]

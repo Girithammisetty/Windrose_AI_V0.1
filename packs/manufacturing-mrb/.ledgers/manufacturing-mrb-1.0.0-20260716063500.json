@@ -1,0 +1,315 @@
+{
+  "pack": "manufacturing-mrb",
+  "version": "1.0.0",
+  "workspace_id": "019f6a77-a307-7576-916e-0b46e3c7cf11",
+  "tenant_id": "019f6a77-9eba-71a1-a490-b8a9a58863bb",
+  "started_at": "2026-07-16T10:34:51Z",
+  "finished_at": "2026-07-16T10:35:00Z",
+  "actions": [
+    {
+      "kind": "datasets",
+      "identity": "nc_nonconformances",
+      "action": "noop",
+      "urn": "wr:019f6a77-9eba-71a1-a490-b8a9a58863bb:dataset:dataset/019f6a7d-4f0d-7ae1-92a4-8ad58780b795",
+      "detail": "dataset 'nc-nonconformances' exists"
+    },
+    {
+      "kind": "datasets",
+      "identity": "nc_lots",
+      "action": "noop",
+      "urn": "wr:019f6a77-9eba-71a1-a490-b8a9a58863bb:dataset:dataset/019f6a7d-507d-7d44-93b9-d8159629d03c",
+      "detail": "dataset 'nc-lots' exists"
+    },
+    {
+      "kind": "datasets",
+      "identity": "nc_suppliers",
+      "action": "create",
+      "urn": "wr:019f6a77-9eba-71a1-a490-b8a9a58863bb:dataset:dataset/019f6a7e-52fc-758c-91d2-6df239bbfb25",
+      "detail": "'nc-suppliers' ingested rows=12 snapshot=7169351686680986932"
+    },
+    {
+      "kind": "semantic_models",
+      "identity": "mrb_core",
+      "action": "create",
+      "urn": "wr:019f6a77-9eba-71a1-a490-b8a9a58863bb:semantic:model/019f6a7e-55bb-7708-b6d9-e562b6a97664",
+      "detail": "'mrb_core' published"
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_0",
+      "action": "create",
+      "urn": "wr:019f6a77-9eba-71a1-a490-b8a9a58863bb:semantic:verified_query/019f6a7e-5f63-7188-9a77-3415ba535266",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_1",
+      "action": "create",
+      "urn": "wr:019f6a77-9eba-71a1-a490-b8a9a58863bb:semantic:verified_query/019f6a7e-6048-77a9-9337-59fcb29b8996",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_2",
+      "action": "create",
+      "urn": "wr:019f6a77-9eba-71a1-a490-b8a9a58863bb:semantic:verified_query/019f6a7e-6129-735c-87ce-5238fecb65e6",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_3",
+      "action": "create",
+      "urn": "wr:019f6a77-9eba-71a1-a490-b8a9a58863bb:semantic:verified_query/019f6a7e-61fb-78d0-8f0d-f5bf6c9ba3d3",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_4",
+      "action": "create",
+      "urn": "wr:019f6a77-9eba-71a1-a490-b8a9a58863bb:semantic:verified_query/019f6a7e-62d4-75b7-806e-d1e125398d10",
+      "detail": ""
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "supplier_part_family_edges",
+      "action": "create",
+      "urn": "wr:019f6a77-9eba-71a1-a490-b8a9a58863bb:query:query/019f6a7e-6381-7a0e-b9b8-212fc226ded6",
+      "detail": "MRB: supplier-part-family network edges"
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "high_cost_open_ncs",
+      "action": "create",
+      "urn": "wr:019f6a77-9eba-71a1-a490-b8a9a58863bb:query:query/019f6a7e-63c5-7e96-8363-a195d1f27536",
+      "detail": "MRB: high-cost open nonconformance queue"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "nonconformance_command_center",
+      "action": "create",
+      "urn": "wr:019f6a77-9eba-71a1-a490-b8a9a58863bb:chart:dashboard/019f6a7e-6427-7ae5-abca-4e9a4a4e9430",
+      "detail": "Nonconformance Command Center"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "nonconformance_command_center",
+      "action": "verify",
+      "urn": "wr:019f6a77-9eba-71a1-a490-b8a9a58863bb:chart:dashboard/019f6a7e-6427-7ae5-abca-4e9a4a4e9430",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "mrb_dispositions_cycle_time",
+      "action": "create",
+      "urn": "wr:019f6a77-9eba-71a1-a490-b8a9a58863bb:chart:dashboard/019f6a7e-660c-7999-800a-ec557731cc22",
+      "detail": "MRB Dispositions & Cycle Time"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "mrb_dispositions_cycle_time",
+      "action": "verify",
+      "urn": "wr:019f6a77-9eba-71a1-a490-b8a9a58863bb:chart:dashboard/019f6a7e-660c-7999-800a-ec557731cc22",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "supplier_quality_watch",
+      "action": "create",
+      "urn": "wr:019f6a77-9eba-71a1-a490-b8a9a58863bb:chart:dashboard/019f6a7e-67b5-711d-a090-40e6ef7bb468",
+      "detail": "Supplier Quality Watch"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "supplier_quality_watch",
+      "action": "verify",
+      "urn": "wr:019f6a77-9eba-71a1-a490-b8a9a58863bb:chart:dashboard/019f6a7e-67b5-711d-a090-40e6ef7bb468",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "rework_to_spec"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "no_defect_found_release"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "use_as_is_engineering_disposition"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "quarantine_pending_analysis"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "return_to_supplier_scar"
+    },
+    {
+      "kind": "cases",
+      "identity": "mrb_queue",
+      "action": "create",
+      "urn": "wr:019f6a77-9eba-71a1-a490-b8a9a58863bb:dataset:dataset/019f6a7d-4f0d-7ae1-92a4-8ad58780b795",
+      "detail": "6 open cases (reindexed)"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Quality Engineer'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Quality Engineer' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'MRB Engineering Reviewer'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'MRB Engineering Reviewer' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Supplier Quality Engineer'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Supplier Quality Engineer' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Quality Manager'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Quality Manager' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Quality Systems Auditor'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Quality Systems Auditor' bound to permission group"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "case-triage prompt_params set"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "analytics prompt_params set"
+    },
+    {
+      "kind": "memories",
+      "identity": "grounding",
+      "action": "create",
+      "urn": null,
+      "detail": "10 grounding records written, 0 already present"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "create",
+      "urn": null,
+      "detail": "'Manufacturing lot anomaly detector (isolation forest)' (isolation_forest, train)"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "create",
+      "urn": null,
+      "detail": "'NC disposition outcome scorer (xgboost)' (xgboost, train)"
+    }
+  ],
+  "deferred": [
+    {
+      "kind": "guardrails",
+      "reason": "MRB-domain policies (no autonomous disposition of nonconforming material; use-as-is or repair on a critical characteristic must carry documented customer/design-authority concurrence before closure; med-device rework must attach re-verification evidence per ISO 13485 / 21 CFR 820.90; an escape assessment must precede any release of customer-return stock) require guardrail-service / OPA policy materialization, which Core does not expose as a pack surface yet. The behavioral core is partially covered today by Core invariants: every pack-configured agent is proposal-mode with four-eyes approval (agent-runtime), and the agent instructions + disposition taxonomy route final dispositions exclusively to human engineers with the Quality Manager as approver."
+    },
+    {
+      "kind": "agent_recipes",
+      "reason": "Bespoke LangGraph recipes (NC Intake Copilot, MRB Package Builder, Supplier SCAR Drafter, Containment Sweep Sentinel, Escape Notification Assessor) require agent-runtime graph-module registration (BRD 23 BR-12). This pack specializes the existing case-triage + analytics agents via TenantAgentConfig prompt_params + tenant-scope RAG grounding instead."
+    },
+    {
+      "kind": "connection_templates",
+      "reason": "Production read connectors (QMS platforms: ETQ Reliance, MasterControl, Arena, Greenlight Guru; ERP quality modules: SAP QM, Oracle Quality; MES/SPC systems and CMM/inspection-result feeds; PLM for drawing and characteristic data; supplier portals for certs and SCAR responses) require customer credentials and pack-service connector materialization. The pack ships seed datasets in the exact landing shape; production connectors are configured through the product Data > Connections UI."
+    },
+    {
+      "kind": "write_adapters",
+      "reason": "Write adapters (write the approved disposition back to the QMS/ERP nonconformance record, issue a SCAR through the supplier portal, place or lift a stock/ship hold in MES/ERP, generate a concession/waiver request package to the customer or design authority, open an escape notification) execute only behind pack-service's materialization contract and customer credentials; every such write stays proposal-mode with human approval \u2014 no autonomous material release, hold, or supplier action, ever."
+    },
+    {
+      "kind": "eval_sets",
+      "reason": "Golden eval sets (disposition triage accuracy, containment-scope recall on suspect lots, SCAR-routing precision, escape-risk ranking) require eval-service write APIs whose action names are not yet in the rbac canonical catalog (Core follow-up noted in rbac catalog.go)."
+    },
+    {
+      "kind": "ontology",
+      "reason": "Ontology registration (Nonconformance, Lot, Part, Characteristic, Supplier, Program, Disposition, MRBReview, Concession, SCAR, Containment, Escape, CertificateOfConformance) awaits pack-service; entity semantics are carried today by the mrb_core semantic model and dataset schemas."
+    },
+    {
+      "kind": "case_schemas",
+      "reason": "Typed case schemas (nc_intake, mrb_review, supplier_scar, containment_sweep, escape_assessment) await case-service schema materialization; today's cases carry the same fields via display_projection + the disposition taxonomy."
+    },
+    {
+      "kind": "model_archetypes",
+      "reason": "Model archetypes (disposition_confidence, escape_risk_score) await experiment-service archetype APIs; the scoring capability ships as pipeline seeds instead (isolation_forest lot anomaly + xgboost disposition-outcome scorer) with model-governance expectations noted in grounding memories."
+    },
+    {
+      "kind": "display_labels",
+      "reason": "Display-label overlays (\"Nonconformance\", \"MRB queue\", \"Disposition due\", \"Containment active\", entity templates) require the BFF label-registry endpoints (BFF-FR-082/088) which are pack-service-tier features."
+    }
+  ],
+  "result": "installed"
+}

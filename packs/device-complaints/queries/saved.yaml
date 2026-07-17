@@ -1,0 +1,28 @@
+# Saved queries (query-service) — includes the device->problem-code edge
+# source (parent/child/n) for network-family charts: repeat-offender devices
+# and problem-code clustering from the complaint book.
+- identity: dc_device_problem_edges
+  name: "Complaints: device-problem network edges"
+  description: >-
+    Device -> device-problem edge list (parent/child/n) from the complaint
+    book — network-chart source for spotting repeat-offender devices (one
+    device, many problem codes) and clustered problem codes (one code, many
+    devices) that should trip trending review under 820.100.
+  sql: >-
+    SELECT device_id AS parent, device_problem AS child,
+           count(*) AS n
+    FROM {{dataset('dc-complaints')}}
+    GROUP BY device_id, device_problem
+  tags: [complaints, network, device_problem, trending, pack]
+- identity: dc_mdr_clock_open_queue
+  name: "Complaints: MDR-clock open queue"
+  description: "Open complaints ranked by deadline runway — the reportability-decision worklist seed (clock x harm x severity, never FIFO)."
+  sql: >-
+    SELECT complaint_id, device_id, complaint_source, event_type,
+           device_problem, patient_harm, severity, investigation_status,
+           cast(days_to_deadline AS double) AS days_to_deadline,
+           cast(age_days AS double) AS age_days
+    FROM {{dataset('dc-complaints')}}
+    WHERE status = 'open'
+    ORDER BY days_to_deadline ASC
+  tags: [complaints, mdr, queue, deadlines, pack]

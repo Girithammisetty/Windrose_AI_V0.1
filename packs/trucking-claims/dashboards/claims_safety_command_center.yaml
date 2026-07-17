@@ -1,0 +1,69 @@
+# Claims & Safety Command Center: work-item mix by kind, backlog aging,
+# outcome mix, intake trend. Chart families restricted to the render-verified
+# set (vertical_bar / grid / pie / line); expr_metric measures (rates) are
+# query/NL surfaces, never charted directly.
+name: "Claims & Safety Command Center"
+module: insights
+semantic_model: trucking_claims_core
+description: >-
+  Top-line claims-and-safety operations KPIs: work-item volume by kind
+  (cargo OS&D, safety events, carrier vetting), adjudication backlog aging
+  by severity, human disposition outcome mix, and the monthly intake trend.
+tags: [logistics, trucking, claims, safety, pack]
+charts:
+  - name: "Claims & safety events by kind"
+    chart_type: vertical_bar_chart
+    description: "Work-item volume by kind (cargo OS&D vs safety event vs carrier vetting)"
+    config:
+      x: { dimension: claim_kind }
+      y: [ { measure: claim_count, agg_fn: count } ]
+    sources: [ { measure: claim_count } ]
+    w: 6
+    h: 4
+  - name: "Backlog aging by severity"
+    chart_type: vertical_bar_chart
+    description: "Average claim age in days by severity (cycle-time watch)"
+    config:
+      x: { dimension: severity }
+      y: [ { measure: avg_claim_age_days, agg_fn: avg } ]
+    sources: [ { measure: avg_claim_age_days } ]
+    w: 6
+    h: 4
+  - name: "Disposition outcome mix"
+    chart_type: pie_chart
+    description: "Paid vs denied vs carrier recovery vs fraud escalation vs coaching vs pending"
+    config:
+      x: { dimension: claim_disposition }
+      y: [ { measure: claim_count, agg_fn: count } ]
+    sources: [ { measure: claim_count } ]
+    w: 6
+    h: 4
+  - name: "Intake by month"
+    chart_type: line_chart
+    description: "Claims and safety reviews filed by month"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: claim_count, agg_fn: count } ]
+    sources: [ { measure: claim_count } ]
+    w: 6
+    h: 4
+  - name: "Work-item kind grid"
+    chart_type: grid_chart
+    description: "Volume, open backlog, closures, fraud escalations and claimed dollars by kind"
+    config:
+      columns: [claim_kind, claim_count, open_claim_count, closed_claim_count, fraud_escalated_count, total_claim_amount]
+      x: { dimension: claim_kind }
+      y:
+        - { measure: claim_count, agg_fn: count }
+        - { measure: open_claim_count, agg_fn: count }
+        - { measure: closed_claim_count, agg_fn: count }
+        - { measure: fraud_escalated_count, agg_fn: count }
+        - { measure: total_claim_amount, agg_fn: sum }
+    sources:
+      - { measure: claim_count }
+      - { measure: open_claim_count }
+      - { measure: closed_claim_count }
+      - { measure: fraud_escalated_count }
+      - { measure: total_claim_amount }
+    w: 12
+    h: 4

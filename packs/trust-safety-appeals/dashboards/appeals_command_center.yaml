@@ -1,0 +1,69 @@
+# Appeals Command Center: appeal mix by enforcement type, backlog aging,
+# outcome mix, intake trend. Chart families restricted to the render-verified
+# set (vertical_bar / grid / pie / line); expr_metric measures (rates) are
+# query/NL surfaces, never charted directly.
+name: "Appeals Command Center"
+module: insights
+semantic_model: appeals_core
+description: >-
+  Top-line appeals operations KPIs: appeal volumes by enforcement type,
+  adjudication backlog aging by severity, human disposition outcome mix,
+  and the monthly appeal intake trend.
+tags: [trust_safety, appeals, moderation, pack]
+charts:
+  - name: "Appeals by enforcement type"
+    chart_type: vertical_bar_chart
+    description: "Appeal volume by contested enforcement type (removal, suspension, demonetization, ranking)"
+    config:
+      x: { dimension: appeal_type }
+      y: [ { measure: appeal_count, agg_fn: count } ]
+    sources: [ { measure: appeal_count } ]
+    w: 6
+    h: 4
+  - name: "Backlog aging by severity"
+    chart_type: vertical_bar_chart
+    description: "Average appeal age in days by severity (cycle-time watch)"
+    config:
+      x: { dimension: severity }
+      y: [ { measure: avg_appeal_age_days, agg_fn: avg } ]
+    sources: [ { measure: avg_appeal_age_days } ]
+    w: 6
+    h: 4
+  - name: "Disposition outcome mix"
+    chart_type: pie_chart
+    description: "Overturn vs uphold vs partial-modify vs escalation vs duplicate vs pending"
+    config:
+      x: { dimension: appeal_disposition }
+      y: [ { measure: appeal_count, agg_fn: count } ]
+    sources: [ { measure: appeal_count } ]
+    w: 6
+    h: 4
+  - name: "Appeal intake by month"
+    chart_type: line_chart
+    description: "Appeal filings trend by filed month"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: appeal_count, agg_fn: count } ]
+    sources: [ { measure: appeal_count } ]
+    w: 6
+    h: 4
+  - name: "Appeal-type worklist grid"
+    chart_type: grid_chart
+    description: "Appeals, closures, overturns, escalations and backlog aging by enforcement type"
+    config:
+      columns: [appeal_type, appeal_count, closed_appeal_count, overturned_count, escalated_count, avg_appeal_age_days]
+      x: { dimension: appeal_type }
+      y:
+        - { measure: appeal_count, agg_fn: count }
+        - { measure: closed_appeal_count, agg_fn: count }
+        - { measure: overturned_count, agg_fn: count }
+        - { measure: escalated_count, agg_fn: count }
+        - { measure: avg_appeal_age_days, agg_fn: avg }
+    sources:
+      - { measure: appeal_count }
+      - { measure: closed_appeal_count }
+      - { measure: overturned_count }
+      - { measure: escalated_count }
+      - { measure: avg_appeal_age_days }
+    w: 12
+    h: 4

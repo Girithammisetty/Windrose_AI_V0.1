@@ -1,0 +1,135 @@
+# Tenant-scope RAG grounding records (memory-service). This is the
+# wildfire-mitigation / clearance-standard / gas-leak-grading domain
+# knowledge the triage copilot retrieves when reasoning about a finding.
+# Every record is factual regulatory or operational reference material;
+# jurisdiction-specific figures are stated qualitatively where exact values
+# vary by state, rule revision, or utility program.
+- content: >-
+    Wildfire mitigation plans (WMPs): utilities in high-fire-risk states —
+    California most prominently — must file wildfire mitigation plans with
+    the state's safety regulator describing inspection programs, vegetation
+    management, grid hardening, and PSPS protocols, and are audited against
+    the commitments in those plans. California's High Fire-Threat District
+    (HFTD) map classifies territory into Tier 2 (elevated fire risk) and
+    Tier 3 (extreme fire risk); HFTD tiers drive shorter inspection cycles,
+    expanded vegetation clearances, and stricter repair timeframes. A
+    finding's risk zone is therefore a first-order triage input: equal
+    defects in Tier 3 and in a standard zone carry different deadlines and
+    different consequence-of-inaction.
+  tags: [wildfire, wmp, hftd, california, inspection_cycles]
+  confidence: 0.93
+- content: >-
+    Overhead-line clearance standards: California General Order 95 governs
+    overhead electric line design, construction, and maintenance, including
+    conductor clearances and vegetation-clearance requirements, with
+    expanded minimum clearances in high fire-threat districts; other states
+    apply the National Electrical Safety Code with state amendments. Exact
+    clearance distances vary by voltage, span, and fire-threat tier, so
+    apply the utility's engineering standard for the specific asset — but a
+    confirmed encroachment inside minimum clearance on an energized
+    conductor in an HFTD is a repair-clock item, not a routine program trim.
+  tags: [go_95, clearances, vegetation, nesc, standards]
+  confidence: 0.9
+- content: >-
+    Gas leak grading (well-established distribution-industry practice,
+    reflected in Gas Piping Technology Committee guidance and state rules):
+    Grade 1 — an existing or probable hazard to persons or property —
+    requires immediate repair or continuous action until conditions are no
+    longer hazardous; Grade 2 — non-hazardous at the time of detection but
+    justifying scheduled repair — must be repaired within a defined program
+    window with periodic re-evaluation until repaired; Grade 3 —
+    non-hazardous and expected to remain so — is monitored through
+    scheduled re-checks. Grading is re-assessed on every re-check: a Grade
+    2 that migrates toward a structure or grows in concentration is
+    regraded, not left on the original clock.
+  tags: [gas, leak_grading, grade_1, grade_2, grade_3, pipeline_safety]
+  confidence: 0.95
+- content: >-
+    Gas integrity management: federal pipeline-safety regulation (PHMSA)
+    requires distribution operators to run integrity-management programs
+    that identify threats and prioritize remediation; corrosion on legacy
+    materials is a recognized threat category, and cast-iron and bare-steel
+    mains are the subject of long-standing federal and state replacement
+    programs. A corrosion finding on a 1960s-era cast-iron segment is an
+    integrity-management item: deferral requires a documented risk-based
+    rationale and belongs in the replacement-program scoping, not in the
+    routine-repair queue.
+  tags: [phmsa, integrity_management, corrosion, cast_iron, gas]
+  confidence: 0.92
+- content: >-
+    Inspection-cycle compliance and audit exposure: utilities are audited
+    against their inspection cycles (patrol and detailed inspections on
+    defined intervals, shorter in high fire-threat districts) and against
+    the corrective-action clocks their rules and WMP commitments attach to
+    findings. Auditors reconstruct the chain finding -> triage decision ->
+    work order -> completion; overdue corrective actions, findings closed
+    without documented basis, and assets past their inspection interval are
+    citable findings that can carry penalties. Every triage decision should
+    therefore be written so an auditor can re-derive it from the record.
+  tags: [audit, inspection_cycles, corrective_action, compliance]
+  confidence: 0.9
+- content: >-
+    Deferred-maintenance liability: in post-incident litigation and
+    regulatory investigation, a utility's own inspection findings and
+    deferral decisions are discoverable, and a record showing a known
+    defect deferred without a documented engineering rationale — followed
+    by a catastrophic failure of that asset — is among the most damaging
+    fact patterns a utility can face (a hard lesson of major
+    wildfire-liability proceedings). Deferral (schedule_planned_work) is a
+    legitimate, often correct decision, but it must carry the risk-based
+    justification, the program window, and the re-inspection basis in the
+    decision note at the time it is made.
+  tags: [liability, deferred_maintenance, litigation, documentation]
+  confidence: 0.9
+- content: >-
+    Drone/AI detection false-positive management: aerial and drone-AI
+    inspection pipelines materially expand coverage but carry meaningful
+    false-positive rates from shadows, sun glint, imaging angle, and
+    vegetation occlusion — low-confidence detections that match a known
+    artifact signature should route to field verification, not to dispatch
+    and not to silent closure. Every field-verification outcome (confirmed
+    or refuted) is a labeled example: feeding it back to retrain the
+    detector is what improves precision over time, so a false-detection
+    closure without a verification record wastes both a truck roll decision
+    and a training label.
+  tags: [drone_ai, false_positive, field_verification, model_training]
+  confidence: 0.88
+- content: >-
+    Vegetation-encroachment prioritization: rank encroachment findings by
+    fire-threat tier first (Tier-3 HFTD outranks Tier 2 outranks standard),
+    then by clearance deficit, species growth rate, and the circuit's PSPS
+    history — encroachment on a circuit that has previously required
+    public-safety power shutoffs is exactly the exposure that vegetation
+    work exists to remove, because PSPS is a last-resort measure whose
+    customer impact regulators expect utilities to engineer away through
+    hardening and clearance work, not to normalize.
+  tags: [vegetation, prioritization, psps, hftd, wildfire]
+  confidence: 0.9
+- content: >-
+    Transmission inspection obligations: NERC reliability standards apply to
+    transmission facilities, including FAC-003 transmission vegetation
+    management — applicable lines carry defined clearance obligations,
+    vegetation-caused sustained outages are reportable events, and
+    transmission owners must run documented vegetation-management and
+    inspection programs. Findings on transmission-class assets therefore
+    carry a reliability-compliance dimension on top of the safety
+    dimension, and their records must survive a NERC audit.
+  tags: [nerc, fac_003, transmission, vegetation, reliability]
+  confidence: 0.9
+- content: >-
+    Storm and emergency surge triage: after major storms, finding volume
+    surges and triage shifts to make-safe-first — downed conductors,
+    leaning or broken poles, and gas leaks are secured before restoration
+    and before routine-queue work resumes; temporary repairs and make-safe
+    actions generate follow-up findings so nothing exits the queue on a
+    temporary fix. Documentation duties do not relax during surge
+    operations: every expedited decision still needs its evidence and
+    rationale recorded, because storm-period decisions are audited too.
+    Model governance applies to the whole loop: every AI-assisted
+    repair/defer decision preserves a provenance chain (data version,
+    detector/model version, detection confidence, reviewer identity,
+    timestamp), and pattern-level over-deferral in high-risk zones is an
+    audit and liability exposure even when each file individually appears
+    defensible.
+  tags: [storm_surge, make_safe, governance, provenance, audit]
+  confidence: 0.88

@@ -1,0 +1,39 @@
+{{- /*
+One Prometheus-Operator ServiceMonitor per entry in .Values.services, scraping
+the service's existing /metrics endpoint on the "http" port (the same port
+Service already exposes — see templates/service.yaml). Pull-based, matches the
+in-house RED registries in go-common/metricsx and py-common/windrose_common/
+metricsx.py; nothing here changes what a service exposes, only how Prometheus
+discovers it.
+
+Requires the Prometheus Operator CRDs (monitoring.coreos.com/v1) to be
+installed in the cluster — this template renders nothing unless explicitly
+enabled via observability.serviceMonitor.enabled, so charts without the CRD
+installed are unaffected by default.
+*/}}
+{{- if .Values.observability.serviceMonitor.enabled }}
+{{- $root := . -}}
+{{- $om := .Values.observability.serviceMonitor -}}
+{{- range $svc := .Values.services }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ $svc.name }}
+  labels:
+    {{- include "windrose.labels" $root | nindent 4 }}
+    {{- include "windrose.selectorLabels" (dict "svc" $svc "root" $root) | nindent 4 }}
+    {{- with $om.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "windrose.selectorLabels" (dict "svc" $svc "root" $root) | nindent 6 }}
+  endpoints:
+    - port: http
+      path: {{ default "/metrics" $om.path }}
+      interval: {{ default "30s" $om.interval }}
+      scrapeTimeout: {{ default "10s" $om.scrapeTimeout }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,22 @@
+# Pack datasets (ingestion-service file_upload, stable names for idempotency).
+# In production these tables land via the customer's core-admin / EDI / LEIE
+# connectors (FWA-FR-080 — deferred until pack-service ships connector
+# materialization); this seed data is REAL rows in the same shape, carrying
+# the four canonical FWA typologies (upcoding, unbundling, phantom billing,
+# impossible days) so every downstream component runs on genuine patterns.
+- identity: fwa_claim_lines
+  name: fwa-claim-lines
+  file: data/fwa_claim_lines.csv
+  format: csv
+- identity: fwa_provider_profiles
+  name: fwa-provider-profiles
+  file: data/fwa_provider_profiles.csv
+  format: csv
+- identity: fwa_leads
+  name: fwa-leads
+  file: data/fwa_leads.csv
+  format: csv
+- identity: fwa_recoveries
+  name: fwa-recoveries
+  file: data/fwa_recoveries.csv
+  format: csv

@@ -1,0 +1,31 @@
+event_id,case_id,product_id,event_pt,soc,listed,severity,outcome,onset_days
+EVT-8001,PVC-5001,PRD-01,Headache,Nervous system disorders,yes,mild,recovered,3
+EVT-8002,PVC-5002,PRD-03,Pancreatitis acute,Gastrointestinal disorders,no,severe,recovering,21
+EVT-8003,PVC-5002,PRD-03,Nausea,Gastrointestinal disorders,yes,moderate,recovered,18
+EVT-8004,PVC-5003,PRD-05,Cough,"Respiratory, thoracic and mediastinal disorders",yes,mild,recovered,5
+EVT-8005,PVC-5004,PRD-02,Stevens-Johnson syndrome,Skin and subcutaneous tissue disorders,no,severe,recovered,12
+EVT-8006,PVC-5005,PRD-08,Dizziness,Nervous system disorders,yes,mild,unknown,7
+EVT-8007,PVC-5006,PRD-06,Gastrointestinal haemorrhage,Gastrointestinal disorders,yes,severe,recovered,30
+EVT-8008,PVC-5007,PRD-04,Drug ineffective,General disorders and administration site conditions,yes,mild,unknown,14
+EVT-8009,PVC-5008,PRD-07,Pneumonia,Infections and infestations,yes,severe,recovered,45
+EVT-8010,PVC-5009,PRD-01,Fatigue,General disorders and administration site conditions,yes,mild,recovered,10
+EVT-8011,PVC-5010,PRD-03,Hepatic failure,Hepatobiliary disorders,no,severe,fatal,60
+EVT-8012,PVC-5010,PRD-03,Jaundice,Hepatobiliary disorders,no,severe,fatal,52
+EVT-8013,PVC-5011,PRD-05,Tremor,Nervous system disorders,yes,moderate,recovered,4
+EVT-8014,PVC-5012,PRD-02,Peripheral neuropathy,Nervous system disorders,no,severe,not_recovered,90
+EVT-8015,PVC-5013,PRD-08,Weight increased,Investigations,yes,mild,unknown,60
+EVT-8016,PVC-5014,PRD-07,Infusion related reaction,Immune system disorders,yes,moderate,recovering,1
+EVT-8017,PVC-5015,PRD-06,Constipation,Gastrointestinal disorders,yes,mild,recovered,8
+EVT-8018,PVC-5016,PRD-04,Injection site erythema,General disorders and administration site conditions,yes,mild,recovering,1
+EVT-8019,PVC-5017,PRD-01,Rash,Skin and subcutaneous tissue disorders,yes,mild,unknown,6
+EVT-8020,PVC-5018,PRD-03,Pancreatitis acute,Gastrointestinal disorders,no,severe,recovering,21
+EVT-8021,PVC-5019,PRD-05,Cough,"Respiratory, thoracic and mediastinal disorders",yes,mild,recovered,5
+EVT-8022,PVC-5020,PRD-07,Infusion related reaction,Immune system disorders,yes,moderate,recovering,1
+EVT-8023,PVC-6001,PRD-03,Hepatic failure,Hepatobiliary disorders,no,severe,fatal,48
+EVT-8024,PVC-6001,PRD-03,Hyperbilirubinaemia,Investigations,no,severe,fatal,41
+EVT-8025,PVC-6002,PRD-02,Stevens-Johnson syndrome,Skin and subcutaneous tissue disorders,no,severe,not_recovered,15
+EVT-8026,PVC-6003,PRD-05,Drug ineffective,General disorders and administration site conditions,yes,mild,unknown,20
+EVT-8027,PVC-6004,PRD-01,Angioedema,Skin and subcutaneous tissue disorders,yes,severe,recovering,2
+EVT-8028,PVC-6005,PRD-07,Infusion related reaction,Immune system disorders,yes,moderate,recovering,1
+EVT-8029,PVC-6005,PRD-07,Pyrexia,General disorders and administration site conditions,yes,moderate,recovering,1
+EVT-8030,PVC-6006,PRD-04,Anaphylactic reaction,Immune system disorders,no,severe,recovering,1

@@ -1,0 +1,77 @@
+# Seeded screening-adjudication queue: the OPEN hit reviews from the seed
+# dataset become cases so an adjudicator logging in sees a real,
+# pattern-diverse worklist on day one — common-name felony mismatch,
+# obsolete non-conviction arrest, pending charge on an active gig driver,
+# 12-year-old conviction routed to individualized assessment, a pre-adverse
+# response window at 2 days, and an education discrepancy that may be a
+# registrar error. due_days=4 keeps triage ahead of the tightest
+# adverse-action clocks on the open book.
+dataset: bs_reviews
+due_days: 4
+rows:
+  - row_pk: BSR-5001
+    severity: high
+    display_projection:
+      review_id: BSR-5001
+      applicant: "David Johnson (AP-3007)"
+      check_type: criminal
+      hit_type: felony
+      position: "driver — HaulRight Logistics (ORD-2019)"
+      identity_confidence: low
+      days_to_deadline: "8"
+      note: "Statewide criminal search returned a 2021 felony for 'David A. Johnson' against applicant David M. Johnson (AP-3007) — middle-initial mismatch, DOB matches month/year only, address history never intersects the record county; common_name flag set and the applicant carries a prior CRA dispute. Identity confidence LOW: 607(b) maximum-possible-accuracy bars reporting a name-plus-partial-DOB match on a common name — corroborate full middle name + full DOB at the source court or suppress"
+  - row_pk: BSR-5002
+    severity: medium
+    display_projection:
+      review_id: BSR-5002
+      applicant: "Aaron Feldman (AP-3005)"
+      check_type: criminal
+      hit_type: misdemeanor
+      position: "finance — Summit Trust Bank (ORD-2016)"
+      record_age_band: over_7_years
+      days_to_deadline: "12"
+      note: "County search surfaced a 2018 misdemeanor arrest for Aaron Feldman (AP-3005) with charges dismissed — a non-conviction record now roughly 8 years old. FCRA 605(a) bars reporting arrest records that did not result in conviction beyond seven years: obsolete, suppress candidate. Confirm the dismissal disposition at the source court before closing so the accuracy finding is documented"
+  - row_pk: BSR-5003
+    severity: high
+    display_projection:
+      review_id: BSR-5003
+      applicant: "Miguel Santana (AP-3003)"
+      check_type: criminal
+      hit_type: pending_charge
+      position: "driver — GlideShare Mobility (ORD-2004)"
+      relevance: pending
+      days_to_deadline: "6"
+      note: "Continuous-monitoring re-screen ORD-2004 (active gig driver) surfaced a pending reckless-driving charge filed 2026-05 against Miguel Santana (AP-3003). A pending charge is not a conviction: run the job-relatedness analysis against the driving role (nature of alleged conduct vs safety-sensitive duties) and check the platform's jurisdiction rules. Applicant has dispute_history=yes — expect a 611 reinvestigation if reported; his prior order ORD-2003 adjudicated clear (BSR-4002)"
+  - row_pk: BSR-5004
+    severity: medium
+    display_projection:
+      review_id: BSR-5004
+      applicant: "Sofia Petrov (AP-3012)"
+      check_type: criminal
+      hit_type: felony
+      position: "healthcare — Lakeview Medical Center (ORD-2014)"
+      record_age_band: over_7_years
+      days_to_deadline: "14"
+      note: "12-year-old felony conviction returned for Sofia Petrov (AP-3012). Convictions carry no federal FCRA 7-year bar (state limits vary), and the employer's matrix routes decade-old convictions to individualized assessment: weigh the EEOC Green factors — nature/gravity of the offense, time elapsed, nature of the patient-facing job — against the rehabilitation evidence the applicant submitted (sentence completed, unrelated offense category, continuous employment since). Assemble the assessment file for the Screening Operations Manager"
+  - row_pk: BSR-5005
+    severity: high
+    display_projection:
+      review_id: BSR-5005
+      applicant: "Rosa Delgado (AP-3006)"
+      check_type: criminal
+      hit_type: misdemeanor
+      position: "hospitality — Casa Bella Hotels (ORD-2018)"
+      relevance: job_related
+      days_to_deadline: "2"
+      note: "Pre-adverse-action package (report copy + CFPB Summary of Rights) went out 2026-07-08 for Rosa Delgado (AP-3006) on a job-related 2025 theft misdemeanor. The customary ~5-business-day response window closes in 2 days and the applicant has emailed intent to dispute the record. Hold the final adverse-action notice until the window closes or the dispute resolves — the clock must not lapse silently, and any dispute pauses reporting pending 611 reinvestigation"
+  - row_pk: BSR-5006
+    severity: medium
+    display_projection:
+      review_id: BSR-5006
+      applicant: "Chen Wei (AP-3004)"
+      check_type: education
+      hit_type: discrepancy
+      position: "healthcare — Meridian Care Partners (ORD-2026)"
+      identity_confidence: high
+      days_to_deadline: "3"
+      note: "Education verification for Chen Wei (AP-3004) shows conferral year 2021 vs the claimed 2020 at the same institution — the registrar migrated student systems in 2021, a known source of conferral-date drift, so this may be a registrar error rather than misrepresentation. Reverify with the registrar before any adverse report (607(b) maximum-possible-accuracy); the applicant's other checks on ORD-2026 are clean"

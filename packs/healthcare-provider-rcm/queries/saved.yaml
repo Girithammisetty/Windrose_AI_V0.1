@@ -1,0 +1,29 @@
+# Saved queries (query-service) — the denials-specialist worklist and the
+# underpayment recovery targets (BRD 26 US-2/US-6, RCM-FR-050).
+- identity: denial_worklist
+  name: "RCM: denial worklist by dollars at risk"
+  description: >-
+    Open denial records ranked by denied dollars with CARC/RARC codes, BR-4
+    denial category, appeal status, and the appeal-deadline window (BR-5).
+  sql: >-
+    SELECT denial_id, claim_id, payer_name, carc_code, rarc_code,
+           denial_category, appeal_status,
+           cast(denied_amount AS double) AS denied_dollars,
+           cast(appeal_deadline_days AS integer) AS appeal_deadline_days
+    FROM {{dataset('rcm-denials')}}
+    ORDER BY denied_dollars DESC
+  tags: [healthcare, rcm, denials, worklist, pack]
+- identity: underpayment_targets
+  name: "RCM: underpayment recovery targets"
+  description: >-
+    835 remit lines paid below the contracted amount (RCM-FR-050), ranked by
+    payment variance — the Underpayment Detector's dispute candidates.
+  sql: >-
+    SELECT remit_id, claim_id, payer_name, remit_month, carc_code,
+           cast(expected_paid AS double) AS expected_paid,
+           cast(paid_amount AS double) AS actual_paid,
+           cast(payment_variance AS double) AS variance
+    FROM {{dataset('rcm-remits')}}
+    WHERE underpayment_flag = 'yes'
+    ORDER BY variance DESC
+  tags: [healthcare, rcm, underpayment, recovery, pack]

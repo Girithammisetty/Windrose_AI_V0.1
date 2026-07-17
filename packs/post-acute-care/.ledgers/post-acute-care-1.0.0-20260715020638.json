@@ -1,0 +1,336 @@
+{
+  "pack": "post-acute-care",
+  "version": "1.0.0",
+  "workspace_id": "019f6462-47e5-79db-b828-8871ff03bcb0",
+  "tenant_id": "019f6462-43af-7c19-83f8-feb3d4eee63e",
+  "started_at": "2026-07-15T06:06:30Z",
+  "finished_at": "2026-07-15T06:06:38Z",
+  "actions": [
+    {
+      "kind": "datasets",
+      "identity": "pac_episodes",
+      "action": "create",
+      "urn": "wr:019f6462-43af-7c19-83f8-feb3d4eee63e:dataset:dataset/019f6462-491e-7474-b690-b6e66303fa48",
+      "detail": "'pac-episodes' ingested rows=16 snapshot=898734630825410802"
+    },
+    {
+      "kind": "datasets",
+      "identity": "pac_referrals",
+      "action": "create",
+      "urn": "wr:019f6462-43af-7c19-83f8-feb3d4eee63e:dataset:dataset/019f6462-4aa4-7bc3-af5d-8f67066baacf",
+      "detail": "'pac-referrals' ingested rows=20 snapshot=2407030778790479857"
+    },
+    {
+      "kind": "datasets",
+      "identity": "pac_assessments",
+      "action": "create",
+      "urn": "wr:019f6462-43af-7c19-83f8-feb3d4eee63e:dataset:dataset/019f6462-4c3b-7322-8e4c-123d1a188489",
+      "detail": "'pac-assessments' ingested rows=18 snapshot=3864225485141088168"
+    },
+    {
+      "kind": "semantic_models",
+      "identity": "episodes",
+      "action": "create",
+      "urn": "wr:019f6462-43af-7c19-83f8-feb3d4eee63e:semantic:model/019f6462-4d91-7724-84d8-8c24a5e2e95f",
+      "detail": "'pac_episodes' published"
+    },
+    {
+      "kind": "semantic_models",
+      "identity": "referrals",
+      "action": "create",
+      "urn": "wr:019f6462-43af-7c19-83f8-feb3d4eee63e:semantic:model/019f6462-4edb-79a4-9ca3-6d83fa952860",
+      "detail": "'pac_referrals' published"
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_0",
+      "action": "create",
+      "urn": "wr:019f6462-43af-7c19-83f8-feb3d4eee63e:semantic:verified_query/019f6462-4fe6-70e1-b75f-1e74dff72a1a",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_1",
+      "action": "create",
+      "urn": "wr:019f6462-43af-7c19-83f8-feb3d4eee63e:semantic:verified_query/019f6462-509d-7a10-9042-994207955644",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_2",
+      "action": "create",
+      "urn": "wr:019f6462-43af-7c19-83f8-feb3d4eee63e:semantic:verified_query/019f6462-5179-77f5-a705-34f0a5a9e96c",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_3",
+      "action": "create",
+      "urn": "wr:019f6462-43af-7c19-83f8-feb3d4eee63e:semantic:verified_query/019f6462-524e-7112-916f-07d21158ebae",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_4",
+      "action": "create",
+      "urn": "wr:019f6462-43af-7c19-83f8-feb3d4eee63e:semantic:verified_query/019f6462-535d-72b0-b83d-8f2eeff4f74a",
+      "detail": ""
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "readmission_watchlist",
+      "action": "create",
+      "urn": "wr:019f6462-43af-7c19-83f8-feb3d4eee63e:query:query/019f6462-540b-7510-85bb-ae2249273a1b",
+      "detail": "Post-acute: active-episode readmission watchlist"
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "referral_flow_edges",
+      "action": "create",
+      "urn": "wr:019f6462-43af-7c19-83f8-feb3d4eee63e:query:query/019f6462-5457-7017-870b-3163c3f863d2",
+      "detail": "Post-acute: referral flow hospital to setting"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "post_acute_network",
+      "action": "create",
+      "urn": "wr:019f6462-43af-7c19-83f8-feb3d4eee63e:chart:dashboard/019f6462-54c5-7635-bdfc-8d44f43f0ab2",
+      "detail": "Post-Acute Network"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "post_acute_network",
+      "action": "verify",
+      "urn": "wr:019f6462-43af-7c19-83f8-feb3d4eee63e:chart:dashboard/019f6462-54c5-7635-bdfc-8d44f43f0ab2",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "readmission_watch",
+      "action": "create",
+      "urn": "wr:019f6462-43af-7c19-83f8-feb3d4eee63e:chart:dashboard/019f6462-56e3-7d81-a4af-b76639632e19",
+      "detail": "Readmission Watch"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "readmission_watch",
+      "action": "verify",
+      "urn": "wr:019f6462-43af-7c19-83f8-feb3d4eee63e:chart:dashboard/019f6462-56e3-7d81-a4af-b76639632e19",
+      "detail": "4/4 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "referral_intake",
+      "action": "create",
+      "urn": "wr:019f6462-43af-7c19-83f8-feb3d4eee63e:chart:dashboard/019f6462-5877-76ba-96f1-fd628b027c50",
+      "detail": "Referral Intake"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "referral_intake",
+      "action": "verify",
+      "urn": "wr:019f6462-43af-7c19-83f8-feb3d4eee63e:chart:dashboard/019f6462-5877-76ba-96f1-fd628b027c50",
+      "detail": "4/4 charts resolve data"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "comorbidity_codes_accepted"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "comorbidity_codes_rejected"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "therapy_plan_realigned"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "risk_intervention_started"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "risk_flag_cleared"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "referral_accept_confirmed"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "referral_decline_confirmed"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "escalate_medical_director"
+    },
+    {
+      "kind": "cases",
+      "identity": "care_transition_queue",
+      "action": "create",
+      "urn": "wr:019f6462-43af-7c19-83f8-feb3d4eee63e:dataset:dataset/019f6462-491e-7474-b690-b6e66303fa48",
+      "detail": "5 open cases (reindexed)"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'HHA Clinical Nurse'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'HHA Clinical Nurse' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'SNF MDS Coordinator'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'SNF MDS Coordinator' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Intake Coordinator'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Intake Coordinator' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Post-Acute Care Manager'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Post-Acute Care Manager' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'PAC Compliance Officer'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'PAC Compliance Officer' bound to permission group"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "case-triage prompt_params set"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "analytics prompt_params set"
+    },
+    {
+      "kind": "memories",
+      "identity": "grounding",
+      "action": "create",
+      "urn": null,
+      "detail": "9 grounding records written, 0 already present"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "create",
+      "urn": null,
+      "detail": "'Rehospitalization 30-day risk (random_forest)' (random_forest, train)"
+    }
+  ],
+  "deferred": [
+    {
+      "kind": "ontology",
+      "reason": "PAC-FR-010 ontology (Patient, Referral, Episode, OASISAssessment, MDSAssessment, PDGMClassification, PDPMClassification, TherapyEncounter, MedicationRecord, HospiceElection, HospiceCertification, LCDPolicy, RehospitalizationRisk) awaits pack-service ontology registration; entity semantics are carried today by the semantic models and dataset schemas."
+    },
+    {
+      "kind": "guardrails",
+      "reason": "PAC-FR-100 regulatory guardrails (HIPAA baseline, PDGM 60-day episode / LUPA rules, PDPM interrupted-stay policy, OASIS-E timing/locking, MDS 3.0 schedule, hospice LCD face-to-face, PEPPER/CERT/UPIC defensibility) require guardrail-service / OPA policy materialization, which Core does not expose as a pack surface yet. BR-1's no-autonomous-submission guarantee (PAC_AUTONOMOUS_ASSESSMENT_FORBIDDEN) is covered today by Core invariants: proposal-mode + four-eyes approval for every pack-configured agent."
+    },
+    {
+      "kind": "agent_recipes",
+      "reason": "PAC-FR-030..080 bespoke LangGraph recipes (OASIS Copilot, PDGM Optimizer, MDS Copilot, PDPM Optimizer, Referral Triage, Hospice Eligibility) require agent-runtime graph-module registration (BRD 23 BR-12). This pack specializes the existing case-triage + analytics agents via TenantAgentConfig prompt_params + tenant-scope RAG grounding instead."
+    },
+    {
+      "kind": "connection_templates",
+      "reason": "PAC-FR-090 read connectors (HomeCare HomeBase, MatrixCare, PointClickCare, Netsmart myUnity, Axxess, WellSky, HL7 ADT via HIE, Bamboo Health, HHAeXchange, CMS iQIES) require customer credentials and pack-service connector materialization. The pack ships seed datasets in the exact landing shape; production connectors are configured through the product Data > Connections UI."
+    },
+    {
+      "kind": "write_adapters",
+      "reason": "PAC-FR-090 write adapters (OASIS/MDS assessment drafts to EHR, care-plan update, referral response, hospice certification narrative) execute only behind pack-service's materialization contract and customer credentials; all platform-side writes remain proposal-mode per BR-1."
+    },
+    {
+      "kind": "eval_sets",
+      "reason": "BRD 29 \u00a74's five golden eval sets (OASIS drafting, PDGM comorbidity capture, MDS Section GG, referral triage ranking, hospice LCD narrative) require eval-service write APIs whose action names are not yet in the rbac canonical catalog (Core follow-up noted in rbac catalog.go)."
+    },
+    {
+      "kind": "model_archetypes",
+      "reason": "BRD 29 \u00a74 archetypes (rehospitalization_30d_risk, referral_acceptance_score) await experiment-service archetype APIs; the rehospitalization risk model ships as a pipeline seed instead (rehospitalization_risk_model, random_forest)."
+    },
+    {
+      "kind": "case_schemas",
+      "reason": "PAC-FR-110 typed case schemas (oasis_review, mds_review, referral_triage_review, pdgm_optimization_review, pdpm_optimization_review, hospice_eligibility_review) await case-service schema materialization; today's cases carry the same fields via display_projection + the disposition taxonomy."
+    },
+    {
+      "kind": "display_labels",
+      "reason": "BRD 29 \u00a74 display-label overlays (case-schema singulars, agent names, patient entity template) require the BFF label-registry endpoints (BFF-FR-082/088) which are pack-service-tier features."
+    }
+  ],
+  "result": "installed"
+}

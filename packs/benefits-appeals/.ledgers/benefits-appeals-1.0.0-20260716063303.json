@@ -1,0 +1,315 @@
+{
+  "pack": "benefits-appeals",
+  "version": "1.0.0",
+  "workspace_id": "019f6a76-5759-78c2-b225-860d97a63d6a",
+  "tenant_id": "019f6a76-530d-7301-a968-51a719fb802d",
+  "started_at": "2026-07-16T10:32:54Z",
+  "finished_at": "2026-07-16T10:33:03Z",
+  "actions": [
+    {
+      "kind": "datasets",
+      "identity": "gb_claimants",
+      "action": "create",
+      "urn": "wr:019f6a76-530d-7301-a968-51a719fb802d:dataset:dataset/019f6a7c-89a1-70a3-8fbd-a1d5c9187f94",
+      "detail": "'gb-claimants' ingested rows=12 snapshot=5546728341629453702"
+    },
+    {
+      "kind": "datasets",
+      "identity": "gb_claims",
+      "action": "create",
+      "urn": "wr:019f6a76-530d-7301-a968-51a719fb802d:dataset:dataset/019f6a7c-8aee-7f03-b95b-cd56e0f7e910",
+      "detail": "'gb-claims' ingested rows=30 snapshot=1364260905050186900"
+    },
+    {
+      "kind": "datasets",
+      "identity": "gb_determinations",
+      "action": "create",
+      "urn": "wr:019f6a76-530d-7301-a968-51a719fb802d:dataset:dataset/019f6a7c-8c0d-712e-9e41-d5c6658bea05",
+      "detail": "'gb-determinations' ingested rows=26 snapshot=8616735642739831442"
+    },
+    {
+      "kind": "semantic_models",
+      "identity": "benefits_core",
+      "action": "create",
+      "urn": "wr:019f6a76-530d-7301-a968-51a719fb802d:semantic:model/019f6a7c-8d26-7eb3-b782-16999ed211da",
+      "detail": "'benefits_core' published"
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_0",
+      "action": "create",
+      "urn": "wr:019f6a76-530d-7301-a968-51a719fb802d:semantic:verified_query/019f6a7c-9683-7f7d-95b2-380a9f4bffbc",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_1",
+      "action": "create",
+      "urn": "wr:019f6a76-530d-7301-a968-51a719fb802d:semantic:verified_query/019f6a7c-975b-7ff2-a61a-2fb1e7c8c6c1",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_2",
+      "action": "create",
+      "urn": "wr:019f6a76-530d-7301-a968-51a719fb802d:semantic:verified_query/019f6a7c-9836-7fd9-8b39-0e57c1511945",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_3",
+      "action": "create",
+      "urn": "wr:019f6a76-530d-7301-a968-51a719fb802d:semantic:verified_query/019f6a7c-9907-74e9-830d-18e027d690b6",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_4",
+      "action": "create",
+      "urn": "wr:019f6a76-530d-7301-a968-51a719fb802d:semantic:verified_query/019f6a7c-99be-79e4-b47e-cd82b4d56077",
+      "detail": ""
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "gb_claimant_program_edges",
+      "action": "create",
+      "urn": "wr:019f6a76-530d-7301-a968-51a719fb802d:query:query/019f6a7c-9a67-793f-837d-cda70dfd2b3f",
+      "detail": "Benefits: claimant-program network edges"
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "gb_deadline_critical_open",
+      "action": "create",
+      "urn": "wr:019f6a76-530d-7301-a968-51a719fb802d:query:query/019f6a7c-9aaa-760a-bece-ebd827653eff",
+      "detail": "Benefits: deadline-critical open determinations"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "determinations_command_center",
+      "action": "create",
+      "urn": "wr:019f6a76-530d-7301-a968-51a719fb802d:chart:dashboard/019f6a7c-9b0e-70fa-bf3b-66e3074fb5ca",
+      "detail": "Determinations Command Center"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "determinations_command_center",
+      "action": "verify",
+      "urn": "wr:019f6a76-530d-7301-a968-51a719fb802d:chart:dashboard/019f6a7c-9b0e-70fa-bf3b-66e3074fb5ca",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "timeliness_due_process",
+      "action": "create",
+      "urn": "wr:019f6a76-530d-7301-a968-51a719fb802d:chart:dashboard/019f6a7c-9cc9-7591-b7e5-4dadaabb3edd",
+      "detail": "Timeliness & Due Process"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "timeliness_due_process",
+      "action": "verify",
+      "urn": "wr:019f6a76-530d-7301-a968-51a719fb802d:chart:dashboard/019f6a7c-9cc9-7591-b7e5-4dadaabb3edd",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "integrity_overpayments",
+      "action": "create",
+      "urn": "wr:019f6a76-530d-7301-a968-51a719fb802d:chart:dashboard/019f6a7c-9e7e-7c35-bd53-4d82d937b79c",
+      "detail": "Integrity & Overpayments"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "integrity_overpayments",
+      "action": "verify",
+      "urn": "wr:019f6a76-530d-7301-a968-51a719fb802d:chart:dashboard/019f6a7c-9e7e-7c35-bd53-4d82d937b79c",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "approve_benefits"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "deny_with_findings"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "request_verification_documents"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "refer_fraud_investigation"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "close_withdrawn"
+    },
+    {
+      "kind": "cases",
+      "identity": "determination_queue",
+      "action": "create",
+      "urn": "wr:019f6a76-530d-7301-a968-51a719fb802d:dataset:dataset/019f6a7c-8c0d-712e-9e41-d5c6658bea05",
+      "detail": "6 open cases (reindexed)"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Eligibility Examiner'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Eligibility Examiner' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Appeals Hearing Preparer'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Appeals Hearing Preparer' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Overpayment Analyst'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Overpayment Analyst' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Program Integrity Manager'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Program Integrity Manager' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Program Audit Lead'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Program Audit Lead' bound to permission group"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "case-triage prompt_params set"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "analytics prompt_params set"
+    },
+    {
+      "kind": "memories",
+      "identity": "grounding",
+      "action": "create",
+      "urn": null,
+      "detail": "10 grounding records written, 0 already present"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "create",
+      "urn": null,
+      "detail": "'Benefit claim anomaly detector (isolation forest)' (isolation_forest, train)"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "create",
+      "urn": null,
+      "detail": "'Determination outcome scorer (xgboost)' (xgboost, train)"
+    }
+  ],
+  "deferred": [
+    {
+      "kind": "guardrails",
+      "reason": "Benefits-domain policies (no adverse action \u2014 denial, termination, reduction, overpayment establishment, fraud penalty \u2014 without an individualized human determination and a compliant written notice; no outcome communicated to a claimant before the human decision; identity flags route to verification pathways, never automatic denial; disparate-impact watch on denial and fraud-referral patterns) require guardrail-service / OPA policy materialization, which Core does not expose as a pack surface yet. The behavioral core is partially covered today by Core invariants: every pack-configured agent is proposal-mode with four-eyes approval (agent-runtime), and the agent instructions + disposition taxonomy route final determinations exclusively to human examiners with the Program Integrity Manager as approver."
+    },
+    {
+      "kind": "agent_recipes",
+      "reason": "Bespoke LangGraph recipes (Eligibility Determination Copilot, Appeal Hearing Packet Builder, Overpayment Waiver Analyzer, Identity Verification Router) require agent-runtime graph-module registration (BRD 23 BR-12). This pack specializes the existing case-triage + analytics agents via TenantAgentConfig prompt_params + tenant-scope RAG grounding instead."
+    },
+    {
+      "kind": "connection_templates",
+      "reason": "Production read connectors (state benefits mainframes and eligibility systems, UI tax/wage systems, interstate and federal cross-matches such as quarterly wage records, new-hire registries, SSA/DMV identity verification, vital records, and document-management systems holding claimant evidence) require customer credentials and pack-service connector materialization. The pack ships seed datasets in the exact landing shape; production connectors are configured through the product Data > Connections UI."
+    },
+    {
+      "kind": "write_adapters",
+      "reason": "Write adapters (post an eligibility decision to the benefits system of record, issue or release payments, establish overpayment debts, send adverse-action and appeal-rights notices, docket fair hearings) execute only behind pack-service's materialization contract and customer credentials; every such write stays proposal-mode with human approval \u2014 no autonomous benefit denial, termination, or debt establishment, ever."
+    },
+    {
+      "kind": "eval_sets",
+      "reason": "Golden eval sets (determination triage, deadline-risk ranking, waiver-eligibility analysis, identity-flag disposition, hearing-packet completeness) require eval-service write APIs whose action names are not yet in the rbac canonical catalog (Core follow-up noted in rbac catalog.go)."
+    },
+    {
+      "kind": "ontology",
+      "reason": "Ontology registration (Claimant, Household, Claim, Determination, Issue, VerificationDocument, WageRecord, Appeal, Hearing, Notice, OverpaymentDebt, WaiverRequest) awaits pack-service; entity semantics are carried today by the benefits_core semantic model and dataset schemas."
+    },
+    {
+      "kind": "case_schemas",
+      "reason": "Typed case schemas (eligibility_determination, redetermination_review, appeal_hearing_prep, overpayment_review, identity_verification, fraud_referral) await case-service schema materialization; today's cases carry the same fields via display_projection + the disposition taxonomy."
+    },
+    {
+      "kind": "model_archetypes",
+      "reason": "Model archetypes (determination_outcome_confidence, identity_risk_score, waiver_likelihood) await experiment-service archetype APIs; the scoring capability ships as pipeline seeds instead (isolation_forest claim anomaly + xgboost determination-outcome scorer) with model-governance and human-review expectations noted in grounding memories."
+    },
+    {
+      "kind": "display_labels",
+      "reason": "Display-label overlays (\"Determination\", \"Fair hearing\", \"Expedited \u2014 clock running\", \"Waiver candidate\", entity templates) require the BFF label-registry endpoints (BFF-FR-082/088) which are pack-service-tier features."
+    }
+  ],
+  "result": "installed"
+}

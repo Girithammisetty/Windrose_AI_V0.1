@@ -1,0 +1,8 @@
+# Disposition taxonomy for the Rx PA + DUR review workflows (BRD 28 RX-FR-100
+# case schemas expressed in today's case-service disposition catalog; BR-1: a
+# denial is always a human pharmacist decision).
+- { code: pa_approved,     label: "Rx PA approved",                          category: false_positive, requires_note: false }
+- { code: pa_denied,       label: "Rx PA denied (pharmacist decision)",      category: true_positive,  requires_note: true }
+- { code: pa_pended_info,  label: "Rx PA pended — prescriber info needed",   category: inconclusive,   requires_note: true }
+- { code: dur_override,    label: "DUR alert overridden — documented",       category: benign,         requires_note: true }
+- { code: dur_intervene,   label: "DUR intervention — contact prescriber",   category: true_positive,  requires_note: true }

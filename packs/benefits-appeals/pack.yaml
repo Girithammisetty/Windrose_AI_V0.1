@@ -1,0 +1,129 @@
+# benefits-appeals capability pack — Core-neutral edition: government
+# benefits eligibility adjudication & appeals for state workforce/human-
+# services agencies, county eligibility offices, and government BPO
+# contractors. Installable TODAY against Windrose Core's public APIs via
+# packctl; the manifest envelope follows BRD 23 (PKG-FR-001/003).
+# Components the current Core cannot materialize are declared under
+# `deferred` — recorded in the install ledger, never faked.
+pack_manifest: 1
+name: benefits-appeals
+version: 1.0.0
+publisher: { id: pub-windrose, name: "Windrose Inc." }
+description: >-
+  AI-assisted eligibility adjudication and appeals workflow for government
+  benefits programs (unemployment insurance, SNAP, Medicaid eligibility,
+  TANF, state disability): determination triage with due-process and
+  processing-deadline awareness (Goldberg v. Kelly notice/hearing rights,
+  SNAP 7-day expedited and 30-day standards, UI first-payment promptness),
+  appeal-hearing packet preparation, overpayment establishment and
+  equity-and-good-conscience waiver review, identity-fraud watch balanced
+  against false-positive harm to legitimate claimants, an adjudication KPI
+  semantic model and dashboards (approval/denial rates,
+  verification-request share, fraud-referral share, appeal overturn share,
+  deadline runway, overpayment exposure), claimant-program network
+  analytics, due-process + program-rule grounding memories, and
+  claim-anomaly + determination-outcome training pipelines.
+categories: [government, benefits, eligibility, appeals, program_integrity]
+regulatory: [due_process, ui_dol_standards, snap_rules, tanf_rules, improper_payments]
+components:
+  datasets:
+    - { file: "data/datasets.yaml", identity: "datasets" }
+  semantic_models:
+    - { file: "semantic/benefits_core.yaml", identity: "benefits_core" }
+  verified_queries:
+    - { file: "queries/verified.yaml", identity: "canonical_questions" }
+  saved_queries:
+    - { file: "queries/saved.yaml", identity: "saved_queries" }
+  dashboards:
+    - { file: "dashboards/determinations_command_center.yaml", identity: "determinations_command_center" }
+    - { file: "dashboards/timeliness_due_process.yaml", identity: "timeliness_due_process" }
+    - { file: "dashboards/integrity_overpayments.yaml", identity: "integrity_overpayments" }
+  dispositions:
+    - { file: "cases/dispositions.yaml", identity: "dispositions" }
+  cases:
+    - { file: "cases/queue.yaml", identity: "determination_queue" }
+  roles:
+    - { file: "rbac/roles.yaml", identity: "roles" }
+  agent_configs:
+    - { file: "agents/configs.yaml", identity: "agent_configs" }
+  memories:
+    - { file: "memories/grounding.yaml", identity: "grounding" }
+  pipelines:
+    - { file: "pipelines/templates.yaml", identity: "pipelines" }
+deferred:
+  - kind: guardrails
+    reason: >-
+      Benefits-domain policies (no adverse action — denial, termination,
+      reduction, overpayment establishment, fraud penalty — without an
+      individualized human determination and a compliant written notice; no
+      outcome communicated to a claimant before the human decision; identity
+      flags route to verification pathways, never automatic denial;
+      disparate-impact watch on denial and fraud-referral patterns) require
+      guardrail-service / OPA policy materialization, which Core does not
+      expose as a pack surface yet. The behavioral core is partially covered
+      today by Core invariants: every pack-configured agent is proposal-mode
+      with four-eyes approval (agent-runtime), and the agent instructions +
+      disposition taxonomy route final determinations exclusively to human
+      examiners with the Program Integrity Manager as approver.
+  - kind: agent_recipes
+    reason: >-
+      Bespoke LangGraph recipes (Eligibility Determination Copilot, Appeal
+      Hearing Packet Builder, Overpayment Waiver Analyzer, Identity
+      Verification Router) require agent-runtime graph-module registration
+      (BRD 23 BR-12). This pack specializes the existing case-triage +
+      analytics agents via TenantAgentConfig prompt_params + tenant-scope
+      RAG grounding instead.
+  - kind: connection_templates
+    reason: >-
+      Production read connectors (state benefits mainframes and eligibility
+      systems, UI tax/wage systems, interstate and federal cross-matches
+      such as quarterly wage records, new-hire registries, SSA/DMV identity
+      verification, vital records, and document-management systems holding
+      claimant evidence) require customer credentials and pack-service
+      connector materialization. The pack ships seed datasets in the exact
+      landing shape; production connectors are configured through the
+      product Data > Connections UI.
+  - kind: write_adapters
+    reason: >-
+      Write adapters (post an eligibility decision to the benefits system of
+      record, issue or release payments, establish overpayment debts, send
+      adverse-action and appeal-rights notices, docket fair hearings)
+      execute only behind pack-service's materialization contract and
+      customer credentials; every such write stays proposal-mode with human
+      approval — no autonomous benefit denial, termination, or debt
+      establishment, ever.
+  - kind: eval_sets
+    reason: >-
+      Golden eval sets (determination triage, deadline-risk ranking,
+      waiver-eligibility analysis, identity-flag disposition, hearing-packet
+      completeness) require eval-service write APIs whose action names are
+      not yet in the rbac canonical catalog (Core follow-up noted in rbac
+      catalog.go).
+  - kind: ontology
+    reason: >-
+      Ontology registration (Claimant, Household, Claim, Determination,
+      Issue, VerificationDocument, WageRecord, Appeal, Hearing, Notice,
+      OverpaymentDebt, WaiverRequest) awaits pack-service; entity semantics
+      are carried today by the benefits_core semantic model and dataset
+      schemas.
+  - kind: case_schemas
+    reason: >-
+      Typed case schemas (eligibility_determination, redetermination_review,
+      appeal_hearing_prep, overpayment_review, identity_verification,
+      fraud_referral) await case-service schema materialization; today's
+      cases carry the same fields via display_projection + the disposition
+      taxonomy.
+  - kind: model_archetypes
+    reason: >-
+      Model archetypes (determination_outcome_confidence,
+      identity_risk_score, waiver_likelihood) await experiment-service
+      archetype APIs; the scoring capability ships as pipeline seeds instead
+      (isolation_forest claim anomaly + xgboost determination-outcome
+      scorer) with model-governance and human-review expectations noted in
+      grounding memories.
+  - kind: display_labels
+    reason: >-
+      Display-label overlays ("Determination", "Fair hearing", "Expedited —
+      clock running", "Waiver candidate", entity templates) require the BFF
+      label-registry endpoints (BFF-FR-082/088) which are pack-service-tier
+      features.

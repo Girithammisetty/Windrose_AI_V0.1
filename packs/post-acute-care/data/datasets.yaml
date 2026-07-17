@@ -1,0 +1,18 @@
+# Pack datasets (ingestion-service file_upload, stable names for idempotency).
+# In production these tables arrive via the customer's post-acute EHR /
+# referral-network connectors (PAC-FR-090 — deferred until pack-service ships
+# connector materialization); this seed data is REAL rows in the same shape
+# those connectors land, so every downstream component (semantic models,
+# dashboards, cases, pipelines) runs against genuine data from day one.
+- identity: pac_episodes
+  name: pac-episodes
+  file: data/pac_episodes.csv
+  format: csv
+- identity: pac_referrals
+  name: pac-referrals
+  file: data/pac_referrals.csv
+  format: csv
+- identity: pac_assessments
+  name: pac-assessments
+  file: data/pac_assessments.csv
+  format: csv

@@ -1,0 +1,29 @@
+# Saved queries (query-service) — includes the party->project edge source
+# (parent/child/n) for network-family charts: which subcontractors and
+# suppliers are spread across which projects (exposure clustering and
+# repeat-claimant fan-out from the contract book).
+- identity: party_project_edges
+  name: "Claims: party-project exposure network edges"
+  description: >-
+    Party -> project edge list (parent/child/n) from the contract book —
+    network-chart source for spotting concentration risk (one party across
+    many projects) and claim-prone project clusters (many claiming parties,
+    one project).
+  sql: >-
+    SELECT party_id AS parent, project AS child,
+           count(*) AS n
+    FROM {{dataset('cc-contracts')}}
+    GROUP BY party_id, project
+  tags: [claims, network, parties, projects, pack]
+- identity: high_value_open_claims
+  name: "Claims: high-value open queue"
+  description: "Open claims ranked by claimed-dollar exposure — the analyst ranked-queue seed (deadline x dollar x severity, not FIFO)."
+  sql: >-
+    SELECT claim_id, contract_id, claim_type, entitlement_basis, severity,
+           schedule_impact, notice_timely,
+           cast(days_to_deadline AS double) AS days_to_deadline,
+           cast(claimed_amount AS double) AS claimed_amount
+    FROM {{dataset('cc-claims')}}
+    WHERE status = 'open'
+    ORDER BY claimed_amount DESC
+  tags: [claims, queue, backlog, pack]

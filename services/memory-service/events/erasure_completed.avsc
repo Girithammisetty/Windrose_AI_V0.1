@@ -1,0 +1,13 @@
+{
+  "type": "record",
+  "name": "ErasureCompleted",
+  "namespace": "windrose.memory.events.v1",
+  "doc": "Payload of erasure.completed (MEM-FR-040). Subject is digested, never raw.",
+  "fields": [
+    {"name": "subject_digest", "type": "string"},
+    {"name": "counts", "type": {"type": "map", "values": "long"},
+      "doc": "per-store deletion counts"},
+    {"name": "report_ref", "type": "string"},
+    {"name": "verified", "type": "boolean"}
+  ]
+}

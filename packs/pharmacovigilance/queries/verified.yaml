@@ -1,0 +1,62 @@
+# Verified NL<->SQL queries (four-eyes approved at install). SQL uses
+# {{dataset('<name>')}} macros — the only table references query-service's
+# tenant-namespace guard admits.
+- nl_text: "Which open cases are expedited-report candidates and how close are their deadlines?"
+  sql_text: >-
+    SELECT case_id, product_id, seriousness_criteria, expectedness, outcome,
+           cast(days_to_deadline AS double) AS days_to_deadline,
+           cast(age_days AS double) AS age_days
+    FROM {{dataset('pv-cases')}}
+    WHERE status = 'open' AND serious = 'yes'
+    ORDER BY days_to_deadline ASC
+  model: pv_core
+  tags: [pv, expedited, deadlines, backlog, pack]
+- nl_text: "Expedited conversion rate by month — how many closures produced a 15-day report?"
+  sql_text: >-
+    SELECT received_month,
+           count(*) AS closed_cases,
+           sum(CASE WHEN disposition = 'expedited_report_filed' THEN 1 ELSE 0 END) AS expedited_filed,
+           round(sum(CASE WHEN disposition = 'expedited_report_filed' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS expedited_conversion_rate
+    FROM {{dataset('pv-cases')}}
+    WHERE status = 'closed'
+    GROUP BY received_month
+    ORDER BY received_month
+  model: pv_core
+  tags: [pv, expedited, kpi, pack]
+- nl_text: "Top unlisted event terms — where is signal pressure building?"
+  sql_text: >-
+    SELECT product_id, event_pt, soc,
+           count(*) AS event_count,
+           sum(CASE WHEN severity = 'severe' THEN 1 ELSE 0 END) AS severe_events
+    FROM {{dataset('pv-events')}}
+    WHERE listed = 'no'
+    GROUP BY product_id, event_pt, soc
+    ORDER BY event_count DESC, severe_events DESC
+  model: pv_core
+  tags: [pv, signal, unlisted, meddra, pack]
+- nl_text: "Case intake quality by source — seriousness mix and processing age"
+  sql_text: >-
+    SELECT source,
+           count(*) AS cases,
+           sum(CASE WHEN serious = 'yes' THEN 1 ELSE 0 END) AS serious_cases,
+           sum(CASE WHEN disposition = 'non_reportable' THEN 1 ELSE 0 END) AS non_reportable,
+           sum(CASE WHEN disposition = 'nullified_duplicate' THEN 1 ELSE 0 END) AS duplicates,
+           round(avg(cast(age_days AS double)), 1) AS avg_age_days
+    FROM {{dataset('pv-cases')}}
+    GROUP BY source
+    ORDER BY cases DESC
+  model: pv_core
+  tags: [pv, intake, data_quality, source, pack]
+- nl_text: "Open backlog aging by seriousness criteria"
+  sql_text: >-
+    SELECT seriousness_criteria,
+           count(*) AS open_cases,
+           round(avg(cast(age_days AS double)), 1) AS avg_age_days,
+           min(cast(days_to_deadline AS double)) AS tightest_deadline_days
+    FROM {{dataset('pv-cases')}}
+    WHERE status = 'open'
+    GROUP BY seriousness_criteria
+    ORDER BY tightest_deadline_days ASC
+  model: pv_core
+  tags: [pv, backlog, aging, deadlines, pack]

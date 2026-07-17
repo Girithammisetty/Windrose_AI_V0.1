@@ -1,0 +1,69 @@
+# Verified NL<->SQL queries (four-eyes approved at install). SQL uses
+# {{dataset('<name>')}} macros — the only table references query-service's
+# tenant-namespace guard admits.
+- nl_text: "What's our approval rate versus denial rate by program?"
+  sql_text: >-
+    SELECT program,
+           count(*) AS closed_determinations,
+           sum(CASE WHEN disposition = 'approve_benefits' THEN 1 ELSE 0 END) AS approved,
+           sum(CASE WHEN disposition = 'deny_with_findings' THEN 1 ELSE 0 END) AS denied,
+           round(sum(CASE WHEN disposition = 'approve_benefits' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS approval_rate,
+           round(sum(CASE WHEN disposition = 'deny_with_findings' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS denial_rate
+    FROM {{dataset('gb-determinations')}}
+    WHERE status = 'closed'
+    GROUP BY program
+    ORDER BY approval_rate DESC
+  model: benefits_core
+  tags: [benefits, outcomes, kpi, pack]
+- nl_text: "Which open determinations are closest to breaching a processing deadline?"
+  sql_text: >-
+    SELECT determination_id, claimant_id, program, determination_type,
+           issue_type, severity,
+           cast(days_to_deadline AS double) AS days_to_deadline,
+           cast(age_days AS double) AS age_days
+    FROM {{dataset('gb-determinations')}}
+    WHERE status = 'open'
+    ORDER BY days_to_deadline ASC
+  model: benefits_core
+  tags: [benefits, deadlines, timeliness, backlog, pack]
+- nl_text: "Overpayment exposure — dollars and case aging by program"
+  sql_text: >-
+    SELECT program, status,
+           count(*) AS overpayment_cases,
+           sum(cast(overpayment_amount AS double)) AS overpayment_dollars,
+           round(avg(cast(age_days AS double)), 1) AS avg_age_days
+    FROM {{dataset('gb-determinations')}}
+    WHERE determination_type = 'overpayment'
+    GROUP BY program, status
+    ORDER BY overpayment_dollars DESC
+  model: benefits_core
+  tags: [benefits, overpayments, integrity, exposure, pack]
+- nl_text: "How often are our determinations overturned at appeal hearings, by program?"
+  sql_text: >-
+    SELECT program,
+           count(*) AS decided_appeals,
+           sum(CASE WHEN appeal_outcome = 'overturned' THEN 1 ELSE 0 END) AS overturned,
+           sum(CASE WHEN appeal_outcome = 'upheld' THEN 1 ELSE 0 END) AS upheld,
+           round(sum(CASE WHEN appeal_outcome = 'overturned' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS overturn_share
+    FROM {{dataset('gb-determinations')}}
+    WHERE determination_type = 'appeal_hearing_prep' AND status = 'closed'
+    GROUP BY program
+    ORDER BY overturn_share DESC
+  model: benefits_core
+  tags: [benefits, appeals, due_process, quality, pack]
+- nl_text: "Repeat filers — claimants with multiple determinations (program-integrity watch)"
+  sql_text: >-
+    SELECT claimant_id,
+           count(*) AS determination_count,
+           sum(CASE WHEN disposition = 'refer_fraud_investigation' THEN 1 ELSE 0 END) AS fraud_referrals,
+           sum(CASE WHEN disposition = 'deny_with_findings' THEN 1 ELSE 0 END) AS denials,
+           sum(cast(overpayment_amount AS double)) AS overpayment_dollars
+    FROM {{dataset('gb-determinations')}}
+    GROUP BY claimant_id
+    HAVING count(*) >= 2
+    ORDER BY fraud_referrals DESC, determination_count DESC
+  model: benefits_core
+  tags: [benefits, integrity, repeat_filers, fraud, pack]

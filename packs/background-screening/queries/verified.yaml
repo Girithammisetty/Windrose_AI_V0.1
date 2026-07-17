@@ -1,0 +1,62 @@
+# Verified NL<->SQL queries (four-eyes approved at install). SQL uses
+# {{dataset('<name>')}} macros — the only table references query-service's
+# tenant-namespace guard admits.
+- nl_text: "What's our clear rate by check type?"
+  sql_text: >-
+    SELECT check_type,
+           count(*) AS closed_reviews,
+           sum(CASE WHEN disposition = 'clear_report_eligible' THEN 1 ELSE 0 END) AS cleared,
+           round(sum(CASE WHEN disposition = 'clear_report_eligible' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS clear_rate
+    FROM {{dataset('bs-reviews')}}
+    WHERE status = 'closed'
+    GROUP BY check_type
+    ORDER BY clear_rate DESC
+  model: screening_core
+  tags: [screening, outcomes, kpi, pack]
+- nl_text: "Which open screening hits are closest to an adverse-action or dispute deadline?"
+  sql_text: >-
+    SELECT review_id, order_id, check_type, hit_type, identity_confidence,
+           severity, relevance,
+           cast(days_to_deadline AS double) AS days_to_deadline,
+           cast(age_days AS double) AS age_days
+    FROM {{dataset('bs-reviews')}}
+    WHERE status = 'open'
+    ORDER BY days_to_deadline ASC
+  model: screening_core
+  tags: [screening, deadlines, adverse_action, backlog, pack]
+- nl_text: "Repeat-screened applicants — multiple orders (re-screen / continuous-monitoring watch)"
+  sql_text: >-
+    SELECT applicant_id,
+           count(*) AS order_count,
+           sum(CASE WHEN position_category = 'driver' THEN 1 ELSE 0 END) AS driver_orders,
+           round(avg(cast(turnaround_days AS double)), 1) AS avg_turnaround_days
+    FROM {{dataset('bs-orders')}}
+    GROUP BY applicant_id
+    HAVING count(*) >= 2
+    ORDER BY order_count DESC
+  model: screening_core
+  tags: [screening, continuous_monitoring, rescreen, pack]
+- nl_text: "Suppression and identity-escalation mix by hit type (accuracy watch)"
+  sql_text: >-
+    SELECT hit_type,
+           count(*) AS reviews,
+           sum(CASE WHEN disposition = 'suppress_not_reportable' THEN 1 ELSE 0 END) AS suppressed,
+           sum(CASE WHEN disposition = 'request_identity_verification' THEN 1 ELSE 0 END) AS identity_escalations,
+           sum(CASE WHEN identity_confidence = 'low' THEN 1 ELSE 0 END) AS low_identity_confidence
+    FROM {{dataset('bs-reviews')}}
+    GROUP BY hit_type
+    ORDER BY suppressed DESC, identity_escalations DESC
+  model: screening_core
+  tags: [screening, accuracy, identity, suppression, pack]
+- nl_text: "Average order turnaround by position category and package tier"
+  sql_text: >-
+    SELECT position_category, package,
+           count(*) AS orders,
+           round(avg(cast(turnaround_days AS double)), 1) AS avg_turnaround_days,
+           sum(CASE WHEN turnaround_band = 'over_5_days' THEN 1 ELSE 0 END) AS delayed_orders
+    FROM {{dataset('bs-orders')}}
+    GROUP BY position_category, package
+    ORDER BY avg_turnaround_days DESC
+  model: screening_core
+  tags: [screening, turnaround, sla, operations, pack]

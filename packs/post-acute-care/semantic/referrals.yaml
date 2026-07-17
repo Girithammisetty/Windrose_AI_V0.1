@@ -1,0 +1,51 @@
+# Semantic model `pac_referrals` — the referral-triage half of PAC-FR-020
+# (referral_acceptance_rate) supporting the Referral Triage workflow
+# (PAC-FR-070 / US-5). response_hours is hours-to-response for decided
+# referrals and hours-elapsed for pending ones (always populated, so avg casts
+# safely).
+name: pac_referrals
+description: >-
+  Post-acute referral intake model (BRD 29): referral volumes from acute
+  discharge, acceptance/decline splits with rationale, response latency,
+  triage-agent acceptance scores by referring hospital and requested setting.
+definition:
+  entities:
+    - name: referrals
+      dataset: pac_referrals
+      table: main.pac_referrals
+      primary_key: [referral_id]
+      dataset_version_policy: { policy: latest }
+  dimensions:
+    - { name: referring_hospital, entity: referrals, type: categorical, column: referring_hospital }
+    - { name: referral_month, entity: referrals, type: categorical, column: referral_month }
+    - { name: requested_setting, entity: referrals, type: categorical, column: requested_setting }
+    - { name: referral_dx_code, entity: referrals, type: categorical, column: primary_dx_code }
+    - { name: complexity_tier, entity: referrals, type: categorical, column: complexity_tier }
+    - { name: capacity_fit, entity: referrals, type: categorical, column: capacity_fit }
+    - { name: referral_status, entity: referrals, type: categorical, column: status }
+    - { name: decline_reason, entity: referrals, type: categorical, column: decline_reason }
+  measures:
+    - { name: referral_count, entity: referrals, agg: count,
+        description: "Referrals received from acute discharge" }
+    - { name: accepted_referral_count, entity: referrals, agg: count,
+        filters: "status = 'accepted'",
+        description: "Referrals accepted" }
+    - { name: declined_referral_count, entity: referrals, agg: count,
+        filters: "status = 'declined'",
+        description: "Referrals declined (rationale required per BR-6)" }
+    - { name: pending_referral_count, entity: referrals, agg: count,
+        filters: "status = 'pending'",
+        description: "Referrals awaiting an intake decision" }
+    - { name: avg_response_hours, entity: referrals, agg: avg,
+        expr: "cast(response_hours as double)", format: decimal,
+        description: "Average hours to intake response (elapsed for pending)" }
+    - { name: avg_acceptance_score, entity: referrals, agg: avg,
+        expr: "cast(acceptance_score as double)", format: decimal,
+        description: "Mean triage-agent acceptance score (PAC-FR-070)" }
+    - { name: total_referral_reimbursement, entity: referrals, agg: sum,
+        expr: "cast(expected_reimbursement as double)", format: decimal,
+        description: "Expected reimbursement across referrals" }
+    - { name: referral_acceptance_rate,
+        expr_metric: "accepted_referral_count / nullif(referral_count, 0)",
+        format: percent,
+        description: "PAC-FR-020 referral_acceptance_rate" }

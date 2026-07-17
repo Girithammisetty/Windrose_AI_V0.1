@@ -1,0 +1,247 @@
+openapi: 3.1.0
+info:
+  title: ai-gateway
+  version: 0.1.0
+  description: >
+    Windrose ai-gateway — the single choke point for every LLM/embedding call.
+    OpenAI-compatible data plane (/v1/*) + admin plane (/api/v1/admin/*).
+    Spec: docs/brd/12_ai_gateway_BRD.md inheriting 00_MASTER_BRD.md.
+    Errors use the envelope {error: {code, message, details?, trace_id}}
+    (MASTER-FR-024); every response carries X-Trace-Id (MASTER-FR-028).
+
+security:
+  - bearerJwt: []
+
+paths:
+  /v1/chat/completions:
+    post:
+      summary: Proxy chat completion (stream or not)
+      description: >
+        Auth: virtual key in Authorization Bearer (nk-…) + platform RS256 JWT
+        in X-Windrose-JWT (AIG-FR-001). Headers: x-windrose-request-class
+        (chat|sql-gen|judge|embed, default chat), x-windrose-workspace-id,
+        x-windrose-agent-id/-version, x-windrose-tool, x-windrose-feature,
+        x-windrose-escalate + x-windrose-prior-request-id, x-windrose-min-rung.
+        x-windrose-tenant-id is IGNORED; tenant comes from the JWT (AIG-FR-002).
+        Response headers: x-windrose-rung, x-windrose-cache (hit|miss|skip),
+        x-windrose-deployment, x-windrose-degraded (budget),
+        x-windrose-guardrail-flags, x-windrose-request-id.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatCompletionRequest'
+      responses:
+        '200':
+          description: Completion (application/json) or SSE stream (text/event-stream)
+        '401': {$ref: '#/components/responses/KeyInvalid'}
+        '402': {$ref: '#/components/responses/BudgetExhausted'}
+        '403': {$ref: '#/components/responses/LadderCap'}
+        '422': {$ref: '#/components/responses/GuardrailBlocked'}
+        '429': {$ref: '#/components/responses/RateLimited'}
+        '502': {$ref: '#/components/responses/OutputSchemaInvalid'}
+        '503': {$ref: '#/components/responses/UpstreamUnavailable'}
+  /v1/completions:
+    post:
+      summary: Legacy completions (adapted onto the chat pipeline)
+      responses:
+        '200': {description: Text completion}
+        '401': {$ref: '#/components/responses/KeyInvalid'}
+        '402': {$ref: '#/components/responses/BudgetExhausted'}
+        '503': {$ref: '#/components/responses/UpstreamUnavailable'}
+  /v1/embeddings:
+    post:
+      summary: Proxy embeddings (batch ≤ 256 inputs, BR-17)
+      responses:
+        '200': {description: Embedding list}
+        '401': {$ref: '#/components/responses/KeyInvalid'}
+        '402': {$ref: '#/components/responses/BudgetExhausted'}
+        '422': {$ref: '#/components/responses/ValidationFailed'}
+        '429': {$ref: '#/components/responses/RateLimited'}
+        '503': {$ref: '#/components/responses/UpstreamUnavailable'}
+
+  /api/v1/admin/providers:
+    get:
+      summary: List provider deployments (operator)
+      parameters:
+        - {name: limit, in: query, schema: {type: integer, default: 50, maximum: 200}}
+        - {name: cursor, in: query, schema: {type: string}}
+      responses:
+        '200': {description: Page of deployments (+ circuit_state, healthy)}
+    post:
+      summary: Register a provider deployment (operator; Idempotency-Key honored)
+      responses:
+        '201': {description: Created}
+        '422': {$ref: '#/components/responses/ValidationFailed'}
+  /api/v1/admin/providers/{id}:
+    patch:
+      summary: Update deployment (status transitions guarded; ?force=true)
+      responses:
+        '200': {description: Updated}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {description: Illegal transition or last-deployment guard (CONFLICT)}
+  /api/v1/admin/providers/{id}/drain:
+    post:
+      summary: Drain deployment (finishes in-flight, accepts none)
+      responses:
+        '200': {description: Draining}
+        '409': {description: Last-deployment guard (CONFLICT)}
+
+  /api/v1/admin/ladders/{request_class}:
+    get:
+      summary: Resolved ladder for the caller's tenant
+      responses:
+        '200': {description: Ladder}
+    put:
+      summary: Put ladder (scope=platform → operator; scope=tenant → tenant admin)
+      responses:
+        '200': {description: Updated ladder (version bumped)}
+        '422': {$ref: '#/components/responses/ValidationFailed'}
+
+  /api/v1/admin/budgets:
+    get:
+      summary: List budgets (tenant-scoped; filter[scope_type] supported)
+      responses:
+        '200': {description: Page of budgets}
+    post:
+      summary: Create budget (platform scope → operator; Idempotency-Key honored)
+      responses:
+        '201': {description: Created (warnings[] when child exceeds parent, AIG-FR-024)}
+        '409': {description: Duplicate scope+window (CONFLICT)}
+        '422': {$ref: '#/components/responses/ValidationFailed'}
+  /api/v1/admin/budgets/{id}:
+    get:
+      responses:
+        '200': {description: Budget}
+        '404': {$ref: '#/components/responses/NotFound'}
+    patch:
+      responses:
+        '200': {description: Updated}
+        '404': {$ref: '#/components/responses/NotFound'}
+    delete:
+      responses:
+        '200': {description: Soft-deleted}
+        '404': {$ref: '#/components/responses/NotFound'}
+
+  /api/v1/admin/spend:
+    get:
+      summary: Live spend per governing window
+      parameters:
+        - {name: scope_type, in: query, required: true, schema: {type: string}}
+        - {name: scope_ref, in: query, required: true, schema: {type: string}}
+        - {name: window, in: query, schema: {type: string, enum: [daily, monthly]}}
+      responses:
+        '200': {description: Spend rows (limit, spend, reserved, reset_at)}
+
+  /api/v1/admin/keys:
+    get:
+      summary: List virtual keys (secrets never returned)
+      responses:
+        '200': {description: Page of keys}
+    post:
+      summary: >
+        Create virtual key (tenant admin JWT, or agent-runtime via SPIFFE mTLS
+        with body.tenant_id + ttl_seconds for per-run keys, AIG-FR-032).
+        Secret returned once.
+      responses:
+        '201': {description: Created (data.secret shown once)}
+  /api/v1/admin/keys/{id}/revoke:
+    post:
+      summary: Revoke key (effective ≤ 30s across replicas, AIG-FR-031)
+      responses:
+        '200': {description: Revoked}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /api/v1/admin/keys/{id}/rotate:
+    post:
+      responses:
+        '200': {description: Rotated (new secret shown once)}
+        '404': {$ref: '#/components/responses/NotFound'}
+
+  /api/v1/admin/guardrails:
+    get:
+      responses:
+        '200': {description: Current tenant guardrail policy + version}
+    put:
+      summary: Put policy (versioned; pii.mode=off needs operator approval)
+      responses:
+        '200': {description: New policy version; tenant cache invalidated}
+        '422': {$ref: '#/components/responses/ValidationFailed'}
+
+  /api/v1/admin/cache:
+    delete:
+      summary: Invalidate cache (scope=tenant|workspace)
+      parameters:
+        - {name: scope, in: query, schema: {type: string, enum: [tenant, workspace]}}
+        - {name: workspace_id, in: query, schema: {type: string}}
+      responses:
+        '200': {description: Purge count}
+
+  /healthz:
+    get: {responses: {'200': {description: liveness}}}
+  /readyz:
+    get: {responses: {'200': {description: readiness}, '503': {description: degraded}}}
+  /metrics:
+    get: {responses: {'200': {description: Prometheus metrics}}}
+
+components:
+  securitySchemes:
+    bearerJwt:
+      type: http
+      scheme: bearer
+      description: RS256 platform JWT (admin) / virtual key nk-… (data plane, + X-Windrose-JWT header)
+  schemas:
+    ChatCompletionRequest:
+      type: object
+      required: [messages]
+      properties:
+        model:
+          type: string
+          description: '"windrose-auto" delegates rung selection to the ladder; a concrete model_alias is capped by the key''s max_rung'
+          default: windrose-auto
+        messages: {type: array, items: {type: object}}
+        stream: {type: boolean, default: false}
+        stream_options: {type: object}
+        temperature: {type: number}
+        max_tokens: {type: integer}
+        response_format: {type: object}
+        tools: {type: array, items: {type: object}}
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          required: [code, message, trace_id]
+          properties:
+            code: {type: string}
+            message: {type: string}
+            details: {}
+            trace_id: {type: string}
+  responses:
+    KeyInvalid:
+      description: 401 KEY_INVALID / UNAUTHENTICATED
+      content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}
+    BudgetExhausted:
+      description: 402 BUDGET_EXHAUSTED (names most specific exhausted scope, window, reset time)
+      content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}
+    LadderCap:
+      description: 403 LADDER_CAP / PERMISSION_DENIED
+      content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}
+    NotFound:
+      description: 404 NOT_FOUND (cross-tenant access also 404, MASTER-FR-003)
+      content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}
+    GuardrailBlocked:
+      description: 422 GUARDRAIL_BLOCKED / VALIDATION_FAILED
+      content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}
+    ValidationFailed:
+      description: 422 VALIDATION_FAILED
+      content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}
+    RateLimited:
+      description: 429 RATE_LIMITED (+ Retry-After header)
+      content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}
+    OutputSchemaInvalid:
+      description: 502 OUTPUT_SCHEMA_INVALID
+      content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}
+    UpstreamUnavailable:
+      description: 503 UPSTREAM_UNAVAILABLE / DEPENDENCY_UNAVAILABLE
+      content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}

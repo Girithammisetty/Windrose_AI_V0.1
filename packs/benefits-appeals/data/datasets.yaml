@@ -1,0 +1,24 @@
+# Pack datasets (ingestion-service file_upload, stable names for idempotency).
+# In production these tables arrive via the agency's benefits mainframe, UI
+# tax/wage systems, and cross-match feeds (deferred until pack-service ships
+# connector materialization); this seed data is REAL rows in the same landing
+# shape, encoding genuine adjudication patterns so every downstream component
+# runs against real signal from day one: a wage-match income mismatch that is
+# a payroll-reporting lag on a vulnerable Medicaid household, a contested
+# quit-vs-layoff UI separation, an expedited SNAP application at day 5 of 7,
+# an identity flag on a legitimate claimant caused by a shared multi-unit
+# address that a stolen-identity filing ring also used, a large UI
+# overpayment traced to agency error (waiver candidate), and an appeal
+# hearing packet due in 3 days on a state-disability denial.
+- identity: gb_claimants
+  name: gb-claimants
+  file: data/gb_claimants.csv
+  format: csv
+- identity: gb_claims
+  name: gb-claims
+  file: data/gb_claims.csv
+  format: csv
+- identity: gb_determinations
+  name: gb-determinations
+  file: data/gb_determinations.csv
+  format: csv

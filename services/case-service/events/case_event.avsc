@@ -1,0 +1,25 @@
+{
+  "type": "record",
+  "name": "CaseEnvelope",
+  "namespace": "ai.windrose.case.events.v1",
+  "doc": "Master event envelope (MASTER-FR-031) carried on case.events.v1. Payload is the schemaless per-type map serialized as a JSON string; the concrete event_type values are enumerated in the doc below.",
+  "fields": [
+    {"name": "event_id", "type": {"type": "string", "logicalType": "uuid"}},
+    {"name": "event_type", "type": {"type": "enum", "name": "CaseEventType", "symbols": [
+      "case_created", "case_assigned", "case_unassigned", "case_started", "case_resolved",
+      "case_reopened", "case_closed", "case_escalated", "case_sla_warning", "case_sla_breached",
+      "case_comment_added", "case_severity_changed", "case_bulk_completed", "case_limit_warning",
+      "case_disposition_applied", "case_correction_recorded"
+    ]}, "doc": "Dotted wire names map 1:1 (e.g. case.disposition_applied). See BRD 08 §6."},
+    {"name": "tenant_id", "type": {"type": "string", "logicalType": "uuid"}},
+    {"name": "actor", "type": {"type": "record", "name": "Actor", "fields": [
+      {"name": "type", "type": "string"}, {"name": "id", "type": "string"}]}},
+    {"name": "via_agent", "type": ["null", {"type": "record", "name": "ViaAgent", "fields": [
+      {"name": "agent_id", "type": "string"}, {"name": "version", "type": "string"}]}], "default": null,
+      "doc": "Dual attribution for OBO/copilot-proposal applications (MASTER-FR-041)."},
+    {"name": "resource_urn", "type": "string", "doc": "wr:<tenant>:case:case/<id>"},
+    {"name": "occurred_at", "type": {"type": "long", "logicalType": "timestamp-micros"}},
+    {"name": "trace_id", "type": "string"},
+    {"name": "payload", "type": "string", "doc": "JSON object. For case.disposition_applied / case.correction_recorded (the learning-loop signal) it carries {dataset_urn, dataset_version, row_pk, disposition{id,code,category}, resolution_note, severity} — the human triage correction turned into a labeled training signal. For case_resolved it carries {case_number, disposition_code, disposition_category, resolution_note, authored_by} — memory-service embeds resolution_note into its resolved_cases RAG corpus and uses authored_by for right-to-erasure user linkage."}
+  ]
+}

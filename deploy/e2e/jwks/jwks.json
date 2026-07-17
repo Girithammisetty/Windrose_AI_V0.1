@@ -1,0 +1,12 @@
+{
+  "keys": [
+    {
+      "kty": "RSA",
+      "kid": "e2e-harness-key-1",
+      "use": "sig",
+      "alg": "RS256",
+      "n": "1Je45ypREjAqbX5wE2VDXnJlvdwqfTOPUrBtxRxWorEi2eBYEXPjpnEMfTOdm_5t6A_lZh7Gizx1_GAOX-mQun3ofYRQ25_2AOZ2iPycfxwSpht18rRDgnOV-AeAl0uAK1Jn4N8-dMFS9IC6rb4T6R89Y4gSPoz070HDI_m5xu8HI-10ksjgHx1N9ZuVRnWlssH4VdAxdodqZJQSEf-h1y6jWN-2Iwew8Js4NbCJIxj6qmqPY_6fysgznwQR6qy0p_-7rbk7tqy2JUYTtwufa4YBsCKrN2awQNM10YQAhvb3doKmv_ve8NTAplFb3it6Ml6W6_RoCHryMrHRNPcQ8Q",
+      "e": "AQAB"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+# Disposition taxonomy for the screening-hit adjudication workflow.
+# Categories are the Core's closed set {true_positive,false_positive,benign,
+# inconclusive,other} (CASE-FR-020). report_adverse_finding is the verified
+# reportable outcome that triggers the pre-adverse/adverse-action two-step;
+# suppress_not_reportable is the FCRA accuracy save (obsolete 605(a) records
+# and mixed-file mismatches must never reach a report);
+# request_identity_verification holds reporting until the identity match
+# meets the 607(b) maximum-possible-accuracy bar; notes on every code feed
+# the exam-ready adjudication file (adjudication-matrix step, evidence,
+# jurisdiction rules applied).
+- { code: clear_report_eligible,             label: "Clear — no reportable adverse information",                      category: benign,         requires_note: true }
+- { code: report_adverse_finding,            label: "Report adverse finding — verified, reportable, job-related",     category: true_positive,  requires_note: true }
+- { code: suppress_not_reportable,           label: "Suppress — not reportable (obsolete or mismatched record)",      category: false_positive, requires_note: true }
+- { code: request_identity_verification,     label: "Request identity verification — insufficient identity match",    category: inconclusive,   requires_note: true }
+- { code: individualized_assessment_review,  label: "Route to individualized assessment (EEOC Green factors)",        category: other,          requires_note: true }

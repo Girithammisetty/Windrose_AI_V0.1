@@ -1,0 +1,166 @@
+openapi: 3.1.0
+info:
+  title: Windrose tool-plane API (tool-registry + mcp-gateway)
+  version: "1.0.0"
+  description: >
+    Two deployables over one bounded context (BRD 13). tool-registry serves the
+    catalog + admin REST API under /api/v1. mcp-gateway serves the MCP data plane
+    at /mcp (Streamable HTTP JSON-RPC) behind the enforcement pipeline. All REST
+    responses use the master error envelope {error:{code,message,details?,trace_id}}
+    and cursor pagination {data,page:{next_cursor,has_more}}.
+servers:
+  - url: /
+security:
+  - bearerAuth: []
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: {type: string}
+            message: {type: string}
+            details: {}
+            trace_id: {type: string}
+    Tool:
+      type: object
+      properties:
+        tool_id: {type: string, example: case.assign}
+        display_name: {type: string}
+        owner_service: {type: string}
+        owner_team: {type: string}
+        enabled_by_default: {type: boolean}
+        side_effects: {type: string, enum: [none, reversible, destructive]}
+        tags: {type: array, items: {type: string}}
+    ToolVersion:
+      type: object
+      properties:
+        tool_id: {type: string}
+        version: {type: string, example: 1.2.0}
+        status: {type: string, enum: [draft, published, deprecated, retired, quarantined]}
+        permission_tier: {type: string, enum: [read, write-proposal, write-direct, admin]}
+        cost_weight: {type: integer, minimum: 1, maximum: 10}
+        semantic_description: {type: string}
+        input_schema: {type: object}
+        output_schema: {type: object}
+        declared_sla: {type: object}
+        side_effects: {type: string}
+paths:
+  /healthz: {get: {security: [], summary: Liveness, responses: {"200": {description: ok}}}}
+  /readyz: {get: {security: [], summary: Readiness, responses: {"200": {description: ready}, "503": {description: not ready}}}}
+  /api/v1/tools:
+    post:
+      summary: Register a tool (manifest; SPIFFE identity must match owner_service, BR-14)
+      responses:
+        "201": {description: created, content: {application/json: {schema: {$ref: '#/components/schemas/Tool'}}}}
+        "403": {description: SPIFFE/owner mismatch, content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}}
+        "409": {description: tool exists, content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}}
+    get:
+      summary: List catalog tools (cursor paginated)
+      parameters:
+        - {name: "filter[owner_service]", in: query, schema: {type: string}}
+        - {name: cursor, in: query, schema: {type: string}}
+        - {name: limit, in: query, schema: {type: integer, default: 50, maximum: 200}}
+      responses: {"200": {description: page}}
+  /api/v1/tools/{id}/versions:
+    post:
+      summary: Add a draft version (BR-15 description gate; BR-2 destructive≠write-direct)
+      parameters: [{name: id, in: path, required: true, schema: {type: string}}]
+      responses:
+        "201": {description: created}
+        "422": {description: validation failed, content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}}
+  /api/v1/tools/{id}/versions/{v}/publish:
+    post:
+      summary: Publish (validates schema, computes real embedding, populates pgvector) — AC-7
+      parameters: [{name: id, in: path, required: true, schema: {type: string}}, {name: v, in: path, required: true, schema: {type: string}}]
+      responses:
+        "200": {description: published}
+        "409": {description: another version already published}
+        "422": {description: invalid schema}
+  /api/v1/tools/{id}/versions/{v}/deprecate:
+    post:
+      summary: Deprecate (window ≥30d, default 90d)
+      parameters: [{name: id, in: path, required: true, schema: {type: string}}, {name: v, in: path, required: true, schema: {type: string}}]
+      responses: {"200": {description: deprecated}, "422": {description: window too short}}
+  /api/v1/tools/{id}/versions/{v}/retire:
+    post:
+      summary: Retire (window elapsed OR operator force+reason)
+      parameters: [{name: id, in: path, required: true, schema: {type: string}}, {name: v, in: path, required: true, schema: {type: string}}]
+      responses: {"200": {description: retired}, "422": {description: window not elapsed}}
+  /api/v1/tools/{id}/diff:
+    post:
+      summary: Diff proposed input schema vs published (CI version-bump gate)
+      parameters: [{name: id, in: path, required: true, schema: {type: string}}]
+      responses: {"200": {description: diff result}}
+  /api/v1/tools/{id}/schema:
+    get:
+      summary: Fast schema fetch (runtime)
+      parameters: [{name: id, in: path, required: true, schema: {type: string}}, {name: version, in: query, schema: {type: string}}]
+      responses: {"200": {description: schema}, "404": {description: not found}}
+  /api/v1/tools/{id}/health:
+    get:
+      summary: Per-tool-version health / declared SLA
+      parameters: [{name: id, in: path, required: true, schema: {type: string}}]
+      responses: {"200": {description: health}}
+  /api/v1/discovery/search:
+    post:
+      summary: Semantic discovery (real nomic-embed-text + pgvector cosine; caller-scoped) — AC-6
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                query: {type: string}
+                top_k: {type: integer, maximum: 20}
+                tier_filter: {type: array, items: {type: string}}
+                tags: {type: array, items: {type: string}}
+      responses: {"200": {description: ranked tools with scores}}
+  /api/v1/tenants/self/tools/{id}:
+    put:
+      summary: Per-tenant enablement + argument constraints (BR-2 destructive≠write-direct)
+      parameters: [{name: id, in: path, required: true, schema: {type: string}}]
+      responses: {"200": {description: settings}, "422": {description: rule violation}}
+  /api/v1/kill-switches:
+    post:
+      summary: Set a kill switch (reason required; Redis pub/sub ≤5s propagation) — AC-5
+      responses: {"201": {description: created}, "422": {description: reason required}}
+  /api/v1/kill-switches/{id}:
+    delete:
+      summary: Unset a kill switch
+      parameters: [{name: id, in: path, required: true, schema: {type: string}}]
+      responses: {"200": {description: unset}, "404": {description: not found}}
+  /api/v1/byo:
+    post:
+      summary: Submit a BYO/third-party tool (pending_approval; external write-direct forbidden)
+      responses: {"201": {description: submitted}, "422": {description: tier too high}}
+  /api/v1/byo/{id}/approve:
+    post: {summary: Approve a BYO submission, parameters: [{name: id, in: path, required: true, schema: {type: string}}], responses: {"200": {description: approved}}}
+  /api/v1/byo/{id}/reject:
+    post: {summary: Reject a BYO submission, parameters: [{name: id, in: path, required: true, schema: {type: string}}], responses: {"200": {description: rejected}}}
+  /mcp:
+    post:
+      summary: >
+        MCP data plane (JSON-RPC 2.0): initialize, tools/list (caller-scoped),
+        tools/call (enforcement pipeline). Errors map per BRD §3:
+        POLICY_UNAVAILABLE/TOKEN_INVALID → JSON-RPC error; kill/retired/disabled/
+        permission/rate/validation/backend → tool result isError=true; proposal_required
+        → isError=false structured content.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                jsonrpc: {type: string, enum: ["2.0"]}
+                id: {}
+                method: {type: string, enum: [initialize, tools/list, tools/call]}
+                params: {type: object}
+      responses: {"200": {description: JSON-RPC response (result or error)}}

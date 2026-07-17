@@ -1,0 +1,14 @@
+# Disposition taxonomy for the loss-mitigation evaluation workflow.
+# Categories are the Core's closed set {true_positive,false_positive,benign,
+# inconclusive,other} (CASE-FR-020). approve_workout_offer and
+# deny_with_specific_reasons are the Reg X 1024.41 evaluation outcomes (a
+# denial's note must carry the specific reasons the borrower is entitled to,
+# including any investor requirement relied upon); request_missing_documents
+# closes an incomplete file after the documented follow-up chase;
+# refer_foreclosure_alternatives routes non-retention outcomes to short-sale/
+# DIL counseling; close_reinstated records a borrower cure.
+- { code: approve_workout_offer,          label: "Approve workout offer — borrower qualifies",                 category: true_positive,  requires_note: true }
+- { code: deny_with_specific_reasons,     label: "Deny — specific reasons documented (appeal rights attach)",  category: false_positive, requires_note: true }
+- { code: request_missing_documents,      label: "Close incomplete — missing documents after follow-up",       category: inconclusive,   requires_note: true }
+- { code: refer_foreclosure_alternatives, label: "Refer to foreclosure alternatives (short sale / DIL)",       category: other,          requires_note: true }
+- { code: close_reinstated,               label: "Close — loan reinstated by borrower",                        category: benign,         requires_note: true }

@@ -1,0 +1,137 @@
+# Tenant-scope RAG grounding records (memory-service). This is the
+# construction claims-law and delay-analysis domain knowledge the triage
+# copilot retrieves when reasoning about a claim. Every record is factual
+# methodological or contract-doctrine reference material; jurisdiction-
+# specific numbers are stated qualitatively (they vary) rather than invented.
+- content: >-
+    Contractual notice provisions: construction contracts almost always make
+    timely WRITTEN notice of a claim, delay, or changed condition a
+    condition precedent to recovery, with the notice period measured in days
+    from the event giving rise to the claim. Many jurisdictions and most
+    public owners enforce these provisions strictly — an otherwise
+    meritorious claim can fail solely on late or defective notice — while
+    some courts excuse technical non-compliance where the owner had actual
+    knowledge and suffered no prejudice. Screen notice timeliness FIRST on
+    every claim, and document the notice date, method, and recipient in the
+    determination file.
+  tags: [notice, condition_precedent, contract_law, screening]
+  confidence: 0.95
+- content: >-
+    Critical-path delay analysis: only delay to the critical path extends
+    the project; float consumption alone is not compensable delay. Accepted
+    forensic methods include as-planned vs as-built comparison, time-impact
+    analysis (TIA — inserting fragnets into the contemporaneous schedule
+    update to measure the impact of a discrete event), and windows/
+    contemporaneous period analysis; global bar-chart assertions without
+    CPM support are routinely rejected. Concurrent delay — owner-caused and
+    contractor-caused delay in the same window — commonly yields time but
+    not money ("time-no-cost"), with apportionment treatment varying by
+    jurisdiction and contract language. Demand the method, the schedule
+    versions used, and the fragnet logic before conceding compensable time.
+  tags: [delay, cpm, tia, windows, concurrent_delay, methodology]
+  confidence: 0.95
+- content: >-
+    Differing site conditions: the federal FAR differing-site-conditions
+    clause concept (widely mirrored in private forms) recognizes Type I —
+    subsurface or latent physical conditions differing MATERIALLY from what
+    the contract documents indicated (boring logs, geotech baseline
+    reports) — and Type II — unknown physical conditions of an unusual
+    nature, differing materially from those ordinarily encountered in work
+    of that character. A Type I claim rises or falls on the comparison
+    between encountered conditions and the contract's indications, so the
+    boring-log/baseline interpretation is the decisive record; the clause
+    exists to remove contingency pricing, and disturbing conditions before
+    notice can defeat the claim.
+  tags: [differing_site_conditions, dsc, type_1, type_2, far, geotech]
+  confidence: 0.95
+- content: >-
+    Productivity-loss quantum: total-cost claims (bid cost vs actual cost)
+    are disfavored because they assume a perfect bid and no
+    claimant-caused inefficiency; tribunals that entertain them at all
+    typically require proof that the bid was reasonable, actual costs were
+    reasonable, the claimant did not cause the overrun, and no more precise
+    method was available (the modified-total-cost variant relaxes this only
+    partially). The preferred method is the measured mile: compare
+    productivity in an impacted period against an unimpacted period of the
+    SAME work on the same project. A claim priced total-cost with no
+    measured-mile or contemporaneous production records is a substantiation
+    gap, not an automatic rejection.
+  tags: [quantum, total_cost, measured_mile, productivity, substantiation]
+  confidence: 0.95
+- content: >-
+    Change-order documentation standard: scope, price, and time should be
+    agreed and SIGNED before the changed work proceeds whenever possible;
+    work performed on verbal direction creates constructive-change exposure
+    priced after the fact on the claimant's records. A disciplined change
+    process requires a written directive or ASI reference, quantity and
+    unit-rate backup consistent with the party's demonstrated production
+    rates on the same contract, and an explicit statement of schedule
+    impact (including zero impact) so delay entitlement cannot be re-opened
+    later through the same event.
+  tags: [change_orders, documentation, constructive_change, pricing]
+  confidence: 0.9
+- content: >-
+    Pay-when-paid vs pay-if-paid: a pay-when-paid clause is generally read
+    as a TIMING provision — the GC must pay the subcontractor within a
+    reasonable time even if the owner never pays. A pay-if-paid clause
+    shifts the owner-insolvency RISK to the subcontractor and is enforced
+    only where the contract uses express condition-precedent language;
+    several states refuse to enforce pay-if-paid clauses outright as
+    against public policy, and courts construe ambiguous payment language
+    against the risk shift. Prompt-payment statutes (federal and state)
+    add interest and penalty exposure for unjustified withholding.
+  tags: [payment_disputes, pay_if_paid, pay_when_paid, prompt_payment]
+  confidence: 0.9
+- content: >-
+    Mechanics liens: contractors, subcontractors, and suppliers hold
+    statutory lien rights against private projects, but the deadlines are
+    jurisdictional and strictly construed — many states require a
+    preliminary/pre-lien notice near the start of work as a condition of
+    lien rights, and all impose hard post-completion deadlines for
+    recording the lien and then for suing to foreclose it. On the paying
+    side, track lien exposure on every payment dispute, use conditional and
+    unconditional lien waivers with progress payments, and remember public
+    projects substitute payment-bond claims for liens.
+  tags: [mechanics_lien, deadlines, lien_waivers, payment_bond]
+  confidence: 0.9
+- content: >-
+    Acceleration: DIRECTED acceleration is an owner order to finish early
+    or recover delay and is compensable as a change. CONSTRUCTIVE
+    acceleration arises without an express order when (i) an excusable
+    delay occurred, (ii) the contractor timely requested a time extension,
+    (iii) the owner denied or ignored it, (iv) the owner required the
+    original completion date to be held, and (v) the contractor actually
+    accelerated and incurred costs (overtime, added crews, resequencing).
+    A claim missing the denied-extension element is an ordinary
+    delay/inefficiency claim, not acceleration.
+  tags: [acceleration, directed, constructive, elements]
+  confidence: 0.95
+- content: >-
+    Surety performance bonds: the bond typically conditions the surety's
+    obligations on the obligee's compliance with the contract's
+    notice-and-cure sequence — written notice of default consideration, an
+    opportunity to cure, and (under common bond forms) a formal declaration
+    of default plus termination before the surety must perform. A
+    premature or wrongful default declaration can discharge the surety and
+    expose the declaring party to a wrongful-termination claim. On a valid
+    default the surety generally elects among completing with the original
+    or a replacement contractor, tendering a new contractor, financing its
+    principal, or paying the bond penalty; document every notice step
+    before touching the bond.
+  tags: [surety, performance_bond, default, notice_and_cure, backcharge]
+  confidence: 0.9
+- content: >-
+    Recordkeeping and AI governance for claim determinations: every
+    determination must be defensible from the contemporaneous project
+    record — daily reports, schedule updates, RFIs, meeting minutes,
+    notices, and pay applications — and a rejection letter must cite the
+    governing contract clause and the specific record evidence relied
+    upon, since determinations are routinely tested in mediation,
+    arbitration, or litigation years later. Every AI-assisted disposition
+    must preserve a provenance chain (data version, model version, prompt
+    hash, reviewer identity, timestamp), and pattern-level over-rejection
+    of one trade's or one party's claims is a bias signal auditors and
+    opposing counsel will probe even when each file individually appears
+    defensible.
+  tags: [recordkeeping, governance, provenance, determination_letters, audit]
+  confidence: 0.9

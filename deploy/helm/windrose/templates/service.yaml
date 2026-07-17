@@ -1,0 +1,21 @@
+{{- /* One ClusterIP Service per entry in .Values.services. */}}
+{{- $root := . -}}
+{{- range $svc := .Values.services }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $svc.name }}
+  labels:
+    {{- include "windrose.labels" $root | nindent 4 }}
+    {{- include "windrose.selectorLabels" (dict "svc" $svc "root" $root) | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "windrose.selectorLabels" (dict "svc" $svc "root" $root) | nindent 4 }}
+  ports:
+    - name: http
+      port: {{ $svc.port }}
+      targetPort: http
+      protocol: TCP
+{{- end }}

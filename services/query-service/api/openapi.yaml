@@ -1,0 +1,337 @@
+openapi: 3.0.3
+info:
+  title: query-service
+  description: >
+    Windrose SQL execution broker (BRD 05): saved queries with typed
+    variables and safe substitution, AST statement safety, engine routing
+    (DuckDB/Trino/warehouse), dry-run + cost ceilings, streamed results,
+    per-tenant concurrency governance, query history.
+  version: 1.0.0
+servers:
+  - url: /api/v1
+security:
+  - bearer: []
+components:
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    limit:
+      name: limit
+      in: query
+      schema: { type: integer, default: 50, maximum: 200 }
+    cursor:
+      name: cursor
+      in: query
+      schema: { type: string }
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          required: [code, message, trace_id]
+          properties:
+            code: { type: string, example: VARIABLE_INVALID }
+            message: { type: string }
+            details: {}
+            trace_id: { type: string }
+    Page:
+      type: object
+      properties:
+        next_cursor: { type: string }
+        has_more: { type: boolean }
+    VariableDecl:
+      type: object
+      required: [name, type]
+      properties:
+        name: { type: string, pattern: '^[a-zA-Z_][a-zA-Z0-9_]*$' }
+        type:
+          type: string
+          enum: [string, integer, decimal, boolean, date, timestamp, string_list, integer_list]
+        required: { type: boolean, default: true }
+        default: {}
+        allowed_values: { type: array, items: {} }
+        min: { type: number }
+        max: { type: number }
+    SavedQuery:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        workspace_id: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string }
+        current_version_no: { type: integer }
+        version_no: { type: integer }
+        sql_text: { type: string }
+        variables: { type: array, items: { $ref: '#/components/schemas/VariableDecl' } }
+        dataset_refs: { type: array, items: { type: object } }
+        tags: { type: array, items: { type: string } }
+        module_names: { type: array, items: { type: string }, minItems: 1 }
+        created_by: { type: string }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    SavedQueryWrite:
+      type: object
+      required: [name, sql_text, module_names]
+      properties:
+        name: { type: string }
+        description: { type: string }
+        workspace_id: { type: string, format: uuid }
+        sql_text: { type: string, description: "Placeholders are :name only; legacy {var} rejected." }
+        variables: { type: array, items: { $ref: '#/components/schemas/VariableDecl' } }
+        tags: { type: array, items: { type: string } }
+        module_names: { type: array, items: { type: string }, minItems: 1 }
+    RunRequest:
+      type: object
+      properties:
+        variables: { type: object, additionalProperties: true }
+        mode: { type: string, enum: [sync, async], default: async }
+        engine_hint: { type: string, enum: [duckdb, trino, warehouse] }
+        limit: { type: integer, format: int64 }
+        cache: { type: boolean, default: true }
+        query_version: { type: integer }
+    AdhocRunRequest:
+      type: object
+      required: [sql]
+      properties:
+        sql: { type: string, maxLength: 32768 }
+        declarations: { type: array, items: { $ref: '#/components/schemas/VariableDecl' } }
+        variables: { type: object, additionalProperties: true }
+        workspace_id: { type: string, format: uuid }
+        mode: { type: string, enum: [sync, async] }
+        engine_hint: { type: string }
+        limit: { type: integer, format: int64 }
+        cache: { type: boolean }
+    Execution:
+      type: object
+      properties:
+        execution_id: { type: string, format: uuid }
+        status:
+          type: string
+          enum: [created, planning, rejected, queued, running, streaming_results, succeeded, failed, cancelled, ceiling_exceeded]
+        queue_position: { type: integer }
+        caller_class: { type: string, enum: [user, service, agent] }
+        engine: { type: string }
+        routing_reason: { type: object }
+        cache_hit: { type: boolean }
+        plan:
+          type: object
+          properties:
+            engine: { type: string }
+            estimated_scan_bytes: { type: integer, format: int64 }
+            ceiling_verdict: { type: string }
+        stats:
+          type: object
+          properties:
+            actual_scan_bytes: { type: integer, format: int64 }
+            result_rows: { type: integer, format: int64 }
+            result_bytes: { type: integer, format: int64 }
+            duration_ms: { type: integer, format: int64 }
+        ceilings: { type: object }
+        warnings: { type: array, items: { type: string } }
+        error: { type: object }
+        bound_params: { type: object, description: "PII-redacted (BR-12)" }
+        created_by: { type: string }
+        created_at: { type: string, format: date-time }
+        started_at: { type: string, format: date-time }
+        finished_at: { type: string, format: date-time }
+    DryRunResponse:
+      type: object
+      properties:
+        engine: { type: string }
+        routing_reason: { type: object }
+        estimated_scan_bytes: { type: integer, format: int64 }
+        estimated_rows: { type: integer, format: int64 }
+        partitions_pruned: { type: string }
+        confidence: { type: string, enum: [high, low] }
+        ceiling_verdict: { type: string, enum: [ok, exceeded] }
+        ceilings: { type: object }
+        warnings: { type: array, items: { type: string } }
+    ResultsPage:
+      type: object
+      properties:
+        columns:
+          type: array
+          items:
+            type: object
+            properties:
+              name: { type: string }
+              type: { type: string }
+        rows:
+          type: array
+          items: { type: array, items: {} }
+        page: { $ref: '#/components/schemas/Page' }
+        stats: { type: object }
+        warnings: { type: array, items: { type: string } }
+paths:
+  /queries:
+    post:
+      summary: Create a saved query (QRY-FR-001)
+      parameters:
+        - { name: Idempotency-Key, in: header, schema: { type: string } }
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/SavedQueryWrite' } } }
+      responses:
+        '201': { description: Created, content: { application/json: { schema: { type: object, properties: { data: { $ref: '#/components/schemas/SavedQuery' } } } } } }
+        '403': { description: STATEMENT_NOT_ALLOWED, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '409': { description: name conflict }
+        '422': { description: VALIDATION_FAILED / VARIABLE_INVALID / DATASET_NOT_FOUND / legacy {var} }
+    get:
+      summary: List saved queries
+      parameters:
+        - { $ref: '#/components/parameters/limit' }
+        - { $ref: '#/components/parameters/cursor' }
+        - { name: 'filter[workspace_id]', in: query, schema: { type: string, format: uuid } }
+      responses:
+        '200': { description: Page of saved queries }
+  /queries/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      summary: Get a saved query (ETag = "v<version>")
+      responses:
+        '200': { description: OK }
+        '404': { description: not found / cross-tenant (MASTER-FR-003) }
+    patch:
+      summary: Update (bumps version; If-Match, BR-11)
+      parameters:
+        - { name: If-Match, in: header, schema: { type: string, example: '"v3"' } }
+      responses:
+        '200': { description: full updated resource }
+        '409': { description: stale If-Match or name conflict }
+    delete:
+      summary: Soft-delete
+      responses:
+        '204': { description: deleted }
+  /queries/{id}/versions:
+    get:
+      summary: List immutable versions
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Page of versions }
+  /queries/{id}/run:
+    post:
+      summary: Execute a saved query (QRY-FR-043)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: mode, in: query, schema: { type: string, enum: [sync, async] } }
+        - { name: query_version, in: query, schema: { type: integer } }
+        - { name: cache, in: query, schema: { type: string, enum: ['false'] } }
+        - { name: Idempotency-Key, in: header, schema: { type: string } }
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/RunRequest' } } }
+      responses:
+        '200': { description: sync completion, content: { application/json: { schema: { type: object, properties: { data: { $ref: '#/components/schemas/Execution' } } } } } }
+        '202': { description: async accepted }
+        '403': { description: STATEMENT_NOT_ALLOWED }
+        '409': { description: USE_ASYNC (sync refusal, BR-5) }
+        '422': { description: VARIABLE_INVALID / COST_CEILING_EXCEEDED / DATASET_NOT_FOUND }
+        '429': { description: RATE_LIMITED (queue overflow) }
+  /sql/run:
+    post:
+      summary: Ad-hoc execution (QRY-FR-006)
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/AdhocRunRequest' } } }
+      responses:
+        '202': { description: accepted }
+        '403': { description: STATEMENT_NOT_ALLOWED }
+        '422': { description: validation / ceiling }
+        '429': { description: RATE_LIMITED }
+  /sql/dry-run:
+    post:
+      summary: Plan + estimate only (QRY-FR-041)
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/AdhocRunRequest' } } }
+      responses:
+        '200': { description: plan, content: { application/json: { schema: { type: object, properties: { data: { $ref: '#/components/schemas/DryRunResponse' } } } } } }
+        '422': { description: COST_CEILING_EXCEEDED with estimate details }
+  /executions:
+    get:
+      summary: Query history (QRY-FR-080)
+      parameters:
+        - { name: status, in: query, schema: { type: string } }
+        - { name: user, in: query, schema: { type: string } }
+        - { name: saved_query_id, in: query, schema: { type: string, format: uuid } }
+        - { name: since, in: query, schema: { type: string, format: date-time } }
+        - { name: sort, in: query, schema: { type: string, enum: ['-cost'] } }
+        - { $ref: '#/components/parameters/limit' }
+        - { $ref: '#/components/parameters/cursor' }
+      responses:
+        '200': { description: Page of executions }
+  /executions/{id}:
+    get:
+      summary: Execution status/detail
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: OK }
+        '404': { description: not found / cross-tenant }
+  /executions/{id}/results:
+    get:
+      summary: Paginated JSON results (QRY-FR-061; limit ≤ 10000)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, default: 1000, maximum: 10000 } }
+        - { $ref: '#/components/parameters/cursor' }
+      responses:
+        '200': { description: page, content: { application/json: { schema: { type: object, properties: { data: { $ref: '#/components/schemas/ResultsPage' } } } } } }
+        '409': { description: results not ready }
+        '410': { description: GONE (results expired; re_run_hint in details) }
+        '501': { description: Arrow stream Accept — pending adapter }
+  /executions/{id}/cancel:
+    post:
+      summary: Cancel (QRY-FR-045; engine kill ≤5s)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: cancelled execution }
+        '409': { description: already terminal }
+  /executions/{id}/export:
+    post:
+      summary: Export to CSV via signed URL (QRY-FR-062; parquet pending)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [format]
+              properties:
+                format: { type: string, enum: [csv, parquet] }
+      responses:
+        '201': { description: signed URL (24h expiry) }
+        '410': { description: results expired }
+        '501': { description: parquet pending }
+  /downloads/{token}:
+    get:
+      summary: Signed export download (pre-authenticated by HMAC signature)
+      security: []
+      parameters:
+        - { name: token, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: CSV attachment }
+        '410': { description: link expired or invalid }
+  /stats/queries:
+    get:
+      summary: TA/OP aggregates (QRY-FR-081)
+      parameters:
+        - { name: since, in: query, schema: { type: string, format: date-time } }
+        - { name: limit, in: query, schema: { type: integer } }
+      responses:
+        '200': { description: top queries by scan bytes, failure counts }
+        '403': { description: PERMISSION_DENIED }
+  /limits:
+    get:
+      summary: Tenant ceilings — overrides, effective, platform maxima
+      responses:
+        '200': { description: OK }
+    put:
+      summary: TA lowers ceilings/concurrency (QRY-FR-042/044)
+      responses:
+        '200': { description: OK }
+        '422': { description: override above platform maxima }

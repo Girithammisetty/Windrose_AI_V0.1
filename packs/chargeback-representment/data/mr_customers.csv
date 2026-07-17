@@ -1,0 +1,13 @@
+customer_id,customer_name,tenure_band,order_count_band,prior_chargebacks_band,loyalty_tier
+CU-3001,Talia Brooks,established,6_20,1_2,silver
+CU-3002,Devon Marsh,established,6_20,3_plus,bronze
+CU-3003,Ingrid Halvorsen,veteran,over_20,none,platinum
+CU-3004,Marco DeLuca,new,1_5,none,bronze
+CU-3005,Sasha Petrov,established,6_20,none,gold
+CU-3006,Amara Diallo,veteran,over_20,1_2,gold
+CU-3007,Felix Grunwald,new,1_5,1_2,bronze
+CU-3008,Noor Rahimi,established,6_20,none,silver
+CU-3009,Caleb Whitcomb,established,1_5,1_2,bronze
+CU-3010,Mei-Ling Chao,veteran,over_20,none,platinum
+CU-3011,Jonas Bergqvist,new,1_5,none,bronze
+CU-3012,Rosa Camacho,established,6_20,1_2,silver

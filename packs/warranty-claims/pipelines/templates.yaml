@@ -1,0 +1,16 @@
+# Pipeline seeds (expressed against the real pipeline-orchestrator algorithm
+# catalog): an unsupervised unit service-pattern anomaly detector (comeback /
+# padding surface scan over the unit-in-operation book) and a supervised
+# claim-outcome scorer trained on human dispositions (the deterministic-first
+# pre-router for claim intake). Trained models require review before
+# promotion — the Warranty Operations Manager approves promotions.
+- identity: wa_unit_anomaly_isolation_forest
+  name: "Unit service-pattern anomaly detector (isolation forest)"
+  algorithm: isolation_forest
+  mode: train
+  dataset: wa_units
+- identity: wa_claim_outcome_xgboost
+  name: "Warranty claim outcome scorer (xgboost)"
+  algorithm: xgboost
+  mode: train
+  dataset: wa_claims

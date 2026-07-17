@@ -1,0 +1,55 @@
+# Transaction Monitoring dashboard (BRD 30 typology surfaces): cash activity
+# (structuring / CTR), wire flow by counterparty jurisdiction (layering,
+# FATF-greylist watch per BR-12), and cross-border mix.
+name: "Transaction Monitoring"
+module: insights
+semantic_model: aml_core
+description: >-
+  Monitored transaction volumes (BRD 30): cash activity trend (structuring +
+  CTR surface), amounts by channel and counterparty jurisdiction, and the
+  cross-border share of flow.
+tags: [banking, aml, transactions, monitoring, pack]
+charts:
+  - name: "Cash transactions by month"
+    chart_type: vertical_bar_chart
+    description: "Cash transaction count trend (structuring / CTR surface)"
+    config:
+      x: { dimension: txn_month }
+      y: [ { measure: cash_txn_count, agg_fn: count } ]
+    sources: [ { measure: cash_txn_count } ]
+    w: 6
+    h: 4
+  - name: "Amount by channel"
+    chart_type: vertical_bar_chart
+    description: "Total transaction amount by channel"
+    config:
+      x: { dimension: channel }
+      y: [ { measure: total_txn_amount, agg_fn: sum } ]
+    sources: [ { measure: total_txn_amount } ]
+    w: 6
+    h: 4
+  - name: "Cross-border mix"
+    chart_type: pie_chart
+    description: "Cross-border vs domestic transaction counts"
+    config:
+      x: { dimension: cross_border }
+      y: [ { measure: txn_count, agg_fn: count } ]
+    sources: [ { measure: txn_count } ]
+    w: 6
+    h: 4
+  - name: "Flow by counterparty jurisdiction"
+    chart_type: grid_chart
+    description: "Transaction count, wires and amount by counterparty jurisdiction"
+    config:
+      columns: [counterparty_jurisdiction, txn_count, wire_txn_count, total_txn_amount]
+      x: { dimension: counterparty_jurisdiction }
+      y:
+        - { measure: txn_count, agg_fn: count }
+        - { measure: wire_txn_count, agg_fn: count }
+        - { measure: total_txn_amount, agg_fn: sum }
+    sources:
+      - { measure: txn_count }
+      - { measure: wire_txn_count }
+      - { measure: total_txn_amount }
+    w: 12
+    h: 4

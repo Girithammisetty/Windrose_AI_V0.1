@@ -1,0 +1,27 @@
+# Saved queries (query-service) — includes the product->event-term edge
+# source (parent/child/n) for network-family charts: the product-event
+# signal map.
+- identity: product_event_edges
+  name: "PV: product-event signal network edges"
+  description: >-
+    Product -> MedDRA preferred-term edge list (parent/child/n) from the
+    coded event book — network-chart source for the portfolio signal map
+    (which products accumulate which reaction terms).
+  sql: >-
+    SELECT product_id AS parent, event_pt AS child,
+           count(*) AS n
+    FROM {{dataset('pv-events')}}
+    GROUP BY product_id, event_pt
+  tags: [pv, signal, network, meddra, pack]
+- identity: priority_open_cases
+  name: "PV: priority open case queue"
+  description: "Open cases ranked by regulatory urgency — serious first, tightest reporting deadline first (never FIFO)."
+  sql: >-
+    SELECT case_id, product_id, case_type, source, serious,
+           seriousness_criteria, expectedness, outcome,
+           cast(days_to_deadline AS double) AS days_to_deadline,
+           cast(age_days AS double) AS age_days
+    FROM {{dataset('pv-cases')}}
+    WHERE status = 'open'
+    ORDER BY serious DESC, days_to_deadline ASC
+  tags: [pv, queue, backlog, pack]

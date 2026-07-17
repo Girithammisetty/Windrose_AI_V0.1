@@ -1,0 +1,153 @@
+# Semantic model `appeals_core` — trust-and-safety appeals KPI catalog
+# (overturn rate, uphold rate, escalation share, deadline runway, backlog
+# aging, enforcement-source and policy-area mix), expressed in the Core
+# semantic grammar (agg whitelist, equality measure filters, derived
+# expr_metric with nullif; join_paths left/many_to_one, acyclic chain).
+#
+# entity.table is main.<safe_relation(dataset name)>; `dataset:` refs are
+# rebound to live dataset URNs by packctl at install. Numeric columns ingest
+# as bronze strings, so numeric measures cast(... as double) (the proven
+# claims_core pattern).
+name: appeals_core
+description: >-
+  Platform trust-and-safety appeals KPI model (DSA/OSA internal
+  complaint-handling): appeal volumes and backlog aging, disposition outcome
+  mix, overturn and uphold rates as the classifier-quality feedback loop,
+  escalation share, statutory-deadline runway — appeals chained to the
+  originating enforcement decisions and the account book.
+definition:
+  entities:
+    - name: appeals
+      dataset: ts_appeals
+      table: main.ts_appeals
+      primary_key: [appeal_id]
+      dataset_version_policy: { policy: latest }
+    - name: enforcements
+      dataset: ts_enforcements
+      table: main.ts_enforcements
+      primary_key: [decision_id]
+      dataset_version_policy: { policy: latest }
+    - name: accounts
+      dataset: ts_accounts
+      table: main.ts_accounts
+      primary_key: [account_id]
+      dataset_version_policy: { policy: latest }
+  join_paths:
+    - name: appeals_enforcements
+      from_entity: appeals
+      to_entity: enforcements
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: decision_id, to_column: decision_id }]
+    - name: enforcements_accounts
+      from_entity: enforcements
+      to_entity: accounts
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: account_id, to_column: account_id }]
+  dimensions:
+    - { name: appeal_type, entity: appeals, type: categorical, column: appeal_type }
+    - { name: policy_area, entity: appeals, type: categorical, column: policy_area }
+    - { name: enforcement_source, entity: appeals, type: categorical, column: enforcement_source }
+    - { name: user_standing, entity: appeals, type: categorical, column: user_standing }
+    - { name: severity, entity: appeals, type: categorical, column: severity }
+    - { name: appeal_status, entity: appeals, type: categorical, column: status }
+    - { name: appeal_disposition, entity: appeals, type: categorical, column: disposition }
+    - { name: deadline_bucket, entity: appeals, type: categorical, column: deadline_bucket }
+    - { name: filed_month, entity: appeals, type: categorical, column: filed_month }
+    - { name: content_type, entity: enforcements, type: categorical, column: content_type }
+    - { name: classifier_score_band, entity: enforcements, type: categorical, column: classifier_score_band }
+    - { name: policy_version, entity: enforcements, type: categorical, column: policy_version }
+    - { name: enforcement_action, entity: enforcements, type: categorical, column: action }
+    - { name: enforce_month, entity: enforcements, type: categorical, column: enforce_month }
+    - { name: geography, entity: enforcements, type: categorical, column: geography }
+    - { name: account_type, entity: accounts, type: categorical, column: account_type }
+    - { name: account_age_bucket, entity: accounts, type: categorical, column: account_age_bucket }
+    - { name: audience_tier, entity: accounts, type: categorical, column: audience_tier }
+    - { name: prior_violations, entity: accounts, type: categorical, column: prior_violations }
+    - { name: verified_flag, entity: accounts, type: categorical, column: verified }
+    - { name: monetized_flag, entity: accounts, type: categorical, column: monetized }
+  measures:
+    - { name: appeal_count, entity: appeals, agg: count,
+        description: "Number of appeals" }
+    - { name: open_appeal_count, entity: appeals, agg: count,
+        filters: "status = 'open'",
+        description: "Appeals still open (adjudication backlog)" }
+    - { name: closed_appeal_count, entity: appeals, agg: count,
+        filters: "status = 'closed'",
+        description: "Appeals closed with a final human determination" }
+    - { name: overturned_count, entity: appeals, agg: count,
+        filters: "disposition = 'overturn_restore'",
+        description: "Appeals where the enforcement was overturned and content/account restored (enforcement error confirmed)" }
+    - { name: upheld_count, entity: appeals, agg: count,
+        filters: "disposition = 'uphold_enforcement'",
+        description: "Appeals where the original enforcement was upheld (appeal without merit)" }
+    - { name: partial_modify_count, entity: appeals, agg: count,
+        filters: "disposition = 'partial_modify_action'",
+        description: "Appeals resolved by modifying the enforcement action (proportionality adjustment)" }
+    - { name: escalated_count, entity: appeals, agg: count,
+        filters: "disposition = 'escalate_policy_team'",
+        description: "Appeals escalated to the policy team (policy-gap or precedent question)" }
+    - { name: duplicate_closed_count, entity: appeals, agg: count,
+        filters: "disposition = 'close_duplicate_appeal'",
+        description: "Appeals closed as duplicates of an existing appeal on the same decision" }
+    - { name: automated_source_appeal_count, entity: appeals, agg: count,
+        filters: "enforcement_source = 'automated_classifier'",
+        description: "Appeals against classifier-initiated enforcements (automation-quality surface)" }
+    - { name: user_report_appeal_count, entity: appeals, agg: count,
+        filters: "enforcement_source = 'user_report'",
+        description: "Appeals against user-report-initiated enforcements (report-integrity surface)" }
+    - { name: repeat_standing_appeal_count, entity: appeals, agg: count,
+        filters: "user_standing = 'repeat'",
+        description: "Appeals filed by accounts with repeat enforcement standing" }
+    - { name: suspension_appeal_count, entity: appeals, agg: count,
+        filters: "appeal_type = 'account_suspension'",
+        description: "Account-suspension appeals (highest-impact enforcement type)" }
+    - { name: avg_appeal_age_days, entity: appeals, agg: avg,
+        expr: "cast(age_days as double)", format: decimal,
+        description: "Average appeal age in days (cycle time / backlog aging)" }
+    - { name: avg_deadline_runway_days, entity: appeals, agg: avg,
+        expr: "cast(days_to_deadline as double)", format: decimal,
+        description: "Average days remaining to the complaint-handling deadline (slice by deadline_bucket or appeal_status to avoid closed-row dilution)" }
+    - { name: enforcement_count, entity: enforcements, agg: count,
+        description: "Number of enforcement decisions on the book" }
+    - { name: high_confidence_classifier_count, entity: enforcements, agg: count,
+        filters: "classifier_score_band = 'high'",
+        description: "Enforcements taken on a high classifier-confidence score" }
+    - { name: suspension_enforcement_count, entity: enforcements, agg: count,
+        filters: "action = 'suspend_account'",
+        description: "Account-suspension enforcement actions" }
+    - { name: total_report_count, entity: enforcements, agg: sum,
+        expr: "cast(report_count as double)", format: decimal,
+        description: "Total user reports behind enforcement decisions (mass-report / brigading surface)" }
+    - { name: avg_report_count, entity: enforcements, agg: avg,
+        expr: "cast(report_count as double)", format: decimal,
+        description: "Average user reports per enforcement decision" }
+    - { name: account_count, entity: accounts, agg: count,
+        description: "Number of accounts in the appellant/enforced book" }
+    - { name: monetized_account_count, entity: accounts, agg: count,
+        filters: "monetized = 'yes'",
+        description: "Monetized accounts (demonetization appeals carry livelihood impact)" }
+    - { name: repeat_violator_account_count, entity: accounts, agg: count,
+        filters: "prior_violations = '3_plus'",
+        description: "Accounts with 3+ prior violations (strike-system watch)" }
+    - { name: overturn_rate,
+        expr_metric: "overturned_count / nullif(closed_appeal_count, 0)",
+        format: percent,
+        description: "Overturned appeals over all closures — the classifier/enforcement quality feedback signal" }
+    - { name: uphold_rate,
+        expr_metric: "upheld_count / nullif(closed_appeal_count, 0)",
+        format: percent,
+        description: "Upheld enforcements over all closures" }
+    - { name: escalation_share,
+        expr_metric: "escalated_count / nullif(closed_appeal_count, 0)",
+        format: percent,
+        description: "Policy-team escalations over all closures (policy-gap pressure)" }
+    - { name: automated_source_share,
+        expr_metric: "automated_source_appeal_count / nullif(appeal_count, 0)",
+        format: percent,
+        description: "Share of appeal volume contesting classifier-initiated enforcements" }
+    - { name: repeat_appellant_share,
+        expr_metric: "repeat_standing_appeal_count / nullif(appeal_count, 0)",
+        format: percent,
+        description: "Share of appeal volume filed by repeat-standing accounts" }

@@ -1,0 +1,62 @@
+# Windrose service inventory — the SINGLE SOURCE OF TRUTH for CI (build/test/push)
+# and the Helm umbrella chart (one Deployment/Service/HPA per entry). Keep this in
+# sync when a service is added; CI and Helm both read it so nothing is hand-listed
+# twice.
+#
+# fields:
+#   name        service + image name
+#   language    go | python | node   (selects the CI test/build lane)
+#   path        repo-relative build context
+#   dockerfile  relative to path (default: Dockerfile)
+#   port        container port
+#   health      readiness probe path (default: /readyz)
+#   db          Postgres database it owns (migrations run against it), or ~ for none
+#   migrate     true if it runs schema migrations on deploy (Helm pre-install/upgrade Job)
+#   ingress     public | internal   (public => routed by the gateway/ingress)
+#   needs       managed-infra dependencies (drive per-cloud values wiring)
+version: 1
+
+services:
+  - { name: identity-service,      language: go,     path: services/identity-service,     port: 8301, db: identity,      migrate: true,  ingress: internal, needs: [postgres, kafka, redis, keycloak] }
+  - { name: rbac-service,          language: go,     path: services/rbac-service,         port: 8302, db: rbac,          migrate: true,  ingress: internal, needs: [postgres, kafka, redis, opa] }
+  - { name: ingestion-service,     language: python, path: services/ingestion-service,    port: 8303, db: ingestion,     migrate: true,  ingress: internal, needs: [postgres, kafka, redis, opa, objectstore, iceberg, secretstore] }
+  - { name: dataset-service,       language: python, path: services/dataset-service,      port: 8304, db: dataset,       migrate: true,  ingress: internal, needs: [postgres, kafka, redis, opa, objectstore, iceberg] }
+  - { name: realtime-hub,          language: go,     path: services/realtime-hub,         port: 8305, db: realtimehub,   migrate: true,  ingress: internal, needs: [postgres, kafka, redis] }
+  - { name: agent-runtime,         language: python, path: services/agent-runtime,        port: 8306, db: agent_runtime, migrate: true,  ingress: internal, needs: [postgres, kafka, redis, opa, temporal] }
+  - { name: memory-service,        language: python, path: services/memory-service,       port: 8307, db: memory,        migrate: true,  ingress: internal, needs: [postgres, kafka, redis, opa, embeddings] }
+  - { name: case-service,          language: go,     path: services/case-service,         port: 8308, db: case_svc,      migrate: true,  ingress: internal, needs: [postgres, kafka, redis, opa, opensearch] }
+  - { name: tool-registry,         language: go,     path: services/tool-plane,           dockerfile: Dockerfile.registry, port: 8310, db: tool_plane, migrate: true,  ingress: internal, needs: [postgres, opa] }
+  - { name: mcp-gateway,           language: go,     path: services/tool-plane,           dockerfile: Dockerfile.gateway,  port: 8311, db: ~,          migrate: false, ingress: internal, needs: [opa] }
+  - { name: ai-gateway,            language: python, path: services/ai-gateway,           port: 8312, db: ai_gateway,    migrate: true,  ingress: internal, needs: [postgres, kafka, redis, opa, llmproviders] }
+  - { name: pipeline-orchestrator, language: python, path: services/pipeline-orchestrator, port: 8313, db: pipeline,     migrate: true,  ingress: internal, needs: [postgres, kafka, redis, opa, objectstore, mlflow, argo] }
+  - { name: experiment-service,    language: python, path: services/experiment-service,   port: 8314, db: experiment,    migrate: true,  ingress: internal, needs: [postgres, kafka, redis, opa, mlflow] }
+  - { name: inference-service,     language: python, path: services/inference-service,    port: 8316, db: inference,     migrate: true,  ingress: internal, needs: [postgres, kafka, redis, opa, objectstore, mlflow] }
+  - { name: query-service,         language: go,     path: services/query-service,        port: 8085, db: query,        migrate: true,  ingress: internal, needs: [postgres, opa, objectstore, iceberg] }
+  - { name: semantic-service,      language: python, path: services/semantic-service,     port: 8086, db: semantic,      migrate: true,  ingress: internal, needs: [postgres, opa] }
+  - { name: chart-service,         language: go,     path: services/chart-service,        port: 8320, db: chart,         migrate: true,  ingress: internal, needs: [postgres, kafka, redis, opa] }
+  - { name: usage-service,         language: go,     path: services/usage-service,        port: 8321, db: usage,         migrate: true,  ingress: internal, needs: [postgres, kafka, redis, opa, clickhouse] }
+  - { name: audit-service,         language: go,     path: services/audit-service,        port: 8322, db: ~,             migrate: false, ingress: internal, needs: [postgres, kafka, clickhouse] }
+  - { name: notification-service,  language: go,     path: services/notification-service, port: 8323, db: notification,  migrate: true,  ingress: internal, needs: [postgres, kafka, redis, opa, smtp] }
+  - { name: eval-service,          language: python, path: services/eval-service,         port: 8324, db: eval,          migrate: true,  ingress: internal, needs: [postgres, kafka, redis, opa] }
+  - { name: bff-graphql,           language: node,   path: services/bff-graphql,          port: 4000, db: ~,             migrate: false, ingress: public,   needs: [jwks] }
+  - { name: ui-web,                language: node,   path: services/ui-web,               port: 3000, db: ~,             migrate: false, ingress: public,   needs: [bff] }
+
+# Platform infra dependencies. In dev these are docker-compose containers; in each
+# cloud they map to a managed service (see deploy/terraform/<cloud> + values-<cloud>.yaml).
+# The mapping is what makes credentials "configurable later": every one is referenced
+# by a connection string / secret key, never hardcoded.
+infra_dependencies:
+  postgres:     { aws: RDS PostgreSQL,            gcp: Cloud SQL for PostgreSQL,   azure: Azure Database for PostgreSQL Flexible }
+  redis:        { aws: ElastiCache (Redis/Valkey), gcp: Memorystore for Redis,     azure: Azure Cache for Redis }
+  kafka:        { aws: MSK,                        gcp: Managed Service for Kafka,  azure: Event Hubs (Kafka API) }
+  objectstore:  { aws: S3,                         gcp: GCS,                        azure: Blob Storage }
+  iceberg:      { aws: iceberg-rest + S3,          gcp: iceberg-rest + GCS,         azure: iceberg-rest + Blob }  # runs in-cluster; catalog persisted on the managed Postgres
+  secretstore:  { aws: Secrets Manager,            gcp: Secret Manager,             azure: Key Vault }
+  clickhouse:   { aws: in-cluster / ClickHouse Cloud, gcp: in-cluster / ClickHouse Cloud, azure: in-cluster / ClickHouse Cloud }
+  opensearch:   { aws: OpenSearch Service,         gcp: in-cluster,                 azure: in-cluster }
+  temporal:     { aws: Temporal Cloud / in-cluster, gcp: Temporal Cloud / in-cluster, azure: Temporal Cloud / in-cluster }
+  mlflow:       { aws: in-cluster (S3 artifacts),  gcp: in-cluster (GCS artifacts), azure: in-cluster (Blob artifacts) }
+  keycloak:     { aws: in-cluster,                 gcp: in-cluster,                 azure: in-cluster }  # or bring your own OIDC IdP
+  opa:          { aws: in-cluster sidecar/deploy,  gcp: in-cluster,                 azure: in-cluster }
+  embeddings:   { aws: Bedrock / in-cluster Ollama, gcp: Vertex / in-cluster Ollama, azure: Foundry / in-cluster Ollama }
+  llmproviders: { aws: Bedrock / OpenAI / Anthropic, gcp: Vertex / OpenAI / Anthropic, azure: Azure OpenAI / Anthropic }

@@ -1,0 +1,10 @@
+{
+  "type": "record",
+  "name": "PermInvalidate",
+  "namespace": "ai.windrose.rbac.v1",
+  "doc": "Redis pub/sub perm.invalidate payload (RBC-FR-042). Not a Kafka schema; documented here for the OPA sidecar contract.",
+  "fields": [
+    {"name": "tenant", "type": {"type": "string", "logicalType": "uuid"}},
+    {"name": "users", "type": {"type": "array", "items": "string"}}
+  ]
+}

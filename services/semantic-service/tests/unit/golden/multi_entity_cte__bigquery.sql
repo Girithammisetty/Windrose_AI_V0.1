@@ -1,0 +1,2 @@
+WITH `m0` AS (SELECT `c`.`tier` AS `customer_tier`, sum(`o`.`order_total`) AS `revenue` FROM {{dataset('ds_orders')}} `o` LEFT JOIN {{dataset('ds_customers')}} `c` ON `o`.`customer_id` = `c`.`id` GROUP BY 1), `m1` AS (SELECT `c`.`tier` AS `customer_tier`, count(*) AS `headcount` FROM {{dataset('ds_customers')}} `c` GROUP BY 1) SELECT coalesce(`m0`.`customer_tier`, `m1`.`customer_tier`) AS `customer_tier`, `m0`.`revenue` AS `revenue`, `m1`.`headcount` AS `headcount` FROM `m0` FULL JOIN `m1` ON `m1`.`customer_tier` = `m0`.`customer_tier`
+-- params: []

@@ -1,0 +1,9 @@
+product_id,product_name,active_ingredient,therapeutic_area,formulation,region_scope,rems_flag,launch_month
+PRD-01,Cardevex,cardevantan,cardiology,tablet,us_eu,no,2021-04
+PRD-02,Neurilex,neurilexin,neurology,capsule,us,yes,2023-09
+PRD-03,Oncovair,vairotinib,oncology,tablet,us_eu,yes,2022-11
+PRD-04,Dermaquil,quilomab,dermatology,injection,us,no,2024-02
+PRD-05,Resporin,resporinide,respiratory,inhaler,us_eu,no,2019-07
+PRD-06,Gastrelle,gastrelline,gastroenterology,tablet,us,no,2020-05
+PRD-07,Immunara,aranumab,immunology,injection,us_eu,yes,2023-03
+PRD-08,Metaboril,metaborilin,endocrinology,tablet,us,no,2018-10

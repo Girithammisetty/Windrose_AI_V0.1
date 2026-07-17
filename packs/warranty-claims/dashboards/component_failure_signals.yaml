@@ -1,0 +1,69 @@
+# Component Failure Signals: the early-warning / field-quality view —
+# component and failure-mode mix, supplier cost recovery by component, and
+# the powertrain claim trend that surfaces the build-batch seal cluster.
+name: "Component Failure Signals"
+module: insights
+semantic_model: warranty_core
+description: >-
+  Field-quality early-warning posture: claim volume by component system,
+  failure-mode mix, supplier chargeback recoveries by component, the
+  powertrain claim trend (build-batch cluster watch), and a per-component
+  replacement/recovery grid.
+tags: [manufacturing, warranty, early_warning, supplier_recovery, pack]
+charts:
+  - name: "Claims by component system"
+    chart_type: vertical_bar_chart
+    description: "Warranty claims by component system (powertrain, electrical, hydraulics, ...)"
+    config:
+      x: { dimension: component_system }
+      y: [ { measure: claim_count, agg_fn: count } ]
+    sources: [ { measure: claim_count } ]
+    w: 6
+    h: 4
+  - name: "Failure-mode mix"
+    chart_type: pie_chart
+    description: "Claims by reported failure mode — clusters are emerging quality signals"
+    config:
+      x: { dimension: failure_mode }
+      y: [ { measure: claim_count, agg_fn: count } ]
+    sources: [ { measure: claim_count } ]
+    w: 6
+    h: 4
+  - name: "Supplier recovery by component"
+    chart_type: vertical_bar_chart
+    description: "Dollars recovered from suppliers via warranty chargebacks, by component system"
+    config:
+      x: { dimension: component_system }
+      y: [ { measure: total_recovered_amount, agg_fn: sum } ]
+    sources: [ { measure: total_recovered_amount } ]
+    w: 6
+    h: 4
+  - name: "Powertrain claim trend"
+    chart_type: line_chart
+    description: "Powertrain-system claims by filed month — the build-batch cluster watch"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: powertrain_claim_count, agg_fn: count } ]
+    sources: [ { measure: powertrain_claim_count } ]
+    w: 6
+    h: 4
+  - name: "Component signal grid"
+    chart_type: grid_chart
+    description: "Claims, replacements, supplier recoveries, claimed and recovered dollars by component"
+    config:
+      columns: [component_system, claim_count, replacement_claim_count, supplier_recovery_count, total_claim_amount, total_recovered_amount]
+      x: { dimension: component_system }
+      y:
+        - { measure: claim_count, agg_fn: count }
+        - { measure: replacement_claim_count, agg_fn: count }
+        - { measure: supplier_recovery_count, agg_fn: count }
+        - { measure: total_claim_amount, agg_fn: sum }
+        - { measure: total_recovered_amount, agg_fn: sum }
+    sources:
+      - { measure: claim_count }
+      - { measure: replacement_claim_count }
+      - { measure: supplier_recovery_count }
+      - { measure: total_claim_amount }
+      - { measure: total_recovered_amount }
+    w: 12
+    h: 4

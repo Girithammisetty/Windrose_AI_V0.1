@@ -1,0 +1,105 @@
+openapi: 3.0.3
+info:
+  title: inference-service
+  version: 0.1.0
+  description: >
+    Batch inference (scoring) jobs, pre-submit schema-compatibility validation,
+    scheduled scoring, output datasets + lineage. Online serving (KServe) is
+    reserved (501). Inherits MASTER-FR-* (auth, RLS, pagination, error envelope).
+servers:
+  - url: /api/v1
+components:
+  securitySchemes:
+    bearerAuth: {type: http, scheme: bearer, bearerFormat: JWT}
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: {type: string}
+            message: {type: string}
+            details: {type: array, items: {type: object}}
+            trace_id: {type: string}
+    SubmitBody:
+      type: object
+      required: [model_version_urn, input_dataset_urn]
+      properties:
+        model_version_urn: {type: string}
+        input_dataset_urn: {type: string}
+        name: {type: string}
+        description: {type: string}
+        parameters: {type: object}
+        output:
+          type: object
+          properties:
+            dataset_name: {type: string}
+            mode: {type: string, enum: [create, append, replace]}
+        allow_unpromoted: {type: boolean}
+        allow_empty: {type: boolean}
+    ScheduleBody:
+      type: object
+      required: [name, input_selector, output]
+      properties:
+        name: {type: string}
+        model_version_urn: {type: string}
+        model_urn: {type: string}
+        stage_selector: {type: string, enum: [production, staging, none, archived]}
+        input_selector: {type: object}
+        output: {type: object}
+        cron: {type: string}
+        interval_seconds: {type: integer}
+        timezone: {type: string}
+        overlap_policy: {type: string, enum: [skip, queue, cancel_running]}
+        enabled: {type: boolean}
+        notify_on_failure: {type: boolean}
+security: [{bearerAuth: []}]
+paths:
+  /inferences:
+    post:
+      summary: Submit a batch inference job (INF-FR-001)
+      requestBody:
+        content: {application/json: {schema: {$ref: '#/components/schemas/SubmitBody'}}}
+      responses:
+        '202': {description: accepted (job in validating->queued/submitted)}
+        '422': {description: SCHEMA_INCOMPATIBLE / MODEL_STAGE_DENIED, content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}}
+        '429': {description: BUDGET_EXHAUSTED}
+    get:
+      summary: List jobs (filter[status], filter[model_version_urn], filter[schedule_id])
+      responses: {'200': {description: page}}
+  /inferences/validate:
+    post:
+      summary: Compatibility check only (INF-FR-003)
+      responses: {'200': {description: report}, '404': {description: model/dataset not found}}
+  /inferences/{job_id}:
+    get: {summary: Job detail (INF-FR-033), responses: {'200': {description: job}, '404': {description: not found}}}
+    delete: {summary: Soft delete (terminal jobs only), responses: {'204': {description: deleted}, '409': {description: not terminal}}}
+  /inferences/{job_id}/cancel:
+    post: {summary: Cancel (idempotent, INF-FR-006), responses: {'200': {description: job}, '409': {description: non-cancellable}}}
+  /inferences/{job_id}/retry:
+    post: {summary: Retry as a new job (INF-FR-007), responses: {'202': {description: new job}}}
+  /inferences/bulk:
+    post: {summary: Bulk submit (<=20, INF-FR-009), responses: {'200': {description: per-item results}}}
+  /schedules:
+    post: {summary: Create schedule (INF-FR-050), responses: {'201': {description: schedule}, '409': {description: name conflict}}}
+    get: {summary: List schedules, responses: {'200': {description: page}}}
+  /schedules/{schedule_id}:
+    get: {summary: Get schedule, responses: {'200': {description: schedule}, '404': {description: not found}}}
+    patch: {summary: Update schedule, responses: {'200': {description: schedule}}}
+    delete: {summary: Delete schedule (INF-FR-053), responses: {'204': {description: deleted}}}
+  /schedules/{schedule_id}/pause:
+    post: {summary: Pause (INF-FR-053), responses: {'200': {description: schedule}}}
+  /schedules/{schedule_id}/resume:
+    post: {summary: Resume (INF-FR-053), responses: {'200': {description: schedule}}}
+  /schedules/{schedule_id}/trigger:
+    post: {summary: Trigger one fire now (INF-FR-053), responses: {'202': {description: fire result}}}
+  /schedules/{schedule_id}/fires:
+    get: {summary: Fire history (jobs by schedule), responses: {'200': {description: page}}}
+  /lineage:
+    get: {summary: Lineage edges touching a URN (AC-4), responses: {'200': {description: edges}}}
+  /endpoints:
+    get: {summary: Reserved online serving (INF-FR-070), responses: {'501': {description: NOT_IMPLEMENTED}}}
+    post: {summary: Reserved online serving (INF-FR-070), responses: {'501': {description: NOT_IMPLEMENTED}}}
+  /endpoints/{endpoint_id}/predict:
+    post: {summary: Reserved online serving proxy (INF-FR-070), responses: {'501': {description: NOT_IMPLEMENTED}}}

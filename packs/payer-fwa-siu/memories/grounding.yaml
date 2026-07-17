@@ -1,0 +1,105 @@
+# Tenant-scope RAG grounding records (memory-service). This is the FWA
+# domain knowledge the SIU triage copilot retrieves when reasoning about a
+# lead — typology definitions, NCCI edit semantics, exclusion-list rules,
+# recovery/referral norms, and the governance constraints from BRD 27 §5.
+# Every record is factual domain reference material. Cross-tenant sharing of
+# learned FWA patterns is forbidden (BR-6) — these records are tenant-scoped.
+- content: >-
+    Upcoding: billing a higher-intensity code than the documentation
+    supports, most commonly E/M levels (99211-99215 established-patient
+    office visits). Peer benchmark: small primary-care practices typically
+    bill level 5 (99215) on roughly 5-15% of E/M visits; a provider billing
+    level 5 on more than ~50% of visits — especially with low-acuity
+    diagnoses like J06.9 (URI) or Z00.00 (routine exam) — is a classic
+    upcoding screen. Confirmation requires a medical-record review showing
+    documentation does not support the billed level.
+  tags: [fwa_typology, upcoding, em_coding]
+  confidence: 0.95
+- content: >-
+    Unbundling: billing component procedures separately when a comprehensive
+    code exists, contrary to CMS National Correct Coding Initiative (NCCI)
+    procedure-to-procedure (PTP) edits. Canonical lab examples: billing
+    80048 (basic metabolic panel) or 80051 (electrolyte panel) alongside
+    80053 (comprehensive metabolic panel, which includes them), and billing
+    82465 (cholesterol), 83718 (HDL), 84478 (triglycerides) alongside 80061
+    (lipid panel). Repeated component billing across claims, or systematic
+    modifier 59 use to bypass PTP edits, indicates a pattern rather than a
+    one-off coding error.
+  tags: [fwa_typology, unbundling, ncci]
+  confidence: 0.95
+- content: >-
+    Phantom billing: claims submitted for services never rendered — no
+    encounter note, no supporting chart, member denies the visit occurred,
+    services dated after a member's death, or DME never delivered. Member
+    complaints are a high-yield lead source for phantom billing. It carries
+    the highest prosecutorial value of the typologies, so evidence handling
+    (chain-of-custody hash, timestamp, access log) matters most on these
+    leads.
+  tags: [fwa_typology, phantom_billing, evidence]
+  confidence: 0.95
+- content: >-
+    Impossible days: a provider's billed time or encounter count on a single
+    date of service exceeds what is physically possible — e.g. more than 24
+    units of 90837 (60-minute psychotherapy) in one day is more than 24
+    hours of billed therapy time. Screen: sum time-based CPT units per
+    provider per day; anything over ~12-16 hours warrants review and over 24
+    hours is per se impossible. Distinguish from group practices billing
+    under one NPI before opening a lead.
+  tags: [fwa_typology, impossible_day, time_based_codes]
+  confidence: 0.95
+- content: >-
+    Scale of the problem: the National Health Care Anti-Fraud Association
+    (NHCAA) conservatively estimates health-care fraud losses at about 3% of
+    total health spending — tens of billions of dollars annually in the US —
+    with some government and academic estimates as high as 10%. GAO has
+    repeatedly designated Medicare and Medicaid as high-risk programs partly
+    for this reason. This is why every payer maintains an SIU and why
+    recovered dollars is the unit's headline KPI.
+  tags: [nhcaa, industry_estimates, kpi]
+  confidence: 0.9
+- content: >-
+    False Claims Act (31 USC 3729-3733): knowingly submitting false claims
+    to a federal health program triggers treble damages plus per-claim civil
+    penalties; the statute of limitations reaches up to 10 years, which
+    drives long evidence-retention requirements. Qui tam provisions let
+    whistleblowers (relators) file on the government's behalf and share
+    15-30% of recoveries — many SIU matters begin as hotline or qui tam
+    allegations. Criminal exposure runs under 18 USC 1347 (health care
+    fraud). Referral packets must include an allegation summary, factual
+    basis, damages quantification, and a chain-of-custody log.
+  tags: [regulatory, false_claims_act, qui_tam, doj_referral]
+  confidence: 0.95
+- content: >-
+    OIG exclusion (LEIE): items or services furnished by a provider on the
+    HHS-OIG List of Excluded Individuals/Entities are not payable by federal
+    health programs, and payers face civil monetary penalty exposure for
+    paying them. The LEIE is refreshed monthly (this platform re-checks
+    daily per BR-4); SAM.gov and state Medicaid exclusion lists are
+    complementary. A provider newly appearing on the exclusion list should
+    automatically open an SIU lead to review pending and recently paid
+    claims — an exclusion hit is among the strongest single evidence items
+    in a case packet.
+  tags: [regulatory, leie, oig_exclusion, screening]
+  confidence: 0.95
+- content: >-
+    Recovery escalation norms: waste and unintentional abuse are handled
+    with provider education letters and prospective policy edits; overpaid
+    dollars are pursued via payback demand letters, offset against future
+    remittances, or negotiated settlement; confirmed fraud escalates to
+    prosecution referral with restitution. Payback demands issue only after
+    supervisor review plus legal concurrence, and direct member outreach for
+    paybacks requires director-level approval (BR-8). Education letters
+    close the lead as benign, not as a fraud finding.
+  tags: [recovery, workflow, escalation]
+  confidence: 0.9
+- content: >-
+    Governance constraints on FWA scoring (BRD 27): FWA scores are exposed
+    to human review only and must never auto-deny or auto-recoup a claim
+    (BR-5 — auto-denial is pre-payment territory and a regulator risk).
+    Prosecution referral requires senior-investigator plus legal-counsel
+    two-signature approval (BR-3). Investigator identity is pseudonymized in
+    any case content shared beyond the SIU (BR-7, whistleblower/retaliation
+    protection). FWA patterns learned at one payer must never inform another
+    payer's model (BR-6, strict tenant isolation).
+  tags: [governance, human_review, two_signature, tenant_isolation]
+  confidence: 0.95

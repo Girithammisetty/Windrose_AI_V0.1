@@ -1,0 +1,77 @@
+{
+  "pack": "post-acute-care",
+  "version": "1.0.0",
+  "workspace_id": "019f62c1-0f5e-7af0-b9be-cbe343ea0ad4",
+  "tenant_id": "019f62c1-080d-71bd-b404-1d4e15b02dcb",
+  "started_at": "2026-07-15T05:41:13Z",
+  "finished_at": "2026-07-15T05:41:14Z",
+  "actions": [
+    {
+      "kind": "datasets",
+      "identity": "pac_episodes",
+      "action": "create",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:dataset:dataset/019f644b-23ca-7cfc-9aac-f357701d43ea",
+      "detail": "'pac-episodes' ingested rows=16 snapshot=2693414839377862292"
+    },
+    {
+      "kind": "datasets",
+      "identity": "pac_referrals",
+      "action": "create",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:dataset:dataset/019f644b-2510-7e43-93f3-fe86d1729023",
+      "detail": "'pac-referrals' ingested rows=20 snapshot=6975524183487867381"
+    },
+    {
+      "kind": "datasets",
+      "identity": "pac_assessments",
+      "action": "create",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:dataset:dataset/019f644b-2619-7df4-93e8-02eb3f5c9205",
+      "detail": "'pac-assessments' ingested rows=18 snapshot=6240372673698623830"
+    },
+    {
+      "kind": "semantic_models",
+      "identity": "episodes",
+      "action": "failed",
+      "urn": null,
+      "detail": "submit 422: {\"error\":{\"code\":\"VALIDATION_FAILED\",\"message\":\"definition validation failed\",\"trace_id\":\"019f644b-2755-7c4a-ba5c-94007c2061f5\",\"details\":[{\"object\":\"entity/assessments\",\"problem\":\"dataset 'wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:dataset:dataset/019f644b-2619-7df4-93e8-02eb3f5c9205' not found\"}]}}"
+    }
+  ],
+  "deferred": [
+    {
+      "kind": "ontology",
+      "reason": "PAC-FR-010 ontology (Patient, Referral, Episode, OASISAssessment, MDSAssessment, PDGMClassification, PDPMClassification, TherapyEncounter, MedicationRecord, HospiceElection, HospiceCertification, LCDPolicy, RehospitalizationRisk) awaits pack-service ontology registration; entity semantics are carried today by the semantic models and dataset schemas."
+    },
+    {
+      "kind": "guardrails",
+      "reason": "PAC-FR-100 regulatory guardrails (HIPAA baseline, PDGM 60-day episode / LUPA rules, PDPM interrupted-stay policy, OASIS-E timing/locking, MDS 3.0 schedule, hospice LCD face-to-face, PEPPER/CERT/UPIC defensibility) require guardrail-service / OPA policy materialization, which Core does not expose as a pack surface yet. BR-1's no-autonomous-submission guarantee (PAC_AUTONOMOUS_ASSESSMENT_FORBIDDEN) is covered today by Core invariants: proposal-mode + four-eyes approval for every pack-configured agent."
+    },
+    {
+      "kind": "agent_recipes",
+      "reason": "PAC-FR-030..080 bespoke LangGraph recipes (OASIS Copilot, PDGM Optimizer, MDS Copilot, PDPM Optimizer, Referral Triage, Hospice Eligibility) require agent-runtime graph-module registration (BRD 23 BR-12). This pack specializes the existing case-triage + analytics agents via TenantAgentConfig prompt_params + tenant-scope RAG grounding instead."
+    },
+    {
+      "kind": "connection_templates",
+      "reason": "PAC-FR-090 read connectors (HomeCare HomeBase, MatrixCare, PointClickCare, Netsmart myUnity, Axxess, WellSky, HL7 ADT via HIE, Bamboo Health, HHAeXchange, CMS iQIES) require customer credentials and pack-service connector materialization. The pack ships seed datasets in the exact landing shape; production connectors are configured through the product Data > Connections UI."
+    },
+    {
+      "kind": "write_adapters",
+      "reason": "PAC-FR-090 write adapters (OASIS/MDS assessment drafts to EHR, care-plan update, referral response, hospice certification narrative) execute only behind pack-service's materialization contract and customer credentials; all platform-side writes remain proposal-mode per BR-1."
+    },
+    {
+      "kind": "eval_sets",
+      "reason": "BRD 29 \u00a74's five golden eval sets (OASIS drafting, PDGM comorbidity capture, MDS Section GG, referral triage ranking, hospice LCD narrative) require eval-service write APIs whose action names are not yet in the rbac canonical catalog (Core follow-up noted in rbac catalog.go)."
+    },
+    {
+      "kind": "model_archetypes",
+      "reason": "BRD 29 \u00a74 archetypes (rehospitalization_30d_risk, referral_acceptance_score) await experiment-service archetype APIs; the rehospitalization risk model ships as a pipeline seed instead (rehospitalization_risk_model, random_forest)."
+    },
+    {
+      "kind": "case_schemas",
+      "reason": "PAC-FR-110 typed case schemas (oasis_review, mds_review, referral_triage_review, pdgm_optimization_review, pdpm_optimization_review, hospice_eligibility_review) await case-service schema materialization; today's cases carry the same fields via display_projection + the disposition taxonomy."
+    },
+    {
+      "kind": "display_labels",
+      "reason": "BRD 29 \u00a74 display-label overlays (case-schema singulars, agent names, patient entity template) require the BFF label-registry endpoints (BFF-FR-082/088) which are pack-service-tier features."
+    }
+  ],
+  "result": "failed"
+}

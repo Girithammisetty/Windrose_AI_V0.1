@@ -1,0 +1,14 @@
+alert_id,party_id,account_id,typology,scenario_rule,severity,status,disposition,assigned_tier,alert_month,age_days,amount_involved,match_score
+ALT-3001,P-1001,A-100101,structuring,cash_structuring_sub10k_pairs,high,open,pending,l1,2026-05,41,56800.00,0.00
+ALT-3002,P-1002,A-100201,layering,rapid_movement_chain_72h,high,open,pending,l2,2026-05,39,250000.00,0.00
+ALT-3003,P-1005,A-100501,sanctions_near_match,sdn_name_screen_fuzzy,critical,open,pending,l1,2026-06,18,75000.00,0.87
+ALT-3004,P-1006,A-100601,dormant_activity,dormant_reactivation_90d,medium,open,pending,l1,2026-06,12,19250.00,0.00
+ALT-3005,P-1009,A-100901,peer_anomaly,sic_peer_group_deviation,high,open,pending,l2,2026-06,9,151500.00,0.00
+ALT-3006,P-1012,A-101201,funnel_account,many_to_one_rapid_out,medium,open,pending,l1,2026-06,5,11400.00,0.00
+ALT-3007,P-1007,A-100701,structuring,cash_structuring_sub10k_pairs,low,closed,false_positive,l1,2026-04,3,9500.00,0.00
+ALT-3008,P-1010,A-101001,ctr_threshold,cash_aggregation_24h_10k,medium,closed,cleared_benign,l1,2026-05,2,14500.00,0.00
+ALT-3009,P-1003,A-100301,layering,rapid_movement_chain_72h,high,closed,sar_filed,mlro,2026-03,27,198000.00,0.00
+ALT-3010,P-1008,A-100801,sanctions_near_match,sdn_name_screen_fuzzy,medium,closed,false_positive,l1,2026-05,4,40000.00,0.41
+ALT-3011,P-1004,A-100401,layering,rapid_movement_chain_72h,high,closed,sar_filed,mlro,2026-04,25,247000.00,0.00
+ALT-3012,P-1001,A-100101,structuring,cash_structuring_sub10k_pairs,medium,closed,false_positive,l1,2026-03,6,18700.00,0.00
+ALT-3013,P-1011,A-101101,sanctions_near_match,sdn_name_screen_fuzzy,low,closed,false_positive,l1,2026-04,2,12000.00,0.35

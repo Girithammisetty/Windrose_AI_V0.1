@@ -1,0 +1,93 @@
+# Semantic model `siu_operations` — FWA-FR-020 SIU pipeline KPIs: hit rate,
+# false-positive rate, recovery dollars, cycle time (BRD 27 §3.3 + US-4/US-6).
+name: siu_operations
+description: >-
+  SIU operations model (BRD 27 FWA-FR-020): lead pipeline by source and
+  typology, SIU hit rate and false-positive rate, recovery dollars by method,
+  and case cycle time — the SIU director / VP payment-integrity KPI surface.
+definition:
+  entities:
+    - name: leads
+      dataset: fwa_leads
+      table: main.fwa_leads
+      primary_key: [lead_id]
+      dataset_version_policy: { policy: latest }
+    - name: recoveries
+      dataset: fwa_recoveries
+      table: main.fwa_recoveries
+      primary_key: [recovery_id]
+      dataset_version_policy: { policy: latest }
+    - name: providers
+      dataset: fwa_provider_profiles
+      table: main.fwa_provider_profiles
+      primary_key: [provider_npi]
+      dataset_version_policy: { policy: latest }
+  join_paths:
+    - name: leads_providers
+      from_entity: leads
+      to_entity: providers
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: provider_npi, to_column: provider_npi }]
+    - name: recoveries_leads
+      from_entity: recoveries
+      to_entity: leads
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: lead_id, to_column: lead_id }]
+  dimensions:
+    - { name: lead_source, entity: leads, type: categorical, column: lead_source }
+    - { name: fwa_typology, entity: leads, type: categorical, column: fwa_typology }
+    - { name: lead_status, entity: leads, type: categorical, column: status }
+    - { name: priority, entity: leads, type: categorical, column: priority }
+    - { name: opened_month, entity: leads, type: categorical, column: opened_month }
+    - { name: outcome, entity: leads, type: categorical, column: outcome }
+    - { name: recovery_method, entity: recoveries, type: categorical, column: recovery_method }
+    - { name: recovery_status, entity: recoveries, type: categorical, column: status }
+    - { name: recovery_month, entity: recoveries, type: categorical, column: recovery_month }
+    - { name: provider_specialty, entity: providers, type: categorical, column: provider_specialty }
+    - { name: leie_status, entity: providers, type: categorical, column: leie_status }
+  measures:
+    - { name: lead_count, entity: leads, agg: count,
+        description: "SIU leads generated" }
+    - { name: confirmed_lead_count, entity: leads, agg: count,
+        filters: "outcome = 'confirmed'",
+        description: "Leads confirmed as FWA after investigation" }
+    - { name: false_positive_lead_count, entity: leads, agg: count,
+        filters: "outcome = 'false_positive'",
+        description: "Leads closed as false positives" }
+    - { name: open_investigation_count, entity: leads, agg: count,
+        filters: "status = 'open_investigation'",
+        description: "Active SIU investigations" }
+    - { name: referred_lead_count, entity: leads, agg: count,
+        filters: "status = 'referred'",
+        description: "Leads referred to DOJ / OIG / state DOI (FWA-FR-070)" }
+    - { name: total_exposure, entity: leads, agg: sum,
+        expr: "cast(exposure_amount as double)", format: decimal,
+        description: "Dollar exposure across leads" }
+    - { name: avg_lead_score, entity: leads, agg: avg,
+        expr: "cast(fwa_score as double)", format: decimal,
+        description: "Average FWA score at lead creation" }
+    - { name: recovery_count, entity: recoveries, agg: count,
+        description: "Recovery actions initiated" }
+    - { name: total_demanded, entity: recoveries, agg: sum,
+        expr: "cast(demanded_amount as double)", format: decimal,
+        description: "Dollars demanded across recovery actions" }
+    - { name: total_recovered, entity: recoveries, agg: sum,
+        expr: "cast(recovered_amount as double)", format: decimal,
+        description: "FWA-FR-020 fwa_recovery_$: dollars recovered via SIU work" }
+    - { name: avg_cycle_days, entity: recoveries, agg: avg,
+        expr: "cast(cycle_days as double)", format: decimal,
+        description: "FWA-FR-020 avg_case_cycle_days: intake to action days" }
+    - { name: siu_hit_rate,
+        expr_metric: "confirmed_lead_count / nullif(lead_count, 0)",
+        format: percent,
+        description: "FWA-FR-020 scan-yield / hit rate: confirmed leads over all leads" }
+    - { name: false_positive_rate,
+        expr_metric: "false_positive_lead_count / nullif(lead_count, 0)",
+        format: percent,
+        description: "FWA-FR-020 quality KPI: false-positive leads over all leads" }
+    - { name: recovery_realization_rate,
+        expr_metric: "total_recovered / nullif(total_demanded, 0)",
+        format: percent,
+        description: "Dollars collected over dollars demanded" }

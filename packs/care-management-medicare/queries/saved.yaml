@@ -1,0 +1,26 @@
+# Saved queries (query-service) — the leakage-flow edge source for
+# network-family charts plus the TCM daily worklist (US-8, Appendix Q5).
+- identity: leakage_flow_edges
+  name: "Care mgmt: hold reason to program flow"
+  description: >-
+    Held billing-candidate counts by (missing artifact -> program family) —
+    edge list for network-family charts and ad-hoc leakage-flow analysis
+    (CMM-FR-071 Revenue Leakage drill).
+  sql: >-
+    SELECT hold_reason AS parent, program_code AS child, count(*) AS n
+    FROM {{dataset('care-billing-candidates')}}
+    WHERE decision = 'hold'
+    GROUP BY hold_reason, program_code
+  tags: [healthcare, care-management, revenue-leakage, network, pack]
+- identity: tcm_open_worklist
+  name: "Care mgmt: TCM discharges not yet contacted"
+  description: >-
+    Recently discharged patients missing the 2-business-day CMS contact
+    (CMM-FR-090/092) — the TCM prioritizer's daily worklist seed.
+  sql: >-
+    SELECT patient_id, discharge_month, tcm_contact_2bd, readmitted_30d,
+           care_manager_id
+    FROM {{dataset('care-patients')}}
+    WHERE recent_discharge_flag = 'yes' AND tcm_contact_2bd = 'no'
+    ORDER BY discharge_month DESC
+  tags: [healthcare, care-management, tcm, worklist, pack]

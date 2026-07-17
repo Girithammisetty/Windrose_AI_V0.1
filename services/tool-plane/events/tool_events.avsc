@@ -1,0 +1,20 @@
+{
+  "type": "record",
+  "name": "ToolEvent",
+  "namespace": "ai.windrose.tool_plane",
+  "doc": "tool.events.v1 — tool-plane lifecycle events (BRD §6). event_type is one of tool.registered, tool.version_published, tool.deprecated, tool.retired, tool.quarantined, tool.killed, tool.unkilled, tool.sla_breached, tenant_tool.enabled|disabled, byo.submitted|approved|rejected. Rides the platform master envelope; this schema documents the payload superset.",
+  "fields": [
+    {"name": "tool_id", "type": ["null", "string"], "default": null},
+    {"name": "version", "type": ["null", "string"], "default": null},
+    {"name": "owner_service", "type": ["null", "string"], "default": null},
+    {"name": "status", "type": ["null", "string"], "default": null},
+    {"name": "scope", "type": ["null", "string"], "default": null, "doc": "kill-switch scope: tool|tool_version|tool_tenant"},
+    {"name": "reason", "type": ["null", "string"], "default": null},
+    {"name": "set_by", "type": ["null", "string"], "default": null},
+    {"name": "decided_by", "type": ["null", "string"], "default": null},
+    {"name": "enabled", "type": ["null", "boolean"], "default": null},
+    {"name": "deprecation_ends_at", "type": ["null", "string"], "default": null},
+    {"name": "byo_id", "type": ["null", "string"], "default": null},
+    {"name": "endpoint_url", "type": ["null", "string"], "default": null}
+  ]
+}

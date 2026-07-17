@@ -1,0 +1,70 @@
+# Seeded ICSR-processing queue: the OPEN cases from the seed dataset become
+# cases so a PV specialist logging in sees a real, pattern-diverse worklist
+# on day one — a fatal unlisted hepatic failure on the oncology product (part
+# of a 3-case hepatobiliary cluster), an unlisted SJS on a REMS product, a
+# clinical-trial anaphylaxis on the 7-day clock, a consumer case failing
+# valid-case minimum criteria, a duplicate suspect, and a literature case.
+# due_days=3 keeps triage well inside the tightest (7-day) reporting clock.
+dataset: pv_cases
+due_days: 3
+rows:
+  - row_pk: PVC-6001
+    severity: high
+    display_projection:
+      case_id: PVC-6001
+      product: "Oncovair / vairotinib (PRD-03)"
+      case_type: spontaneous
+      seriousness: "death"
+      expectedness: unlisted
+      days_to_deadline: "13"
+      note: "Fatal hepatic failure + hyperbilirubinaemia (EVT-8023/8024) in an elderly patient, onset day 48 — hepatic failure is NOT in the Oncovair reference safety information: serious + unexpected = 15-day expedited candidate. This is the THIRD unlisted hepatobiliary case on Oncovair (PVC-5002 pancreatitis, PVC-5010 fatal hepatic failure) — flag the cluster to the signal analyst alongside the ICSR decision"
+  - row_pk: PVC-6002
+    severity: high
+    display_projection:
+      case_id: PVC-6002
+      product: "Neurilex / neurilexin (PRD-02, REMS)"
+      case_type: spontaneous
+      seriousness: "hospitalization"
+      expectedness: unlisted
+      days_to_deadline: "10"
+      note: "Stevens-Johnson syndrome (EVT-8025), hospitalized, not recovered — SJS is unlisted for Neurilex and this is the SECOND unlisted severe skin/neuro case (PVC-5004 SJS, PVC-5012 peripheral neuropathy) on a REMS product: 15-day expedited candidate + REMS assessment impact; medical review for causality (positive dechallenge data pending from reporter)"
+  - row_pk: PVC-6003
+    severity: medium
+    display_projection:
+      case_id: PVC-6003
+      product: "Resporin / resporinide (PRD-05)"
+      case_type: solicited
+      seriousness: non_serious
+      expectedness: pending
+      days_to_deadline: "82"
+      note: "Patient-support-program report of 'drug ineffective' (EVT-8026) — solicited source, so it needs causality assessment before reportability; reporter contact details on file but patient identifiers incomplete: one valid-case criterion (identifiable patient) unconfirmed — request follow-up before the case can be assessed, document two follow-up attempts"
+  - row_pk: PVC-6004
+    severity: high
+    display_projection:
+      case_id: PVC-6004
+      product: "Cardevex / cardevantan (PRD-01)"
+      case_type: literature
+      seriousness: "life_threatening"
+      expectedness: listed
+      days_to_deadline: "9"
+      note: "Published case report (DE) of severe angioedema (EVT-8027), onset day 2 — angioedema IS listed for Cardevex, but the article describes airway compromise requiring intubation: seriousness life-threatening. EU serious ICSR: 15-day clock from receipt of the article; extract full case details from the publication and confirm the authors haven't also reported it directly (duplicate check)"
+  - row_pk: PVC-6005
+    severity: medium
+    display_projection:
+      case_id: PVC-6005
+      product: "Immunara / aranumab (PRD-07, REMS)"
+      case_type: spontaneous
+      seriousness: "hospitalization"
+      expectedness: listed
+      days_to_deadline: "12"
+      note: "Consumer-reported infusion reaction + pyrexia (EVT-8028/8029), hospitalized overnight — same patient initials, sex, and event date as already-processed PVC-5020 (nullified duplicates PVC-5018/5019/5020 show intake is receiving double-feeds this month): run duplicate detection BEFORE assessment; if distinct, listed + serious = expedited candidate on the 15-day clock"
+  - row_pk: PVC-6006
+    severity: high
+    display_projection:
+      case_id: PVC-6006
+      product: "Dermaquil / quilomab (PRD-04)"
+      case_type: clinical
+      seriousness: "life_threatening"
+      expectedness: unlisted
+      days_to_deadline: "4"
+      note: "Clinical-trial anaphylactic reaction (EVT-8030) within an hour of injection, life-threatening, unexpected per the investigator's brochure — a suspected unexpected serious adverse reaction on the 7-DAY clock (fatal/life-threatening SUSAR): 4 days left; medical review and QPPV sign-off today, follow-up complete report within 8 additional days"

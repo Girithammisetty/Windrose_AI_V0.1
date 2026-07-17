@@ -1,0 +1,69 @@
+# Seeded dispute-adjudication queue: the OPEN disputes from the seed dataset
+# become cases so an analyst logging in sees a real, pattern-diverse worklist
+# on day one — card-testing burst, serial first-party disputer, cancelled
+# recurring, ATM shortfall, duplicate charge, high-value CNP fraud on a new
+# account. due_days=5 keeps triage inside the Reg E 10-business-day
+# provisional-credit clock on the tightest rows.
+dataset: cd_disputes
+due_days: 5
+rows:
+  - row_pk: DSP-5001
+    severity: high
+    display_projection:
+      dispute_id: DSP-5001
+      cardholder: "Priya Raman (C-2003)"
+      dispute_type: fraud_unauthorized
+      reason_code: "4837"
+      amount: "849.99"
+      deadline_days_left: "24"
+      note: "Card-testing signature: three micro-authorizations $0.99-$1.99 at GameTopUp Digital (GB) on 2026-06-02 (T-7001..T-7003) followed same day by $849.99 at ElectroHub Online (T-7004); prior micro-charge chargeback DSP-4020 lost on trivial amount — dispute the large charge, recommend card reissue"
+  - row_pk: DSP-5002
+    severity: high
+    display_projection:
+      dispute_id: DSP-5002
+      cardholder: "Dana Whitfield (C-2001)"
+      dispute_type: not_received
+      reason_code: "13.1"
+      amount: "342.20"
+      deadline_days_left: "1"
+      note: "Third 'item not received' claim in 3 months (DSP-4001, DSP-4002 both denied on carrier delivery confirmation to the address on file); 6 prior disputes, high risk tier. Reg E provisional-credit decision due in 1 business day — deny requires documented findings, first-party fraud pattern is strong but each claim must be investigated on its own evidence"
+  - row_pk: DSP-5003
+    severity: medium
+    display_projection:
+      dispute_id: DSP-5003
+      cardholder: "Yuki Tanaka (C-2009)"
+      dispute_type: cancelled_recurring
+      reason_code: "4853"
+      amount: "39.99"
+      deadline_days_left: "12"
+      note: "FitStream Plus charged $39.99 on 2026-06-15 (T-7009) after documented cancellation; identical May charge already resolved cardholder-favor (DSP-4019) and a second cardholder (C-2012, T-7010) shows the same post-cancellation billing — problem-merchant pattern, consider chargeback with the cancellation record as compelling evidence"
+  - row_pk: DSP-5004
+    severity: medium
+    display_projection:
+      dispute_id: DSP-5004
+      cardholder: "Hank Sorensen (C-2008)"
+      dispute_type: atm_shortfall
+      reason_code: "12.5"
+      amount: "200.00"
+      deadline_days_left: "3"
+      note: "ATM FirstLine 4417 debited $300 but dispensed $100 on 2026-06-18 (T-7011) — partial-dispense error; ATM cash-total reconciliation requested from the operator. Reg E error investigation clock running; provisional credit due if not resolved within 10 business days of the 2026-06-20 error notice"
+  - row_pk: DSP-5005
+    severity: medium
+    display_projection:
+      dispute_id: DSP-5005
+      cardholder: "Tomas Rivera (C-2006)"
+      dispute_type: duplicate_charge
+      reason_code: "12.6.1"
+      amount: "86.40"
+      deadline_days_left: "34"
+      note: "Casa Verde Cantina charged $86.40 twice on 2026-06-14 (T-7012, T-7013), same amount same terminal minutes apart — classic duplicate capture; provisional credit issued; confirm the second capture wasn't a distinct visit, then recover via 12.6.1 duplicate-processing chargeback"
+  - row_pk: DSP-5006
+    severity: high
+    display_projection:
+      dispute_id: DSP-5006
+      cardholder: "Robert Ellison (C-2004)"
+      dispute_type: fraud_unauthorized
+      reason_code: "10.4"
+      amount: "2450.00"
+      deadline_days_left: "2"
+      note: "$2,450 CNP charge at LuxeTech Bazaar (SG) on 2026-06-25 (T-7014); cardholder in OH with card in hand, no travel, no device match. Account is NEW (opened <90 days): Reg E new-account timing applies — 20 business days for provisional credit, extended investigation window; high-value + cross-border, escalated to fraud tier"

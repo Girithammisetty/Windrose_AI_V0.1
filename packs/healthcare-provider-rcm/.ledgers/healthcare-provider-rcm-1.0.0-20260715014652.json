@@ -1,0 +1,343 @@
+{
+  "pack": "healthcare-provider-rcm",
+  "version": "1.0.0",
+  "workspace_id": "019f62c1-0f5e-7af0-b9be-cbe343ea0ad4",
+  "tenant_id": "019f62c1-080d-71bd-b404-1d4e15b02dcb",
+  "started_at": "2026-07-15T05:46:45Z",
+  "finished_at": "2026-07-15T05:46:52Z",
+  "actions": [
+    {
+      "kind": "datasets",
+      "identity": "rcm_claims",
+      "action": "create",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:dataset:dataset/019f6450-33af-7642-bf5c-3dee5a5cb33f",
+      "detail": "'rcm-claims' ingested rows=26 snapshot=8929816282827532097"
+    },
+    {
+      "kind": "datasets",
+      "identity": "rcm_remits",
+      "action": "create",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:dataset:dataset/019f6450-3508-74c6-b2de-e221f00f53a6",
+      "detail": "'rcm-remits' ingested rows=20 snapshot=7412983857827085216"
+    },
+    {
+      "kind": "datasets",
+      "identity": "rcm_denials",
+      "action": "create",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:dataset:dataset/019f6450-3606-7942-901b-af79bc5b250f",
+      "detail": "'rcm-denials' ingested rows=10 snapshot=332359667881051915"
+    },
+    {
+      "kind": "datasets",
+      "identity": "rcm_ar_aging",
+      "action": "create",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:dataset:dataset/019f6450-3724-7357-93ab-ac07dc21b30e",
+      "detail": "'rcm-ar-aging' ingested rows=15 snapshot=5888967385478472959"
+    },
+    {
+      "kind": "semantic_models",
+      "identity": "rcm_claims",
+      "action": "create",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:semantic:model/019f6450-3826-7a98-86a8-bbc0502149dd",
+      "detail": "'rcm_claims' published"
+    },
+    {
+      "kind": "semantic_models",
+      "identity": "rcm_ar",
+      "action": "create",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:semantic:model/019f6450-3977-74c1-9f77-9a9652a7c6fc",
+      "detail": "'rcm_ar' published"
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_0",
+      "action": "create",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:semantic:verified_query/019f6450-3a78-7cfe-ae99-ca89f2c73dfc",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_1",
+      "action": "create",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:semantic:verified_query/019f6450-3b2b-7cb8-91c7-0218329581f1",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_2",
+      "action": "create",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:semantic:verified_query/019f6450-3bf0-755a-8f28-2b77d21e2be2",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_3",
+      "action": "create",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:semantic:verified_query/019f6450-3cac-70e7-b393-17542daa1095",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_4",
+      "action": "create",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:semantic:verified_query/019f6450-3d79-75ee-b1b5-0fc378d34aa8",
+      "detail": ""
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "denial_worklist",
+      "action": "create",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:query:query/019f6450-3e2a-777d-8f05-88840e4b7c50",
+      "detail": "RCM: denial worklist by dollars at risk"
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "underpayment_targets",
+      "action": "create",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:query:query/019f6450-3e6b-7c15-9114-f1aacd54fbd3",
+      "detail": "RCM: underpayment recovery targets"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "rcm_command_center",
+      "action": "create",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:chart:dashboard/019f6450-3f09-7b27-ae45-1efd505958df",
+      "detail": "RCM Command Center"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "rcm_command_center",
+      "action": "verify",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:chart:dashboard/019f6450-3f09-7b27-ae45-1efd505958df",
+      "detail": "4/4 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "denial_analytics",
+      "action": "create",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:chart:dashboard/019f6450-409f-7927-bbf6-c7d3fef0df93",
+      "detail": "Denial Analytics"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "denial_analytics",
+      "action": "verify",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:chart:dashboard/019f6450-409f-7927-bbf6-c7d3fef0df93",
+      "detail": "4/4 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "ar_aging_actions",
+      "action": "create",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:chart:dashboard/019f6450-4210-7724-89da-49d5f8c9b2b8",
+      "detail": "A/R Aging Actions"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "ar_aging_actions",
+      "action": "verify",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:chart:dashboard/019f6450-4210-7724-89da-49d5f8c9b2b8",
+      "detail": "4/4 charts resolve data"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "appeal_submitted"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "corrected_resubmit"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "write_off"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "escalate_payer"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "underpayment_recovered"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "balance_verified_correct"
+    },
+    {
+      "kind": "cases",
+      "identity": "denial_queue",
+      "action": "create",
+      "urn": "wr:019f62c1-080d-71bd-b404-1d4e15b02dcb:dataset:dataset/019f6450-3606-7942-901b-af79bc5b250f",
+      "detail": "6 open cases (reindexed)"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Biller'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Biller' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Medical Coder'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Medical Coder' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Denials Specialist'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Denials Specialist' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'A/R Manager'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'A/R Manager' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Revenue Integrity Analyst'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Revenue Integrity Analyst' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Revenue Cycle Director'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Revenue Cycle Director' bound to permission group"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "case-triage prompt_params set"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "analytics prompt_params set"
+    },
+    {
+      "kind": "memories",
+      "identity": "grounding",
+      "action": "create",
+      "urn": null,
+      "detail": "10 grounding records written, 0 already present"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "create",
+      "urn": null,
+      "detail": "'Denial prediction (xgboost)' (xgboost, train)"
+    }
+  ],
+  "deferred": [
+    {
+      "kind": "ontology",
+      "reason": "RCM-FR-010 ontology (Patient, Encounter, Charge, Claim, Denial, Remittance 835, Appeal, PayerContract, PatientAccount, ClinicalDocument, CodeAssignment, PayerPolicy \u2014 with phi:true field tags) awaits pack-service ontology registration; entity semantics are carried today by the semantic models and dataset schemas."
+    },
+    {
+      "kind": "guardrails",
+      "reason": "RCM-FR-110 policies (HIPAA baseline, CMS LCD/NCD/NCCI billing edits, No Surprises Act balance-billing, state balance-billing configs, TILA/FDCPA payment-plan disclosures, RAC/MAC audit posture) require guardrail-service / OPA materialization, which Core does not expose as a pack surface yet. Proposal-mode + four-eyes approval in agent-runtime already satisfies the human-review guarantee (BRD 26 BR-1) for every pack-configured agent."
+    },
+    {
+      "kind": "agent_recipes",
+      "reason": "RCM-FR-030..080 bespoke LangGraph recipes (coding_copilot, denial_response, underpayment_detector, ar_prioritizer, patient_collections, coding_audit_prep) require agent-runtime graph-module registration (BRD 23 BR-12). This pack specializes the existing case-triage + analytics agents via TenantAgentConfig prompt_params + tenant-scope RAG grounding instead; all writes remain proposal-mode per BR-1 (RCM_AUTONOMOUS_BILLING_FORBIDDEN)."
+    },
+    {
+      "kind": "connection_templates",
+      "reason": "RCM-FR-090 read connectors (Epic Resolute FHIR/HL7v2, Athenahealth Collector, eCW, NextGen, Cerner Millennium, EDI 837/835/276/277/275, Waystar, Change Healthcare, Availity) require customer credentials and pack-service connector materialization. The pack ships seed datasets in the exact landing shape (837 claims, 835 remit lines, denials, A/R aging); production connectors are configured through Data > Connections."
+    },
+    {
+      "kind": "write_adapters",
+      "reason": "RCM-FR-090 write adapters (Epic charge/claim/note, Athena/eCW/Cerner claim update, Waystar/Availity submission, outbound EDI 837 corrected claim + EDI 276 status inquiry) execute only behind pack-service's materialization contract and customer credentials; per BRD 26 BR-1 the coding-write adapter refuses without a signed grant and all platform-side writes remain proposal-mode."
+    },
+    {
+      "kind": "eval_sets",
+      "reason": "BRD 26 \u00a74 golden sets (coding, denial-response, underpayment, collections) require eval-service write APIs whose action names are not yet in the rbac canonical catalog (Core follow-up noted in rbac catalog.go)."
+    },
+    {
+      "kind": "model_archetypes",
+      "reason": "BRD 26 \u00a74 archetypes (denial_reversal_probability, patient_affordability_score) await experiment-service archetype APIs; the denial-prediction capability ships today as a pipeline seed (denial_prediction_classifier) instead."
+    },
+    {
+      "kind": "case_schemas",
+      "reason": "RCM-FR-120 typed case schemas (coding_review, denial_response_review, underpayment_dispute_review, ar_worklist_item, patient_collection_case, coding_audit_prep) await case-service schema materialization; today's cases carry the same fields via display_projection + the disposition taxonomy."
+    },
+    {
+      "kind": "display_labels",
+      "reason": "BRD 26 \u00a74 display-label overlays (\"Denial appeal\", \"Underpayment\", \"AR item\", entity templates) require the BFF label-registry endpoints (BFF-FR-082/088) which are pack-service-tier features."
+    }
+  ],
+  "result": "installed"
+}

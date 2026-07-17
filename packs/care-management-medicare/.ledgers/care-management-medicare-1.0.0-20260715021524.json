@@ -1,0 +1,357 @@
+{
+  "pack": "care-management-medicare",
+  "version": "1.0.0",
+  "workspace_id": "019f6461-97a8-73b1-9dd4-2f8ac484d19d",
+  "tenant_id": "019f6461-9373-7f2a-a671-65e33d71affa",
+  "started_at": "2026-07-15T06:15:20Z",
+  "finished_at": "2026-07-15T06:15:24Z",
+  "actions": [
+    {
+      "kind": "datasets",
+      "identity": "care_patients",
+      "action": "noop",
+      "urn": "wr:019f6461-9373-7f2a-a671-65e33d71affa:dataset:dataset/019f6461-98cf-7fe2-847d-d84eb27896e7",
+      "detail": "dataset 'care-patients' exists"
+    },
+    {
+      "kind": "datasets",
+      "identity": "care_activities",
+      "action": "noop",
+      "urn": "wr:019f6461-9373-7f2a-a671-65e33d71affa:dataset:dataset/019f6461-9a70-7ee0-9da4-3c7e760862ab",
+      "detail": "dataset 'care-activities' exists"
+    },
+    {
+      "kind": "datasets",
+      "identity": "care_billing_candidates",
+      "action": "noop",
+      "urn": "wr:019f6461-9373-7f2a-a671-65e33d71affa:dataset:dataset/019f6461-9b92-75fe-9a4e-3a7a4e9e9471",
+      "detail": "dataset 'care-billing-candidates' exists"
+    },
+    {
+      "kind": "datasets",
+      "identity": "care_rpm_readings",
+      "action": "noop",
+      "urn": "wr:019f6461-9373-7f2a-a671-65e33d71affa:dataset:dataset/019f6461-9c9d-727f-b500-37703a63f683",
+      "detail": "dataset 'care-rpm-readings' exists"
+    },
+    {
+      "kind": "semantic_models",
+      "identity": "care_mgmt_core",
+      "action": "noop",
+      "urn": null,
+      "detail": "'care_mgmt_core' already published"
+    },
+    {
+      "kind": "semantic_models",
+      "identity": "rpm_readings",
+      "action": "noop",
+      "urn": null,
+      "detail": "'rpm_readings' already published"
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_0",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_1",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_2",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_3",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_4",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "leakage_flow_edges",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "tcm_open_worklist",
+      "action": "noop",
+      "urn": null,
+      "detail": ""
+    },
+    {
+      "kind": "dashboards",
+      "identity": "enrollment_funnel",
+      "action": "noop",
+      "urn": "wr:019f6461-9373-7f2a-a671-65e33d71affa:chart:dashboard/019f6461-a4cd-7d3e-b3dd-fb2e05580172",
+      "detail": "'Enrollment Funnel' exists"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "enrollment_funnel",
+      "action": "verify",
+      "urn": "wr:019f6461-9373-7f2a-a671-65e33d71affa:chart:dashboard/019f6461-a4cd-7d3e-b3dd-fb2e05580172",
+      "detail": "4/4 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "revenue_leakage",
+      "action": "noop",
+      "urn": "wr:019f6461-9373-7f2a-a671-65e33d71affa:chart:dashboard/019f6461-a6a8-7b71-8083-b0d56d9f375e",
+      "detail": "'Revenue Leakage' exists"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "revenue_leakage",
+      "action": "verify",
+      "urn": "wr:019f6461-9373-7f2a-a671-65e33d71affa:chart:dashboard/019f6461-a6a8-7b71-8083-b0d56d9f375e",
+      "detail": "4/4 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "rpm_ops",
+      "action": "noop",
+      "urn": "wr:019f6461-9373-7f2a-a671-65e33d71affa:chart:dashboard/019f6461-a892-7a50-8659-23f21953a53b",
+      "detail": "'RPM Ops' exists"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "rpm_ops",
+      "action": "verify",
+      "urn": "wr:019f6461-9373-7f2a-a671-65e33d71affa:chart:dashboard/019f6461-a892-7a50-8659-23f21953a53b",
+      "detail": "4/4 charts resolve data"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "noop",
+      "urn": null,
+      "detail": "bill_approved"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "noop",
+      "urn": null,
+      "detail": "bill_held"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "noop",
+      "urn": null,
+      "detail": "bill_adjusted"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "noop",
+      "urn": null,
+      "detail": "consent_issue_confirmed"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "noop",
+      "urn": null,
+      "detail": "activity_note_approved"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "noop",
+      "urn": null,
+      "detail": "care_plan_approved"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "noop",
+      "urn": null,
+      "detail": "rpm_review_signed"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "noop",
+      "urn": null,
+      "detail": "escalate_md"
+    },
+    {
+      "kind": "cases",
+      "identity": "billing_review_queue",
+      "action": "create",
+      "urn": "wr:019f6461-9373-7f2a-a671-65e33d71affa:dataset:dataset/019f6461-9b92-75fe-9a4e-3a7a4e9e9471",
+      "detail": "0 open cases (reindexed)"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "noop",
+      "urn": null,
+      "detail": "role 'Care Manager RN'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Care Manager RN' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "noop",
+      "urn": null,
+      "detail": "role 'Care Manager LPN'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Care Manager LPN' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "noop",
+      "urn": null,
+      "detail": "role 'Clinician MD Reviewer'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Clinician MD Reviewer' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "noop",
+      "urn": null,
+      "detail": "role 'Director of Care Coordination'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Director of Care Coordination' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "noop",
+      "urn": null,
+      "detail": "role 'Practice CFO'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Practice CFO' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "noop",
+      "urn": null,
+      "detail": "role 'Compliance Officer'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Compliance Officer' bound to permission group"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "case-triage prompt_params set"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "analytics prompt_params set"
+    },
+    {
+      "kind": "memories",
+      "identity": "grounding",
+      "action": "noop",
+      "urn": null,
+      "detail": "0 grounding records written, 10 already present"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "noop",
+      "urn": null,
+      "detail": "Enrollment propensity classifier (xgboost)"
+    }
+  ],
+  "deferred": [
+    {
+      "kind": "ontology",
+      "reason": "CMM-FR-010/011 ontology registration (Patient, Provider, Encounter, ChronicCondition, BehavioralHealthDx, Discharge, Consent, CarePlan, CareCoordinationActivity, DeviceReading, BillingCandidate, RACAuditPackage, with phi:true field tagging) awaits pack-service; entity semantics are carried today by the two semantic models and the seed dataset schemas."
+    },
+    {
+      "kind": "guardrails",
+      "reason": "CMM-FR-130..138 OPA policies (hipaa.rego, cms_code_mutual_exclusion, cms_time_thresholds, consent_required, rpm_16day_rule, tcm_window, apcm_tier_eligibility, rac_audit_trail, fqhc_rhc_g0511) require guardrail-service policy materialization, which Core does not expose as a pack surface yet. The behavioral guarantees are partially covered today by Core invariants (proposal-mode + four-eyes approval on every billing decision \u2014 BR-2) plus the same rules encoded as retrievable grounding memories and the case-triage agent's instructions."
+    },
+    {
+      "kind": "eval_sets",
+      "reason": "CMM-FR-001 golden sets (code_selection, enrollment, documentation, care_plan per evals/*.jsonl) require eval-service write APIs whose action names are not yet in the rbac canonical catalog (Core follow-up noted in rbac catalog.go)."
+    },
+    {
+      "kind": "agent_recipes",
+      "reason": "CMM-FR-030..101 bespoke recipes (enrollment_scanner, care_scribe, code_selection, care_plan_drafter, documentation_auditor, rpm_reviewer, tcm_prioritizer, outreach_scheduler) require agent-runtime graph-module registration (a Core code surface, BRD 23 BR-12). This pack specializes the existing case-triage + analytics agents via TenantAgentConfig prompt_params + tenant-scope RAG grounding instead; BR-2 (no autonomous billing) holds because agent-runtime is proposal-mode only."
+    },
+    {
+      "kind": "connection_templates",
+      "reason": "CMM-FR-110 EHR/RPM/telephony connectors (epic_ambulatory, athenahealth, eclinicalworks, nextgen, cerner_ambulatory, rpm_optimize_health, rpm_cadence, rpm_ihealth, phone_rc, telehealth_doxy) require customer credentials and pack-service connector materialization. The pack ships seed datasets in the exact landing shape; production connectors are configured through the product Data > Connections UI."
+    },
+    {
+      "kind": "write_adapters",
+      "reason": "CMM-FR-111/112 SoR write adapters (epic/athena/ecw care-activity, care-plan, and billing-candidate writes with Idempotency-Key case_id:proposal_id) execute only behind pack-service's materialization contract and customer credentials; all platform-side writes remain proposal-mode (BR-2 CMM_AUTONOMOUS_BILLING_FORBIDDEN)."
+    },
+    {
+      "kind": "model_archetypes",
+      "reason": "CMM-FR-033/090 model archetypes (enrollment_propensity, readmission_risk_30d) await experiment-service archetype APIs; the enrollment-propensity capability ships today as a real training pipeline seed instead (pipelines/templates.yaml)."
+    },
+    {
+      "kind": "case_schemas",
+      "reason": "CMM-FR-141 typed case schemas (care_activity_review, monthly_billing_review, care_plan_review, rpm_data_review, tcm_discharge) await case-service schema materialization; today's seeded queue carries the same fields via display_projection + the disposition taxonomy."
+    },
+    {
+      "kind": "display_labels",
+      "reason": "CMM-FR-160 label overlays (labels/en.yaml, PHI-safe patient display templates) require the BFF label-registry endpoints which are pack-service-tier features."
+    }
+  ],
+  "result": "installed"
+}

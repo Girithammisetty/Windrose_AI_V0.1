@@ -1,0 +1,64 @@
+# Verified NL<->SQL queries (four-eyes approved at install). SQL uses
+# {{dataset('<name>')}} macros — the only table references query-service's
+# tenant-namespace guard admits.
+- nl_text: "What's our rework rate by nonconformance type?"
+  sql_text: >-
+    SELECT nc_type,
+           count(*) AS closed_ncs,
+           sum(CASE WHEN disposition = 'rework_to_spec' THEN 1 ELSE 0 END) AS reworked,
+           round(sum(CASE WHEN disposition = 'rework_to_spec' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS rework_rate
+    FROM {{dataset('nc-nonconformances')}}
+    WHERE status = 'closed'
+    GROUP BY nc_type
+    ORDER BY rework_rate DESC
+  model: mrb_core
+  tags: [mrb, nonconformance, rework, kpi, pack]
+- nl_text: "Which open nonconformances are closest to their MRB disposition deadline?"
+  sql_text: >-
+    SELECT nc_id, lot_id, nc_type, spec_class, severity, containment,
+           cast(days_to_deadline AS double) AS days_to_deadline,
+           cast(age_days AS double) AS age_days,
+           cast(est_cost_impact AS double) AS est_cost_impact
+    FROM {{dataset('nc-nonconformances')}}
+    WHERE status = 'open'
+    ORDER BY days_to_deadline ASC
+  model: mrb_core
+  tags: [mrb, deadlines, backlog, containment, pack]
+- nl_text: "Suspect-lot watch — lots that generated multiple nonconformances"
+  sql_text: >-
+    SELECT lot_id,
+           count(*) AS nc_count,
+           sum(CASE WHEN spec_class = 'critical_characteristic' THEN 1 ELSE 0 END) AS critical_ncs,
+           sum(cast(est_cost_impact AS double)) AS total_cost_impact
+    FROM {{dataset('nc-nonconformances')}}
+    GROUP BY lot_id
+    HAVING count(*) >= 2
+    ORDER BY nc_count DESC, total_cost_impact DESC
+  model: mrb_core
+  tags: [mrb, suspect_lots, traceability, containment, pack]
+- nl_text: "Use-as-is share by spec class — are concessions creeping onto critical characteristics?"
+  sql_text: >-
+    SELECT spec_class,
+           count(*) AS closed_ncs,
+           sum(CASE WHEN disposition = 'use_as_is' THEN 1 ELSE 0 END) AS use_as_is,
+           round(sum(CASE WHEN disposition = 'use_as_is' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS use_as_is_share
+    FROM {{dataset('nc-nonconformances')}}
+    WHERE status = 'closed'
+    GROUP BY spec_class
+    ORDER BY use_as_is_share DESC
+  model: mrb_core
+  tags: [mrb, use_as_is, critical_characteristics, concessions, pack]
+- nl_text: "Cost-of-quality exposure on the open book by containment status"
+  sql_text: >-
+    SELECT containment, spec_class,
+           count(*) AS open_ncs,
+           sum(cast(est_cost_impact AS double)) AS exposure,
+           round(avg(cast(days_to_deadline AS double)), 1) AS avg_days_to_deadline
+    FROM {{dataset('nc-nonconformances')}}
+    WHERE status = 'open'
+    GROUP BY containment, spec_class
+    ORDER BY exposure DESC
+  model: mrb_core
+  tags: [mrb, cost_of_quality, containment, exposure, pack]

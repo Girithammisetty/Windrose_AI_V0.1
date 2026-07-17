@@ -1,0 +1,70 @@
+# Supplier Quality Watch: where the nonconformances come from — part-family
+# cost concentration, detection-point mix (how late defects are caught),
+# supplier-return pressure, and the supplier scorecard surface feeding the
+# SCAR program.
+name: "Supplier Quality Watch"
+module: insights
+semantic_model: mrb_core
+description: >-
+  Supplier quality posture: cost-of-quality by part family, detection-point
+  mix (incoming vs in-process vs final vs customer escapes), supplier
+  returns by part family, nonconformances by supplier scorecard, and the
+  certification-regime grid feeding the SCAR program.
+tags: [manufacturing, quality, suppliers, scar, pack]
+charts:
+  - name: "Cost impact by part family"
+    chart_type: vertical_bar_chart
+    description: "Estimated cost-of-quality impact by part family (machined, casting, PCB, ...)"
+    config:
+      x: { dimension: part_family }
+      y: [ { measure: total_cost_impact, agg_fn: sum } ]
+    sources: [ { measure: total_cost_impact } ]
+    w: 6
+    h: 4
+  - name: "Detection point mix"
+    chart_type: pie_chart
+    description: "Where defects are caught: incoming, in-process, final, customer return, supplier notification"
+    config:
+      x: { dimension: detection_point }
+      y: [ { measure: nc_count, agg_fn: count } ]
+    sources: [ { measure: nc_count } ]
+    w: 6
+    h: 4
+  - name: "Supplier returns by part family"
+    chart_type: vertical_bar_chart
+    description: "Return-to-supplier dispositions by part family — the SCAR pressure map"
+    config:
+      x: { dimension: part_family }
+      y: [ { measure: supplier_return_count, agg_fn: count } ]
+    sources: [ { measure: supplier_return_count } ]
+    w: 6
+    h: 4
+  - name: "NCs by supplier scorecard"
+    chart_type: vertical_bar_chart
+    description: "Nonconformance volume by supplier scorecard tier (green/yellow/red)"
+    config:
+      x: { dimension: scorecard }
+      y: [ { measure: nc_count, agg_fn: count } ]
+    sources: [ { measure: nc_count } ]
+    w: 6
+    h: 4
+  - name: "Certification regime grid"
+    chart_type: grid_chart
+    description: "NC volume, open backlog, supplier returns, customer escapes and cost impact by supplier certification"
+    config:
+      columns: [certification, nc_count, open_nc_count, supplier_return_count, customer_return_count, total_cost_impact]
+      x: { dimension: certification }
+      y:
+        - { measure: nc_count, agg_fn: count }
+        - { measure: open_nc_count, agg_fn: count }
+        - { measure: supplier_return_count, agg_fn: count }
+        - { measure: customer_return_count, agg_fn: count }
+        - { measure: total_cost_impact, agg_fn: sum }
+    sources:
+      - { measure: nc_count }
+      - { measure: open_nc_count }
+      - { measure: supplier_return_count }
+      - { measure: customer_return_count }
+      - { measure: total_cost_impact }
+    w: 12
+    h: 4

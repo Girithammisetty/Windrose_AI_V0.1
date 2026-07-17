@@ -1,0 +1,147 @@
+# Tenant-scope RAG grounding records (memory-service). This is the AS9100 /
+# ISO 13485 / IATF 16949 + quality-methodology domain knowledge the triage
+# copilot retrieves when reasoning about a nonconformance. Every record is
+# factual regulatory or methodological reference material; where exact
+# clause-level numbers vary by revision or contract, the guidance is stated
+# qualitatively.
+- content: >-
+    MRB authority limits: a Material Review Board can disposition
+    nonconforming product only within its delegated authority. In aerospace
+    and defense practice, use-as-is or repair dispositions on
+    customer-designed product — and on any critical characteristic or key
+    characteristic — typically require the customer's or the design
+    authority's approval (a concession/waiver or deviation request) before
+    the MRB can close the nonconformance; internal MRB authority generally
+    covers rework-to-spec, scrap, and return-to-supplier, since those
+    restore or remove the nonconforming condition rather than accept it.
+    Dispositioning outside delegated authority is itself a major audit
+    finding regardless of the engineering merits.
+  tags: [mrb, authority_limits, use_as_is, critical_characteristics, concession]
+  confidence: 0.95
+- content: >-
+    AS9100 control of nonconforming outputs: nonconforming product must be
+    identified, documented, segregated (or otherwise positively controlled)
+    to prevent unintended use or delivery, evaluated, and dispositioned by
+    authorized personnel, with records of the nonconformity, the actions
+    taken, and any concessions obtained. AS9100 additionally requires
+    processes to prevent the use of counterfeit or suspect-unapproved parts
+    (the AS5553/AS6174 practice family): counterfeit-suspect material is
+    controlled to prevent reentry into the supply chain, and an unbroken
+    certificate-of-conformance / raw-material pedigree chain is part of the
+    acceptance evidence — a missing mill cert is a nonconformance even when
+    the parts measure conforming.
+  tags: [as9100, nonconforming_product, counterfeit_parts, certs, aerospace]
+  confidence: 0.95
+- content: >-
+    Medical-device nonconforming product control (ISO 13485 and FDA 21 CFR
+    820.90): the manufacturer must identify, document, evaluate, segregate,
+    and disposition nonconforming product, and the evaluation must include
+    whether an investigation is needed and whether external parties are
+    notified. Acceptance by concession (use-as-is) is permitted only with
+    documented justification and authorization by designated personnel, and
+    generally only where regulatory requirements are still met. Rework
+    requires a documented rework procedure, re-testing/re-verification
+    against the original acceptance criteria, and an evaluation of any
+    adverse effect of the rework on the product; all of it lands in the
+    device history record. Nonconformity discovered after delivery triggers
+    action appropriate to the effects — including the correction-and-removal
+    / advisory-notice path.
+  tags: [iso13485, fda_820_90, medical_device, use_as_is, rework, reverification]
+  confidence: 0.95
+- content: >-
+    8D / CAPA methodology: the eight disciplines run D0 plan, D1 team, D2
+    problem description, D3 interim containment, D4 root cause analysis, D5
+    corrective-action selection, D6 implementation and validation, D7
+    prevention/read-across, D8 closure and recognition. Containment (D3)
+    always precedes root cause — quarantine and sweep first, analyze second
+    — and a corrective action is not closed until its effectiveness is
+    verified with objective evidence. CAPA distinguishes correction (fix
+    this material) from corrective action (remove the cause) from preventive
+    action (stop it appearing elsewhere); dispositioning a lot is a
+    correction and never substitutes for the corrective action on a
+    recurring failure mode.
+  tags: [8d, capa, containment, root_cause, methodology]
+  confidence: 0.95
+- content: >-
+    SCAR practice (supplier corrective action request): a supplier-caused
+    nonconformance is returned with a SCAR requiring containment, root
+    cause, and corrective-action evidence on a defined clock, usually in 8D
+    format. Repeat SCARs on the same supplier or failure mode escalate the
+    response ladder: tightened receiving inspection, source inspection at
+    the supplier, probation on the approved supplier list, and ultimately
+    desourcing. SCAR history feeds the supplier scorecard, and purchasing
+    from a supplier that is not on the approved supplier list (or has lapsed
+    certification) is itself a process nonconformance in AS9100 / ISO 13485
+    / IATF 16949 systems.
+  tags: [scar, suppliers, scorecard, escalation, approved_supplier_list]
+  confidence: 0.9
+- content: >-
+    First article inspection (the AS9102 practice in aerospace): a complete,
+    documented verification of every drawing characteristic on a
+    representative unit from the first production run of a new part or
+    process, repeated in part (delta/partial FAI) after an engineering
+    change, a process or tooling change, a source change, or a lapse in
+    production. A nonconformance found during FAI blocks production-rate
+    release until dispositioned and the FAI is completed clean;
+    characteristic accountability from the FAI is also the baseline that
+    later dimensional NCs are judged against.
+  tags: [fai, as9102, first_article, characteristics, aerospace]
+  confidence: 0.9
+- content: >-
+    Containment, stop-ship, and suspect-lot traceability: on a confirmed
+    escape-capable defect (foreign object debris, a critical-characteristic
+    failure, a suspect raw-material heat), containment sweeps every lot that
+    shares the causal window — same line, machine, tool, operator, material
+    heat, or time window — not just the lot that surfaced the defect.
+    Serialization / unit-level traceability bounds the sweep precisely;
+    without it, containment widens to the full unserialized population.
+    Suspect product ships nowhere until the sweep clears (stop-ship), and
+    FOD findings additionally feed the site's FOD-prevention program in
+    aerospace practice.
+  tags: [containment, stop_ship, traceability, serialization, fod]
+  confidence: 0.95
+- content: >-
+    Escape and customer-notification obligations: when nonconforming product
+    may already have been delivered, aerospace customer contracts and AS9100
+    practice require timely notification of the affected customers with the
+    affected lot/serial identification, and the customer decides the field
+    action. In medical devices, nonconformity after delivery drives the
+    correction-and-removal assessment: field corrections and removals
+    initiated to reduce a risk to health are reportable to the regulator
+    (the FDA 21 CFR 806 concept), and advisory notices follow the quality
+    system's documented procedure. An escape investigated as if it were an
+    internal find — without the notification assessment — is a recurring
+    audit finding.
+  tags: [escape, customer_notification, correction_removal, field_action]
+  confidence: 0.9
+- content: >-
+    Cost of quality: the classic categories are prevention, appraisal,
+    internal failure (scrap, rework, re-inspection, downtime found before
+    delivery), and external failure (returns, warranty, field action,
+    customer-relationship damage found after delivery). External-failure
+    cost per defect is consistently far higher than internal-failure cost,
+    which is why detection-point mix (incoming vs in-process vs final vs
+    customer return) is a leading indicator: defects migrating later in the
+    detection chain predict rising total cost of quality even at flat NC
+    volume. Statistical acceptance sampling (the ANSI/ASQ Z1.4 /
+    MIL-STD-105 lineage) sets AQL-indexed sampling plans with switching
+    rules — normal to tightened inspection after rejects, and tightened
+    receiving inspection is a standard response to a supplier's repeat
+    nonconformances.
+  tags: [cost_of_quality, detection_point, aql, sampling, z1_4]
+  confidence: 0.9
+- content: >-
+    AI governance for disposition decisions: an AI-assisted nonconformance
+    disposition is a quality record — it must preserve a provenance chain
+    (data version, model version, prompt hash, reviewer identity, timestamp)
+    and the objective evidence behind the recommendation, because
+    certification-body and customer auditors sample MRB records for the
+    justification behind each closure. The model proposes and a qualified
+    human dispositions: quality-system standards place disposition authority
+    with designated competent personnel, so autonomous release, scrap,
+    return, or concession by a model is outside any defensible quality
+    system. Pattern-level monitoring matters too — a drift toward use-as-is
+    concessions or against a single supplier must be reviewable in the
+    aggregate, not just file by file.
+  tags: [ai_governance, provenance, human_in_the_loop, audit, model_governance]
+  confidence: 0.9

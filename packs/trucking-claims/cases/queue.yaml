@@ -1,0 +1,71 @@
+# Seeded claims-and-safety adjudication queue: the OPEN items from the seed
+# dataset become cases so an analyst logging in sees a real, pattern-diverse
+# worklist on day one — reefer temperature excursion with the unit download
+# pending, repeat intact-seal shortage, mid-load banking change on a
+# new-authority carrier (double-brokering signature), a disputed
+# harsh-braking camera event, a full-trailer electronics theft on a known
+# hot lane, and a repeat-damage carrier/lane cluster. due_days=4 keeps
+# triage inside the tightest carrier-response and load-recovery clocks.
+dataset: tl_claims
+due_days: 4
+rows:
+  - row_pk: CLM-9101
+    severity: high
+    display_projection:
+      claim_id: CLM-9101
+      shipment: "SHP-6025 (Sunbelt Reefer Lines, FRS-DEN)"
+      claim_type: reefer_breakdown
+      commodity: produce
+      amount: "16850.00"
+      days_to_deadline: "12"
+      note: "Consignee rejected produce pallets pulping 48F at delivery on SHP-6025 (FRS-DEN, load value $60,900); origin records show product loaded at 36F with pre-cool confirmed, so the shipper's prima facie case (good at origin, damaged at destination, $16,850 claimed) looks made. Reefer unit download requested from Sunbelt (CAR-05) — setpoint was 34F, alarm codes pending. Same carrier's May excursion (CLM-9016) ended in an $8,740 carrier recovery; hold the 12-day response clock and decide pay vs recovery once the download lands"
+  - row_pk: CLM-9102
+    severity: medium
+    display_projection:
+      claim_id: CLM-9102
+      shipment: "SHP-6026 (Northgate Logistics, SAV-CLT)"
+      claim_type: shortage
+      commodity: electronics
+      amount: "3120.00"
+      days_to_deadline: "30"
+      note: "Six cartons of electronics short at the consignee on SHP-6026, but the POD records the origin seal intact at delivery — on a shipper-load-and-count move an intact seal points at an origin short-count, not transit loss. Second intact-seal electronics shortage on the same carrier/lane (CLM-9010, SAV-CLT, denied 2026-04 on origin count error). Request origin CCTV, scale tickets, and the seal record before any payment; suspicious repeat pattern — seal-tamper/reapplication cannot be ruled out yet"
+  - row_pk: CLM-9103
+    severity: high
+    display_projection:
+      claim_id: CLM-9103
+      shipment: "SHP-6027 (Redline Xpress LLC, LRD-DAL)"
+      claim_type: carrier_fraud_check
+      event: banking_change
+      exposure: "52300.00"
+      days_to_deadline: "2"
+      note: "Redline Xpress (CAR-02) emailed a change of banking/factoring details MID-LOAD on SHP-6027 ($52,300 in transit, now running late); authority granted under 6 months ago and the onboarding references verified in May's vetting (CLM-9015) are no longer reachable, dispatcher number now VOIP-only. Classic double-brokering / carrier identity-theft signature: freeze carrier payment, verify against FMCSA registration data via direct callback, confirm truck location and possession of the freight — 2-day runway before the scheduled payment release"
+  - row_pk: CLM-9104
+    severity: medium
+    display_projection:
+      claim_id: CLM-9104
+      shipment: "SHP-6028 (Blue Summit Fleet Ops, ATL-MIA)"
+      claim_type: harsh_event
+      event: hard_braking
+      driver: "R. Calloway (1.2M safe miles)"
+      days_to_deadline: "25"
+      note: "Forward-camera harsh-braking trigger on own-fleet SHP-6028; driver R. Calloway (1.2M miles, zero preventables) disputes the event, stating a passenger vehicle cut in and braked. Review the video before any determination — telematics flags on this trip: one. Preventability and coaching decisions are litigation-discoverable, so the file must show the evidence reviewed and consistent treatment; if the video supports the cut-in, document non-preventable and close with the finding, else complete coaching per policy"
+  - row_pk: CLM-9105
+    severity: high
+    display_projection:
+      claim_id: CLM-9105
+      shipment: "SHP-6029 (Falcon Ridge Express, ONT-LAS)"
+      claim_type: theft
+      commodity: electronics
+      amount: "86900.00"
+      days_to_deadline: "9"
+      note: "Full-trailer electronics theft reported on SHP-6029 (ONT-LAS, load value $91,400, claim $86,900) from an unsecured overnight lot on a known theft corridor. Carrier Falcon Ridge (CAR-11) was already escalated in vetting (CLM-9012: new authority, blocked references) and shows an insurance gap on the roster — verify the pickup was not fictitious, pull seal and GPS history, obtain the police report, and weigh escalate_fraud_investigation vs pay; 9-day runway on the recovery-preservation clock"
+  - row_pk: CLM-9106
+    severity: medium
+    display_projection:
+      claim_id: CLM-9106
+      shipment: "SHP-6017 (Ironbridge Freight Lines, CHI-DAL)"
+      claim_type: damage
+      commodity: machinery_parts
+      amount: "6480.00"
+      days_to_deadline: "75"
+      note: "Third machinery-parts damage claim on the Ironbridge (CAR-04) CHI-DAL lane — CLM-9001 ($7,400) and CLM-9008 ($6,980) both closed with full carrier recovery on load-securement failures. Same fact pattern (freight shifted, inadequate bracing per driver photos): carrier-liable band, recovery expected; also feed the carrier scorecard — Ironbridge is safety watch tier, propose a corrective-action plan or lane removal alongside the recovery filing"

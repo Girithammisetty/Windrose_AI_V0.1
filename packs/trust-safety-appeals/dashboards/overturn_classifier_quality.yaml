@@ -1,0 +1,70 @@
+# Overturn & Classifier Quality: the appeal-outcome feedback loop back into
+# enforcement quality — where overturns concentrate (policy area, source),
+# the classifier-confidence mix on the enforcement book, and the overturn
+# trend. Rates (overturn_rate, uphold_rate) are NL/query surfaces.
+name: "Overturn & Classifier Quality"
+module: insights
+semantic_model: appeals_core
+description: >-
+  Enforcement-quality feedback loop: overturned appeals by policy area and
+  the classifier-confidence mix behind enforcement decisions, the
+  enforcement-source mix of contested decisions, and the monthly overturn
+  trend that drives classifier retraining reviews.
+tags: [trust_safety, appeals, classifier_quality, overturns, pack]
+charts:
+  - name: "Overturns by policy area"
+    chart_type: vertical_bar_chart
+    description: "Where confirmed enforcement errors concentrate (hate speech, violence, counterfeit, ...)"
+    config:
+      x: { dimension: policy_area }
+      y: [ { measure: overturned_count, agg_fn: count } ]
+    sources: [ { measure: overturned_count } ]
+    w: 6
+    h: 4
+  - name: "Enforcement source mix"
+    chart_type: pie_chart
+    description: "Contested enforcements by origin: automated classifier vs user report vs moderator"
+    config:
+      x: { dimension: enforcement_source }
+      y: [ { measure: appeal_count, agg_fn: count } ]
+    sources: [ { measure: appeal_count } ]
+    w: 6
+    h: 4
+  - name: "Classifier confidence bands (enforcement book)"
+    chart_type: vertical_bar_chart
+    description: "Enforcement decisions by classifier score band (none = human-initiated)"
+    config:
+      x: { dimension: classifier_score_band }
+      y: [ { measure: enforcement_count, agg_fn: count } ]
+    sources: [ { measure: enforcement_count } ]
+    w: 6
+    h: 4
+  - name: "Overturn trend by month"
+    chart_type: line_chart
+    description: "Overturned appeals by filed month — a rising line means enforcement drift"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: overturned_count, agg_fn: count } ]
+    sources: [ { measure: overturned_count } ]
+    w: 6
+    h: 4
+  - name: "Policy-area quality grid"
+    chart_type: grid_chart
+    description: "Appeals, closures, overturns, upholds and policy escalations by policy area"
+    config:
+      columns: [policy_area, appeal_count, closed_appeal_count, overturned_count, upheld_count, escalated_count]
+      x: { dimension: policy_area }
+      y:
+        - { measure: appeal_count, agg_fn: count }
+        - { measure: closed_appeal_count, agg_fn: count }
+        - { measure: overturned_count, agg_fn: count }
+        - { measure: upheld_count, agg_fn: count }
+        - { measure: escalated_count, agg_fn: count }
+    sources:
+      - { measure: appeal_count }
+      - { measure: closed_appeal_count }
+      - { measure: overturned_count }
+      - { measure: upheld_count }
+      - { measure: escalated_count }
+    w: 12
+    h: 4

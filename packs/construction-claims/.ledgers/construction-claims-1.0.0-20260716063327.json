@@ -1,0 +1,315 @@
+{
+  "pack": "construction-claims",
+  "version": "1.0.0",
+  "workspace_id": "019f6a76-fcdc-7cc9-ae30-842dcc2fa42d",
+  "tenant_id": "019f6a76-f8ae-724d-bca7-44f2931b869d",
+  "started_at": "2026-07-16T10:33:17Z",
+  "finished_at": "2026-07-16T10:33:27Z",
+  "actions": [
+    {
+      "kind": "datasets",
+      "identity": "cc_claims",
+      "action": "create",
+      "urn": "wr:019f6a76-f8ae-724d-bca7-44f2931b869d:dataset:dataset/019f6a7c-e5fe-7a2e-ab7b-f39aca74a109",
+      "detail": "'cc-claims' ingested rows=26 snapshot=6146415145254237051"
+    },
+    {
+      "kind": "datasets",
+      "identity": "cc_contracts",
+      "action": "create",
+      "urn": "wr:019f6a76-f8ae-724d-bca7-44f2931b869d:dataset:dataset/019f6a7c-e72a-7608-ab20-a2d89fe46c1e",
+      "detail": "'cc-contracts' ingested rows=30 snapshot=1836387467700960208"
+    },
+    {
+      "kind": "datasets",
+      "identity": "cc_parties",
+      "action": "create",
+      "urn": "wr:019f6a76-f8ae-724d-bca7-44f2931b869d:dataset:dataset/019f6a7c-e84c-711b-a224-cd4ef84b113e",
+      "detail": "'cc-parties' ingested rows=12 snapshot=6628250269376794216"
+    },
+    {
+      "kind": "semantic_models",
+      "identity": "construction_claims_core",
+      "action": "create",
+      "urn": "wr:019f6a76-f8ae-724d-bca7-44f2931b869d:semantic:model/019f6a7c-e963-7811-b2d5-9e8670494fcf",
+      "detail": "'construction_claims_core' published"
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_0",
+      "action": "create",
+      "urn": "wr:019f6a76-f8ae-724d-bca7-44f2931b869d:semantic:verified_query/019f6a7c-f34d-7e61-8dc0-c3f92e6756e9",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_1",
+      "action": "create",
+      "urn": "wr:019f6a76-f8ae-724d-bca7-44f2931b869d:semantic:verified_query/019f6a7c-f43b-7b4c-918a-9a830da8d7f8",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_2",
+      "action": "create",
+      "urn": "wr:019f6a76-f8ae-724d-bca7-44f2931b869d:semantic:verified_query/019f6a7c-f522-7255-84da-97390a7acc42",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_3",
+      "action": "create",
+      "urn": "wr:019f6a76-f8ae-724d-bca7-44f2931b869d:semantic:verified_query/019f6a7c-f5f4-79a3-92b4-c69acf9a64c2",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_4",
+      "action": "create",
+      "urn": "wr:019f6a76-f8ae-724d-bca7-44f2931b869d:semantic:verified_query/019f6a7c-f6c0-7c46-8c71-b92b3458701a",
+      "detail": ""
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "party_project_edges",
+      "action": "create",
+      "urn": "wr:019f6a76-f8ae-724d-bca7-44f2931b869d:query:query/019f6a7c-f76d-79e7-ba9c-524e753280df",
+      "detail": "Claims: party-project exposure network edges"
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "high_value_open_claims",
+      "action": "create",
+      "urn": "wr:019f6a76-f8ae-724d-bca7-44f2931b869d:query:query/019f6a7c-f7ae-7a31-8ee6-d5f91fcfb4e7",
+      "detail": "Claims: high-value open queue"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "claims_command_center",
+      "action": "create",
+      "urn": "wr:019f6a76-f8ae-724d-bca7-44f2931b869d:chart:dashboard/019f6a7c-f814-7c8a-84bd-b3e5c5a14ec9",
+      "detail": "Claims Command Center"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "claims_command_center",
+      "action": "verify",
+      "urn": "wr:019f6a76-f8ae-724d-bca7-44f2931b869d:chart:dashboard/019f6a7c-f814-7c8a-84bd-b3e5c5a14ec9",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "entitlement_schedule_impact",
+      "action": "create",
+      "urn": "wr:019f6a76-f8ae-724d-bca7-44f2931b869d:chart:dashboard/019f6a7c-f9ec-7b04-8dc5-15c449bd44b5",
+      "detail": "Entitlement & Schedule Impact"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "entitlement_schedule_impact",
+      "action": "verify",
+      "urn": "wr:019f6a76-f8ae-724d-bca7-44f2931b869d:chart:dashboard/019f6a7c-f9ec-7b04-8dc5-15c449bd44b5",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "party_risk_recovery",
+      "action": "create",
+      "urn": "wr:019f6a76-f8ae-724d-bca7-44f2931b869d:chart:dashboard/019f6a7c-fb92-735b-bd74-f8631a2293ec",
+      "detail": "Party Risk & Recovery"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "party_risk_recovery",
+      "action": "verify",
+      "urn": "wr:019f6a76-f8ae-724d-bca7-44f2931b869d:chart:dashboard/019f6a7c-fb92-735b-bd74-f8631a2293ec",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "approve_change_order"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "reject_no_entitlement"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "negotiate_partial_merit"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "request_substantiation"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "close_withdrawn_resolved"
+    },
+    {
+      "kind": "cases",
+      "identity": "claims_queue",
+      "action": "create",
+      "urn": "wr:019f6a76-f8ae-724d-bca7-44f2931b869d:dataset:dataset/019f6a7c-e5fe-7a2e-ab7b-f39aca74a109",
+      "detail": "6 open cases (reindexed)"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Claims Analyst'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Claims Analyst' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Scheduling & Delay Specialist'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Scheduling & Delay Specialist' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Contract Administrator'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Contract Administrator' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Claims Review Board Manager'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Claims Review Board Manager' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Project Controls Auditor'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Project Controls Auditor' bound to permission group"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "case-triage prompt_params set"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "analytics prompt_params set"
+    },
+    {
+      "kind": "memories",
+      "identity": "grounding",
+      "action": "create",
+      "urn": null,
+      "detail": "10 grounding records written, 0 already present"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "create",
+      "urn": null,
+      "detail": "'Contract-book anomaly detector (isolation forest)' (isolation_forest, train)"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "create",
+      "urn": null,
+      "detail": "'Claim outcome scorer (xgboost)' (xgboost, train)"
+    }
+  ],
+  "deferred": [
+    {
+      "kind": "guardrails",
+      "reason": "Claims-domain policies (no entitlement position communicated to a claimant before the human determination; every rejection must cite the governing contract clause and the record evidence relied upon; no surety default declaration without contract-required notice and cure period; negotiated settlements above authority thresholds escalate to the review board) require guardrail-service / OPA policy materialization, which Core does not expose as a pack surface yet. The behavioral core is partially covered today by Core invariants: every pack-configured agent is proposal-mode with four-eyes approval (agent-runtime), and the agent instructions + disposition taxonomy route final determinations exclusively to human analysts with the Claims Review Board Manager as approver."
+    },
+    {
+      "kind": "agent_recipes",
+      "reason": "Bespoke LangGraph recipes (Claim Intake Copilot, Delay Analysis Assistant for TIA/windows narratives, Quantum Review Builder with measured-mile benchmarking, Notice & Deadline Sentinel) require agent-runtime graph-module registration (BRD 23 BR-12). This pack specializes the existing case-triage + analytics agents via TenantAgentConfig prompt_params + tenant-scope RAG grounding instead."
+    },
+    {
+      "kind": "connection_templates",
+      "reason": "Production read connectors (project-controls and PMIS platforms: Procore, Autodesk Construction Cloud, Oracle Primavera P6 and Unifier, e-Builder, Kahua; ERP/cost systems: CMiC, Sage 300 CRE, Viewpoint Vista; document management for daily reports, RFIs, submittals and boring logs) require customer credentials and pack-service connector materialization. The pack ships seed datasets in the exact landing shape; production connectors are configured through the product Data > Connections UI."
+    },
+    {
+      "kind": "write_adapters",
+      "reason": "Write adapters (execute a change order in the contract/ERP system, post a backcharge, release or hold a progress payment, issue a formal claim determination letter, transmit a surety notice) execute only behind pack-service's materialization contract and customer credentials; every such write stays proposal-mode with human approval \u2014 no autonomous change-order execution, payment movement, or default declaration, ever."
+    },
+    {
+      "kind": "eval_sets",
+      "reason": "Golden eval sets (entitlement triage, delay-analysis method selection, quantum reasonableness ranking, notice-timeliness screening) require eval-service write APIs whose action names are not yet in the rbac canonical catalog (Core follow-up noted in rbac catalog.go)."
+    },
+    {
+      "kind": "ontology",
+      "reason": "Ontology registration (Project, Contract, Party, Surety, Claim, ChangeOrder, DelayEvent, ScheduleUpdate, NoticeRecord, Backcharge, PayApplication, DeterminationLetter) awaits pack-service; entity semantics are carried today by the construction_claims_core semantic model and dataset schemas."
+    },
+    {
+      "kind": "case_schemas",
+      "reason": "Typed case schemas (change_order_review, delay_claim_analysis, dsc_investigation, defect_backcharge_review, payment_dispute_review, acceleration_claim_review) await case-service schema materialization; today's cases carry the same fields via display_projection + the disposition taxonomy."
+    },
+    {
+      "kind": "model_archetypes",
+      "reason": "Model archetypes (claim_outcome_confidence, quantum_inflation_score) await experiment-service archetype APIs; the scoring capability ships as pipeline seeds instead (isolation_forest contract-book anomaly + xgboost claim-outcome scorer) with model-governance expectations noted in grounding memories."
+    },
+    {
+      "kind": "display_labels",
+      "reason": "Display-label overlays (\"Claim\", \"Change order\", \"Notice deadline at risk\", \"Surety notice pending\", entity templates) require the BFF label-registry endpoints (BFF-FR-082/088) which are pack-service-tier features."
+    }
+  ],
+  "result": "installed"
+}

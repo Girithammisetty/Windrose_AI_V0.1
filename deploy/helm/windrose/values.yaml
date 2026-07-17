@@ -1,0 +1,388 @@
+# Windrose umbrella chart — default values (cloud-agnostic).
+# Override per cloud with -f values-<cloud>.yaml and set the image tag at deploy
+# time: --set global.imageTag=<sha-or-tag>.
+
+global:
+  # Container registry that CI pushed to (deploy/CONFIG.md -> REGISTRY).
+  registry: ghcr.io/windrose-ai
+  # Image tag; CI publishes ${{ github.sha }}. Override at deploy time.
+  imageTag: latest
+  # Pull secrets, if the registry is private and not using workload identity.
+  imagePullSecrets: []
+  # e.g. [{ name: ghcr-pull }]
+
+nameOverride: ""
+
+# --- Non-secret configuration (rendered into ConfigMap `windrose-config`) ------
+# Every Deployment consumes this via envFrom. Values here are the in-cluster
+# defaults; per-cloud endpoints are overridden in values-<cloud>.yaml.
+config:
+  WINDROSE_ENV: production
+
+  # Identity / JWT (public issuer + audience; signing key/JWKS are SECRETS).
+  JWT_ISSUER: https://identity.windrose.internal
+  JWT_AUDIENCE: windrose
+
+  # Policy, data lake, ML tracking, workflow, search, embeddings.
+  OPA_URL: http://opa:8281
+  ICEBERG_CATALOG_URI: http://iceberg-rest:8181
+  ICEBERG_WAREHOUSE: s3://windrose-warehouse/
+  MLFLOW_TRACKING_URI: http://mlflow:5000
+  TEMPORAL_HOST: temporal:7233
+  OPENSEARCH_URL: http://opensearch:9200
+  OLLAMA_BASE_URL: http://ollama:11434
+
+  # --- Observability (BYO OTel backend) -----------------------------------------
+  # Opt-in: unset/false is a clean no-op in every service (go-common/otelx,
+  # py-common/windrose_common/otelx.py both gate on WINDROSE_OTEL_ENABLED /
+  # OTEL_EXPORTER_OTLP_ENDPOINT). Point this at your own OTel Collector or a
+  # vendor's native OTLP/gRPC endpoint (Datadog Agent, Honeycomb, Grafana Cloud,
+  # New Relic, Splunk O11y) to receive traces — see deploy/CONFIG.md.
+  WINDROSE_OTEL_ENABLED: "false"
+  # OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector.observability.svc:4317
+
+  # In-cluster service DNS (name:port from deploy/services.yaml). Callers resolve
+  # peers via these, never hard-coded hosts.
+  IDENTITY_URL: http://identity-service:8301
+  RBAC_URL: http://rbac-service:8302
+  INGESTION_URL: http://ingestion-service:8303
+  DATASET_URL: http://dataset-service:8304
+  REALTIME_HUB_URL: http://realtime-hub:8305
+  AGENT_RUNTIME_URL: http://agent-runtime:8306
+  MEMORY_URL: http://memory-service:8307
+  CASE_URL: http://case-service:8308
+  TOOL_REGISTRY_URL: http://tool-registry:8310
+  MCP_GATEWAY_URL: http://mcp-gateway:8311
+  AI_GATEWAY_URL: http://ai-gateway:8312
+  PIPELINE_URL: http://pipeline-orchestrator:8313
+  EXPERIMENT_URL: http://experiment-service:8314
+  INFERENCE_URL: http://inference-service:8316
+  QUERY_SERVICE_URL: http://query-service:8085
+  SEMANTIC_URL: http://semantic-service:8086
+  CHART_URL: http://chart-service:8320
+  USAGE_URL: http://usage-service:8321
+  AUDIT_URL: http://audit-service:8322
+  NOTIFICATION_URL: http://notification-service:8323
+  EVAL_URL: http://eval-service:8324
+  BFF_URL: http://bff-graphql:4000
+
+# --- Secrets -------------------------------------------------------------------
+# The Secret `windrose-secrets` is synced from the cloud secret manager (External
+# Secrets Operator or the CD workflow). The chart does NOT create it by default —
+# every Deployment consumes it via envFrom.
+secrets:
+  create: false
+  name: windrose-secrets
+
+# Optional: let the External Secrets Operator materialize windrose-secrets from
+# the cloud secret store. Enable + set secretStoreRef in values-<cloud>.yaml.
+externalSecrets:
+  enabled: false
+  refreshInterval: 1h
+  secretStoreRef:
+    name: windrose-secret-store
+    kind: ClusterSecretStore
+  # remoteRef.key prefix in the cloud secret manager (e.g. windrose/prod).
+  remoteKeyPrefix: windrose/prod
+  # Keys to pull from the store into windrose-secrets. Mirrors deploy/CONFIG.md.
+  keys:
+    - POSTGRES_HOST
+    - POSTGRES_PORT
+    - POSTGRES_ADMIN_USER
+    - POSTGRES_ADMIN_PASSWORD
+    - REDIS_URL
+    - KAFKA_BOOTSTRAP
+    - KAFKA_SASL_USERNAME
+    - KAFKA_SASL_PASSWORD
+    - OBJECTSTORE_ENDPOINT
+    - OBJECTSTORE_ACCESS_KEY
+    - OBJECTSTORE_SECRET_KEY
+    - OBJECTSTORE_REGION
+    - JWT_SIGNING_KEY_PEM
+    - JWT_JWKS
+    - KEYCLOAK_ADMIN_USER
+    - KEYCLOAK_ADMIN_PASSWORD
+    - VAULT_ADDR
+    - VAULT_TOKEN
+    - SMTP_HOST
+    - SMTP_PORT
+    - SMTP_USER
+    - SMTP_PASSWORD
+    - OPENAI_API_KEY
+    - ANTHROPIC_API_KEY
+    - CLICKHOUSE_URL
+    - CLICKHOUSE_PASSWORD
+
+# --- ServiceAccount ------------------------------------------------------------
+# Workload-identity annotations are cloud-specific (IRSA / GKE WI / AAD) — set in
+# values-<cloud>.yaml so pods reach managed infra keylessly.
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+
+# --- Ingress (applied only to services with ingress: public) -------------------
+ingress:
+  enabled: true
+  className: ""            # set per cloud (alb / gce / azure-application-gateway)
+  annotations: {}          # set per cloud
+  # Host each public service is exposed on. path defaults to "/".
+  hosts:
+    ui-web:
+      host: app.windrose.example.com
+      path: /
+    bff-graphql:
+      host: api.windrose.example.com
+      path: /
+  tls: []
+  # - hosts: [app.windrose.example.com]
+  #   secretName: windrose-ui-tls
+
+# --- Migration Jobs ------------------------------------------------------------
+migrate:
+  enabled: true
+  # Extra backoff before failing a migration Job.
+  backoffLimit: 1
+
+# --- Observability (Prometheus-Operator convention) -----------------------------
+# Metrics stay pull-based (every service exposes /metrics; see deploy/CONFIG.md).
+# Enable this for customers running the Prometheus Operator so scraping is
+# auto-discovered instead of hand-written scrape_configs. Disabled by default —
+# renders nothing (and the CRD need not even be installed) when false.
+observability:
+  serviceMonitor:
+    enabled: false
+    interval: 30s
+    scrapeTimeout: 10s
+    path: /metrics
+    labels: {}
+    # Extra labels merged onto every ServiceMonitor, e.g. to match the label
+    # selector your Prometheus Operator's `serviceMonitorSelector` expects:
+    #   release: kube-prometheus-stack
+
+# --- Pod hardening defaults (per-service overridable) --------------------------
+podSecurityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: [ALL]
+
+# Default resources, referenced by anchors in the services list below.
+_resourceTiers:
+  small: &res-small
+    requests: { cpu: 50m, memory: 128Mi }
+    limits:   { cpu: 500m, memory: 256Mi }
+  medium: &res-medium
+    requests: { cpu: 100m, memory: 256Mi }
+    limits:   { cpu: "1", memory: 512Mi }
+  large: &res-large
+    requests: { cpu: 250m, memory: 512Mi }
+    limits:   { cpu: "2", memory: 1Gi }
+
+# --- Services ------------------------------------------------------------------
+# MIRRORS deploy/services.yaml. Templates range over this list to render a
+# Deployment + Service (+ HPA / migration Job) per entry. Keep in sync with the
+# inventory when a service is added.
+#   name/language/port/migrate/ingress  -> from deploy/services.yaml
+#   health (readiness) default /readyz; liveness default /healthz
+#   dockerfile-derived image name == service name (CI pushes <registry>/<name>)
+services:
+  - name: identity-service
+    language: go
+    port: 8301
+    migrate: true
+    ingress: internal
+    replicas: 2
+    resources: *res-medium
+
+  - name: rbac-service
+    language: go
+    port: 8302
+    migrate: true
+    ingress: internal
+    replicas: 2
+    resources: *res-medium
+
+  - name: ingestion-service
+    language: python
+    port: 8303
+    migrate: true
+    ingress: internal
+    replicas: 1
+    resources: *res-large
+
+  - name: dataset-service
+    language: python
+    port: 8304
+    migrate: true
+    ingress: internal
+    replicas: 1
+    resources: *res-large
+
+  - name: realtime-hub
+    language: go
+    port: 8305
+    migrate: true
+    ingress: internal
+    replicas: 2
+    resources: *res-medium
+
+  - name: agent-runtime
+    language: python
+    port: 8306
+    migrate: true
+    ingress: internal
+    replicas: 1
+    resources: *res-large
+
+  - name: memory-service
+    language: python
+    port: 8307
+    migrate: true
+    ingress: internal
+    replicas: 1
+    resources: *res-medium
+
+  - name: case-service
+    language: go
+    port: 8308
+    migrate: true
+    ingress: internal
+    replicas: 2
+    resources: *res-medium
+
+  - name: tool-registry
+    language: go
+    port: 8310
+    migrate: true
+    ingress: internal
+    replicas: 1
+    resources: *res-small
+
+  - name: mcp-gateway
+    language: go
+    port: 8311
+    migrate: false
+    ingress: internal
+    replicas: 2
+    resources: *res-medium
+
+  - name: ai-gateway
+    language: python
+    port: 8312
+    migrate: true
+    ingress: internal
+    replicas: 2
+    resources: *res-large
+
+  - name: pipeline-orchestrator
+    language: python
+    port: 8313
+    migrate: true
+    ingress: internal
+    replicas: 1
+    resources: *res-large
+
+  - name: experiment-service
+    language: python
+    port: 8314
+    migrate: true
+    ingress: internal
+    replicas: 1
+    resources: *res-medium
+
+  - name: inference-service
+    language: python
+    port: 8316
+    migrate: true
+    ingress: internal
+    replicas: 2
+    resources: *res-large
+
+  - name: query-service
+    language: go
+    port: 8085
+    migrate: true
+    ingress: internal
+    replicas: 2
+    resources: *res-medium
+
+  - name: semantic-service
+    language: python
+    port: 8086
+    migrate: true
+    ingress: internal
+    replicas: 1
+    resources: *res-medium
+
+  - name: chart-service
+    language: go
+    port: 8320
+    migrate: true
+    ingress: internal
+    replicas: 1
+    resources: *res-small
+
+  - name: usage-service
+    language: go
+    port: 8321
+    migrate: true
+    ingress: internal
+    replicas: 1
+    resources: *res-small
+
+  - name: audit-service
+    language: go
+    port: 8322
+    migrate: false
+    ingress: internal
+    replicas: 1
+    resources: *res-small
+
+  - name: notification-service
+    language: go
+    port: 8323
+    migrate: true
+    ingress: internal
+    replicas: 1
+    resources: *res-small
+
+  - name: eval-service
+    language: python
+    port: 8324
+    migrate: true
+    ingress: internal
+    replicas: 1
+    resources: *res-medium
+
+  - name: bff-graphql
+    language: node
+    port: 4000
+    migrate: false
+    ingress: public
+    health: /healthz
+    liveness: /healthz
+    replicas: 2
+    resources: *res-medium
+    # bff runs as `node` (uid 1000) but writes nothing to the FS; keep it locked.
+
+  - name: ui-web
+    language: node
+    port: 3000
+    migrate: false
+    ingress: public
+    health: /login          # Next.js has no /readyz; /login is the ready signal
+    liveness: /login
+    replicas: 2
+    resources: *res-medium
+    # Full override — Next.js writes its cache under /app/.next at runtime, so the
+    # root FS can't be read-only. Other hardening is kept.
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: false
+      capabilities:
+        drop: [ALL]

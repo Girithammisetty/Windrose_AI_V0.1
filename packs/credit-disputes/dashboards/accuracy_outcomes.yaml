@@ -1,0 +1,67 @@
+# Accuracy & Outcomes: furnisher-accuracy signal (where corrections land,
+# what verifies accurate) and the tradeline-book surface the disputes attach
+# to (account status, furnisher systems, delinquency depth).
+name: "Accuracy & Outcomes"
+module: insights
+semantic_model: credit_disputes_core
+description: >-
+  Furnisher-accuracy view: tradeline corrections by product type,
+  verified-accurate determinations by claimed reason, monthly correction
+  trend, and the furnished tradeline book by account status and source
+  system.
+tags: [credit_reporting, accuracy, furnisher, outcomes, pack]
+charts:
+  - name: "Corrections by tradeline type"
+    chart_type: vertical_bar_chart
+    description: "Tradeline corrections furnished by product type (card, auto, mortgage, collection, student)"
+    config:
+      x: { dimension: tradeline_type }
+      y: [ { measure: correction_count, agg_fn: count } ]
+    sources: [ { measure: correction_count } ]
+    w: 6
+    h: 4
+  - name: "Tradeline account-status mix"
+    chart_type: pie_chart
+    description: "Furnished tradelines by account status (current, delinquent, charged off, in collection, paid closed)"
+    config:
+      x: { dimension: account_status }
+      y: [ { measure: tradeline_count, agg_fn: count } ]
+    sources: [ { measure: tradeline_count } ]
+    w: 6
+    h: 4
+  - name: "Verified-accurate by dispute reason"
+    chart_type: vertical_bar_chart
+    description: "Where reinvestigations verify the reporting accurate — the frivolous/repeat-dispute surface"
+    config:
+      x: { dimension: dispute_reason }
+      y: [ { measure: verified_accurate_count, agg_fn: count } ]
+    sources: [ { measure: verified_accurate_count } ]
+    w: 6
+    h: 4
+  - name: "Correction trend"
+    chart_type: line_chart
+    description: "Tradeline corrections furnished by month (accuracy remediation velocity)"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: correction_count, agg_fn: count } ]
+    sources: [ { measure: correction_count } ]
+    w: 6
+    h: 4
+  - name: "Furnisher-system grid"
+    chart_type: grid_chart
+    description: "Tradeline book, collection load, charge-offs and serious delinquency by furnisher source system"
+    config:
+      columns: [furnisher_system, tradeline_count, in_collection_tradeline_count, charged_off_tradeline_count, serious_delinquency_tradeline_count]
+      x: { dimension: furnisher_system }
+      y:
+        - { measure: tradeline_count, agg_fn: count }
+        - { measure: in_collection_tradeline_count, agg_fn: count }
+        - { measure: charged_off_tradeline_count, agg_fn: count }
+        - { measure: serious_delinquency_tradeline_count, agg_fn: count }
+    sources:
+      - { measure: tradeline_count }
+      - { measure: in_collection_tradeline_count }
+      - { measure: charged_off_tradeline_count }
+      - { measure: serious_delinquency_tradeline_count }
+    w: 12
+    h: 4

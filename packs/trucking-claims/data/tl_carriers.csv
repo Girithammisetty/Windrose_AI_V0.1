@@ -1,0 +1,13 @@
+carrier_id,carrier_name,type,safety_tier,authority_age,insurance_ok,fraud_risk
+CAR-01,Blue Summit Fleet Ops,own_fleet,satisfactory,established,yes,low
+CAR-02,Redline Xpress LLC,partner_carrier,conditional,new,yes,high
+CAR-03,Prairie Wind Carriers,partner_carrier,satisfactory,established,yes,low
+CAR-04,Ironbridge Freight Lines,partner_carrier,watch,developing,yes,medium
+CAR-05,Sunbelt Reefer Lines,partner_carrier,satisfactory,established,yes,low
+CAR-06,Delgado & Sons Trucking,owner_operator,satisfactory,developing,yes,low
+CAR-07,Cascade Intermodal Group,partner_carrier,satisfactory,established,yes,low
+CAR-08,Keystone Haulage Co,partner_carrier,conditional,established,yes,medium
+CAR-09,Vega Brothers Transport,owner_operator,watch,developing,no,medium
+CAR-10,Northgate Logistics Inc,partner_carrier,satisfactory,established,yes,low
+CAR-11,Falcon Ridge Express,partner_carrier,watch,new,no,high
+CAR-12,Highline Dedicated Fleet,own_fleet,satisfactory,established,yes,low

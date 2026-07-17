@@ -1,0 +1,120 @@
+# seller-vetting capability pack — Core-neutral edition: marketplace seller
+# vetting and counterfeit/IP-enforcement adjudication for e-commerce
+# marketplaces, app stores, resale platforms, and B2B marketplaces.
+# Installable TODAY against Windrose Core's public APIs via packctl; the
+# manifest envelope follows BRD 23 (PKG-FR-001/003). Components the current
+# Core cannot materialize are declared under `deferred` — recorded in the
+# install ledger, never faked.
+pack_manifest: 1
+name: seller-vetting
+version: 1.0.0
+publisher: { id: pub-windrose, name: "Windrose Inc." }
+description: >-
+  AI-assisted marketplace seller vetting and counterfeit/IP-enforcement
+  workflow: onboarding KYB verification with INFORM Consumers Act / EU DSA
+  trader-traceability awareness, counterfeit takedown triage grounded in
+  test-buy and signal-stack evidence, DMCA/trademark claim adjudication that
+  weighs first-sale and claim-abuse defenses, linked-account ring detection,
+  reinstatement plan-of-action review, a marketplace-integrity KPI semantic
+  model and dashboards (enforcement rate, claim-rejection rate, deadline
+  runway, GMV at risk, KYB posture), seller-category network analytics,
+  INFORM/DMCA/KYB grounding memories, and listing-anomaly + review-outcome
+  training pipelines.
+categories: [marketplace, trust_safety, counterfeit, ip_enforcement, seller_risk]
+regulatory: [inform_consumers_act, dmca, lanham_act, eu_dsa, cpsc, ftc]
+components:
+  datasets:
+    - { file: "data/datasets.yaml", identity: "datasets" }
+  semantic_models:
+    - { file: "semantic/seller_vetting_core.yaml", identity: "seller_vetting_core" }
+  verified_queries:
+    - { file: "queries/verified.yaml", identity: "canonical_questions" }
+  saved_queries:
+    - { file: "queries/saved.yaml", identity: "saved_queries" }
+  dashboards:
+    - { file: "dashboards/marketplace_integrity_center.yaml", identity: "marketplace_integrity_center" }
+    - { file: "dashboards/counterfeit_ip_claims.yaml", identity: "counterfeit_ip_claims" }
+    - { file: "dashboards/seller_risk_rings.yaml", identity: "seller_risk_rings" }
+  dispositions:
+    - { file: "cases/dispositions.yaml", identity: "dispositions" }
+  cases:
+    - { file: "cases/queue.yaml", identity: "vetting_queue" }
+  roles:
+    - { file: "rbac/roles.yaml", identity: "roles" }
+  agent_configs:
+    - { file: "agents/configs.yaml", identity: "agent_configs" }
+  memories:
+    - { file: "memories/grounding.yaml", identity: "grounding" }
+  pipelines:
+    - { file: "pipelines/templates.yaml", identity: "pipelines" }
+deferred:
+  - kind: guardrails
+    reason: >-
+      Enforcement-domain policies (no takedown promised to a claimant before
+      the human determination; claim rejections must record why the evidence
+      failed; network suspensions must name every corroborated linkage; no
+      reinstatement without verified invoices; over-enforcement watch on
+      lawful resellers) require guardrail-service / OPA policy
+      materialization, which Core does not expose as a pack surface yet. The
+      behavioral core is partially covered today by Core invariants: every
+      pack-configured agent is proposal-mode with four-eyes approval
+      (agent-runtime), and the agent instructions + disposition taxonomy
+      route final determinations exclusively to human analysts with the
+      Marketplace Trust Manager as approver.
+  - kind: agent_recipes
+    reason: >-
+      Bespoke LangGraph recipes (Onboarding KYB Verifier, Counterfeit
+      Signal-Stack Scorer, IP Claim Evidence Examiner, Ring Linkage Mapper,
+      Reinstatement Plan-of-Action Reviewer) require agent-runtime
+      graph-module registration (BRD 23 BR-12). This pack specializes the
+      existing case-triage + analytics agents via TenantAgentConfig
+      prompt_params + tenant-scope RAG grounding instead.
+  - kind: connection_templates
+    reason: >-
+      Production read connectors (marketplace catalog and seller-account
+      APIs; brand-registry claim intake; KYB data providers and business
+      registries; device-fingerprint/fraud platforms; test-buy program
+      logistics; product-safety recall feeds) require customer credentials
+      and pack-service connector materialization. The pack ships seed
+      datasets in the exact landing shape; production connectors are
+      configured through the product Data > Connections UI.
+  - kind: write_adapters
+    reason: >-
+      Write adapters (remove/suppress a listing, suspend or reinstate a
+      seller account, hold or release payout disbursements, send
+      claimant/seller notices and counter-notice correspondence) execute
+      only behind pack-service's materialization contract and customer
+      credentials; every such write stays proposal-mode with human approval
+      — no autonomous takedown, suspension, or payout hold, ever.
+  - kind: eval_sets
+    reason: >-
+      Golden eval sets (counterfeit triage, claim-evidence sufficiency,
+      ring-linkage confirmation, reinstatement plan-of-action grading)
+      require eval-service write APIs whose action names are not yet in the
+      rbac canonical catalog (Core follow-up noted in rbac catalog.go).
+  - kind: ontology
+    reason: >-
+      Ontology registration (Seller, Listing, Brand, RightsHolder, Claim,
+      TestBuy, KYBVerification, LinkedAccountCluster, EnforcementAction,
+      ReinstatementPlan, DeadlineClock) awaits pack-service; entity
+      semantics are carried today by the seller_vetting_core semantic model
+      and dataset schemas.
+  - kind: case_schemas
+    reason: >-
+      Typed case schemas (onboarding_vetting, counterfeit_takedown,
+      ip_claim_review, ring_investigation, reinstatement_review) await
+      case-service schema materialization; today's cases carry the same
+      fields via display_projection + the disposition taxonomy.
+  - kind: model_archetypes
+    reason: >-
+      Model archetypes (counterfeit_signal_score, ring_linkage_confidence)
+      await experiment-service archetype APIs; the scoring capability ships
+      as pipeline seeds instead (isolation_forest listing anomaly + xgboost
+      review-outcome scorer) with model-governance expectations noted in
+      grounding memories.
+  - kind: display_labels
+    reason: >-
+      Display-label overlays ("Takedown", "Ring watch", "KYB mismatch",
+      "Counter-notice window", entity templates) require the BFF
+      label-registry endpoints (BFF-FR-082/088) which are pack-service-tier
+      features.

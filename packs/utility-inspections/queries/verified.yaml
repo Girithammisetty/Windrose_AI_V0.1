@@ -1,0 +1,66 @@
+# Verified NL<->SQL queries (four-eyes approved at install). SQL uses
+# {{dataset('<name>')}} macros — the only table references query-service's
+# tenant-namespace guard admits.
+- nl_text: "What's our immediate-dispatch rate by finding type?"
+  sql_text: >-
+    SELECT finding_type,
+           count(*) AS closed_findings,
+           sum(CASE WHEN disposition = 'dispatch_immediate_repair' THEN 1 ELSE 0 END) AS immediate_dispatches,
+           round(sum(CASE WHEN disposition = 'dispatch_immediate_repair' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS immediate_dispatch_rate
+    FROM {{dataset('ui-findings')}}
+    WHERE status = 'closed'
+    GROUP BY finding_type
+    ORDER BY immediate_dispatch_rate DESC
+  model: inspections_core
+  tags: [inspections, dispositions, kpi, pack]
+- nl_text: "Which open findings are closest to their repair deadline?"
+  sql_text: >-
+    SELECT finding_id, asset_id, finding_type, risk_zone, priority, severity,
+           detection_source,
+           cast(days_to_deadline AS double) AS days_to_deadline,
+           cast(age_days AS double) AS age_days,
+           cast(est_repair_cost AS double) AS est_repair_cost
+    FROM {{dataset('ui-findings')}}
+    WHERE status = 'open'
+    ORDER BY days_to_deadline ASC
+  model: inspections_core
+  tags: [inspections, deadlines, backlog, wildfire, pack]
+- nl_text: "Repeat-finding assets — assets with multiple findings (recurring-defect watch)"
+  sql_text: >-
+    SELECT asset_id,
+           count(*) AS finding_count,
+           sum(CASE WHEN disposition = 'close_monitored_stable' THEN 1 ELSE 0 END) AS prior_monitor_decisions,
+           sum(cast(est_repair_cost AS double)) AS total_est_repair_cost
+    FROM {{dataset('ui-findings')}}
+    GROUP BY asset_id
+    HAVING count(*) >= 2
+    ORDER BY finding_count DESC, total_est_repair_cost DESC
+  model: inspections_core
+  tags: [inspections, repeat_findings, escalation, pack]
+- nl_text: "False-detection rate by detection source"
+  sql_text: >-
+    SELECT detection_source,
+           count(*) AS closed_findings,
+           sum(CASE WHEN disposition = 'close_false_detection' THEN 1 ELSE 0 END) AS false_detections,
+           round(sum(CASE WHEN disposition = 'close_false_detection' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS false_detection_rate,
+           round(avg(cast(detection_confidence AS double)), 3) AS avg_detection_confidence
+    FROM {{dataset('ui-findings')}}
+    WHERE status = 'closed'
+    GROUP BY detection_source
+    ORDER BY false_detection_rate DESC
+  model: inspections_core
+  tags: [inspections, detection_quality, drone_ai, pack]
+- nl_text: "Repair-cost exposure on open findings by risk zone"
+  sql_text: >-
+    SELECT risk_zone, priority,
+           count(*) AS open_findings,
+           sum(cast(est_repair_cost AS double)) AS exposure,
+           round(avg(cast(days_to_deadline AS double)), 1) AS avg_days_to_deadline
+    FROM {{dataset('ui-findings')}}
+    WHERE status = 'open'
+    GROUP BY risk_zone, priority
+    ORDER BY exposure DESC
+  model: inspections_core
+  tags: [inspections, wildfire, exposure, hftd, pack]

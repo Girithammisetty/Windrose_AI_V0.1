@@ -1,0 +1,15 @@
+# Disposition taxonomy for the compensability-adjudication workflow.
+# Categories are the Core's closed set {true_positive,false_positive,benign,
+# inconclusive,other} (CASE-FR-020). accept_compensable and
+# deny_not_compensable are the statutory compensability determinations
+# (denial notes must carry the specific AOE/COE findings the jurisdiction's
+# denial notice will cite); refer_utilization_review routes medical-necessity
+# and fee-schedule questions to UR/bill review; escalate_siu_fraud sends
+# red-flag clusters to the Special Investigation Unit (benefits continue
+# unless disqualifying evidence develops); close_return_to_work records a
+# successful RTW closure.
+- { code: accept_compensable,        label: "Accept — compensable (AOE/COE established)",          category: true_positive,  requires_note: true }
+- { code: deny_not_compensable,      label: "Deny — compensability not established",               category: false_positive, requires_note: true }
+- { code: refer_utilization_review,  label: "Refer to utilization review / bill review",           category: other,          requires_note: true }
+- { code: escalate_siu_fraud,        label: "Escalate to SIU — fraud red flags",                   category: inconclusive,   requires_note: true }
+- { code: close_return_to_work,      label: "Close — successful return to work",                   category: benign,         requires_note: true }

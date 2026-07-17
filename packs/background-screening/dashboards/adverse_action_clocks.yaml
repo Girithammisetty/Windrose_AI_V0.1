@@ -1,0 +1,67 @@
+# Adverse Action & Clocks: pre-adverse/adverse-action runway and the
+# job-relatedness posture — the compliance view an FCRA auditor walks first.
+name: "Adverse Action & Clocks"
+module: insights
+semantic_model: screening_core
+description: >-
+  FCRA adverse-action compliance posture: deadline runway buckets on the
+  open queue, job-relatedness (relevance) mix, open backlog by severity,
+  the monthly adverse-finding trend, and volumes with clocks by hit type.
+tags: [screening, fcra, adverse_action, compliance, pack]
+charts:
+  - name: "Deadline runway (open queue)"
+    chart_type: vertical_bar_chart
+    description: "Open hit reviews by days remaining to the next adverse-action or dispute deadline"
+    config:
+      x: { dimension: deadline_bucket }
+      y: [ { measure: open_review_count, agg_fn: count } ]
+    sources: [ { measure: open_review_count } ]
+    w: 6
+    h: 4
+  - name: "Job-relatedness mix"
+    chart_type: pie_chart
+    description: "Hits adjudicated job-related vs not job-related vs relevance analysis pending"
+    config:
+      x: { dimension: relevance }
+      y: [ { measure: review_count, agg_fn: count } ]
+    sources: [ { measure: review_count } ]
+    w: 6
+    h: 4
+  - name: "Open backlog by severity"
+    chart_type: vertical_bar_chart
+    description: "Open hit reviews split by severity (what breaches first)"
+    config:
+      x: { dimension: severity }
+      y: [ { measure: open_review_count, agg_fn: count } ]
+    sources: [ { measure: open_review_count } ]
+    w: 6
+    h: 4
+  - name: "Adverse findings by month"
+    chart_type: line_chart
+    description: "Verified reportable adverse findings by filed month (pattern-level watch)"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: adverse_finding_count, agg_fn: count } ]
+    sources: [ { measure: adverse_finding_count } ]
+    w: 6
+    h: 4
+  - name: "Hit-type clock grid"
+    chart_type: grid_chart
+    description: "Volume, open backlog, adverse findings, individualized assessments and aging by hit type"
+    config:
+      columns: [hit_type, review_count, open_review_count, adverse_finding_count, individualized_assessment_count, avg_review_age_days]
+      x: { dimension: hit_type }
+      y:
+        - { measure: review_count, agg_fn: count }
+        - { measure: open_review_count, agg_fn: count }
+        - { measure: adverse_finding_count, agg_fn: count }
+        - { measure: individualized_assessment_count, agg_fn: count }
+        - { measure: avg_review_age_days, agg_fn: avg }
+    sources:
+      - { measure: review_count }
+      - { measure: open_review_count }
+      - { measure: adverse_finding_count }
+      - { measure: individualized_assessment_count }
+      - { measure: avg_review_age_days }
+    w: 12
+    h: 4

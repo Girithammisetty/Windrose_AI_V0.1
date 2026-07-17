@@ -1,0 +1,31 @@
+{
+  "type": "record",
+  "name": "AiTokenUsageEvent",
+  "namespace": "com.windrose.ai.events",
+  "doc": "ai.token_usage.v1 — one record per completed (or failed-after-provider-call) gateway request (AIG-FR-060). Envelope per MASTER-FR-031; this is the envelope payload contract owned by ai-gateway; usage-service contract-tests against it.",
+  "fields": [
+    {"name": "request_id", "type": "string"},
+    {"name": "tenant_id", "type": "string"},
+    {"name": "workspace_id", "type": ["null", "string"], "default": null},
+    {"name": "principal", "type": "string"},
+    {"name": "agent_id", "type": ["null", "string"], "default": null},
+    {"name": "agent_version", "type": ["null", "string"], "default": null},
+    {"name": "tool", "type": ["null", "string"], "default": null},
+    {"name": "feature", "type": ["null", "string"], "default": null},
+    {"name": "request_class", "type": {"type": "enum", "name": "RequestClass", "symbols": ["chat", "sql_gen", "judge", "embed"]}},
+    {"name": "model_alias", "type": "string"},
+    {"name": "provider", "type": ["null", "string"], "default": null},
+    {"name": "deployment", "type": ["null", "string"], "default": null},
+    {"name": "rung", "type": "int"},
+    {"name": "input_tokens", "type": "long"},
+    {"name": "output_tokens", "type": "long"},
+    {"name": "cached", "type": "boolean", "default": false},
+    {"name": "cost_usd", "type": "double"},
+    {"name": "latency_ms", "type": "long"},
+    {"name": "first_token_ms", "type": ["null", "long"], "default": null},
+    {"name": "guardrail_flags", "type": {"type": "array", "items": "string"}, "default": []},
+    {"name": "degraded", "type": ["null", "string"], "default": null},
+    {"name": "price_version", "type": "string"},
+    {"name": "trace_id", "type": ["null", "string"], "default": null}
+  ]
+}

@@ -1,0 +1,69 @@
+# Seeded alert-triage queue (AML-FR-120 alert_triage): the OPEN alerts from
+# the seed dataset become cases so an L1 analyst logging in sees a real,
+# typology-diverse worklist on day one — each row traces to a BRD 30 typology
+# (structuring pair, layering chain, sanctions near-match, dormant mule,
+# peer anomaly AC-9, funnel account). due_days=5 keeps triage well inside the
+# FinCEN 30-day SAR clock should a case convert.
+dataset: aml_alerts
+due_days: 5
+rows:
+  - row_pk: ALT-3001
+    severity: high
+    display_projection:
+      alert_id: ALT-3001
+      party: "Riverside Convenience LLC (P-1001)"
+      typology: structuring
+      scenario_rule: cash_structuring_sub10k_pairs
+      amount_involved: "56800.00"
+      age_days: "41"
+      note: "Six paired cash deposits $9,200-$9,800 across 3 branches on 3 days (T-9001..T-9006) — classic CTR-evasion pattern; prior alert ALT-3012 cleared FP, pattern now repeating at higher volume"
+  - row_pk: ALT-3002
+    severity: high
+    display_projection:
+      alert_id: ALT-3002
+      party: "Marina Bay Trading FZE (P-1002)"
+      typology: layering
+      scenario_rule: rapid_movement_chain_72h
+      amount_involved: "250000.00"
+      age_days: "39"
+      note: "Rapid 3-hop wire chain P-1002 -> P-1003 -> P-1004 -> offshore (CY) inside 72h, ~99% pass-through each hop; related parties share a director and an ownership chain reaching SDN-4402 (OFAC 50% Rule check needed)"
+  - row_pk: ALT-3003
+    severity: high
+    display_projection:
+      alert_id: ALT-3003
+      party: "Viktor Petrov (P-1005)"
+      typology: sanctions_near_match
+      scenario_rule: sdn_name_screen_fuzzy
+      match_score: "0.87"
+      amount_involved: "75000.00"
+      note: "High fuzzy match vs SDN 'Viktor A. Petrov' + $75K inbound wire from Cyprus counterparty; adjudicate on DOB/address/ID distinguishing evidence — true hit requires blocking, never disclose screening to customer"
+  - row_pk: ALT-3004
+    severity: medium
+    display_projection:
+      alert_id: ALT-3004
+      party: "Amara Okafor (P-1006)"
+      typology: dormant_activity
+      scenario_rule: dormant_reactivation_90d
+      amount_involved: "19250.00"
+      age_days: "12"
+      note: "Dormant student account reactivated: repeated ACH-in followed within 24-48h by wires out to NG counterparty — dormant-then-active mule pattern; expected monthly volume $1,200, observed $19,250"
+  - row_pk: ALT-3005
+    severity: high
+    display_projection:
+      alert_id: ALT-3005
+      party: "Sunrise Wholesale Flowers Inc (P-1009)"
+      typology: peer_anomaly
+      scenario_rule: sic_peer_group_deviation
+      amount_involved: "151500.00"
+      age_days: "9"
+      note: "Florist (SIC 5992) sending ~$50K international wires to HK weekly (T-9017..T-9019) — extreme deviation from SIC peer group and declared business; build L2 case with peer-group evidence"
+  - row_pk: ALT-3006
+    severity: medium
+    display_projection:
+      alert_id: ALT-3006
+      party: "Elena Marquez (P-1012)"
+      typology: funnel_account
+      scenario_rule: many_to_one_rapid_out
+      amount_involved: "11400.00"
+      age_days: "5"
+      note: "Three unrelated ACH senders in 48h followed by a single wire out to MX — funnel-account pattern; KYC refresh overdue (refresh_due), consider EDD alongside triage"

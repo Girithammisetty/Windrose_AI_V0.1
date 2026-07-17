@@ -1,0 +1,98 @@
+# Semantic model `fwa_claims` — FWA-FR-020 claim-line slice of the SIU KPI
+# catalog, in the Core semantic grammar (agg whitelist, filtered counts,
+# derived expr_metric with nullif; join_paths left/many_to_one, acyclic).
+#
+# entity.table is main.<safe_relation(dataset name)>; `dataset:` refs are
+# rebound to live dataset URNs by packctl at install. Amount/score columns
+# ingest as bronze strings, so numeric measures cast(... as double).
+name: fwa_claims
+description: >-
+  Post-adjudicated claim-line FWA model (BRD 27 FWA-FR-020/030/040): flagged
+  lines by typology (upcoding, unbundling, phantom billing, impossible day),
+  billed/paid exposure, FWA scores, provider peer-group outlier and LEIE
+  exclusion status.
+definition:
+  entities:
+    - name: claim_lines
+      dataset: fwa_claim_lines
+      table: main.fwa_claim_lines
+      primary_key: [claim_line_id]
+      dataset_version_policy: { policy: latest }
+    - name: providers
+      dataset: fwa_provider_profiles
+      table: main.fwa_provider_profiles
+      primary_key: [provider_npi]
+      dataset_version_policy: { policy: latest }
+  join_paths:
+    - name: claim_lines_providers
+      from_entity: claim_lines
+      to_entity: providers
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: provider_npi, to_column: provider_npi }]
+  dimensions:
+    - { name: fwa_flag, entity: claim_lines, type: categorical, column: fwa_flag }
+    - { name: flagged, entity: claim_lines, type: categorical, column: flagged }
+    - { name: cpt_code, entity: claim_lines, type: categorical, column: cpt_code }
+    - { name: provider_specialty, entity: claim_lines, type: categorical, column: provider_specialty }
+    - { name: service_month, entity: claim_lines, type: categorical, column: service_month }
+    - { name: place_of_service, entity: claim_lines, type: categorical, column: place_of_service }
+    - { name: member_state, entity: claim_lines, type: categorical, column: member_state }
+    - { name: peer_group, entity: providers, type: categorical, column: peer_group }
+    - { name: leie_status, entity: providers, type: categorical, column: leie_status }
+    - { name: outlier_flag, entity: providers, type: categorical, column: outlier_flag }
+  measures:
+    - { name: line_count, entity: claim_lines, agg: count,
+        description: "Number of adjudicated claim lines" }
+    - { name: flagged_line_count, entity: claim_lines, agg: count,
+        filters: "flagged = 'yes'",
+        description: "Claim lines carrying any FWA flag" }
+    - { name: upcoding_line_count, entity: claim_lines, agg: count,
+        filters: "fwa_flag = 'upcoding'",
+        description: "Lines flagged for E/M upcoding" }
+    - { name: unbundling_line_count, entity: claim_lines, agg: count,
+        filters: "fwa_flag = 'unbundling'",
+        description: "Lines flagged for NCCI unbundling" }
+    - { name: phantom_line_count, entity: claim_lines, agg: count,
+        filters: "fwa_flag = 'phantom_billing'",
+        description: "Lines flagged as phantom billing" }
+    - { name: impossible_day_line_count, entity: claim_lines, agg: count,
+        filters: "fwa_flag = 'impossible_day'",
+        description: "Lines flagged for impossible-day volumes" }
+    - { name: total_billed, entity: claim_lines, agg: sum,
+        expr: "cast(billed_amount as double)", format: decimal,
+        description: "Total billed amount" }
+    - { name: total_paid, entity: claim_lines, agg: sum,
+        expr: "cast(paid_amount as double)", format: decimal,
+        description: "Total paid amount (post-payment exposure basis)" }
+    - { name: total_units, entity: claim_lines, agg: sum,
+        expr: "cast(units as double)", format: decimal,
+        description: "Total billed units" }
+    - { name: avg_fwa_score, entity: claim_lines, agg: avg,
+        expr: "cast(fwa_score as double)", format: decimal,
+        description: "Average FWA Scorer output (FWA-FR-030, human-review-only per BR-5)" }
+    - { name: max_fwa_score, entity: claim_lines, agg: max,
+        expr: "cast(fwa_score as double)", format: decimal,
+        description: "Highest FWA score in scope" }
+    - { name: provider_count, entity: providers, agg: count,
+        description: "Providers in the profiled peer universe" }
+    - { name: outlier_provider_count, entity: providers, agg: count,
+        filters: "outlier_flag = 'outlier'",
+        description: "Providers deviating > 2 sigma from peer group (FWA-FR-040)" }
+    - { name: excluded_provider_count, entity: providers, agg: count,
+        filters: "leie_status = 'excluded'",
+        description: "Providers on the OIG LEIE exclusion list (BR-4)" }
+    - { name: avg_peer_sigma, entity: providers, agg: avg,
+        expr: "cast(peer_deviation_sigma as double)", format: decimal,
+        description: "Average peer-group deviation (sigma)" }
+    - { name: avg_level5_share, entity: providers, agg: avg,
+        expr: "cast(em_level5_share as double)", format: percent,
+        description: "Average share of E/M visits billed at level 5 (upcoding screen)" }
+    - { name: flag_rate,
+        expr_metric: "flagged_line_count / nullif(line_count, 0)",
+        format: percent,
+        description: "FWA-FR-020: flagged lines over all adjudicated lines" }
+    - { name: outlier_provider_rate,
+        expr_metric: "outlier_provider_count / nullif(provider_count, 0)",
+        format: percent,
+        description: "FWA-FR-040: outlier providers over profiled providers" }

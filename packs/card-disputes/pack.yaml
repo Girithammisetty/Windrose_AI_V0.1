@@ -1,0 +1,116 @@
+# card-disputes capability pack — Core-neutral edition: Reg E / Reg Z card
+# dispute and chargeback adjudication for US issuers (banks, credit unions,
+# fintech program managers). Installable TODAY against Windrose Core's public
+# APIs via packctl; the manifest envelope follows BRD 23 (PKG-FR-001/003).
+# Components the current Core cannot materialize are declared under
+# `deferred` — recorded in the install ledger, never faked.
+pack_manifest: 1
+name: card-disputes
+version: 1.0.0
+publisher: { id: pub-windrose, name: "Windrose Inc." }
+description: >-
+  AI-assisted card dispute and chargeback workflow for US issuers: dispute
+  intake triage with regulatory-clock awareness (Reg E provisional credit,
+  Reg Z billing-error windows), first-party fraud escalation, network
+  chargeback recovery with reason-code grounding, dispute-operations KPI
+  semantic model and dashboards (cardholder-favor rate, chargeback win rate,
+  deadline runway, provisional-credit exposure), cardholder-merchant network
+  analytics, Reg E/Z + network-rule grounding memories, and
+  transaction-anomaly + dispute-outcome training pipelines.
+categories: [banking, cards, disputes, chargebacks, fraud]
+regulatory: [reg_e, reg_z, cfpb, visa_rules, mastercard_rules]
+components:
+  datasets:
+    - { file: "data/datasets.yaml", identity: "datasets" }
+  semantic_models:
+    - { file: "semantic/disputes_core.yaml", identity: "disputes_core" }
+  verified_queries:
+    - { file: "queries/verified.yaml", identity: "canonical_questions" }
+  saved_queries:
+    - { file: "queries/saved.yaml", identity: "saved_queries" }
+  dashboards:
+    - { file: "dashboards/dispute_command_center.yaml", identity: "dispute_command_center" }
+    - { file: "dashboards/regulatory_clock.yaml", identity: "regulatory_clock" }
+    - { file: "dashboards/chargeback_recovery.yaml", identity: "chargeback_recovery" }
+  dispositions:
+    - { file: "cases/dispositions.yaml", identity: "dispositions" }
+  cases:
+    - { file: "cases/queue.yaml", identity: "dispute_queue" }
+  roles:
+    - { file: "rbac/roles.yaml", identity: "roles" }
+  agent_configs:
+    - { file: "agents/configs.yaml", identity: "agent_configs" }
+  memories:
+    - { file: "memories/grounding.yaml", identity: "grounding" }
+  pipelines:
+    - { file: "pipelines/templates.yaml", identity: "pipelines" }
+deferred:
+  - kind: guardrails
+    reason: >-
+      Dispute-domain policies (no outcome promised to a cardholder before the
+      human determination; denial letters must cite actual investigation
+      findings; no provisional-credit reversal without the Reg E notice;
+      UDAAP pattern-of-denial watch) require guardrail-service / OPA policy
+      materialization, which Core does not expose as a pack surface yet. The
+      behavioral core is partially covered today by Core invariants: every
+      pack-configured agent is proposal-mode with four-eyes approval
+      (agent-runtime), and the agent instructions + disposition taxonomy
+      route final determinations exclusively to human analysts with the
+      Dispute Operations Manager as approver.
+  - kind: agent_recipes
+    reason: >-
+      Bespoke LangGraph recipes (Dispute Intake Copilot, Chargeback
+      Representment Builder, First-Party Fraud Scorer, Provisional Credit
+      Clock Sentinel) require agent-runtime graph-module registration
+      (BRD 23 BR-12). This pack specializes the existing case-triage +
+      analytics agents via TenantAgentConfig prompt_params + tenant-scope
+      RAG grounding instead.
+  - kind: connection_templates
+    reason: >-
+      Production read connectors (core processors: FIS/Fiserv/TSYS/Marqeta/
+      Galileo; network dispute rails: Visa Resolve Online (VROL), Mastercom;
+      fraud platforms; ATM operator journals; carrier tracking APIs for
+      delivery-confirmation evidence) require customer credentials and
+      pack-service connector materialization. The pack ships seed datasets
+      in the exact landing shape; production connectors are configured
+      through the product Data > Connections UI.
+  - kind: write_adapters
+    reason: >-
+      Write adapters (post/reverse provisional credit on the core, submit
+      chargeback/representment via VROL/Mastercom, order card reissue, send
+      Reg E/Z status and resolution letters) execute only behind
+      pack-service's materialization contract and customer credentials;
+      every such write stays proposal-mode with human approval — no
+      autonomous credit movement or network filing, ever.
+  - kind: eval_sets
+    reason: >-
+      Golden eval sets (dispute triage, deadline-risk ranking, chargeback
+      reason-code selection, first-party fraud escalation) require
+      eval-service write APIs whose action names are not yet in the rbac
+      canonical catalog (Core follow-up noted in rbac catalog.go).
+  - kind: ontology
+    reason: >-
+      Ontology registration (Cardholder, Account, Card, Transaction,
+      Dispute, Chargeback, Representment, ProvisionalCredit, Merchant,
+      ReasonCode, DeadlineClock, ResolutionLetter) awaits pack-service;
+      entity semantics are carried today by the disputes_core semantic model
+      and dataset schemas.
+  - kind: case_schemas
+    reason: >-
+      Typed case schemas (dispute_intake, fraud_investigation,
+      chargeback_representment, atm_error_review, first_party_fraud_review)
+      await case-service schema materialization; today's cases carry the
+      same fields via display_projection + the disposition taxonomy.
+  - kind: model_archetypes
+    reason: >-
+      Model archetypes (dispute_outcome_confidence, first_party_fraud_score)
+      await experiment-service archetype APIs; the scoring capability ships
+      as pipeline seeds instead (isolation_forest transaction anomaly +
+      xgboost dispute-outcome scorer) with model-governance expectations
+      noted in grounding memories.
+  - kind: display_labels
+    reason: >-
+      Display-label overlays ("Dispute", "Chargeback", "Provisional credit
+      due", "Deadline at risk", entity templates) require the BFF
+      label-registry endpoints (BFF-FR-082/088) which are pack-service-tier
+      features.

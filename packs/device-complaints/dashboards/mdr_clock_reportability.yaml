@@ -1,0 +1,68 @@
+# MDR Clock & Reportability: 21 CFR 803 deadline runway and the
+# reportability decision posture — the compliance view an FDA investigator
+# walks first.
+name: "MDR Clock & Reportability"
+module: insights
+semantic_model: complaints_core
+description: >-
+  21 CFR 803 compliance posture: reportability decision mix, deadline runway
+  buckets on the open book, open complaints by event type, the
+  MDR-reportable intake trend, and the per-event-type regulatory grid.
+tags: [medtech, complaints, mdr, compliance, pack]
+charts:
+  - name: "Reportability decision mix"
+    chart_type: pie_chart
+    description: "MDR-reportable vs not-reportable vs decision-pending complaints"
+    config:
+      x: { dimension: reportability }
+      y: [ { measure: complaint_count, agg_fn: count } ]
+    sources: [ { measure: complaint_count } ]
+    w: 6
+    h: 4
+  - name: "Deadline runway (open book)"
+    chart_type: vertical_bar_chart
+    description: "Open complaints by days remaining on the MDR reporting clock"
+    config:
+      x: { dimension: deadline_bucket }
+      y: [ { measure: open_complaint_count, agg_fn: count } ]
+    sources: [ { measure: open_complaint_count } ]
+    w: 6
+    h: 4
+  - name: "Open complaints by event type"
+    chart_type: vertical_bar_chart
+    description: "Reportability-decision backlog split by event type"
+    config:
+      x: { dimension: event_type }
+      y: [ { measure: open_complaint_count, agg_fn: count } ]
+    sources: [ { measure: open_complaint_count } ]
+    w: 6
+    h: 4
+  - name: "MDR-reportable intake trend"
+    chart_type: line_chart
+    description: "Complaints assessed MDR-reportable by filed month"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: mdr_reportable_count, agg_fn: count } ]
+    sources: [ { measure: mdr_reportable_count } ]
+    w: 6
+    h: 4
+  - name: "Event-type regulatory grid"
+    chart_type: grid_chart
+    description: "Volume, open backlog, reportable assessments, MDR filings and aging by event type"
+    config:
+      columns: [event_type, complaint_count, open_complaint_count, mdr_reportable_count, mdr_filed_count, avg_complaint_age_days]
+      x: { dimension: event_type }
+      y:
+        - { measure: complaint_count, agg_fn: count }
+        - { measure: open_complaint_count, agg_fn: count }
+        - { measure: mdr_reportable_count, agg_fn: count }
+        - { measure: mdr_filed_count, agg_fn: count }
+        - { measure: avg_complaint_age_days, agg_fn: avg }
+    sources:
+      - { measure: complaint_count }
+      - { measure: open_complaint_count }
+      - { measure: mdr_reportable_count }
+      - { measure: mdr_filed_count }
+      - { measure: avg_complaint_age_days }
+    w: 12
+    h: 4

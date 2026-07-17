@@ -1,0 +1,15 @@
+claim_id,claimant_name,policy_no,claim_type,vendor,invoice_no,amount,incident_date,description
+CLM-1001,Zürich Ré,POL-88213,auto,ACME Auto Body,INV-5540,12500.50,2026-05-02,Rear collision repair; bumper and quarter panel
+CLM-1002,Zürich Ré,POL-88213,auto,ACME Auto Body,INV-5540,12500.50,2026-05-09,Rear collision repair; bumper and quarter panel (resubmission)
+CLM-1003,John Alvarez,POL-42117,auto,Bayview Collision,INV-9921,3400.00,2026-04-18,Windshield replacement and calibration
+CLM-1004,Amélie Dubois,POL-55190,property,RapidDry Restoration,INV-3312,8800.75,2026-03-27,Water damage remediation basement
+CLM-1005,Kenji Watanabe,POL-77341,auto,ACME Auto Body,INV-5541,980.00,2026-05-11,Minor fender scratch buff-out
+CLM-1006,María José Peña,POL-33098,auto,Bayview Collision,INV-9955,27650.00,2026-05-14,Total loss claim; vehicle submerged in flood
+CLM-1007,Björk Ólafsdóttir,POL-61204,property,RapidDry Restoration,INV-3312,8800.75,2026-05-15,Water damage remediation basement (duplicate invoice)
+CLM-1008,Robert Chen,POL-49871,auto,Precision Auto Glass,INV-7710,1250.00,2026-04-30,Windshield chip repair
+CLM-1009,Fatima Al-Sayed,POL-70552,health,MercyCare Clinic,INV-2201,540.25,2026-05-03,Outpatient physiotherapy sessions
+CLM-1010,Zürich Ré,POL-88213,auto,ACME Auto Body,INV-5599,15900.00,2026-05-20,Second high-value claim same policy within 3 weeks
+CLM-1011,Giovanni Russo,POL-28640,property,StormShield Roofing,INV-4420,19200.00,2026-05-06,Roof replacement after hail; itemization sparse
+CLM-1012,Aisha Okafor,POL-90183,auto,Bayview Collision,INV-9970,2100.00,2026-05-18,Side mirror and door panel repair
+CLM-1013,Lars Andersen,POL-11276,health,MercyCare Clinic,INV-2240,3120.00,2026-05-19,Emergency room visit and imaging
+CLM-1014,Sofía Gómez,POL-64409,auto,ACME Auto Body,INV-5610,760.40,2026-05-21,Headlamp assembly replacement

@@ -1,0 +1,70 @@
+{
+  "pack": "ap-invoice-audit",
+  "version": "1.0.0",
+  "workspace_id": "019f6a77-5015-74f1-a0b6-a923a85392e4",
+  "tenant_id": "019f6a77-4bc9-7b8d-a363-570dc178db9d",
+  "started_at": "2026-07-16T10:27:12Z",
+  "finished_at": "2026-07-16T10:27:31Z",
+  "actions": [
+    {
+      "kind": "datasets",
+      "identity": "ap_exceptions",
+      "action": "failed",
+      "urn": null,
+      "detail": "complete 500: {\"error\":{\"code\":\"INTERNAL\",\"message\":\"internal error\",\"trace_id\":\"019f6a77-535e-7adf-b3a7-3abbcdc883ce\"}}"
+    },
+    {
+      "kind": "datasets",
+      "identity": "ap_invoices",
+      "action": "failed",
+      "urn": null,
+      "detail": "complete 500: {\"error\":{\"code\":\"INTERNAL\",\"message\":\"internal error\",\"trace_id\":\"019f6a77-6caf-7ae3-886f-611494189edc\"}}"
+    },
+    {
+      "kind": "datasets",
+      "identity": "ap_vendors",
+      "action": "failed",
+      "urn": null,
+      "detail": "complete 500: {\"error\":{\"code\":\"INTERNAL\",\"message\":\"internal error\",\"trace_id\":\"019f6a77-85a7-7342-a542-75e54e9f21fb\"}}"
+    }
+  ],
+  "deferred": [
+    {
+      "kind": "guardrails",
+      "reason": "AP-domain policies (no payment released over a control exception without an approver-signed rationale; no vendor banking change accepted without documented out-of-band verification; no vendor payable until TIN verification and sanctions screening complete; block scope limited to the payment at risk) require guardrail-service / OPA policy materialization, which Core does not expose as a pack surface yet. The behavioral core is partially covered today by Core invariants: every pack-configured agent is proposal-mode with four-eyes approval (agent-runtime), and the agent instructions + disposition taxonomy route payment blocks and releases exclusively to human analysts with the AP Controls Manager as approver."
+    },
+    {
+      "kind": "agent_recipes",
+      "reason": "Bespoke LangGraph recipes (Exception Triage Copilot, Banking-Change Verification Sentinel, Duplicate-Pair Matcher, Recovery Statement Auditor) require agent-runtime graph-module registration (BRD 23 BR-12). This pack specializes the existing case-triage + analytics agents via TenantAgentConfig prompt_params + tenant-scope RAG grounding instead."
+    },
+    {
+      "kind": "connection_templates",
+      "reason": "Production read connectors (ERP AP subledgers: SAP S/4HANA, Oracle Fusion, NetSuite; P2P suites: Coupa, Ariba, Ivalua; invoice-capture/ OCR platforms; bank payment gateways for run schedules; vendor-master and TIN/sanctions screening services) require customer credentials and pack-service connector materialization. The pack ships seed datasets in the exact landing shape; production connectors are configured through the product Data > Connections UI."
+    },
+    {
+      "kind": "write_adapters",
+      "reason": "Write adapters (place/release payment blocks in the ERP, park or reject invoices back to the vendor portal, post negotiated credit memos, update vendor-master banking details after verification) execute only behind pack-service's materialization contract and customer credentials; every such write stays proposal-mode with human approval \u2014 no autonomous payment movement or vendor-master change, ever."
+    },
+    {
+      "kind": "eval_sets",
+      "reason": "Golden eval sets (duplicate-pair matching, BEC banking-change triage, split-invoicing detection, release-vs-block calibration) require eval-service write APIs whose action names are not yet in the rbac canonical catalog (Core follow-up noted in rbac catalog.go)."
+    },
+    {
+      "kind": "ontology",
+      "reason": "Ontology registration (Vendor, VendorBankAccount, PurchaseOrder, GoodsReceipt, Invoice, InvoiceLine, PaymentRun, Exception, CreditMemo, ApprovalThreshold, RecoveryClaim) awaits pack-service; entity semantics are carried today by the ap_audit_core semantic model and dataset schemas."
+    },
+    {
+      "kind": "case_schemas",
+      "reason": "Typed case schemas (duplicate_review, banking_change_verification, shell_vendor_investigation, price_variance_negotiation, recovery_claim) await case-service schema materialization; today's cases carry the same fields via display_projection + the disposition taxonomy."
+    },
+    {
+      "kind": "model_archetypes",
+      "reason": "Model archetypes (duplicate_pair_confidence, vendor_fraud_risk_score) await experiment-service archetype APIs; the scoring capability ships as pipeline seeds instead (isolation_forest invoice anomaly + xgboost exception-outcome scorer) with model-governance expectations noted in grounding memories."
+    },
+    {
+      "kind": "display_labels",
+      "reason": "Display-label overlays (\"Exception\", \"Payment block\", \"Banking change pending verification\", \"Discount window closing\", entity templates) require the BFF label-registry endpoints (BFF-FR-082/088) which are pack-service-tier features."
+    }
+  ],
+  "result": "failed"
+}

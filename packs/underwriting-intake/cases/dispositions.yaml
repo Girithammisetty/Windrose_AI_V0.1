@@ -1,0 +1,14 @@
+# Disposition taxonomy for the submission-triage workflow. Categories are
+# the Core's closed set {true_positive,false_positive,benign,inconclusive,
+# other} (CASE-FR-020). accept_route_to_underwriter is the funnel's
+# value-creating outcome (a clean, in-appetite risk reaching an underwriter
+# fast); decline_out_of_appetite carries the declination-hygiene note (some
+# states require documented reasons for certain lines); the info-request note
+# names the exact missing documents; the specialty referral note records the
+# admitted-market declination that E&S placement rests on; the withdrawal
+# note preserves the funnel-loss reason for hit-ratio analysis.
+- { code: accept_route_to_underwriter,  label: "Accept — clear and route to underwriter",                 category: true_positive,  requires_note: true }
+- { code: decline_out_of_appetite,      label: "Decline — out of appetite (documented reasons)",          category: false_positive, requires_note: true }
+- { code: request_missing_information,  label: "Request missing information from broker",                 category: inconclusive,   requires_note: true }
+- { code: refer_specialty_market,       label: "Refer to specialty / E&S market",                         category: other,          requires_note: true }
+- { code: close_broker_withdrawn,       label: "Close — broker withdrew the submission",                  category: benign,         requires_note: true }

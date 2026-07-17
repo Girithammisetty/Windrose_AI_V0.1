@@ -1,0 +1,13 @@
+# Disposition taxonomy for the post-acute review workflows (PAC-FR-110 case
+# schemas expressed in today's case-service disposition catalog). Notes are
+# mandatory wherever the BRD demands documented rationale: BR-3 (comorbidity
+# evidence), BR-4 (therapy changes trace to clinical justification), BR-6
+# (referral declines need rationale).
+- { code: comorbidity_codes_accepted,  label: "PDGM comorbidity codes accepted",          category: true_positive,  requires_note: true }
+- { code: comorbidity_codes_rejected,  label: "Proposed codes lack documentation (BR-3)", category: false_positive, requires_note: true }
+- { code: therapy_plan_realigned,      label: "PDPM therapy plan brought into alignment", category: true_positive,  requires_note: true }
+- { code: risk_intervention_started,   label: "Readmission-risk intervention initiated",  category: true_positive,  requires_note: false }
+- { code: risk_flag_cleared,           label: "Risk flag cleared — no intervention",      category: false_positive, requires_note: false }
+- { code: referral_accept_confirmed,   label: "Referral accepted — intake confirmed",     category: benign,         requires_note: false }
+- { code: referral_decline_confirmed,  label: "Referral declined (rationale required)",   category: other,          requires_note: true }
+- { code: escalate_medical_director,   label: "Escalate to medical director",             category: inconclusive,   requires_note: false }

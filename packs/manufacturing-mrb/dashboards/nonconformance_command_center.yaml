@@ -1,0 +1,69 @@
+# Nonconformance Command Center: NC mix by type, backlog aging, disposition
+# outcome mix, intake trend. Chart families restricted to the render-verified
+# set (vertical_bar / grid / pie / line); expr_metric measures (rates) are
+# query/NL surfaces, never charted directly.
+name: "Nonconformance Command Center"
+module: insights
+semantic_model: mrb_core
+description: >-
+  Top-line quality operations KPIs: nonconformance volumes by defect type,
+  MRB backlog aging by severity, disposition outcome mix, and cost-of-quality
+  exposure per defect type.
+tags: [manufacturing, quality, mrb, nonconformance, pack]
+charts:
+  - name: "Nonconformances by type"
+    chart_type: vertical_bar_chart
+    description: "NC volume by defect type (dimensional, material, FOD, documentation, ...)"
+    config:
+      x: { dimension: nc_type }
+      y: [ { measure: nc_count, agg_fn: count } ]
+    sources: [ { measure: nc_count } ]
+    w: 6
+    h: 4
+  - name: "Backlog aging by severity"
+    chart_type: vertical_bar_chart
+    description: "Average nonconformance age in days by severity (cycle-time watch)"
+    config:
+      x: { dimension: severity }
+      y: [ { measure: avg_nc_age_days, agg_fn: avg } ]
+    sources: [ { measure: avg_nc_age_days } ]
+    w: 6
+    h: 4
+  - name: "Disposition outcome mix"
+    chart_type: pie_chart
+    description: "Rework vs use-as-is vs scrap vs supplier return vs no-defect vs pending"
+    config:
+      x: { dimension: nc_disposition }
+      y: [ { measure: nc_count, agg_fn: count } ]
+    sources: [ { measure: nc_count } ]
+    w: 6
+    h: 4
+  - name: "NC intake by month"
+    chart_type: line_chart
+    description: "Nonconformance filings trend by filed month"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: nc_count, agg_fn: count } ]
+    sources: [ { measure: nc_count } ]
+    w: 6
+    h: 4
+  - name: "Defect-type worklist grid"
+    chart_type: grid_chart
+    description: "NCs, closures, rework and scrap dispositions and cost impact by defect type"
+    config:
+      columns: [nc_type, nc_count, closed_nc_count, rework_count, scrap_count, total_cost_impact]
+      x: { dimension: nc_type }
+      y:
+        - { measure: nc_count, agg_fn: count }
+        - { measure: closed_nc_count, agg_fn: count }
+        - { measure: rework_count, agg_fn: count }
+        - { measure: scrap_count, agg_fn: count }
+        - { measure: total_cost_impact, agg_fn: sum }
+    sources:
+      - { measure: nc_count }
+      - { measure: closed_nc_count }
+      - { measure: rework_count }
+      - { measure: scrap_count }
+      - { measure: total_cost_impact }
+    w: 12
+    h: 4

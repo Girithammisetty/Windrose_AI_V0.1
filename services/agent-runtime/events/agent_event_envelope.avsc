@@ -1,0 +1,29 @@
+{
+  "type": "record",
+  "name": "AgentEventEnvelope",
+  "namespace": "windrose.agent.events.v1",
+  "doc": "Master event envelope (MASTER-FR-031) for agent-runtime topics (ai.agent_run.v1, ai.proposal.v1, ai.code_executed.v1, agent.events.v1). Partition key = tenant_id.",
+  "fields": [
+    {"name": "event_id", "type": "string", "doc": "uuidv7"},
+    {"name": "event_type", "type": "string"},
+    {"name": "tenant_id", "type": "string"},
+    {"name": "actor", "type": {
+      "type": "record", "name": "Actor",
+      "fields": [
+        {"name": "type", "type": "string"},
+        {"name": "id", "type": "string"}
+      ]
+    }},
+    {"name": "via_agent", "type": ["null", {
+      "type": "record", "name": "ViaAgent",
+      "fields": [
+        {"name": "agent_id", "type": "string"},
+        {"name": "version", "type": "string"}
+      ]
+    }], "default": null},
+    {"name": "resource_urn", "type": "string"},
+    {"name": "occurred_at", "type": "string", "doc": "ISO-8601 UTC"},
+    {"name": "trace_id", "type": ["null", "string"], "default": null},
+    {"name": "payload", "type": "string", "doc": "JSON-encoded event-type-specific body"}
+  ]
+}

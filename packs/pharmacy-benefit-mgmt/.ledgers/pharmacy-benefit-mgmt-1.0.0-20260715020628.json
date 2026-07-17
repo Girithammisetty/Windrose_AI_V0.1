@@ -1,0 +1,322 @@
+{
+  "pack": "pharmacy-benefit-mgmt",
+  "version": "1.0.0",
+  "workspace_id": "019f6462-1925-7d0f-8046-a3694911b658",
+  "tenant_id": "019f6462-14dc-7249-8e1f-faa5e562b126",
+  "started_at": "2026-07-15T06:06:19Z",
+  "finished_at": "2026-07-15T06:06:28Z",
+  "actions": [
+    {
+      "kind": "datasets",
+      "identity": "pbm_rx_claims",
+      "action": "create",
+      "urn": "wr:019f6462-14dc-7249-8e1f-faa5e562b126:dataset:dataset/019f6462-1c55-78f7-9bf1-fbf5d9fcd068",
+      "detail": "'pbm-rx-claims' ingested rows=24 snapshot=4591110940629608543"
+    },
+    {
+      "kind": "datasets",
+      "identity": "pbm_formulary",
+      "action": "create",
+      "urn": "wr:019f6462-14dc-7249-8e1f-faa5e562b126:dataset:dataset/019f6462-1d71-766f-9ebc-ed4f0512574a",
+      "detail": "'pbm-formulary' ingested rows=12 snapshot=7687700952634475047"
+    },
+    {
+      "kind": "datasets",
+      "identity": "pbm_pa_requests",
+      "action": "create",
+      "urn": "wr:019f6462-14dc-7249-8e1f-faa5e562b126:dataset:dataset/019f6462-1e8b-71c5-a5ff-072141c60f8e",
+      "detail": "'pbm-pa-requests' ingested rows=15 snapshot=7789568759725952891"
+    },
+    {
+      "kind": "datasets",
+      "identity": "pbm_dur_alerts",
+      "action": "create",
+      "urn": "wr:019f6462-14dc-7249-8e1f-faa5e562b126:dataset:dataset/019f6462-1fb7-70c1-8283-6dbf7e62b23d",
+      "detail": "'pbm-dur-alerts' ingested rows=12 snapshot=2044924413652530257"
+    },
+    {
+      "kind": "semantic_models",
+      "identity": "pbm_core",
+      "action": "create",
+      "urn": "wr:019f6462-14dc-7249-8e1f-faa5e562b126:semantic:model/019f6462-20bb-7e20-a46c-f97b6c7759c6",
+      "detail": "'pbm_core' published"
+    },
+    {
+      "kind": "semantic_models",
+      "identity": "pbm_pa",
+      "action": "create",
+      "urn": "wr:019f6462-14dc-7249-8e1f-faa5e562b126:semantic:model/019f6462-2a41-72b3-b079-dcf90eb95ef0",
+      "detail": "'pbm_pa' published"
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_0",
+      "action": "create",
+      "urn": "wr:019f6462-14dc-7249-8e1f-faa5e562b126:semantic:verified_query/019f6462-2b52-7c41-aa94-1705e99c1246",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_1",
+      "action": "create",
+      "urn": "wr:019f6462-14dc-7249-8e1f-faa5e562b126:semantic:verified_query/019f6462-2c19-7843-8a64-5b08c34f08a8",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_2",
+      "action": "create",
+      "urn": "wr:019f6462-14dc-7249-8e1f-faa5e562b126:semantic:verified_query/019f6462-2ce7-7a1c-ab74-954868d75d8d",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_3",
+      "action": "create",
+      "urn": "wr:019f6462-14dc-7249-8e1f-faa5e562b126:semantic:verified_query/019f6462-2dbd-71de-8005-ddde6f131d28",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_4",
+      "action": "create",
+      "urn": "wr:019f6462-14dc-7249-8e1f-faa5e562b126:semantic:verified_query/019f6462-2e8e-772d-be1d-dbd7025aa642",
+      "detail": ""
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "dur_action_edges",
+      "action": "create",
+      "urn": "wr:019f6462-14dc-7249-8e1f-faa5e562b126:query:query/019f6462-2f2a-712c-8f2b-c0adfe81619d",
+      "detail": "PBM: DUR conflict to pharmacist action"
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "plan_paid_per_member",
+      "action": "create",
+      "urn": "wr:019f6462-14dc-7249-8e1f-faa5e562b126:query:query/019f6462-2f6f-7b98-924c-fbe36a8e3793",
+      "detail": "PBM: plan paid per member per month"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "pbm_trend_safety",
+      "action": "create",
+      "urn": "wr:019f6462-14dc-7249-8e1f-faa5e562b126:chart:dashboard/019f6462-2fd2-7ed4-920e-16a7b0f2fa6a",
+      "detail": "PBM Trend & Safety"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "pbm_trend_safety",
+      "action": "verify",
+      "urn": "wr:019f6462-14dc-7249-8e1f-faa5e562b126:chart:dashboard/019f6462-2fd2-7ed4-920e-16a7b0f2fa6a",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "pa_operations",
+      "action": "create",
+      "urn": "wr:019f6462-14dc-7249-8e1f-faa5e562b126:chart:dashboard/019f6462-31cb-7874-a948-d1578f2868f5",
+      "detail": "PA Operations"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "pa_operations",
+      "action": "verify",
+      "urn": "wr:019f6462-14dc-7249-8e1f-faa5e562b126:chart:dashboard/019f6462-31cb-7874-a948-d1578f2868f5",
+      "detail": "5/5 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "rebate_cost",
+      "action": "create",
+      "urn": "wr:019f6462-14dc-7249-8e1f-faa5e562b126:chart:dashboard/019f6462-3382-79b8-a319-7d2e8effafdf",
+      "detail": "Rebate & Cost"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "rebate_cost",
+      "action": "verify",
+      "urn": "wr:019f6462-14dc-7249-8e1f-faa5e562b126:chart:dashboard/019f6462-3382-79b8-a319-7d2e8effafdf",
+      "detail": "4/4 charts resolve data"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "pa_approved"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "pa_denied"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "pa_pended_info"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "dur_override"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "dur_intervene"
+    },
+    {
+      "kind": "cases",
+      "identity": "pa_dur_queue",
+      "action": "create",
+      "urn": "wr:019f6462-14dc-7249-8e1f-faa5e562b126:dataset:dataset/019f6462-1e8b-71c5-a5ff-072141c60f8e",
+      "detail": "5 open cases (reindexed)"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'PA Pharmacist'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'PA Pharmacist' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Formulary Manager'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Formulary Manager' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Rebate Analyst'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Rebate Analyst' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Clinical Director'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Clinical Director' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'PBM Compliance Officer'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'PBM Compliance Officer' bound to permission group"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "case-triage prompt_params set"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "analytics prompt_params set"
+    },
+    {
+      "kind": "memories",
+      "identity": "grounding",
+      "action": "create",
+      "urn": null,
+      "detail": "10 grounding records written, 0 already present"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "create",
+      "urn": null,
+      "detail": "'Rx PA auto-decision classifier (logistic regression)' (logistic_regression, train)"
+    }
+  ],
+  "deferred": [
+    {
+      "kind": "ontology",
+      "reason": "RX-FR-010 ontology registration (Member, Prescriber, Pharmacy, Drug, Prescription, PriorAuthRequest, Formulary, MTMEligibility, CMR, MAP, AdherenceRecord, DrugInteraction) awaits pack-service; entity semantics are carried today by the pbm_core / pbm_pa semantic models and the dataset schemas."
+    },
+    {
+      "kind": "guardrails",
+      "reason": "RX-FR-090 policy bundle (HIPAA baseline, CMS Part D turnaround + transparency, Star Ratings measure rules, NCPDP EDI formats, DEA EPCS identity/audit, state pharmacy law, DDI alert severity rules) requires guardrail-service / OPA materialization, which Core does not expose as a pack surface yet. The behavioral guarantees BR-1/BR-2 encode (no autonomous denial, no controlled-substance auto-approve) are covered today by Core invariants \u2014 proposal-mode + four-eyes approval in agent-runtime \u2014 plus the pack's agent instructions and grounding."
+    },
+    {
+      "kind": "agent_recipes",
+      "reason": "RX-FR-030..070 bespoke LangGraph recipes (Rx PA Copilot, Formulary Alternative Suggester, MTM Copilot, Adherence Intervention Prioritizer, Star Ratings Copilot) require agent-runtime graph-module registration (a Core code surface, BRD 23 BR-12). This pack specializes the existing case-triage + analytics agents via TenantAgentConfig prompt_params + tenant-scope RAG grounding instead."
+    },
+    {
+      "kind": "connection_templates",
+      "reason": "RX-FR-080 read connectors (RxClaim, MedImpact, ScriptCheck, CoverMyMeds ePA, Surescripts RTPB, NCPDP EDI, dispensing feeds, Micromedex/First Databank/Lexi-Comp, formulary configs, member CRM) require customer credentials/licenses and pack-service connector materialization. The pack ships seed datasets in the exact landing shape; production connectors are configured through the product Data > Connections UI."
+    },
+    {
+      "kind": "write_adapters",
+      "reason": "RX-FR-080 write adapters (RxClaim PA decision post-back, CoverMyMeds ePA response, Surescripts approval/denial, MTM CMR document upload, adherence intervention log) execute only behind pack-service's materialization contract and customer credentials; all platform-side writes remain proposal-mode per BR-1/BR-10."
+    },
+    {
+      "kind": "eval_sets",
+      "reason": "BRD 28 \u00a74 golden eval sets (4, incl. Rx PA agreement-rate per AC-2) require eval-service write APIs whose action names are not yet in the rbac canonical catalog (Core follow-up noted in rbac catalog.go)."
+    },
+    {
+      "kind": "model_archetypes",
+      "reason": "BRD 28 \u00a74 archetypes (rx_pa_confidence, adherence_event_risk) await experiment-service archetype APIs; the confidence model ships today as the pa_auto_decision pipeline seed instead."
+    },
+    {
+      "kind": "case_schemas",
+      "reason": "RX-FR-100 typed case schemas (rx_pa_review, formulary_alternative_review, mtm_cmr_review, adherence_intervention_case, star_gap_closure_case) await case-service schema materialization; today's cases carry the same fields via display_projection + the disposition taxonomy."
+    },
+    {
+      "kind": "display_labels",
+      "reason": "BRD 28 \u00a74 display-label overlays (rx_pa_review.singular, agent names, member/drug entity templates) require the BFF label-registry endpoints (BFF-FR-082/088) which are pack-service-tier features."
+    }
+  ],
+  "result": "installed"
+}

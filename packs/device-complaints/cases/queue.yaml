@@ -1,0 +1,71 @@
+# Seeded complaint-handling queue: the OPEN complaints from the seed dataset
+# become cases so an analyst logging in sees a real, pattern-diverse worklist
+# on day one — a death with device involvement unconfirmed (reportability
+# presumption), a third alarm-failure on one product (30-day MDR candidate +
+# trend), a post-rollout software-anomaly cluster (CAPA candidate), a
+# possibly design-induced use error, a returned-device analysis pending, and
+# a suspected distributor double-report. due_days=4 keeps triage well inside
+# the 30-calendar-day MDR clock on the tightest rows.
+dataset: dc_complaints
+due_days: 4
+rows:
+  - row_pk: DCP-5001
+    severity: high
+    display_projection:
+      complaint_id: DCP-5001
+      product: "NeuroPulse S2 Implantable Neurostimulator (D-3014 / P-104, class III)"
+      event_type: death
+      device_problem: unknown
+      patient_harm: death
+      days_to_deadline: "8"
+      note: "Implanting physician reported a patient death; explant analysis not yet performed and device involvement is UNCONFIRMED. Deaths carry a reportability presumption — if the investigation cannot rule out that the device caused or contributed, the MDR is due. Becoming-aware day zero was first employee awareness: the 30-day clock is at day 22 with 8 days left. Do not hold the decision for conclusive causality."
+  - row_pk: DCP-5002
+    severity: high
+    display_projection:
+      complaint_id: DCP-5002
+      product: "CardioSense M7 Bedside Monitor (D-3006 / P-102)"
+      event_type: malfunction
+      device_problem: alarm_failure
+      patient_harm: none
+      days_to_deadline: "4"
+      note: "Desaturation alarm failed to sound; nurse caught the event, no harm THIS time — but an alarm failure that recurs is likely to cause or contribute to serious injury, so this is a 30-day MDR candidate on the malfunction prong (4 days left). THIRD alarm-failure complaint on P-102 (DCP-4002 on D-3004, DCP-4013 on D-3005, both MDR-filed): trending threshold hit — evaluate a CAPA under 820.100 alongside the reportability decision."
+  - row_pk: DCP-5003
+    severity: medium
+    display_projection:
+      complaint_id: DCP-5003
+      product: "GlucoTrack G4 CGM (D-3012 / P-103)"
+      event_type: malfunction
+      device_problem: software_anomaly
+      patient_harm: none
+      days_to_deadline: "18"
+      note: "Display freeze with stale glucose reading on a v4_0 / lot_c unit — third software-anomaly complaint since the v4.0 rollout (DCP-4011 on D-3010, DCP-4012 on D-3011, both closed into CAPA). Cluster-after-change is a classic CAPA trigger; assess reportability on the could-recur prong (a frozen display can mask hypoglycemia). Root-cause candidate: the v4.0 build, not individual units."
+  - row_pk: DCP-5004
+    severity: medium
+    display_projection:
+      complaint_id: DCP-5004
+      product: "DermaStapler Pro Skin Stapler (D-3025 / P-108, class I)"
+      event_type: use_error
+      device_problem: labeling_confusion
+      patient_harm: minor
+      days_to_deadline: "21"
+      note: "Stapler misfire during wound closure, minor tissue injury; the clinician reports the anvil-orientation marking is easy to misread — a use error possibly INDUCED by design/labeling. Prior labeling complaints exist on the sibling pen injector line (DCP-4005, DCP-4019). Human-factors review needed: if the design invites the error, this feeds design input and possibly CAPA, and use-error harm can still be reportable."
+  - row_pk: DCP-5005
+    severity: medium
+    display_projection:
+      complaint_id: DCP-5005
+      product: "InsuJet Duo Pen Injector (D-3028 / P-109)"
+      event_type: malfunction
+      device_problem: breakage
+      patient_harm: minor
+      days_to_deadline: "15"
+      note: "Patient reports a cracked cartridge holder and a suspected dosing shortfall (mild hyperglycemia). Device return is in transit — returned-device analysis pending. Document every return-request attempt in the complaint file; if the device never arrives, the reportability decision must still be made on the available information before the clock runs out (15 days left)."
+  - row_pk: DCP-5006
+    severity: medium
+    display_projection:
+      complaint_id: DCP-5006
+      product: "AeroVent V300 Home Ventilator (D-3015 / P-105)"
+      event_type: serious_injury
+      device_problem: alarm_failure
+      patient_harm: serious
+      days_to_deadline: "24"
+      note: "Distributor-relayed report of a ventilator alarm failure with patient hypoxia on D-3015 — same device, same event window as DCP-4009, which was investigated and MDR-filed in April. Suspected distributor double-report: confirm the linkage (event date, patient, facility) before closing as duplicate. If it is a DISTINCT second event, it gets its own investigation and its own 30-day clock (24 days left)."

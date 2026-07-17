@@ -1,0 +1,18 @@
+# Pipeline seeds (expressed against the real pipeline-orchestrator algorithm
+# catalog): an unsupervised claim-anomaly detector (identity-ring /
+# out-of-pattern filing surface scan over the claim book) and a supervised
+# determination-outcome scorer trained on human dispositions (the
+# deterministic-first pre-router for intake triage). Trained models require
+# review before promotion — the Program Integrity Manager approves
+# promotions, and no model output ever becomes an adverse action without an
+# individualized human determination.
+- identity: gb_claim_anomaly_isolation_forest
+  name: "Benefit claim anomaly detector (isolation forest)"
+  algorithm: isolation_forest
+  mode: train
+  dataset: gb_claims
+- identity: gb_determination_outcome_xgboost
+  name: "Determination outcome scorer (xgboost)"
+  algorithm: xgboost
+  mode: train
+  dataset: gb_determinations

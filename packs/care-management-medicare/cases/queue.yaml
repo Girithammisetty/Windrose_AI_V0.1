@@ -1,0 +1,73 @@
+# Seeded monthly-billing-review queue (CMM-FR-141 monthly_billing_review +
+# CMM-FR-071): the documentation auditor's held billing candidates from the
+# seed dataset become OPEN cases so a care manager / CFO logging in sees a
+# real worklist on day one — each case names the exact missing artifact.
+dataset: care_billing_candidates
+due_days: 5
+rows:
+  - row_pk: BC-5012
+    severity: medium
+    display_projection:
+      candidate_id: BC-5012
+      patient_id: PT-1010
+      program_code: rpm
+      cpt_code: "99454"
+      service_month: 2026-06
+      expected_reimbursement: "46.20"
+      hold_reason: rpm_16day_not_met
+      note: "Only 14 of 30 days had device readings — CPT 99454 requires >= 16 days; 99457 evaluated separately (BR-4)"
+  - row_pk: BC-5013
+    severity: medium
+    display_projection:
+      candidate_id: BC-5013
+      patient_id: PT-1010
+      program_code: rpm
+      cpt_code: "99457"
+      service_month: 2026-06
+      expected_reimbursement: "47.87"
+      hold_reason: missing_time
+      note: "14 review minutes logged — CPT 99457 requires >= 20 min of clinician data review this month"
+  - row_pk: BC-5016
+    severity: high
+    display_projection:
+      candidate_id: BC-5016
+      patient_id: PT-1013
+      program_code: tcm
+      cpt_code: "99495"
+      service_month: 2026-06
+      expected_reimbursement: "204.06"
+      hold_reason: tcm_window_missed
+      note: "Discharge 2026-06: interactive contact not completed within 2 business days — CMS TCM window (CMM-FR-092)"
+  - row_pk: BC-5027
+    severity: high
+    display_projection:
+      candidate_id: BC-5027
+      patient_id: PT-1017
+      program_code: ccm
+      cpt_code: "99490"
+      service_month: 2026-06
+      expected_reimbursement: "64.02"
+      hold_reason: consent_revoked
+      note: "Patient revoked CCM consent before service-month end — revocation date cited in audit chain; do not bill (BR-1/BR-7)"
+  - row_pk: BC-5028
+    severity: high
+    display_projection:
+      candidate_id: BC-5028
+      patient_id: PT-1006
+      program_code: ccm
+      cpt_code: "99490"
+      service_month: 2026-06
+      expected_reimbursement: "64.02"
+      hold_reason: code_mutual_exclusion
+      note: "CCM 99490 cannot be billed with PCM 99424 (BC-5007) same patient same month — pick the more defensible code (BR-5)"
+  - row_pk: BC-5019
+    severity: low
+    display_projection:
+      candidate_id: BC-5019
+      patient_id: PT-1002
+      program_code: ccm
+      cpt_code: "99490"
+      service_month: 2026-05
+      expected_reimbursement: "64.02"
+      hold_reason: missing_time
+      note: "Only 9 minutes logged in May — CPT 99490 requires >= 20 min; propose outreach to close the gap next month"

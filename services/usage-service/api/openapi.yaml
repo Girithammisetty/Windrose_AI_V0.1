@@ -1,0 +1,130 @@
+openapi: 3.1.0
+info:
+  title: usage-service API
+  version: "1.0.0"
+  description: >
+    Metering, cost-attribution and budget-enforcement authority (BRD 17).
+    All endpoints require an RS256 bearer JWT (MASTER-FR-010) and authorize via
+    the local OPA sidecar (MASTER-FR-012). Tenant scope comes from the verified
+    JWT; tenant ids in payloads are ignored (MASTER-FR-001/002).
+servers:
+  - url: /api/v1
+components:
+  securitySchemes:
+    bearerAuth: { type: http, scheme: bearer, bearerFormat: JWT }
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: { type: string }
+            message: { type: string }
+            details: {}
+            trace_id: { type: string }
+    Page:
+      type: object
+      properties:
+        next_cursor: { type: string }
+        has_more: { type: boolean }
+security:
+  - bearerAuth: []
+paths:
+  /meters:
+    get:
+      summary: Meter catalog (USG-FR-003)
+      responses: { "200": { description: catalog } }
+  /reports/usage:
+    get:
+      summary: Showback rollups; CSV via Accept text/csv (USG-FR-040/041)
+      parameters:
+        - { name: group_by, in: query, schema: { type: string }, description: "comma list of tenant|workspace|user|agent|meter|model|day|month" }
+        - { name: from, in: query, required: true, schema: { type: string, format: date } }
+        - { name: to, in: query, required: true, schema: { type: string, format: date } }
+        - { name: meter_key, in: query, schema: { type: string } }
+        - { name: workspace_id, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer } }
+        - { name: cursor, in: query, schema: { type: string } }
+      responses:
+        "200": { description: report (JSON or CSV) }
+        "400": { description: VALIDATION_FAILED }
+  /reports/chargeback:
+    get:
+      summary: Priced monthly report for a finalized month (USG-FR-043)
+      parameters:
+        - { name: month, in: query, required: true, schema: { type: string, example: "2026-06" } }
+      responses:
+        "200": { description: chargeback lines }
+        "409": { description: "CONFLICT (month_open | reconciliation_variance)" }
+  /budgets:
+    post:
+      summary: Create budget (USG-FR-030); Idempotency-Key supported
+      parameters:
+        - { name: Idempotency-Key, in: header, schema: { type: string } }
+      responses:
+        "201": { description: created }
+        "400": { description: VALIDATION_FAILED }
+    get:
+      summary: List budgets
+      responses: { "200": { description: budgets } }
+  /budgets/{id}:
+    get:
+      summary: Get budget
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses: { "200": { description: budget }, "404": { description: NOT_FOUND } }
+    patch:
+      summary: Update budget limit/action (USG-FR-033)
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses: { "200": { description: updated }, "404": { description: NOT_FOUND } }
+    delete:
+      summary: Soft-delete budget (USG-FR-034)
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses: { "204": { description: deleted }, "404": { description: NOT_FOUND } }
+  /budgets/{id}/state:
+    get:
+      summary: Current window state (gateway resync, USG-FR-032)
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses: { "200": { description: state }, "404": { description: NOT_FOUND } }
+  /budget-states:
+    get:
+      summary: Bulk budget states (gateway warm-up/resync, USG-FR-032). Each row carries a canonical scope string ("tenant/<id>" | "workspace/<id>" | "user/<id>" | "agent/<id>").
+      parameters:
+        - { name: scope, in: query, required: false, schema: { type: string }, description: "Filter to one scope, e.g. workspace/<uuid>" }
+      responses: { "200": { description: states } }
+  /rate-cards:
+    post:
+      summary: Create draft rate card (USG-FR-042, platform operator)
+      responses: { "201": { description: created } }
+    get:
+      summary: List rate cards
+      responses: { "200": { description: cards } }
+  /rate-cards/{id}/activate:
+    post:
+      summary: Activate a draft rate card (USG-FR-042)
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses: { "200": { description: activated }, "409": { description: CONFLICT } }
+  /anomalies:
+    get:
+      summary: List anomalies (USG-FR-051)
+      responses: { "200": { description: anomalies } }
+  /anomalies/{id}/dismiss:
+    post:
+      summary: Dismiss anomaly (USG-FR-051, audited)
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses: { "200": { description: dismissed }, "404": { description: NOT_FOUND } }
+  /reconciliations:
+    get:
+      summary: List reconciliations (platform operator, USG-FR-070)
+      responses: { "200": { description: reconciliations } }
+  /reconciliations/{id}/acknowledge:
+    post:
+      summary: Acknowledge a variance month (USG-FR-071)
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses: { "200": { description: acknowledged }, "404": { description: NOT_FOUND } }
+  /adjustments:
+    post:
+      summary: Record a signed adjustment on a closed month (USG-FR-072)
+      responses:
+        "201": { description: recorded }
+        "409": { description: "CONFLICT (month_open)" }

@@ -1,0 +1,28 @@
+# Saved queries (query-service) — includes the vendor->spend-category edge
+# source (parent/child/n) for network-family charts: vendor concentration
+# and shell-vendor clustering from the invoice register.
+- identity: vendor_category_edges
+  name: "AP: vendor-category network edges"
+  description: >-
+    Vendor -> spend-category edge list (parent/child/n) from the invoice
+    register — network-chart source for spotting vendor concentration (one
+    vendor fanning across categories) and single-category new vendors whose
+    only footprint is a burst of invoices (shell-vendor screen).
+  sql: >-
+    SELECT vendor_id AS parent, category AS child,
+           count(*) AS n
+    FROM {{dataset('ap-invoices')}}
+    GROUP BY vendor_id, category
+  tags: [ap, network, vendors, pack]
+- identity: high_value_open_exceptions
+  name: "AP: high-value open exception queue"
+  description: "Open exceptions ranked by dollar exposure — the analyst ranked-queue seed (deadline runway x dollar x severity, not FIFO)."
+  sql: >-
+    SELECT exception_id, invoice_id, exception_type, three_way_match,
+           fraud_indicator, severity,
+           cast(days_to_deadline AS double) AS days_to_deadline,
+           cast(invoice_amount AS double) AS invoice_amount
+    FROM {{dataset('ap-exceptions')}}
+    WHERE status = 'open'
+    ORDER BY invoice_amount DESC
+  tags: [ap, queue, backlog, pack]

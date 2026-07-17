@@ -1,0 +1,66 @@
+# Verified NL<->SQL queries (four-eyes approved at install). SQL uses
+# {{dataset('<name>')}} macros — the only table references query-service's
+# tenant-namespace guard admits.
+- nl_text: "What's our claim approval rate by claim type?"
+  sql_text: >-
+    SELECT claim_type,
+           count(*) AS closed_claims,
+           sum(CASE WHEN disposition = 'approved' THEN 1 ELSE 0 END) AS approved,
+           round(sum(CASE WHEN disposition = 'approved' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS approval_rate
+    FROM {{dataset('cc-claims')}}
+    WHERE status = 'closed'
+    GROUP BY claim_type
+    ORDER BY approval_rate DESC
+  model: construction_claims_core
+  tags: [claims, outcomes, kpi, pack]
+- nl_text: "Which open claims are closest to a contractual response deadline?"
+  sql_text: >-
+    SELECT claim_id, contract_id, claim_type, entitlement_basis, severity,
+           schedule_impact, notice_timely,
+           cast(days_to_deadline AS double) AS days_to_deadline,
+           cast(age_days AS double) AS age_days,
+           cast(claimed_amount AS double) AS claimed_amount
+    FROM {{dataset('cc-claims')}}
+    WHERE status = 'open'
+    ORDER BY days_to_deadline ASC
+  model: construction_claims_core
+  tags: [claims, deadlines, notice, backlog, pack]
+- nl_text: "Repeat-claim contracts — contracts with multiple claims filed"
+  sql_text: >-
+    SELECT contract_id,
+           count(*) AS claim_count,
+           sum(CASE WHEN disposition = 'rejected_no_entitlement' THEN 1 ELSE 0 END) AS prior_rejections,
+           sum(cast(claimed_amount AS double)) AS total_claimed
+    FROM {{dataset('cc-claims')}}
+    GROUP BY contract_id
+    HAVING count(*) >= 2
+    ORDER BY claim_count DESC, total_claimed DESC
+  model: construction_claims_core
+  tags: [claims, repeat_claimants, contracts, pack]
+- nl_text: "Claimed vs approved dollars by entitlement basis"
+  sql_text: >-
+    SELECT entitlement_basis,
+           count(*) AS closed_claims,
+           sum(cast(claimed_amount AS double)) AS claimed,
+           sum(cast(approved_amount AS double)) AS approved,
+           round(sum(cast(approved_amount AS double)) * 1.0
+                 / nullif(sum(cast(claimed_amount AS double)), 0), 4) AS approved_to_claimed_ratio
+    FROM {{dataset('cc-claims')}}
+    WHERE status = 'closed'
+    GROUP BY entitlement_basis
+    ORDER BY claimed DESC
+  model: construction_claims_core
+  tags: [claims, quantum, entitlement, recovery, pack]
+- nl_text: "Schedule-impact exposure on the open claim book"
+  sql_text: >-
+    SELECT schedule_impact,
+           count(*) AS open_claims,
+           sum(cast(claimed_amount AS double)) AS exposure,
+           round(avg(cast(days_to_deadline AS double)), 1) AS avg_days_to_deadline
+    FROM {{dataset('cc-claims')}}
+    WHERE status = 'open'
+    GROUP BY schedule_impact
+    ORDER BY exposure DESC
+  model: construction_claims_core
+  tags: [claims, schedule_impact, delay, exposure, pack]

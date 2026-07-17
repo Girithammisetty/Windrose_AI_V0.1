@@ -1,0 +1,12 @@
+# Pipeline seeds (BRD 26 §4 denial_reversal_probability archetype, expressed
+# against the real pipeline-orchestrator algorithm catalog): a denial-
+# prediction classifier trained on the seed claims table (payer, service
+# line, CPT, amounts, clean/first-pass flags -> denied outcome). The nightly
+# underpayment-scan and AR-prioritization Argo workflows (RCM-FR-050/060) are
+# deferred — they require pack-service pipeline materialization beyond the
+# algorithm-template surface.
+- identity: denial_prediction_classifier
+  name: "Denial prediction (xgboost)"
+  algorithm: xgboost
+  mode: train
+  dataset: rcm_claims

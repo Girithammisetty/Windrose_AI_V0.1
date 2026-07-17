@@ -1,0 +1,11 @@
+product_id,product_name,device_class,therapeutic_area,regulatory_pathway,recall_history
+P-101,VitaFlow IP-200 Infusion Pump,ii,infusion_therapy,510k,yes
+P-102,CardioSense M7 Bedside Monitor,ii,patient_monitoring,510k,no
+P-103,GlucoTrack G4 Continuous Glucose Monitor,ii,diabetes_care,de_novo,no
+P-104,NeuroPulse S2 Implantable Neurostimulator,iii,neurology,pma,no
+P-105,AeroVent V300 Home Ventilator,ii,respiratory,510k,yes
+P-106,OrthoLock Bone Fixation Plate,ii,orthopedics,510k,no
+P-107,PulseLink Telemetry Transmitter,ii,cardiology,510k,no
+P-108,DermaStapler Pro Skin Stapler,i,general_surgery,exempt,no
+P-109,InsuJet Duo Pen Injector,ii,diabetes_care,510k,no
+P-110,CardioValve T1 Transcatheter Valve,iii,cardiology,pma,no

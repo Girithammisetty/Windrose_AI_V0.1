@@ -1,0 +1,68 @@
+# investigation-framework LIBRARY pack (BRD 31) — Core-neutral edition.
+#
+# BRD 31 defines this as a LIBRARY pack: reusable investigation primitives
+# consumed by vertical packs (payer-fwa-siu, banking-aml) via depends_on, with
+# ZERO user-facing surface of its own. Today's Core can materialize the shared
+# role catalog, the investigation-lifecycle disposition vocabulary, and the
+# investigation-methodology grounding corpus (the knowledge INV-FR-090's
+# guardrails encode, as copilot RAG). Everything else — the abstract agent
+# recipes, graph MCP tools, rego guardrails, case schemas, eval sets, and the
+# pack_class/depends_on enforcement itself — awaits pack-service (BRD 23) and
+# is declared under `deferred`, never faked.
+#
+# pack_class/consumers_recommended are BRD-31 manifest fields (INV-FR-002)
+# carried verbatim for forward-compatibility; packctl ignores them.
+pack_manifest: 1
+name: investigation-framework
+version: 1.0.0
+pack_class: library
+consumers_recommended: [payer-fwa-siu, banking-aml]
+publisher: { id: pub-windrose, name: "Windrose Inc." }
+description: >-
+  LIBRARY pack: reusable investigation primitives — shared investigator role
+  catalog, investigation-lifecycle disposition vocabulary, and the
+  investigation-methodology grounding corpus (chain-of-custody, tipping-off,
+  evidence-provenance, two-signature referral discipline) consumed by
+  investigation-heavy vertical packs. No end-user surface of its own.
+categories: [investigation, framework, library, base-pack]
+regulatory: []
+components:
+  dispositions:
+    - { file: "cases/dispositions.yaml", identity: "lifecycle_dispositions" }
+  roles:
+    - { file: "rbac/investigation_roles.yaml", identity: "investigation_roles" }
+  memories:
+    - { file: "memories/methodology.yaml", identity: "methodology" }
+deferred:
+  - kind: agent_recipes
+    reason: >-
+      INV-FR-010..040 abstract 3-specialist agents (pattern_detector,
+      network_graph_investigator, risk_scorer, evidence_gatherer) require
+      agent-runtime graph-module registration + the consumer-pack
+      specialization-point mechanism — both pack-service-tier (BRD 23 BR-12).
+      Today the methodology memories ground the existing case-triage agent
+      with the same investigation discipline.
+  - kind: guardrails
+    reason: >-
+      INV-FR-090 rego guardrails (chain_of_custody, tipping_off_lite,
+      evidence_provenance, two_signature_referral, investigator_identity)
+      await guardrail-service materialization. Their behavioral intent is
+      carried today as grounding memories + Core invariants (four-eyes
+      approvals, WORM audit).
+  - kind: case_schemas
+    reason: >-
+      INV-FR-080 five investigation case schemas await case-service schema
+      materialization; the lifecycle vocabulary ships as dispositions instead.
+  - kind: eval_sets
+    reason: >-
+      INV abstract golden sets await eval-service pack write APIs (rbac
+      catalog gap noted in Core).
+  - kind: ontology
+    reason: "investigation_base ontology registration awaits pack-service."
+  - kind: model_archetypes
+    reason: >-
+      confidence_calibrator + network_anomaly_baseline archetypes await
+      experiment-service archetype APIs; consumer packs ship trainable
+      pipeline seeds instead.
+  - kind: display_labels
+    reason: "Label overlays await BFF label-registry endpoints (BFF-FR-082/088)."

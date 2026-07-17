@@ -1,0 +1,70 @@
+{
+  "pack": "manufacturing-mrb",
+  "version": "1.0.0",
+  "workspace_id": "019f6a77-a307-7576-916e-0b46e3c7cf11",
+  "tenant_id": "019f6a77-9eba-71a1-a490-b8a9a58863bb",
+  "started_at": "2026-07-16T10:27:33Z",
+  "finished_at": "2026-07-16T10:27:53Z",
+  "actions": [
+    {
+      "kind": "datasets",
+      "identity": "nc_nonconformances",
+      "action": "failed",
+      "urn": null,
+      "detail": "complete 500: {\"error\":{\"code\":\"INTERNAL\",\"message\":\"internal error\",\"trace_id\":\"019f6a77-a68c-709d-9521-a68678832c3b\"}}"
+    },
+    {
+      "kind": "datasets",
+      "identity": "nc_lots",
+      "action": "failed",
+      "urn": null,
+      "detail": "complete 500: {\"error\":{\"code\":\"INTERNAL\",\"message\":\"internal error\",\"trace_id\":\"019f6a77-bf88-78fd-bcd4-c01c38c0b9ae\"}}"
+    },
+    {
+      "kind": "datasets",
+      "identity": "nc_suppliers",
+      "action": "failed",
+      "urn": null,
+      "detail": "complete 500: {\"error\":{\"code\":\"INTERNAL\",\"message\":\"internal error\",\"trace_id\":\"019f6a77-d882-799d-be24-4dad1b158962\"}}"
+    }
+  ],
+  "deferred": [
+    {
+      "kind": "guardrails",
+      "reason": "MRB-domain policies (no autonomous disposition of nonconforming material; use-as-is or repair on a critical characteristic must carry documented customer/design-authority concurrence before closure; med-device rework must attach re-verification evidence per ISO 13485 / 21 CFR 820.90; an escape assessment must precede any release of customer-return stock) require guardrail-service / OPA policy materialization, which Core does not expose as a pack surface yet. The behavioral core is partially covered today by Core invariants: every pack-configured agent is proposal-mode with four-eyes approval (agent-runtime), and the agent instructions + disposition taxonomy route final dispositions exclusively to human engineers with the Quality Manager as approver."
+    },
+    {
+      "kind": "agent_recipes",
+      "reason": "Bespoke LangGraph recipes (NC Intake Copilot, MRB Package Builder, Supplier SCAR Drafter, Containment Sweep Sentinel, Escape Notification Assessor) require agent-runtime graph-module registration (BRD 23 BR-12). This pack specializes the existing case-triage + analytics agents via TenantAgentConfig prompt_params + tenant-scope RAG grounding instead."
+    },
+    {
+      "kind": "connection_templates",
+      "reason": "Production read connectors (QMS platforms: ETQ Reliance, MasterControl, Arena, Greenlight Guru; ERP quality modules: SAP QM, Oracle Quality; MES/SPC systems and CMM/inspection-result feeds; PLM for drawing and characteristic data; supplier portals for certs and SCAR responses) require customer credentials and pack-service connector materialization. The pack ships seed datasets in the exact landing shape; production connectors are configured through the product Data > Connections UI."
+    },
+    {
+      "kind": "write_adapters",
+      "reason": "Write adapters (write the approved disposition back to the QMS/ERP nonconformance record, issue a SCAR through the supplier portal, place or lift a stock/ship hold in MES/ERP, generate a concession/waiver request package to the customer or design authority, open an escape notification) execute only behind pack-service's materialization contract and customer credentials; every such write stays proposal-mode with human approval \u2014 no autonomous material release, hold, or supplier action, ever."
+    },
+    {
+      "kind": "eval_sets",
+      "reason": "Golden eval sets (disposition triage accuracy, containment-scope recall on suspect lots, SCAR-routing precision, escape-risk ranking) require eval-service write APIs whose action names are not yet in the rbac canonical catalog (Core follow-up noted in rbac catalog.go)."
+    },
+    {
+      "kind": "ontology",
+      "reason": "Ontology registration (Nonconformance, Lot, Part, Characteristic, Supplier, Program, Disposition, MRBReview, Concession, SCAR, Containment, Escape, CertificateOfConformance) awaits pack-service; entity semantics are carried today by the mrb_core semantic model and dataset schemas."
+    },
+    {
+      "kind": "case_schemas",
+      "reason": "Typed case schemas (nc_intake, mrb_review, supplier_scar, containment_sweep, escape_assessment) await case-service schema materialization; today's cases carry the same fields via display_projection + the disposition taxonomy."
+    },
+    {
+      "kind": "model_archetypes",
+      "reason": "Model archetypes (disposition_confidence, escape_risk_score) await experiment-service archetype APIs; the scoring capability ships as pipeline seeds instead (isolation_forest lot anomaly + xgboost disposition-outcome scorer) with model-governance expectations noted in grounding memories."
+    },
+    {
+      "kind": "display_labels",
+      "reason": "Display-label overlays (\"Nonconformance\", \"MRB queue\", \"Disposition due\", \"Containment active\", entity templates) require the BFF label-registry endpoints (BFF-FR-082/088) which are pack-service-tier features."
+    }
+  ],
+  "result": "failed"
+}

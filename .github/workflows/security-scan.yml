@@ -1,0 +1,102 @@
+# Windrose security scanning — SAST (semgrep, gosec, bandit), dependency CVEs
+# (trivy) and secrets (gitleaks) on every PR and a weekly full sweep. This is
+# the automated rung of the platform's independent-validation ladder; findings
+# gate merges at HIGH severity and land as SARIF in the GitHub Security tab.
+# Local equivalent: security/run_baseline_scan.sh (same tools, same scopes).
+name: security-scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 5 * * 1" # weekly full sweep, Monday 05:00 UTC
+  workflow_dispatch: {}
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  security-events: write # SARIF upload to the Security tab
+
+jobs:
+  semgrep:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install semgrep
+      - name: semgrep (Go/Python/TS security rules)
+        run: |
+          semgrep scan \
+            --config p/golang --config p/python --config p/typescript \
+            --config p/security-audit --config p/secrets \
+            --exclude '*.venv*' --exclude 'node_modules' \
+            --exclude 'deploy/e2e/run' --exclude '**/testdata' \
+            --sarif --output semgrep.sarif --metrics=off \
+            --severity ERROR --error
+      - uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with: { sarif_file: semgrep.sarif, category: semgrep }
+
+  gosec:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version: "1.23" }
+      - run: go install github.com/securego/gosec/v2/cmd/gosec@latest
+      - name: gosec over every Go module
+        run: |
+          set -e
+          fail=0
+          for mod in $(find services libs -name go.mod -maxdepth 3); do
+            dir=$(dirname "$mod")
+            echo "==> $dir"
+            (cd "$dir" && gosec -quiet -severity high ./...) || fail=1
+          done
+          exit $fail
+
+  bandit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install bandit
+      - name: bandit over Python sources (HIGH severity gate)
+        run: |
+          bandit -r services libs deploy packs \
+            -x '**/.venv/**,**/node_modules/**,**/.pytest_cache/**' \
+            --severity-level high
+
+  trivy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: trivy dependency/CVE scan (lockfiles)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scanners: vuln
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+          format: sarif
+          output: trivy.sarif
+      - uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with: { sarif_file: trivy.sarif, category: trivy }
+
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 } # full history so leaked-then-deleted secrets are caught
+      - name: gitleaks secrets scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

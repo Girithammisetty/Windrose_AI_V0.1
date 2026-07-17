@@ -1,0 +1,16 @@
+ar_id,claim_id,patient_account_id,payer_name,payer_type,service_line,aging_bucket,over_90,balance_type,balance_amount,days_outstanding,followup_priority_score,last_action,as_of_month
+AR-4001,CLM-9003,ACCT-7003,UnitedHealthcare,commercial,orthopedics,120_plus,yes,insurance,7350.00,161,92,appeal_submitted,2026-06
+AR-4002,CLM-9007,ACCT-7007,Medicare,medicare,radiology,120_plus,yes,insurance,238.00,133,41,appeal_overturned_awaiting_repay,2026-06
+AR-4003,CLM-9009,ACCT-7009,Aetna,commercial,oncology,120_plus,yes,insurance,6250.00,128,95,appeal_submitted,2026-06
+AR-4004,CLM-9013,ACCT-7013,Cigna,commercial,primary_care,91-120,yes,insurance,214.00,102,38,corrected_claim_resubmitted,2026-06
+AR-4005,CLM-9015,ACCT-7015,Aetna,commercial,physical_therapy,91-120,yes,insurance,112.00,98,22,pending_writeoff_review,2026-06
+AR-4006,CLM-9018,ACCT-7018,Texas Medicaid,medicaid,emergency,61-90,no,insurance,276.00,84,18,writeoff_recommended,2026-06
+AR-4007,CLM-9020,ACCT-7020,Cigna,commercial,primary_care,61-90,no,insurance,153.00,77,35,appeal_submitted,2026-06
+AR-4008,CLM-9021,ACCT-7021,Medicare,medicare,radiology,31-60,no,insurance,463.00,55,44,coverage_review,2026-06
+AR-4009,CLM-9006,ACCT-7006,Cigna,commercial,gastroenterology,91-120,yes,insurance,300.00,118,61,underpayment_dispute_filed,2026-06
+AR-4010,CLM-9017,ACCT-7017,UnitedHealthcare,commercial,oncology,61-90,no,insurance,440.00,68,72,underpayment_dispute_drafted,2026-06
+AR-4011,CLM-9024,ACCT-7024,UnitedHealthcare,commercial,gastroenterology,31-60,no,insurance,330.00,41,58,underpayment_variance_flagged,2026-06
+AR-4012,CLM-9025,ACCT-7025,Cigna,commercial,infusion,31-60,no,insurance,382.00,34,29,status_inquiry_sent,2026-06
+AR-4013,CLM-9004,ACCT-7004,BCBS of Texas,commercial,emergency,120_plus,yes,patient,95.00,148,15,second_statement_sent,2026-06
+AR-4014,CLM-9019,ACCT-7019,BCBS of Texas,commercial,gastroenterology,61-90,no,patient,150.00,72,20,payment_plan_offered,2026-06
+AR-4015,CLM-9026,ACCT-7026,Medicare,medicare,primary_care,0-30,no,insurance,152.00,28,12,awaiting_adjudication,2026-06

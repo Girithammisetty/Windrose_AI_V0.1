@@ -1,0 +1,153 @@
+# Semantic model `inspections_core` — utility asset-inspection triage KPI
+# catalog (immediate-dispatch rate, false-detection rate, verification share,
+# deadline runway, risk-zone and detection-source mix, backlog aging),
+# expressed in the Core semantic grammar (agg whitelist, equality measure
+# filters, derived expr_metric with nullif; join_paths left/many_to_one,
+# acyclic chain findings -> assets -> circuits).
+#
+# entity.table is main.<safe_relation(dataset name)>; `dataset:` refs are
+# rebound to live dataset URNs by packctl at install. Cost/confidence columns
+# ingest as bronze strings, so numeric measures cast(... as double) (the
+# proven claims_core pattern).
+name: inspections_core
+description: >-
+  Electric & gas utility inspection-finding triage KPI model: finding volumes
+  and backlog aging, repair/defer disposition mix, immediate-dispatch and
+  false-detection rates, deadline runway on the open book, wildfire risk-zone
+  and detection-source mix — findings joined to the asset registry and the
+  circuit/district book (HFTD tiers, PSPS history, criticality).
+definition:
+  entities:
+    - name: findings
+      dataset: ui_findings
+      table: main.ui_findings
+      primary_key: [finding_id]
+      dataset_version_policy: { policy: latest }
+    - name: assets
+      dataset: ui_assets
+      table: main.ui_assets
+      primary_key: [asset_id]
+      dataset_version_policy: { policy: latest }
+    - name: circuits
+      dataset: ui_circuits
+      table: main.ui_circuits
+      primary_key: [circuit_id]
+      dataset_version_policy: { policy: latest }
+  join_paths:
+    - name: findings_assets
+      from_entity: findings
+      to_entity: assets
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: asset_id, to_column: asset_id }]
+    - name: assets_circuits
+      from_entity: assets
+      to_entity: circuits
+      join_type: left
+      cardinality: many_to_one
+      "on": [{ from_column: circuit_id, to_column: circuit_id }]
+  dimensions:
+    - { name: finding_type, entity: findings, type: categorical, column: finding_type }
+    - { name: asset_class, entity: findings, type: categorical, column: asset_class }
+    - { name: detection_source, entity: findings, type: categorical, column: detection_source }
+    - { name: risk_zone, entity: findings, type: categorical, column: risk_zone }
+    - { name: priority, entity: findings, type: categorical, column: priority }
+    - { name: severity, entity: findings, type: categorical, column: severity }
+    - { name: finding_status, entity: findings, type: categorical, column: status }
+    - { name: finding_disposition, entity: findings, type: categorical, column: disposition }
+    - { name: deadline_bucket, entity: findings, type: categorical, column: deadline_bucket }
+    - { name: filed_month, entity: findings, type: categorical, column: filed_month }
+    - { name: install_decade, entity: assets, type: categorical, column: install_decade }
+    - { name: material, entity: assets, type: categorical, column: material }
+    - { name: last_inspection, entity: assets, type: categorical, column: last_inspection }
+    - { name: criticality, entity: assets, type: categorical, column: criticality }
+    - { name: service_type, entity: circuits, type: categorical, column: service_type }
+    - { name: region, entity: circuits, type: categorical, column: region }
+    - { name: customers_served, entity: circuits, type: categorical, column: customers_served }
+    - { name: wildfire_risk, entity: circuits, type: categorical, column: wildfire_risk }
+    - { name: psps_history, entity: circuits, type: categorical, column: psps_history }
+    - { name: reliability_tier, entity: circuits, type: categorical, column: reliability_tier }
+  measures:
+    - { name: finding_count, entity: findings, agg: count,
+        description: "Number of inspection findings" }
+    - { name: open_finding_count, entity: findings, agg: count,
+        filters: "status = 'open'",
+        description: "Findings still open (triage/decision backlog)" }
+    - { name: closed_finding_count, entity: findings, agg: count,
+        filters: "status = 'closed'",
+        description: "Findings closed with a final repair/defer decision" }
+    - { name: immediate_dispatch_count, entity: findings, agg: count,
+        filters: "disposition = 'dispatch_immediate_repair'",
+        description: "Findings dispatched for immediate repair (confirmed hazard)" }
+    - { name: false_detection_count, entity: findings, agg: count,
+        filters: "disposition = 'close_false_detection'",
+        description: "Findings closed as false detections (AI/detection artifacts)" }
+    - { name: planned_work_count, entity: findings, agg: count,
+        filters: "disposition = 'schedule_planned_work'",
+        description: "Findings scheduled into the planned-work program" }
+    - { name: field_verification_count, entity: findings, agg: count,
+        filters: "disposition = 'request_field_verification'",
+        description: "Findings sent to field verification (evidence inconclusive)" }
+    - { name: monitored_stable_count, entity: findings, agg: count,
+        filters: "disposition = 'close_monitored_stable'",
+        description: "Findings closed as monitored, condition stable" }
+    - { name: immediate_priority_count, entity: findings, agg: count,
+        filters: "priority = 'immediate'",
+        description: "Findings triaged at immediate priority (make-safe tier)" }
+    - { name: vegetation_finding_count, entity: findings, agg: count,
+        filters: "finding_type = 'vegetation_encroachment'",
+        description: "Vegetation-encroachment findings (clearance-deficit surface)" }
+    - { name: leak_finding_count, entity: findings, agg: count,
+        filters: "finding_type = 'leak_indication'",
+        description: "Gas leak-indication findings (leak-grading workflow)" }
+    - { name: drone_ai_finding_count, entity: findings, agg: count,
+        filters: "detection_source = 'drone_ai'",
+        description: "Findings raised by the drone-AI detection pipeline" }
+    - { name: tier3_finding_count, entity: findings, agg: count,
+        filters: "risk_zone = 'hftd_tier3'",
+        description: "Findings in Tier-3 high fire-threat districts (extreme risk)" }
+    - { name: avg_finding_age_days, entity: findings, agg: avg,
+        expr: "cast(age_days as double)", format: decimal,
+        description: "Average finding age in days (cycle time / backlog aging)" }
+    - { name: total_est_repair_cost, entity: findings, agg: sum,
+        expr: "cast(est_repair_cost as double)", format: decimal,
+        description: "Total estimated repair cost across findings" }
+    - { name: avg_est_repair_cost, entity: findings, agg: avg,
+        expr: "cast(est_repair_cost as double)", format: decimal,
+        description: "Average estimated repair cost per finding" }
+    - { name: avg_detection_confidence, entity: findings, agg: avg,
+        expr: "cast(detection_confidence as double)", format: decimal,
+        description: "Average detection confidence score (detector quality watch)" }
+    - { name: asset_count, entity: assets, agg: count,
+        description: "Number of assets in the inspection registry" }
+    - { name: critical_asset_count, entity: assets, agg: count,
+        filters: "criticality = 'critical'",
+        description: "Assets in the critical tier (highest consequence of failure)" }
+    - { name: overdue_inspection_asset_count, entity: assets, agg: count,
+        filters: "last_inspection = 'over_3yr'",
+        description: "Assets not inspected in over 3 years (cycle-compliance watch)" }
+    - { name: circuit_count, entity: circuits, agg: count,
+        description: "Number of circuits/districts in the service territory" }
+    - { name: psps_circuit_count, entity: circuits, agg: count,
+        filters: "psps_history = 'yes'",
+        description: "Circuits with public-safety power-shutoff history" }
+    - { name: immediate_dispatch_rate,
+        expr_metric: "immediate_dispatch_count / nullif(closed_finding_count, 0)",
+        format: percent,
+        description: "Findings dispatched for immediate repair over all closures" }
+    - { name: false_detection_rate,
+        expr_metric: "false_detection_count / nullif(closed_finding_count, 0)",
+        format: percent,
+        description: "Findings closed as false detections over all closures (detector precision proxy)" }
+    - { name: verification_share,
+        expr_metric: "field_verification_count / nullif(closed_finding_count, 0)",
+        format: percent,
+        description: "Findings routed to field verification over all closures" }
+    - { name: tier3_finding_share,
+        expr_metric: "tier3_finding_count / nullif(finding_count, 0)",
+        format: percent,
+        description: "Share of findings located in Tier-3 high fire-threat districts" }
+    - { name: drone_ai_share,
+        expr_metric: "drone_ai_finding_count / nullif(finding_count, 0)",
+        format: percent,
+        description: "Share of findings raised by the drone-AI detection pipeline" }

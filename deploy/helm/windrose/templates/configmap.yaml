@@ -1,0 +1,11 @@
+{{- /* windrose-config — non-secret settings consumed by every Deployment. */}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: windrose-config
+  labels:
+    {{- include "windrose.labels" . | nindent 4 }}
+data:
+  {{- range $k, $v := .Values.config }}
+  {{ $k }}: {{ $v | quote }}
+  {{- end }}

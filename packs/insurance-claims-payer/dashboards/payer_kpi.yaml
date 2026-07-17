@@ -1,0 +1,56 @@
+# Payer KPI dashboard (INS-FR-070 #1): top-line claim volumes, denial mix,
+# paid amounts. Chart families restricted to the render-verified set
+# (vertical_bar / grid / pie / line).
+name: "Payer KPI"
+module: insights
+semantic_model: payer_claims
+description: >-
+  Top-line payer KPIs (BRD 24): claim volumes and paid amounts by product and
+  service line, denial mix by reason code.
+tags: [insurance, payer, claims, pack]
+charts:
+  - name: "Claims by product type"
+    chart_type: vertical_bar_chart
+    description: "Claim volume by product type"
+    config:
+      x: { dimension: product_type }
+      y: [ { measure: claim_count, agg_fn: count } ]
+    sources: [ { measure: claim_count } ]
+    w: 6
+    h: 4
+  - name: "Paid amount by service line"
+    chart_type: vertical_bar_chart
+    description: "Total paid by service line"
+    config:
+      x: { dimension: service_line }
+      y: [ { measure: total_paid, agg_fn: sum } ]
+    sources: [ { measure: total_paid } ]
+    w: 6
+    h: 4
+  - name: "Claim status mix"
+    chart_type: pie_chart
+    description: "Paid vs denied claim volumes"
+    config:
+      x: { dimension: claim_status }
+      y: [ { measure: claim_count, agg_fn: count } ]
+    sources: [ { measure: claim_count } ]
+    w: 6
+    h: 4
+  - name: "Claims grid by service line"
+    chart_type: grid_chart
+    description: "Claims, denials-in-status, billed and paid by service line"
+    config:
+      columns: [service_line, claim_count, denied_claim_count, total_billed, total_paid]
+      x: { dimension: service_line }
+      y:
+        - { measure: claim_count, agg_fn: count }
+        - { measure: denied_claim_count, agg_fn: count }
+        - { measure: total_billed, agg_fn: sum }
+        - { measure: total_paid, agg_fn: sum }
+    sources:
+      - { measure: claim_count }
+      - { measure: denied_claim_count }
+      - { measure: total_billed }
+      - { measure: total_paid }
+    w: 12
+    h: 4

@@ -1,0 +1,70 @@
+# Complaint Handling Center: complaint mix by event type, backlog aging,
+# disposition outcome mix, intake trend, and the per-source quality grid.
+# Chart families restricted to the render-verified set (vertical_bar / grid /
+# pie / line); expr_metric measures (rates) are query/NL surfaces, never
+# charted directly.
+name: "Complaint Handling Center"
+module: insights
+semantic_model: complaints_core
+description: >-
+  Top-line complaint-handling KPIs (21 CFR 820.198): complaint volumes by
+  event type, investigation backlog aging by severity, human disposition
+  outcome mix, monthly intake trend, and intake quality by complaint source.
+tags: [medtech, complaints, quality, pack]
+charts:
+  - name: "Complaints by event type"
+    chart_type: vertical_bar_chart
+    description: "Complaint volume by event type (malfunction, serious injury, death, use error, no harm)"
+    config:
+      x: { dimension: event_type }
+      y: [ { measure: complaint_count, agg_fn: count } ]
+    sources: [ { measure: complaint_count } ]
+    w: 6
+    h: 4
+  - name: "Backlog aging by severity"
+    chart_type: vertical_bar_chart
+    description: "Average complaint age in days by severity (investigation cycle-time watch)"
+    config:
+      x: { dimension: severity }
+      y: [ { measure: avg_complaint_age_days, agg_fn: avg } ]
+    sources: [ { measure: avg_complaint_age_days } ]
+    w: 6
+    h: 4
+  - name: "Disposition outcome mix"
+    chart_type: pie_chart
+    description: "MDR filed vs not reportable vs CAPA vs return-info vs duplicate vs pending"
+    config:
+      x: { dimension: complaint_disposition }
+      y: [ { measure: complaint_count, agg_fn: count } ]
+    sources: [ { measure: complaint_count } ]
+    w: 6
+    h: 4
+  - name: "Complaint intake by month"
+    chart_type: line_chart
+    description: "Complaints received trend by filed month"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: complaint_count, agg_fn: count } ]
+    sources: [ { measure: complaint_count } ]
+    w: 6
+    h: 4
+  - name: "Intake-source worklist grid"
+    chart_type: grid_chart
+    description: "Complaints, open backlog, MDR filings, CAPA escalations and duplicates by source"
+    config:
+      columns: [complaint_source, complaint_count, open_complaint_count, mdr_filed_count, capa_opened_count, duplicate_closed_count]
+      x: { dimension: complaint_source }
+      y:
+        - { measure: complaint_count, agg_fn: count }
+        - { measure: open_complaint_count, agg_fn: count }
+        - { measure: mdr_filed_count, agg_fn: count }
+        - { measure: capa_opened_count, agg_fn: count }
+        - { measure: duplicate_closed_count, agg_fn: count }
+    sources:
+      - { measure: complaint_count }
+      - { measure: open_complaint_count }
+      - { measure: mdr_filed_count }
+      - { measure: capa_opened_count }
+      - { measure: duplicate_closed_count }
+    w: 12
+    h: 4

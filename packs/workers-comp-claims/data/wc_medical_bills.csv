@@ -1,0 +1,31 @@
+bill_id,claim_id,provider_name,provider_type,service_category,billed_amount,paid_amount,bill_month,fee_schedule_flag
+B-8001,WC-5001,Lone Star Regional Medical Center,hospital,surgery,21400.00,14800.00,2026-03,within
+B-8002,WC-5001,Hill Country Physical Therapy,physical_therapy,physical_therapy,2600.00,2210.00,2026-04,within
+B-8003,WC-5002,Prairie OccuHealth Clinic,occupational_clinic,initial_evaluation,480.00,395.00,2026-03,within
+B-8004,WC-5003,BayView Occupational Medicine,occupational_clinic,initial_evaluation,520.00,430.00,2026-03,within
+B-8005,WC-5003,Meridian Spine & Pain Center,pain_management,injection_procedure,4850.00,1690.00,2026-04,above
+B-8006,WC-5003,Golden State Rehab Partners,physical_therapy,physical_therapy,1900.00,1620.00,2026-04,within
+B-8007,WC-5004,Coral Bay OccuCare,occupational_clinic,initial_evaluation,350.00,310.00,2026-03,within
+B-8008,WC-5005,Rio Grande Imaging Center,imaging_center,imaging,2300.00,1140.00,2026-04,above
+B-8009,WC-5005,Meridian Spine & Pain Center,pain_management,injection_procedure,5200.00,1740.00,2026-05,above
+B-8010,WC-5006,Everglade WorkMed Clinic,occupational_clinic,initial_evaluation,410.00,360.00,2026-03,within
+B-8011,WC-5007,Lakeshore OccuHealth,occupational_clinic,initial_evaluation,495.00,420.00,2026-04,within
+B-8012,WC-5007,Windy City Therapy Group,physical_therapy,physical_therapy,2150.00,1980.00,2026-05,within
+B-8013,WC-5008,Keystone General Hospital,hospital,surgery,34600.00,28400.00,2026-03,within
+B-8014,WC-5008,Alleghany Orthopedic Associates,orthopedic_surgery,follow_up_visit,780.00,645.00,2026-04,within
+B-8015,WC-5008,Steel City Hand Therapy,physical_therapy,physical_therapy,3100.00,2760.00,2026-05,within
+B-8016,WC-5009,BayView Occupational Medicine,occupational_clinic,initial_evaluation,390.00,340.00,2026-04,within
+B-8017,WC-5010,Pacific Ergonomic Health,occupational_clinic,initial_evaluation,460.00,410.00,2026-04,within
+B-8018,WC-5010,WellSpring Pharmacy Services,pharmacy,dme,310.00,265.00,2026-05,within
+B-8019,WC-5011,Sutter Bay Community Hospital,hospital,imaging,3400.00,2950.00,2026-04,within
+B-8020,WC-5011,AlignRight Chiropractic,chiropractic,follow_up_visit,850.00,310.00,2026-05,above
+B-8021,WC-5012,Meridian Spine & Pain Center,pain_management,injection_procedure,4700.00,1580.00,2026-05,above
+B-8022,WC-5014,Gulf Coast OccuMed,occupational_clinic,initial_evaluation,505.00,430.00,2026-05,within
+B-8023,WC-5014,Lone Star Rehab Institute,physical_therapy,physical_therapy,1750.00,1560.00,2026-06,within
+B-8024,WC-5016,Lone Star Regional Medical Center,hospital,imaging,4100.00,3520.00,2026-05,within
+B-8025,WC-6001,Gulf Coast OccuMed,occupational_clinic,initial_evaluation,445.00,380.00,2026-06,within
+B-8026,WC-6002,Lakeshore Diagnostic Imaging,imaging_center,imaging,1850.00,1590.00,2026-06,within
+B-8027,WC-6003,Lone Star Regional Medical Center,hospital,surgery,58200.00,49800.00,2026-06,within
+B-8028,WC-6003,Lone Star Regional Medical Center,hospital,imaging,6900.00,5870.00,2026-06,within
+B-8029,WC-6005,Meridian Spine & Pain Center,pain_management,injection_procedure,5350.00,1720.00,2026-06,above
+B-8030,WC-6005,Meridian Spine & Pain Center,pain_management,follow_up_visit,1450.00,430.00,2026-06,above

@@ -1,0 +1,31 @@
+# Disposition taxonomy for the MRB nonconformance workflow. Categories are
+# the Core's closed set {true_positive,false_positive,benign,inconclusive,
+# other} (CASE-FR-020), mapped to MRB semantics as follows:
+#   - rework_to_spec -> true_positive: the reported defect is REAL and the
+#     material is corrected to drawing (rework must attach re-verification
+#     evidence — the analyst note records the re-inspection plan).
+#   - no_defect_found_release -> false_positive: investigation shows the NC
+#     report itself was wrong (measurement/paperwork error) — parts conform
+#     and release to stock; the note records the objective evidence.
+#   - use_as_is_engineering_disposition -> other: the defect is real but the
+#     material is accepted by documented engineering justification /
+#     concession; on critical characteristics this closure additionally
+#     requires customer or design-authority approval, so it fits neither
+#     true-positive-corrected nor false-positive — it is its own governed
+#     outcome ("other").
+#   - quarantine_pending_analysis -> inconclusive: the evidence does not yet
+#     support a final disposition — containment holds while root-cause /
+#     escape analysis completes.
+#   - return_to_supplier_scar -> benign: the defect is genuine but ownership
+#     transfers to the supplier's corrective-action system (SCAR); the
+#     material exits our MRB workflow without internal material action — the
+#     closest fit in the closed set to "resolved outside our process"
+#     (mirrors card-disputes' close_merchant_credited).
+# requires_note on every code: MRB minutes, justifications, re-verification
+# plans and SCAR references are the audit record an AS9100 / ISO 13485
+# examiner reads.
+- { code: rework_to_spec,                    label: "Rework to specification — re-verification required",          category: true_positive,  requires_note: true }
+- { code: no_defect_found_release,           label: "Release — no defect found, parts conform",                    category: false_positive, requires_note: true }
+- { code: use_as_is_engineering_disposition, label: "Use as is — engineering disposition / customer concession",   category: other,          requires_note: true }
+- { code: quarantine_pending_analysis,       label: "Quarantine — containment pending root-cause / escape analysis", category: inconclusive,   requires_note: true }
+- { code: return_to_supplier_scar,           label: "Return to supplier — issue SCAR",                             category: benign,         requires_note: true }

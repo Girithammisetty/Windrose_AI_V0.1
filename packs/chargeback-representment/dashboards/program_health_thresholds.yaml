@@ -1,0 +1,69 @@
+# Program Health & Thresholds: network mix, friendly-fraud exposure,
+# fight-economics posture and the fraud-family trend that feeds the
+# Visa/Mastercard monitoring-program ratios (VDMP/VFMP, ECM/HECM).
+name: "Program Health & Thresholds"
+module: insights
+semantic_model: representment_core
+description: >-
+  Dispute-program health: chargeback volume by network, first-party
+  (friendly-fraud) exposure, fight-economics posture, the fraud-family
+  intake trend that drives monitoring-program ratios, and the per-network
+  program grid.
+tags: [payments, chargebacks, monitoring_programs, friendly_fraud, pack]
+charts:
+  - name: "Chargebacks by network"
+    chart_type: vertical_bar_chart
+    description: "Incoming chargebacks split by card network (monitoring programs are per-network)"
+    config:
+      x: { dimension: network }
+      y: [ { measure: chargeback_count, agg_fn: count } ]
+    sources: [ { measure: chargeback_count } ]
+    w: 6
+    h: 4
+  - name: "First-party suspect mix"
+    chart_type: pie_chart
+    description: "Chargebacks with vs without first-party (friendly-fraud) indicators"
+    config:
+      x: { dimension: first_party_suspect }
+      y: [ { measure: chargeback_count, agg_fn: count } ]
+    sources: [ { measure: chargeback_count } ]
+    w: 6
+    h: 4
+  - name: "Fight economics mix"
+    chart_type: vertical_bar_chart
+    description: "Chargebacks above vs below the fight-economics threshold (fees vs expected recovery)"
+    config:
+      x: { dimension: fight_economics }
+      y: [ { measure: chargeback_count, agg_fn: count } ]
+    sources: [ { measure: chargeback_count } ]
+    w: 6
+    h: 4
+  - name: "Fraud-family intake trend"
+    chart_type: line_chart
+    description: "Fraud-family chargebacks (Visa 10.4 / MC 4837) filed by month — the monitoring-program numerator"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: fraud_family_count, agg_fn: count } ]
+    sources: [ { measure: fraud_family_count } ]
+    w: 6
+    h: 4
+  - name: "Network program-health grid"
+    chart_type: grid_chart
+    description: "Volume, fraud family, first-party suspects, accepted liability and dollars by network"
+    config:
+      columns: [network, chargeback_count, fraud_family_count, first_party_suspect_count, accepted_liability_count, total_chargeback_amount]
+      x: { dimension: network }
+      y:
+        - { measure: chargeback_count, agg_fn: count }
+        - { measure: fraud_family_count, agg_fn: count }
+        - { measure: first_party_suspect_count, agg_fn: count }
+        - { measure: accepted_liability_count, agg_fn: count }
+        - { measure: total_chargeback_amount, agg_fn: sum }
+    sources:
+      - { measure: chargeback_count }
+      - { measure: fraud_family_count }
+      - { measure: first_party_suspect_count }
+      - { measure: accepted_liability_count }
+      - { measure: total_chargeback_amount }
+    w: 12
+    h: 4

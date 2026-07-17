@@ -1,0 +1,66 @@
+# Medical Bill Review: fee-schedule compliance and the medical-spend surface
+# (provider types, service categories) that drives claim cost.
+name: "Medical Bill Review"
+module: insights
+semantic_model: wc_claims_core
+description: >-
+  Medical-spend control: billed dollars by provider type, fee-schedule
+  compliance mix, bill volume by service category, monthly billed trend, and
+  the provider-type review grid (bills, above-schedule flags, billed vs
+  allowed dollars).
+tags: [insurance, workers_comp, bill_review, fee_schedule, pack]
+charts:
+  - name: "Billed dollars by provider type"
+    chart_type: vertical_bar_chart
+    description: "Provider-billed dollars split by provider type (hospital, PT, pain management, ...)"
+    config:
+      x: { dimension: provider_type }
+      y: [ { measure: total_billed_amount, agg_fn: sum } ]
+    sources: [ { measure: total_billed_amount } ]
+    w: 6
+    h: 4
+  - name: "Fee-schedule compliance mix"
+    chart_type: pie_chart
+    description: "Bills priced within vs above the state fee schedule"
+    config:
+      x: { dimension: fee_schedule_flag }
+      y: [ { measure: bill_count, agg_fn: count } ]
+    sources: [ { measure: bill_count } ]
+    w: 6
+    h: 4
+  - name: "Bills by service category"
+    chart_type: vertical_bar_chart
+    description: "Bill volume by service category (evaluation, surgery, PT, imaging, injections, ...)"
+    config:
+      x: { dimension: service_category }
+      y: [ { measure: bill_count, agg_fn: count } ]
+    sources: [ { measure: bill_count } ]
+    w: 6
+    h: 4
+  - name: "Billed dollars by month"
+    chart_type: line_chart
+    description: "Provider-billed dollars trend by bill month"
+    config:
+      x: { dimension: bill_month }
+      y: [ { measure: total_billed_amount, agg_fn: sum } ]
+    sources: [ { measure: total_billed_amount } ]
+    w: 6
+    h: 4
+  - name: "Provider-type review grid"
+    chart_type: grid_chart
+    description: "Bills, above-fee-schedule flags, billed and allowed dollars by provider type"
+    config:
+      columns: [provider_type, bill_count, above_fee_schedule_count, total_billed_amount, total_bill_paid_amount]
+      x: { dimension: provider_type }
+      y:
+        - { measure: bill_count, agg_fn: count }
+        - { measure: above_fee_schedule_count, agg_fn: count }
+        - { measure: total_billed_amount, agg_fn: sum }
+        - { measure: total_bill_paid_amount, agg_fn: sum }
+    sources:
+      - { measure: bill_count }
+      - { measure: above_fee_schedule_count }
+      - { measure: total_billed_amount }
+      - { measure: total_bill_paid_amount }
+    w: 12
+    h: 4

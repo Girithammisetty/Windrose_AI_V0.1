@@ -1,0 +1,70 @@
+{
+  "pack": "seller-vetting",
+  "version": "1.0.0",
+  "workspace_id": "019f6a76-041c-73f3-9e60-08df10523dc0",
+  "tenant_id": "019f6a76-03c6-7c8e-9ba5-b6d939688877",
+  "started_at": "2026-07-16T10:25:47Z",
+  "finished_at": "2026-07-16T10:26:06Z",
+  "actions": [
+    {
+      "kind": "datasets",
+      "identity": "sv_sellers",
+      "action": "failed",
+      "urn": null,
+      "detail": "complete 500: {\"error\":{\"code\":\"INTERNAL\",\"message\":\"internal error\",\"trace_id\":\"019f6a76-07a2-7f06-b0e2-98cf6ee4b680\"}}"
+    },
+    {
+      "kind": "datasets",
+      "identity": "sv_listings",
+      "action": "failed",
+      "urn": null,
+      "detail": "complete 500: {\"error\":{\"code\":\"INTERNAL\",\"message\":\"internal error\",\"trace_id\":\"019f6a76-20ef-7fa6-be13-929487a4b56e\"}}"
+    },
+    {
+      "kind": "datasets",
+      "identity": "sv_reviews",
+      "action": "failed",
+      "urn": null,
+      "detail": "complete 500: {\"error\":{\"code\":\"INTERNAL\",\"message\":\"internal error\",\"trace_id\":\"019f6a76-39ec-7fbb-babc-a47d3a567237\"}}"
+    }
+  ],
+  "deferred": [
+    {
+      "kind": "guardrails",
+      "reason": "Enforcement-domain policies (no takedown promised to a claimant before the human determination; claim rejections must record why the evidence failed; network suspensions must name every corroborated linkage; no reinstatement without verified invoices; over-enforcement watch on lawful resellers) require guardrail-service / OPA policy materialization, which Core does not expose as a pack surface yet. The behavioral core is partially covered today by Core invariants: every pack-configured agent is proposal-mode with four-eyes approval (agent-runtime), and the agent instructions + disposition taxonomy route final determinations exclusively to human analysts with the Marketplace Trust Manager as approver."
+    },
+    {
+      "kind": "agent_recipes",
+      "reason": "Bespoke LangGraph recipes (Onboarding KYB Verifier, Counterfeit Signal-Stack Scorer, IP Claim Evidence Examiner, Ring Linkage Mapper, Reinstatement Plan-of-Action Reviewer) require agent-runtime graph-module registration (BRD 23 BR-12). This pack specializes the existing case-triage + analytics agents via TenantAgentConfig prompt_params + tenant-scope RAG grounding instead."
+    },
+    {
+      "kind": "connection_templates",
+      "reason": "Production read connectors (marketplace catalog and seller-account APIs; brand-registry claim intake; KYB data providers and business registries; device-fingerprint/fraud platforms; test-buy program logistics; product-safety recall feeds) require customer credentials and pack-service connector materialization. The pack ships seed datasets in the exact landing shape; production connectors are configured through the product Data > Connections UI."
+    },
+    {
+      "kind": "write_adapters",
+      "reason": "Write adapters (remove/suppress a listing, suspend or reinstate a seller account, hold or release payout disbursements, send claimant/seller notices and counter-notice correspondence) execute only behind pack-service's materialization contract and customer credentials; every such write stays proposal-mode with human approval \u2014 no autonomous takedown, suspension, or payout hold, ever."
+    },
+    {
+      "kind": "eval_sets",
+      "reason": "Golden eval sets (counterfeit triage, claim-evidence sufficiency, ring-linkage confirmation, reinstatement plan-of-action grading) require eval-service write APIs whose action names are not yet in the rbac canonical catalog (Core follow-up noted in rbac catalog.go)."
+    },
+    {
+      "kind": "ontology",
+      "reason": "Ontology registration (Seller, Listing, Brand, RightsHolder, Claim, TestBuy, KYBVerification, LinkedAccountCluster, EnforcementAction, ReinstatementPlan, DeadlineClock) awaits pack-service; entity semantics are carried today by the seller_vetting_core semantic model and dataset schemas."
+    },
+    {
+      "kind": "case_schemas",
+      "reason": "Typed case schemas (onboarding_vetting, counterfeit_takedown, ip_claim_review, ring_investigation, reinstatement_review) await case-service schema materialization; today's cases carry the same fields via display_projection + the disposition taxonomy."
+    },
+    {
+      "kind": "model_archetypes",
+      "reason": "Model archetypes (counterfeit_signal_score, ring_linkage_confidence) await experiment-service archetype APIs; the scoring capability ships as pipeline seeds instead (isolation_forest listing anomaly + xgboost review-outcome scorer) with model-governance expectations noted in grounding memories."
+    },
+    {
+      "kind": "display_labels",
+      "reason": "Display-label overlays (\"Takedown\", \"Ring watch\", \"KYB mismatch\", \"Counter-notice window\", entity templates) require the BFF label-registry endpoints (BFF-FR-082/088) which are pack-service-tier features."
+    }
+  ],
+  "result": "failed"
+}
