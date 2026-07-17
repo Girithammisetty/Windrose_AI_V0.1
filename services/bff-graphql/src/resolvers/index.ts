@@ -342,6 +342,14 @@ export const resolvers = {
       return toConnection(page, (d) => mapUser(ctx, d));
     },
 
+    // Member-safe assignee picker (no admin scope) — identity forwards the
+    // caller's JWT and enforces the member-safe /users/assignable tier.
+    assignableUsers: async (_p: unknown, a: ConnectionArgs, ctx: GraphQLContext) => {
+      const { limit, cursor } = toLimitCursor(a, ctx.config.limits);
+      const page = await ctx.clients.identity.assignableUsers(limit, cursor);
+      return toConnection(page, (d) => mapUser(ctx, d));
+    },
+
     serviceAccounts: async (_p: unknown, a: ConnectionArgs, ctx: GraphQLContext) => {
       const { limit, cursor } = toLimitCursor(a, ctx.config.limits);
       const page = await ctx.clients.identity.serviceAccounts(limit, cursor);
@@ -777,6 +785,53 @@ export const resolvers = {
       };
     },
 
+    // Resolve a chart selection to the real detail-row browse behind it, so a
+    // dashboard drill can open cases anchored to (dataset_urn, row_pk). Only
+    // semantic-measure charts resolve (increment 1); saved-query/other -> null.
+    chartDrillTarget: async (
+      _p: unknown,
+      a: { chartId: string; dimension: string },
+      ctx: GraphQLContext,
+    ): Promise<{ datasetId: string; datasetUrn: string; column: string } | null> => {
+      const chart = await ctx.clients.chart.chart(a.chartId).catch(() => null);
+      if (!chart) return null;
+      const sources = (chart.sources ?? [])
+        .slice()
+        .sort((x, y) => (x.position ?? 0) - (y.position ?? 0));
+      const primary = sources[0];
+      if (!primary || primary.source_type !== "semantic_measure") return null;
+
+      const dm = (chart.display_meta ?? {}) as Record<string, unknown>;
+      const cfg = (chart.config ?? {}) as Record<string, unknown>;
+      const modelName = (dm.semantic_model as string) ?? (cfg.model as string);
+      if (!modelName) return null;
+      const wsId = (dm.workspace_id as string) || undefined;
+
+      const models = await ctx.clients.semantic.listModels(wsId, 200).catch(() => null);
+      const model = (models?.data ?? []).find((m) => m.name === modelName);
+      if (!model) return null;
+
+      const defRes = await ctx.clients.semantic.definition(model.id).catch(() => null);
+      const def = (defRes?.definition ?? {}) as {
+        entities?: { name?: string; dataset_urn?: string }[];
+        dimensions?: { name?: string; column?: string; entity?: string }[];
+      };
+      const dim = (def.dimensions ?? []).find((x) => x.name === a.dimension);
+      if (!dim) return null;
+      const column = dim.column ?? dim.name;
+      if (!column) return null;
+
+      const entities = def.entities ?? [];
+      const entity = entities.find((e) => e.name === dim.entity) ?? entities[0];
+      const datasetUrn = entity?.dataset_urn;
+      if (!datasetUrn) return null;
+      const m = /dataset\/([0-9a-fA-F-]+)$/.exec(datasetUrn);
+      const datasetId = m?.[1];
+      if (!datasetId) return null;
+
+      return { datasetId, datasetUrn, column };
+    },
+
     datasetAggregate: async (
       _p: unknown,
       a: { datasetId: string; dimension: string; measure?: string | null; agg: string; limit?: number },
@@ -985,6 +1040,31 @@ export const resolvers = {
 
     agentRun: (_p: unknown, a: { id: string }, ctx: GraphQLContext) =>
       nullOn404(ctx.clients.agent.run(a.id).then((d) => mapAgentRun(ctx, d))),
+
+    // Correction->retrain loop stats (agent-runtime M1 transcripts + M2 SFT
+    // datasets). Counts are honest page counts: the service caps list pages
+    // at 200, so `capped` tells the UI to render "200+" instead of a lie.
+    learningLoop: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      const CAP = 200;
+      const [all, decided, datasets] = await Promise.all([
+        ctx.clients.agent.transcripts({ limit: CAP }),
+        ctx.clients.agent.transcripts({ decided: true, limit: CAP }),
+        ctx.clients.agent.sftDatasets({ limit: 50 }),
+      ]);
+      const ds = (datasets.data ?? []).slice().sort((a, b) =>
+        (b.created_at ?? "").localeCompare(a.created_at ?? ""));
+      const latest = ds[0];
+      return {
+        transcriptsCaptured: (all.data ?? []).length,
+        correctionsCaptured: (decided.data ?? []).length,
+        datasetCount: ds.length,
+        latestDatasetAgentKey: latest?.agent_key ?? null,
+        latestDatasetVersion: latest?.version ?? null,
+        latestDatasetExamples: latest?.row_count ?? null,
+        latestDatasetAt: latest?.created_at ?? null,
+        capped: (all.data ?? []).length >= CAP,
+      };
+    },
 
     agentKillSwitches: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       const rows = await ctx.clients.agent.killSwitches();
@@ -4152,6 +4232,21 @@ export const resolvers = {
 
     proposals: (parent: { urn: string }, _a: unknown, ctx: GraphQLContext) =>
       ctx.loaders.proposalsByResourceUrn.load(parent.urn).then((ps) => ps.map((p) => mapProposal(ctx, p))),
+
+    // Evidence attachments (task #77). Resolved on demand (detail path only) —
+    // one case-service call per case; the UI requests it only on the detail page.
+    evidence: async (parent: { id: string }, _a: unknown, ctx: GraphQLContext) => {
+      const rows = await ctx.clients.case.listEvidence(parent.id);
+      return rows.map((e) => ({
+        id: e.id,
+        caseId: e.case_id ?? parent.id,
+        filename: e.filename ?? "evidence",
+        contentType: e.content_type ?? "application/octet-stream",
+        sizeBytes: e.size_bytes ?? 0,
+        uploadedBy: e.uploaded_by ?? null,
+        createdAt: e.created_at ?? null,
+      }));
+    },
   },
 
   // ==== Tier 4b: case ops field resolvers =====================================

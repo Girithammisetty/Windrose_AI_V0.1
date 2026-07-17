@@ -1581,6 +1581,9 @@ export const typeDefs = gql`
     sourceDataset: Dataset
     """Copilot proposals targeting this case (agent-runtime, resource-urn loader)."""
     proposals: [Proposal!]!
+    """Pack/dataset-provided evidence summary (key -> value; 'note' carries the
+    investigator briefing). Present on BOTH list rows and detail."""
+    displayProjection: JSON
     # ---- Tier 4b: caseView detail fields (null on search-projection list rows).
     description: String
     """The disposition recorded by resolveCase (null until resolved)."""
@@ -1593,6 +1596,22 @@ export const typeDefs = gql`
     caseVersion: Int
     """How many times the case has been (re)assigned — SLA policy caps this."""
     reassignCount: Int
+    """Uploaded evidence attachments (case-service GET /cases/{id}/evidence).
+    Resolved on the detail path only; needs case.evidence.read. Download the
+    bytes via the ui-web /api/case-evidence proxy (binary, not GraphQL)."""
+    evidence: [CaseEvidence!]!
+  }
+
+  """One uploaded evidence file on a case (task #77). Metadata only — the bytes
+  live in object storage; fetch them via /api/case-evidence/{caseId}/{id}."""
+  type CaseEvidence {
+    id: ID!
+    caseId: ID!
+    filename: String!
+    contentType: String!
+    sizeBytes: Float!
+    uploadedBy: String
+    createdAt: DateTime
   }
 
   type CaseConnection { nodes: [Case!]! pageInfo: PageInfo! }
@@ -1801,6 +1820,16 @@ export const typeDefs = gql`
     deduplicated: [DeduplicatedRow!]!
   }
 
+  """A dashboard chart's drill target: the real dataset behind the chart and the
+  physical column a group-by dimension maps to. Feeds the dataset-rows browse so
+  a manager can turn a chart selection (e.g. payer=Cigna) into cases anchored to
+  real (dataset_urn, row_pk)."""
+  type ChartDrillTarget {
+    datasetId: ID!
+    datasetUrn: String!
+    column: String!
+  }
+
   # ============================ agentic (agent-runtime) =======================
   """An agent-suggested write awaiting a human decision (agent-runtime GET /proposals/{id})."""
   type Proposal implements Node {
@@ -1849,6 +1878,25 @@ export const typeDefs = gql`
   type TokenUsage { inputTokens: Int outputTokens: Int }
 
   type ProposalConnection { nodes: [Proposal!]! pageInfo: PageInfo! }
+
+  """Correction->retrain loop stats: what the tenant's decisions have taught
+  the system so far (agent-runtime transcript corpus + curated SFT datasets)."""
+  type LearningLoopStats {
+    """Agent-run transcripts captured into the governed corpus (M1)."""
+    transcriptsCaptured: Int!
+    """Transcripts carrying a human decision/correction — the training signal."""
+    correctionsCaptured: Int!
+    """Curated, versioned SFT datasets (M2)."""
+    datasetCount: Int!
+    """Latest curated dataset, if any."""
+    latestDatasetAgentKey: String
+    latestDatasetVersion: Int
+    """Gold input->corrected-output examples in the latest dataset."""
+    latestDatasetExamples: Int
+    latestDatasetAt: DateTime
+    """True when a count hit the service's 200-row page cap (display as 200+)."""
+    capped: Boolean!
+  }
   input DecisionInput { kind: DecisionKind! reason: String editedArgs: JSON responseText: String }
 
   # ============================ kill switches (agent-runtime + tool-plane) =====
@@ -3344,6 +3392,11 @@ export const typeDefs = gql`
     user(id: ID!): User
     """The tenant user directory (identity-service GET /users), cursor-paginated. Admin only."""
     users(first: Int = 50, after: String): UserConnection!
+    """Member-safe directory of ACTIVE tenant users for assignment / mention pickers
+    (identity-service GET /users/assignable). Returns only id/email/fullName — status
+    and lastLoginAt are always null here. No admin scope required, unlike \`users\`:
+    any member holding case.case.assign can list assignees."""
+    assignableUsers(first: Int = 50, after: String): UserConnection!
 
     """Workspaces (rbac-service GET /workspaces). \`archived\`: null|"only"|"with". Admin only."""
     workspaces(first: Int = 50, after: String, archived: String): WorkspaceConnection!
@@ -3529,6 +3582,16 @@ export const typeDefs = gql`
       filters: [RowFilterInput!]
     ): DatasetRowPage!
 
+    """Resolve a dashboard chart's backing dataset + the physical column a
+    group-by dimension maps to, so a chart selection can drill into the real
+    detail rows (dataset browse) and open cases from them. Follows the chart's
+    primary source: only \`semantic_measure\` charts resolve (chart ->
+    display_meta.semantic_model -> published model definition -> the dimension's
+    entity dataset_urn + column); returns null for saved-query/other charts or an
+    unknown dimension. Needs chart.chart.read + semantic.model.read (the caller's
+    token is forwarded)."""
+    chartDrillTarget(chartId: ID!, dimension: String!): ChartDrillTarget
+
     """Quick-chart aggregation over a raw dataset — WITHOUT a hand-authored
     semantic model. Generates a governed \`SELECT <dimension>, <agg>(<measure>)
     GROUP BY <dimension>\` over the dataset's \`{{dataset()}}\` macro and runs it
@@ -3595,6 +3658,10 @@ export const typeDefs = gql`
     proposalsInbox(status: ProposalStatus = PENDING, agentKey: String, first: Int = 50, after: String): ProposalConnection!
     proposal(id: ID!): Proposal
     agentRun(id: ID!): AgentRun
+    """Correction->retrain loop stats (agent-runtime transcript corpus +
+    curated SFT datasets, BRD 12 M1/M2). Counts are honest page counts capped
+    at 200 — capped is true when the underlying page was full."""
+    learningLoop: LearningLoopStats!
 
     experiments(first: Int = 50, after: String): ExperimentConnection!
     experiment(id: ID!): Experiment

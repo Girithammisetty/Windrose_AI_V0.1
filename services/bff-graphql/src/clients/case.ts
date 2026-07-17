@@ -16,6 +16,9 @@ export interface CaseDTO {
   dataset_urn?: string;
   dataset_version?: string;
   row_pk?: string;
+  /** Pack/createCases-provided evidence summary (present on search docs AND
+   * the CRUD view; 'note' carries the investigator briefing). */
+  display_projection?: Record<string, string>;
   due_date?: string;
   description?: string;
   custom_fields?: Record<string, unknown>;
@@ -50,6 +53,17 @@ export interface CaseCommentDTO {
   author_id?: string;
   body?: string;
   edited_at?: string | null;
+  created_at?: string;
+}
+
+/** One case evidence attachment (case-service GET /cases/{id}/evidence, task #77). */
+export interface CaseEvidenceDTO {
+  id: string;
+  case_id?: string;
+  filename?: string;
+  content_type?: string;
+  size_bytes?: number;
+  uploaded_by?: string;
   created_at?: string;
 }
 
@@ -283,6 +297,16 @@ export class CaseClient {
       { body, idempotencyKey },
     );
     return unwrap<CaseDTO>(r);
+  }
+
+  /** GET /cases/{id}/evidence — a case's evidence attachments metadata
+   * (task #77; needs case.evidence.read). */
+  async listEvidence(caseId: string): Promise<CaseEvidenceDTO[]> {
+    const r = await this.http.get<{ data: CaseEvidenceDTO[] } | CaseEvidenceDTO[]>(
+      `/api/v1/cases/${encodeURIComponent(caseId)}/evidence`,
+    );
+    const d = (r as { data?: CaseEvidenceDTO[] }).data ?? (r as CaseEvidenceDTO[]);
+    return d ?? [];
   }
 
   // ---- Tier 4b: comments + timeline -----------------------------------------

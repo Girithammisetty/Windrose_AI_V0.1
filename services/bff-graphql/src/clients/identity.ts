@@ -133,9 +133,19 @@ export class IdentityClient {
     return this.http.get<UserDTO>(`/api/v1/users/${encodeURIComponent(id)}`);
   }
 
-  /** GET /api/v1/users (tenant admin list; cursor-paginated). */
+  /** GET /api/v1/users (tenant admin list; cursor-paginated). Admin only —
+   * requires identity.user.admin, returns the full admin DTO. */
   users(limit: number, cursor?: string): Promise<Page<UserDTO>> {
     return this.http.get<Page<UserDTO>>("/api/v1/users", { query: { limit, cursor } });
+  }
+
+  /** GET /api/v1/users/assignable — member-safe directory of ACTIVE tenant
+   * users (id/email/full_name only) for the case assignment + mention pickers.
+   * Deliberately NOT GET /api/v1/users: no admin scope required (mirrors
+   * /users/profiles), so a case worker with case.case.assign can list assignees
+   * without identity.user.admin. status/last_login_at/etc. are never returned. */
+  assignableUsers(limit: number, cursor?: string): Promise<Page<UserDTO>> {
+    return this.http.get<Page<UserDTO>>("/api/v1/users/assignable", { query: { limit, cursor } });
   }
 
   /** POST /api/v1/users/invite — create a user in the "invited" state (201).

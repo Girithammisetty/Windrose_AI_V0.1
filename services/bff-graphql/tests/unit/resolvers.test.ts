@@ -26,8 +26,9 @@ function downstream() {
     if (req.path === "/api/v1/cases/forbidden") {
       return { status: 403, body: { error: { code: "PERMISSION_DENIED", message: "no access", trace_id: "tr-403" } } };
     }
-    // identity-service batch
-    if (req.path === "/api/v1/users") {
+    // identity-service batch — the userById loader uses the member-safe
+    // /users/profiles endpoint (no admin scope), not the admin /users listing.
+    if (req.path === "/api/v1/users/profiles") {
       return { status: 200, body: { data: [{ id: "user-1", email: "a@x.com", full_name: "Ann" }], page: { has_more: false } } };
     }
     // dataset-service batch
@@ -75,7 +76,7 @@ describe("federated case composition (AC-2) + JWT passthrough (AC-3)", () => {
       expect(r.headers["authorization"]).toMatch(/^Bearer /);
     }
     // Nested hydration went through the batch endpoints (loaders), one each.
-    expect(requests.filter((r) => r.path === "/api/v1/users")).toHaveLength(1);
+    expect(requests.filter((r) => r.path === "/api/v1/users/profiles")).toHaveLength(1);
     expect(requests.filter((r) => r.path === "/api/v1/datasets")).toHaveLength(1);
   });
 

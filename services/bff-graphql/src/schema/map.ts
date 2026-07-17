@@ -100,6 +100,9 @@ export interface MappedCase {
   severity: string | null;
   dueDate?: string;
   createdAt?: string;
+  // Pack/dataset-provided evidence summary; present on BOTH the search
+  // projection and caseView ('note' carries the investigator briefing).
+  displayProjection: Record<string, string> | null;
   // Tier 4b: lifecycle/resolution detail fields (caseView only — the search
   // projection omits them, so they are null on list rows).
   description: string | null;
@@ -532,6 +535,10 @@ export function mapCase(ctx: GraphQLContext, d: CaseDTO): MappedCase {
     severity: up(d.severity),
     dueDate: d.due_date,
     createdAt: d.created_at,
+    displayProjection:
+      d.display_projection && Object.keys(d.display_projection).length > 0
+        ? d.display_projection
+        : null,
     description: d.description ?? null,
     dispositionId: d.disposition_id ?? null,
     resolutionNote: d.resolution_note ?? null,

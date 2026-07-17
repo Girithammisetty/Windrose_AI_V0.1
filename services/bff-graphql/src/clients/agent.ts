@@ -287,4 +287,40 @@ export class AgentClient {
       query: { "filter[agent_key]": params.agentKey, limit: params.limit },
     });
   }
+
+  // ---- SLM distillation (BRD 12 M1/M2): transcript corpus + curated SFT ----
+
+  /** List transcript-corpus rows (service caps the page at 200 — callers must
+   * treat a full page as "200+", never fabricate a total). */
+  transcripts(params: { decided?: boolean; limit: number }): Promise<Page<TranscriptDTO>> {
+    return this.http.get<Page<TranscriptDTO>>("/api/v1/transcripts", {
+      query: { "filter[decided]": params.decided || undefined, limit: params.limit },
+    });
+  }
+
+  sftDatasets(params: { agentKey?: string; limit: number }): Promise<Page<SftDatasetDTO>> {
+    return this.http.get<Page<SftDatasetDTO>>("/api/v1/sft-datasets", {
+      query: { "filter[agent_key]": params.agentKey, limit: params.limit },
+    });
+  }
+}
+
+/** One captured agent-run transcript (only the fields the loop stats need). */
+export interface TranscriptDTO {
+  transcript_id: string;
+  agent_key?: string;
+  decision?: string | null;
+  corrected_output?: unknown;
+  created_at?: string | null;
+}
+
+/** One curated, versioned SFT dataset (agent-runtime sft_datasets). */
+export interface SftDatasetDTO {
+  dataset_id: string;
+  agent_key?: string;
+  version?: number;
+  status?: string;
+  row_count?: number;
+  source_count?: number;
+  created_at?: string | null;
 }

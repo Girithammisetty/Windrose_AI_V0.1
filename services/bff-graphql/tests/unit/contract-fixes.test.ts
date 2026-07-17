@@ -278,7 +278,10 @@ describe("Case assignee id: both CRUD (assigned_to_id) and search (assignee_id) 
       if (req.path === "/api/v1/cases/case-search") {
         return { status: 200, body: { id: "case-search", assignee_id: "u-1", status: "in_progress" } };
       }
-      if (req.path === "/api/v1/users") {
+      // The userById loader hydrates Case.assignee via identity's member-safe
+      // /users/profiles batch endpoint (no admin scope) — NOT the admin
+      // /api/v1/users directory listing. Mock the endpoint the loader calls.
+      if (req.path === "/api/v1/users/profiles") {
         return { status: 200, body: { data: users, page: { has_more: false } } };
       }
       if (req.path === "/api/v1/proposals") {
