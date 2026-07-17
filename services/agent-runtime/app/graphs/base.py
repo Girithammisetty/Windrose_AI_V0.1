@@ -24,6 +24,9 @@ class GraphDeps:
     experiment_reader: Any = None
     dataset_reader: Any = None
     pipeline_reader: Any = None
+    # Sandboxed training-launch writer (BRD 52 ml-engineer): OBO-authorized,
+    # reversible artifacts only — the promotion write stays a WriteIntent.
+    pipeline_writer: Any = None
     semantic_reader: Any = None
     catalog_reader: Any = None
     prompt_params: dict = field(default_factory=dict)
@@ -53,6 +56,14 @@ class WriteIntent:
     # never proposes/executes an action the caller could not perform themselves
     # (ART-FR-044 caller-gate). None = declare no action (legacy / autonomous).
     required_action: str | None = None
+    # Workspace context for the caller/approver-eligibility authz gates
+    # (case.case.update, ai.proposal.approve are workspace-scoped actions).
+    # Separate from `args`: args is sent verbatim to tool-plane, and a
+    # strict-schema tool (additionalProperties:false) would reject a
+    # workspace_id field it never declared. Graphs whose tool DOES accept
+    # workspace_id as a real arg may keep setting args["workspace_id"] instead
+    # — service.py falls back to that when this field is None.
+    workspace_id: str | None = None
 
 
 @dataclass(slots=True)

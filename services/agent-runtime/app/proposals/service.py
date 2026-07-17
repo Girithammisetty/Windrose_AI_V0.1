@@ -18,11 +18,15 @@ from app.domain.canonical import args_digest as compute_digest
 from app.domain.entities import Proposal, new_uuid, now
 from app.domain.errors import (
     Conflict,
+    GuardrailViolation,
     NotFound,
     PermissionDenied,
     ProposalExpired,
     ValidationFailed,
 )
+
+# Tool-tier ordering for the max-tier guardrail ceiling (BRD 53 PA-FR-030).
+_TIER_RANK = {"read": 0, "write-proposal": 1, "write-direct": 2, "admin": 3}
 from app.domain.urn import proposal_urn
 from app.events.envelope import make_envelope
 from app.graphs.base import WriteIntent
@@ -61,6 +65,13 @@ class ProposalService:
         if intent.required_action and obo_user:
             await self._authorize_caller(
                 intent, obo_user=obo_user, tenant_id=run.tenant_id)
+        # Agent-scoped guardrail envelope (BRD 53 PA-FR-030): the agent may only
+        # propose a tool ON ITS OWN declared allow-list, at or below its tier
+        # ceiling. This activates AgentVersion.toolset (declared but never
+        # enforced) for EVERY agent — a platform hardening — and is what makes a
+        # tenant custom agent's allow-list real. Fail closed BEFORE any proposal
+        # row exists; defense-in-depth with tool-plane's tenant-enablement gate.
+        await self._enforce_guardrail(run, intent)
         pid = new_uuid()
         expires = now().timestamp() + self._settings.proposal_default_ttl_seconds
         from datetime import datetime
@@ -71,7 +82,8 @@ class ProposalService:
             tier=intent.tier, side_effects=intent.side_effects, args=intent.args,
             rationale=intent.rationale, affected_urns=intent.affected_urns,
             predicted_effect=intent.predicted_effect,
-            expires_at=datetime.fromtimestamp(expires, tz=UTC), status="pending")
+            expires_at=datetime.fromtimestamp(expires, tz=UTC), status="pending",
+            workspace_id=intent.workspace_id or intent.args.get("workspace_id"))
         await self._store.create_proposal(prop)
         await self._store.supersede_pending(
             tenant_id=run.tenant_id, run_id=run.run_id, tool_id=intent.tool_id,
@@ -95,6 +107,35 @@ class ProposalService:
                 return decided, True
         return prop, False
 
+    async def _enforce_guardrail(self, run, intent: WriteIntent) -> None:
+        """Reject a WriteIntent whose tool is not on the agent version's declared
+        toolset allow-list, or whose tier exceeds the write-proposal ceiling.
+        Fail closed (GuardrailViolation, audited, no proposal) — defense-in-depth
+        with the caller-gate and tool-plane's tenant-enablement gate.
+
+        Allow-list scope: enforced whenever the agent version resolves to a
+        NON-EMPTY toolset (every seeded fixed agent and every tenant custom agent
+        — whose toolset is mandatory-non-empty at create). A missing/empty
+        declared toolset means "no write surface declared", so there is no
+        allow-list to be outside of; the tier ceiling below still applies, and
+        tool-plane + the signed grant + the caller-gate still gate execution."""
+        version = None
+        if run.agent_version is not None:
+            version = await self._store.get_agent_version(run.agent_key, run.agent_version)
+        allowed = {t.get("tool_id") for t in (version.toolset if version else [])
+                   if isinstance(t, dict)}
+        if allowed and intent.tool_id not in allowed:
+            raise GuardrailViolation(
+                f"agent {run.agent_key} v{run.agent_version} may not use tool "
+                f"{intent.tool_id!r}: not on its allow-list ({sorted(allowed)})")
+        # Tier ceiling: never let ANY agent's proposal exceed write-proposal from
+        # this path (write-direct/admin are operator-fixed-agent territory only,
+        # and even those never auto-execute — policy.py hard-forbids it).
+        if _TIER_RANK.get(intent.tier, 99) > _TIER_RANK["write-proposal"]:
+            raise GuardrailViolation(
+                f"agent {run.agent_key} proposed tier {intent.tier!r} above the "
+                "write-proposal ceiling")
+
     async def _authorize_caller(self, intent: WriteIntent, *, obo_user: str,
                                 tenant_id: str) -> None:
         """Enforce the invoking caller holds ``intent.required_action`` on every
@@ -103,7 +144,7 @@ class ProposalService:
         the copilot cannot escalate a user's privileges by proposing on their
         behalf. Uses the same OPA engine + rbac projection the UI is gated by."""
         subject = {"type": "user", "id": obo_user}
-        workspace_id = intent.args.get("workspace_id")
+        workspace_id = intent.workspace_id or intent.args.get("workspace_id")
         for urn in intent.affected_urns:
             allowed = await self._authz.allow(
                 subject=subject, action=intent.required_action, tenant=tenant_id,
@@ -198,10 +239,11 @@ class ProposalService:
         # already reference (rbac seed/roles_actions.yaml).
         # ai.proposal is workspace-scoped (RBC catalog wsScoped=true) — OPA's
         # ctx_ok denies a workspace-scoped action carrying no workspace, so
-        # thread the proposal's workspace, recorded in its WriteIntent args at
-        # creation time, through the same way every write-proposal tool does.
+        # thread the proposal's workspace, recorded on Proposal.workspace_id at
+        # creation time (falling back to args for graphs that still put it
+        # there — see WriteIntent.workspace_id for why the two are separate).
         subject = {"type": "user", "id": actor_sub}
-        workspace_id = prop.args.get("workspace_id")
+        workspace_id = prop.workspace_id or prop.args.get("workspace_id")
         for urn in prop.affected_urns:
             allowed = await self._authz.allow(
                 subject=subject, action="ai.proposal.approve", tenant=prop.tenant_id,
@@ -219,8 +261,22 @@ class ProposalService:
             tier=prop.tier, args=args, decided_by=decided_by)
         # OBO token for tool-plane authN; scope carries the tool id so the toolset
         # gate passes, and obo_sub drives case-service dual attribution.
+        #
+        # Execution authority belongs to whoever DECIDED to run this write (the
+        # approver), not the original trigger user: a proposal only requires the
+        # trigger user to hold enough capability to PROPOSE (e.g.
+        # case.case.update), while backend facades that gate the actual write on
+        # an approve-tier action (e.g. case-service's case.disposition.approve)
+        # correctly check the ACTOR performing the apply — which, for a
+        # human-approved proposal, is the decider, not the original OBO user.
+        # Confirmed live 2026-07-17: obo_sub=obo_user (the triggering adjuster,
+        # who only holds case.case.update) made case-service's facade reject
+        # every disposition-apply with 403, even after a manager approved it.
+        # Auto-executed proposals have no human decider ("policy:auto") so those
+        # still ride the original trigger user's authority.
+        obo_sub = obo_user if decided_by == "policy:auto" else decided_by
         token = self._tokens.mint_agent_obo(
-            tenant_id=prop.tenant_id, obo_sub=obo_user or decided_by,
+            tenant_id=prop.tenant_id, obo_sub=obo_sub or decided_by,
             agent_key=prop.agent_key, agent_version=prop.agent_version,
             workspace_id=None, scopes=[prop.tool_id])
         result = await self._tools.call(

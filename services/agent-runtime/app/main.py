@@ -22,7 +22,20 @@ from fastapi import FastAPI
 
 from app.agents.catalog import seed_catalog
 from app.api.errors import TraceMiddleware, install_error_handlers
-from app.api.routes import a2a, chat, health, jwks, proposals, registry, replay, sft, transcripts
+from app.api.routes import (
+    a2a,
+    chat,
+    decisions,
+    health,
+    jwks,
+    outcomes,
+    proposals,
+    registry,
+    replay,
+    sft,
+    training,
+    transcripts,
+)
 from app.container import Container, build_container
 from windrose_common.logging import configure_json_logging
 
@@ -119,6 +132,9 @@ def create_app(container: Container | None = None) -> FastAPI:
     app.include_router(a2a.router)
     app.include_router(transcripts.router)
     app.include_router(sft.router)
+    app.include_router(training.router)
+    app.include_router(decisions.router)
+    app.include_router(outcomes.router)
     return app
 
 

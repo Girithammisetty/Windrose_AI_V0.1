@@ -62,6 +62,11 @@ class Settings(BaseSettings):
     # into the governed agent_transcripts corpus. This is the tenant/deploy
     # CONSENT gate — off means no capture; the stored `consent` flag records it.
     slm_transcript_capture: bool = True
+    # SLM distillation trainer backend (milestone 3). None/"" -> the honest
+    # UnconfiguredGpuTrainer (jobs fail with gpu_trainer_not_configured); "fake"
+    # -> deterministic in-process trainer (tests/demo); a real GPU backend
+    # (e.g. "modal"/"sagemaker"/"k8s-job") is a GPU-gated follow-up.
+    slm_trainer_backend: str | None = None
 
     # ai-gateway (ART-FR-012): ALL LLM calls go through the gateway (budget/
     # guardrails/metering), never direct to a provider. Dual credential per its

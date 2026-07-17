@@ -19,6 +19,11 @@ PROPOSAL_STATUSES = (
     "expired", "superseded", "cancelled",
 )
 PROPOSAL_TERMINAL = tuple(s for s in PROPOSAL_STATUSES if s != "pending")
+# SLM distillation (milestone 3/4): a training job's lifecycle and a distilled
+# adapter's promotion lifecycle (design doc §M3/M4).
+TRAINING_STATUSES = ("queued", "running", "succeeded", "failed", "cancelled")
+TRAINING_TERMINAL = ("succeeded", "failed", "cancelled")
+ADAPTER_PROMOTION_STATUSES = ("candidate", "gated", "promoted", "demoted")
 
 
 def now() -> datetime:
@@ -38,6 +43,9 @@ class AgentDefinition:
     owner_team: str
     default_write_mode: str  # read_only | proposal
     status: str = "draft"
+    # BRD 53: NULL = platform agent (global); set = a tenant CUSTOM agent,
+    # visible + runnable only within its authoring tenant.
+    owner_tenant: str | None = None
 
 
 @dataclass(slots=True)
@@ -138,6 +146,13 @@ class Proposal:
     expires_at: datetime
     status: str = "pending"
     decision: dict | None = None
+    # Workspace context for workspace-scoped authz checks (case.case.update,
+    # ai.proposal.approve), kept OUT of args: args is sent verbatim to
+    # tool-plane, and a strict-schema tool (additionalProperties:false) would
+    # reject a workspace_id field it never declared. service.py falls back to
+    # args.get("workspace_id") when this is None, for graphs whose tools do
+    # accept workspace_id as a real arg.
+    workspace_id: str | None = None
     created_at: datetime = field(default_factory=now)
     updated_at: datetime = field(default_factory=now)
 
@@ -207,6 +222,51 @@ class SftDataset:
     checksum: str
     consent_verified: bool
     created_by: str | None
+    created_at: datetime = field(default_factory=now)
+    updated_at: datetime = field(default_factory=now)
+
+
+@dataclass(slots=True)
+class TrainingJob:
+    """A submitted SLM distillation run against a versioned SFT dataset
+    (milestone 3). The control-plane row; the GPU LoRA compute runs behind the
+    ``GpuTrainer`` port. Immutable identity; status advances through
+    ``TRAINING_STATUSES``."""
+
+    job_id: str
+    tenant_id: str
+    archetype: str
+    sft_dataset_id: str
+    base_model: str
+    status: str  # queued | running | succeeded | failed | cancelled
+    params: dict
+    mlflow_run_ref: str | None = None
+    adapter_id: str | None = None
+    error: dict | None = None
+    created_by: str | None = None
+    created_at: datetime = field(default_factory=now)
+    updated_at: datetime = field(default_factory=now)
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
+
+
+@dataclass(slots=True)
+class SlmAdapter:
+    """A distilled adapter produced by a succeeded training job (milestone 3),
+    with its promotion lifecycle (milestone 4). Once promoted it becomes the
+    tenant's cheapest ai-gateway ladder rung (``model_alias``)."""
+
+    adapter_id: str
+    tenant_id: str
+    training_job_id: str
+    archetype: str
+    base_model: str
+    adapter_uri: str
+    model_alias: str
+    checksum: str = ""
+    promotion_status: str = "candidate"  # candidate | gated | promoted | demoted
+    eval_result_ref: str | None = None
+    target_rung_alias: str | None = None
     created_at: datetime = field(default_factory=now)
     updated_at: datetime = field(default_factory=now)
 

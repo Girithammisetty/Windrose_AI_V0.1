@@ -272,3 +272,64 @@ async def test_caller_gate_skipped_for_autonomous_run():
     prop, _ = await c.proposal_service.create_from_intent(
         run=run, intent=_gated_intent(), obo_user=None, auto_execute_policy={})
     assert prop.status == "pending"
+
+
+# ---- BRD 53 PA-FR-030: agent-scoped tool-allowlist enforcement (the new
+#      load-bearing guardrail — an agent can only propose a tool ON ITS OWN
+#      declared allow-list; this is what makes a custom agent's envelope real) --
+
+from app.domain.entities import AgentVersion  # noqa: E402
+from app.domain.errors import GuardrailViolation  # noqa: E402
+
+
+async def _seed_agent(c, agent_key, tool_ids):
+    """Persist a published agent version whose toolset is the allow-list."""
+    from app.domain.entities import AgentDefinition
+    await c.store.upsert_agent_definition(AgentDefinition(
+        agent_key=agent_key, display_name=agent_key, description="",
+        owner_team="t", default_write_mode="proposal", status="published"))
+    await c.store.create_agent_version(AgentVersion(
+        agent_key=agent_key, version=1, graph_ref="persona_copilot.v1",
+        graph_digest="x", toolset=[{"tool_id": t} for t in tool_ids],
+        status="published"))
+
+
+async def test_guardrail_blocks_tool_outside_agent_allowlist():
+    c = _container()
+    # A custom agent allowed ONLY case.apply_disposition tries to propose a
+    # promotion tool it never declared — fail closed, no proposal, no execution.
+    await _seed_agent(c, "cust-x-copilot", ["case.apply_disposition"])
+    run = await _run(c, agent="cust-x-copilot")
+    off_list = WriteIntent(
+        tool_id="experiment.model.promote", tool_version="1.0.0", tier="write-proposal",
+        side_effects="reversible", args={"model_id": "m", "version": 1},
+        rationale="should be blocked", affected_urns=[f"wr:{TENANT_A}:x:y/1"],
+        predicted_effect={"summary": "x", "reversibility": "reversible", "blast_radius": 1})
+    with pytest.raises(GuardrailViolation):
+        await c.proposal_service.create_from_intent(
+            run=run, intent=off_list, obo_user="u-77", auto_execute_policy={})
+    assert c.bus.of_type("proposal.created") == []
+    assert c.tool_client.calls == []
+
+
+async def test_guardrail_allows_tool_on_agent_allowlist():
+    c = _container()
+    await _seed_agent(c, "cust-x-copilot", ["case.apply_disposition"])
+    run = await _run(c, agent="cust-x-copilot")
+    prop, _ = await c.proposal_service.create_from_intent(
+        run=run, intent=_intent(), obo_user="u-77", auto_execute_policy={})
+    assert prop.status == "pending"
+
+
+async def test_guardrail_blocks_tier_above_ceiling():
+    c = _container()
+    await _seed_agent(c, "cust-x-copilot", ["case.apply_disposition"])
+    run = await _run(c, agent="cust-x-copilot")
+    too_high = WriteIntent(
+        tool_id="case.apply_disposition", tool_version="1.0.0", tier="write-direct",
+        side_effects="reversible", args={"case_id": "c-91"}, rationale="x",
+        affected_urns=[f"wr:{TENANT_A}:case:case/c-91"],
+        predicted_effect={"summary": "x", "reversibility": "reversible", "blast_radius": 1})
+    with pytest.raises(GuardrailViolation):
+        await c.proposal_service.create_from_intent(
+            run=run, intent=too_high, obo_user="u-77", auto_execute_policy={})

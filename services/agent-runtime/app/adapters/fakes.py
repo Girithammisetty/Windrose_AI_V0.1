@@ -229,6 +229,34 @@ class FakePipelineReader:
         self.calls.append({"op": "get_algorithm", "algorithm": algorithm})
         return {**self._algorithm, "name": algorithm}
 
+    async def get_run(self, *, tenant_id, run_id, auth_token) -> dict:
+        self.calls.append({"op": "get_run", "run_id": run_id})
+        return {"id": run_id, "status": "succeeded",
+                "mlflow_run_id": f"mlrun-{run_id}",
+                "model_uri": f"models:/fake/{run_id}",
+                "metrics": {"accuracy": 0.91, "f1": 0.88}}
+
+
+class FakePipelineWriter:
+    """Training-launch double for the ml-engineer agent: records every
+    instantiate() and returns a deterministic run id (the paired
+    FakePipelineReader.get_run reports it succeeded with fixed metrics)."""
+
+    def __init__(self, fail_with: Exception | None = None) -> None:
+        self.calls: list[dict] = []
+        self._fail = fail_with
+        self._n = 0
+
+    async def instantiate(self, *, tenant_id, algorithm, auth_token, dataset_refs,
+                          params, workspace_id=None, name=None, mode="train") -> dict:
+        if self._fail is not None:
+            raise self._fail
+        self._n += 1
+        self.calls.append({"op": "instantiate", "algorithm": algorithm,
+                           "dataset_refs": dataset_refs, "params": params,
+                           "mode": mode, "workspace_id": workspace_id, "name": name})
+        return {"id": f"run-{self._n}", "status": "queued"}
+
 
 class NoopRealtime:
     def __init__(self) -> None:

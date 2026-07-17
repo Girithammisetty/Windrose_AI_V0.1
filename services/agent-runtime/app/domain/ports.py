@@ -92,3 +92,45 @@ class Authz(Protocol):
         resource_urn: str | None = None,
         workspace_id: str | None = None,
     ) -> bool: ...
+
+
+# ---- SLM distillation trainer (milestone 3) ---------------------------------
+
+
+class GpuTrainerNotConfigured(RuntimeError):
+    """Raised by the GpuTrainer EXECUTION path when no GPU/executor backend is
+    wired. Mirrors ai-gateway's ProviderNotConfigured (Rule 2): a training job
+    is ACCEPTED by the control plane (a row is created), but running it fails
+    honestly with a typed, non-retryable error naming the missing wiring — never
+    a silent fake-trained adapter. On a CPU-only stack the submitted job lands
+    in `failed` with reason `gpu_trainer_not_configured`."""
+
+
+@dataclass(slots=True)
+class TrainingSpec:
+    """The inputs a GpuTrainer needs to run one LoRA distillation."""
+
+    tenant_id: str
+    archetype: str
+    base_model: str
+    sft_dataset_id: str
+    sft_examples_jsonl: str  # the frozen chat-format corpus (milestone 2 export)
+    params: dict
+
+
+@dataclass(slots=True)
+class TrainingResult:
+    """What a succeeded training run produces."""
+
+    adapter_uri: str
+    mlflow_run_ref: str
+    checksum: str = ""
+
+
+class GpuTrainer(Protocol):
+    """Executes one LoRA/QLoRA distillation on the GPU node pool. The real
+    implementation body (+ a provisioned GPU) is the genuinely GPU-gated leg;
+    the control plane (submit -> track -> promote) around it is real. Raises
+    GpuTrainerNotConfigured when no executor backend is available."""
+
+    async def train(self, spec: TrainingSpec) -> TrainingResult: ...

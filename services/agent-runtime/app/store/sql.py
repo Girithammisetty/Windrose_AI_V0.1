@@ -27,7 +27,9 @@ from app.domain.entities import (
     Session,
     SftDataset,
     SftExample,
+    SlmAdapter,
     TenantAgentConfig,
+    TrainingJob,
     Transcript,
     new_uuid,
 )
@@ -113,13 +115,15 @@ class SqlStore:
         async with self._plain() as s:
             await s.execute(text(
                 """INSERT INTO agent_definitions
-                   (agent_key, display_name, description, owner_team, default_write_mode, status)
-                   VALUES (:k,:n,:d,:o,:w,:st)
+                   (agent_key, display_name, description, owner_team, default_write_mode,
+                    status, owner_tenant)
+                   VALUES (:k,:n,:d,:o,:w,:st,:ot)
                    ON CONFLICT (agent_key) DO UPDATE SET
                      display_name=:n, description=:d, owner_team=:o,
-                     default_write_mode=:w, status=:st, updated_at=now()"""),
+                     default_write_mode=:w, status=:st, owner_tenant=:ot, updated_at=now()"""),
                 {"k": d.agent_key, "n": d.display_name, "d": d.description,
-                 "o": d.owner_team, "w": d.default_write_mode, "st": d.status})
+                 "o": d.owner_team, "w": d.default_write_mode, "st": d.status,
+                 "ot": d.owner_tenant})
 
     async def get_agent_definition(self, agent_key: str) -> AgentDefinition | None:
         async with self._plain() as s:
@@ -202,6 +206,71 @@ class SqlStore:
                      auto_execute_policy=cast(:ap as jsonb), self_approval=:sa, updated_at=now()"""),
                 {"t": c.tenant_id, "k": c.agent_key, "en": c.enabled, "pv": c.pinned_version,
                  "pp": _j(c.prompt_params), "ap": _j(c.auto_execute_policy), "sa": c.self_approval})
+
+    # ---- decision models (BRD 54) ------------------------------------------
+    async def create_decision_model(self, m) -> None:
+        from app.domain.decisions import _outcome_to_dict, rules_to_json
+        async with self._plain() as s:
+            await s.execute(text(
+                """INSERT INTO decision_models
+                   (id, tenant_id, workspace_id, name, dataset_urn, version, status,
+                    rules, default_outcome, created_by)
+                   VALUES (cast(:id as uuid), :t, :ws, :n, :du, :v, :st,
+                           cast(:r as jsonb), cast(:d as jsonb), :cb)"""),
+                {"id": m.model_id, "t": m.tenant_id, "ws": m.workspace_id, "n": m.name,
+                 "du": m.dataset_urn, "v": m.version, "st": m.status,
+                 "r": _j(rules_to_json(m.rules)), "d": _j(_outcome_to_dict(m.default_outcome)),
+                 "cb": getattr(m, "created_by", None)})
+
+    async def get_decision_model(self, tenant_id: str, model_id: str):
+        async with self._plain() as s:
+            r = (await s.execute(text(
+                "SELECT * FROM decision_models WHERE id=cast(:id as uuid) AND tenant_id=:t"),
+                {"id": model_id, "t": tenant_id})).mappings().first()
+        return _decision_model(r) if r else None
+
+    async def list_decision_models(self, tenant_id: str) -> list:
+        async with self._plain() as s:
+            rows = (await s.execute(text(
+                "SELECT * FROM decision_models WHERE tenant_id=:t ORDER BY name, version DESC"),
+                {"t": tenant_id})).mappings().all()
+        return [_decision_model(r) for r in rows]
+
+    # ---- outcome labels (BRD 55) -------------------------------------------
+    async def upsert_outcome_label(self, lab) -> None:
+        async with self._plain() as s:
+            await s.execute(text(
+                """INSERT INTO outcome_labels
+                   (id, tenant_id, decision_ref, decision_type, producer,
+                    decided_outcome, realized_outcome, correct, label_source,
+                    note, labeled_by)
+                   VALUES (cast(:id as uuid), :t, :dr, :dt, :pr, :do, :ro, :co,
+                           :ls, :n, :lb)
+                   ON CONFLICT (tenant_id, decision_ref) DO UPDATE SET
+                     realized_outcome=:ro, decided_outcome=:do, correct=:co,
+                     label_source=:ls, note=:n, labeled_by=:lb, labeled_at=now()"""),
+                {"id": lab.label_id, "t": lab.tenant_id, "dr": lab.decision_ref,
+                 "dt": lab.decision_type, "pr": lab.producer, "do": lab.decided_outcome,
+                 "ro": lab.realized_outcome, "co": lab.correct, "ls": lab.label_source,
+                 "n": lab.note, "lb": lab.labeled_by})
+
+    async def list_outcome_labels(self, tenant_id: str, *, decision_type=None) -> list:
+        q = "SELECT * FROM outcome_labels WHERE tenant_id=:t"
+        params = {"t": tenant_id}
+        if decision_type:
+            q += " AND decision_type=:dt"
+            params["dt"] = decision_type
+        async with self._plain() as s:
+            rows = (await s.execute(text(q + " ORDER BY labeled_at DESC"),
+                                    params)).mappings().all()
+        return [_outcome_label(r) for r in rows]
+
+    async def get_outcome_label(self, tenant_id: str, decision_ref: str):
+        async with self._plain() as s:
+            r = (await s.execute(text(
+                "SELECT * FROM outcome_labels WHERE tenant_id=:t AND decision_ref=:dr"),
+                {"t": tenant_id, "dr": decision_ref})).mappings().first()
+        return _outcome_label(r) if r else None
 
     # ---- rollouts ----------------------------------------------------------
     async def create_rollout(self, r: Rollout) -> None:
@@ -372,16 +441,16 @@ class SqlStore:
             await s.execute(text(
                 """INSERT INTO proposals (proposal_id, tenant_id, session_id, run_id, agent_key,
                      agent_version, obo_user, tool_id, tool_version, tier, side_effects, args,
-                     rationale, affected_urns, predicted_effect, expires_at, status)
+                     rationale, affected_urns, predicted_effect, expires_at, status, workspace_id)
                    VALUES (cast(:id as uuid), cast(:t as uuid), :sid, cast(:rid as uuid), :k, :v,
                            :obo, :tid, :tv, :tier, :se, cast(:args as jsonb), :rat, :urns,
-                           cast(:pe as jsonb), :exp, :st)"""),
+                           cast(:pe as jsonb), :exp, :st, cast(:ws as uuid))"""),
                 {"id": p.proposal_id, "t": p.tenant_id,
                  "sid": p.session_id, "rid": p.run_id, "k": p.agent_key, "v": p.agent_version,
                  "obo": p.obo_user, "tid": p.tool_id, "tv": p.tool_version, "tier": p.tier,
                  "se": p.side_effects, "args": _j(p.args), "rat": p.rationale,
                  "urns": list(p.affected_urns), "pe": _j(p.predicted_effect),
-                 "exp": p.expires_at, "st": p.status})
+                 "exp": p.expires_at, "st": p.status, "ws": p.workspace_id})
 
     async def get_proposal(self, tenant_id: str, proposal_id: str) -> Proposal | None:
         async with self._tenant(tenant_id) as s:
@@ -561,6 +630,92 @@ class SqlStore:
                 {"did": dataset_id, "lim": limit})).mappings().all()
         return [_sft_example(r) for r in rows]
 
+    # ---- SLM training jobs + adapters (milestone 3/4) ----------------------
+    async def record_training_job(self, j: TrainingJob) -> None:
+        async with self._tenant(j.tenant_id) as s:
+            await s.execute(text(
+                """INSERT INTO slm_training_jobs
+                     (job_id, tenant_id, archetype, sft_dataset_id, base_model, status,
+                      params, mlflow_run_ref, adapter_id, error, created_by, started_at, finished_at)
+                   VALUES (cast(:id as uuid), cast(:t as uuid), :ak, cast(:ds as uuid), :bm, :st,
+                      cast(:p as jsonb), :mr, cast(:ad as uuid), cast(:err as jsonb), :by, :sa, :fa)"""),
+                {"id": j.job_id, "t": j.tenant_id, "ak": j.archetype, "ds": j.sft_dataset_id,
+                 "bm": j.base_model, "st": j.status, "p": _j(j.params), "mr": j.mlflow_run_ref,
+                 "ad": j.adapter_id, "err": _j(j.error) if j.error is not None else None,
+                 "by": j.created_by, "sa": j.started_at, "fa": j.finished_at})
+
+    async def update_training_job(self, j: TrainingJob) -> None:
+        async with self._tenant(j.tenant_id) as s:
+            await s.execute(text(
+                """UPDATE slm_training_jobs SET status=:st, mlflow_run_ref=:mr,
+                     adapter_id=cast(:ad as uuid), error=cast(:err as jsonb),
+                     started_at=:sa, finished_at=:fa, updated_at=now()
+                   WHERE job_id=cast(:id as uuid)"""),
+                {"id": j.job_id, "st": j.status, "mr": j.mlflow_run_ref, "ad": j.adapter_id,
+                 "err": _j(j.error) if j.error is not None else None,
+                 "sa": j.started_at, "fa": j.finished_at})
+
+    async def get_training_job(self, tenant_id: str, job_id: str) -> TrainingJob | None:
+        async with self._tenant(tenant_id) as s:
+            r = (await s.execute(
+                text("SELECT * FROM slm_training_jobs WHERE job_id=cast(:id as uuid)"),
+                {"id": job_id})).mappings().first()
+        return _training_job(r) if r else None
+
+    async def list_training_jobs(
+        self, tenant_id: str, *, archetype: str | None = None, limit: int = 50,
+    ) -> list[TrainingJob]:
+        q = "SELECT * FROM slm_training_jobs"
+        params: dict = {"lim": limit}
+        if archetype:
+            q += " WHERE archetype=:ak"
+            params["ak"] = archetype
+        q += " ORDER BY created_at DESC LIMIT :lim"
+        async with self._tenant(tenant_id) as s:
+            rows = (await s.execute(text(q), params)).mappings().all()
+        return [_training_job(r) for r in rows]
+
+    async def record_slm_adapter(self, a: SlmAdapter) -> None:
+        async with self._tenant(a.tenant_id) as s:
+            await s.execute(text(
+                """INSERT INTO slm_adapters
+                     (adapter_id, tenant_id, training_job_id, archetype, base_model,
+                      adapter_uri, checksum, model_alias, promotion_status, eval_result_ref, target_rung_alias)
+                   VALUES (cast(:id as uuid), cast(:t as uuid), cast(:jid as uuid), :ak, :bm,
+                      :uri, :cs, :ma, :ps, :er, :tr)"""),
+                {"id": a.adapter_id, "t": a.tenant_id, "jid": a.training_job_id, "ak": a.archetype,
+                 "bm": a.base_model, "uri": a.adapter_uri, "cs": a.checksum, "ma": a.model_alias,
+                 "ps": a.promotion_status, "er": a.eval_result_ref, "tr": a.target_rung_alias})
+
+    async def update_slm_adapter(self, a: SlmAdapter) -> None:
+        async with self._tenant(a.tenant_id) as s:
+            await s.execute(text(
+                """UPDATE slm_adapters SET promotion_status=:ps, eval_result_ref=:er,
+                     target_rung_alias=:tr, updated_at=now()
+                   WHERE adapter_id=cast(:id as uuid)"""),
+                {"id": a.adapter_id, "ps": a.promotion_status, "er": a.eval_result_ref,
+                 "tr": a.target_rung_alias})
+
+    async def get_slm_adapter(self, tenant_id: str, adapter_id: str) -> SlmAdapter | None:
+        async with self._tenant(tenant_id) as s:
+            r = (await s.execute(
+                text("SELECT * FROM slm_adapters WHERE adapter_id=cast(:id as uuid)"),
+                {"id": adapter_id})).mappings().first()
+        return _slm_adapter(r) if r else None
+
+    async def list_slm_adapters(
+        self, tenant_id: str, *, archetype: str | None = None, limit: int = 50,
+    ) -> list[SlmAdapter]:
+        q = "SELECT * FROM slm_adapters"
+        params: dict = {"lim": limit}
+        if archetype:
+            q += " WHERE archetype=:ak"
+            params["ak"] = archetype
+        q += " ORDER BY created_at DESC LIMIT :lim"
+        async with self._tenant(tenant_id) as s:
+            rows = (await s.execute(text(q), params)).mappings().all()
+        return [_slm_adapter(r) for r in rows]
+
     # ---- outbox ------------------------------------------------------------
     async def enqueue_outbox(self, *, tenant_id: str, topic: str, envelope: dict) -> None:
         async with self._tenant(tenant_id) as s:
@@ -604,10 +759,31 @@ class OutboxDispatcher:
 
 
 # ---- row mappers ------------------------------------------------------------
+def _outcome_label(r):
+    from app.domain.outcomes import OutcomeLabel
+    return OutcomeLabel(
+        label_id=str(r["id"]), tenant_id=r["tenant_id"], decision_ref=r["decision_ref"],
+        decision_type=r["decision_type"], realized_outcome=r["realized_outcome"],
+        decided_outcome=r.get("decided_outcome"), correct=r.get("correct"),
+        label_source=r["label_source"], note=r.get("note"),
+        labeled_by=r.get("labeled_by"), producer=r.get("producer"))
+
+
+def _decision_model(r):
+    from app.domain.decisions import DecisionModel, parse_outcome, rules_from_json
+    return DecisionModel(
+        model_id=str(r["id"]), tenant_id=r["tenant_id"], name=r["name"],
+        version=int(r["version"]), rules=rules_from_json(r["rules"]),
+        default_outcome=parse_outcome(r["default_outcome"]),
+        workspace_id=r.get("workspace_id"), dataset_urn=r.get("dataset_urn"),
+        status=r["status"])
+
+
 def _def(r) -> AgentDefinition:
     return AgentDefinition(agent_key=r["agent_key"], display_name=r["display_name"],
                            description=r["description"], owner_team=r["owner_team"],
-                           default_write_mode=r["default_write_mode"], status=r["status"])
+                           default_write_mode=r["default_write_mode"], status=r["status"],
+                           owner_tenant=r.get("owner_tenant"))
 
 
 def _ver(r) -> AgentVersion:
@@ -696,6 +872,27 @@ def _sft_example(r) -> SftExample:
         example_hash=r["example_hash"], created_at=r["created_at"])
 
 
+def _training_job(r) -> TrainingJob:
+    return TrainingJob(
+        job_id=str(r["job_id"]), tenant_id=str(r["tenant_id"]), archetype=r["archetype"],
+        sft_dataset_id=str(r["sft_dataset_id"]), base_model=r["base_model"], status=r["status"],
+        params=_load(r["params"]) or {}, mlflow_run_ref=r["mlflow_run_ref"],
+        adapter_id=str(r["adapter_id"]) if r["adapter_id"] else None,
+        error=_load(r["error"]), created_by=r["created_by"],
+        created_at=r["created_at"], updated_at=r["updated_at"],
+        started_at=r["started_at"], finished_at=r["finished_at"])
+
+
+def _slm_adapter(r) -> SlmAdapter:
+    return SlmAdapter(
+        adapter_id=str(r["adapter_id"]), tenant_id=str(r["tenant_id"]),
+        training_job_id=str(r["training_job_id"]), archetype=r["archetype"],
+        base_model=r["base_model"], adapter_uri=r["adapter_uri"], checksum=r["checksum"],
+        model_alias=r["model_alias"], promotion_status=r["promotion_status"],
+        eval_result_ref=r["eval_result_ref"], target_rung_alias=r["target_rung_alias"],
+        created_at=r["created_at"], updated_at=r["updated_at"])
+
+
 def _proposal(r) -> Proposal:
     return Proposal(
         proposal_id=str(r["proposal_id"]), tenant_id=str(r["tenant_id"]),
@@ -706,4 +903,5 @@ def _proposal(r) -> Proposal:
         rationale=r["rationale"], affected_urns=list(r["affected_urns"] or []),
         predicted_effect=_load(r["predicted_effect"]) or {}, expires_at=r["expires_at"],
         status=r["status"], decision=_load(r["decision"]),
+        workspace_id=str(r["workspace_id"]) if r["workspace_id"] else None,
         created_at=r["created_at"], updated_at=r["updated_at"])

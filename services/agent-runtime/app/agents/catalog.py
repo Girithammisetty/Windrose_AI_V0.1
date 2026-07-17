@@ -49,6 +49,16 @@ CATALOG = {
                        [{"id": "train_model",
                          "description": "Propose a training run for an algorithm on a dataset",
                          "tags": ["mlops", "training", "proposals"]}]),
+    "ml-engineer": ("ML Engineer Agent",
+                    "Autonomously runs the data-science loop on a governed dataset: "
+                    "inspects the schema, trains candidate models via sandboxed "
+                    "pipeline runs, compares real metrics, and PROPOSES the winning "
+                    "model's promotion (four-eyes; never promotes directly).",
+                    "proposal", "ml_engineer.v1",
+                    [{"id": "build_and_propose_model",
+                      "description": "Train candidate models on a dataset and propose "
+                                     "promoting the best one",
+                      "tags": ["mlops", "training", "promotion", "proposals"]}]),
     "inference": ("Inference Agent",
                   "Proposes batch inference jobs grounded in the registered model's "
                   "production version + input-dataset schema compatibility.",
@@ -96,6 +106,8 @@ async def seed_catalog(store, signing_key, *,
                    [{"tool_id": "pipeline.template.create_from_algorithm",
                      "version_range": ">=1.0.0"}]
                    if key == "model-training" else
+                   [{"tool_id": "experiment.model.promote", "version_range": ">=1.0.0"}]
+                   if key == "ml-engineer" else
                    [{"tool_id": "inference.submit", "version_range": ">=1.0.0"}]
                    if key == "inference" else
                    # meta-router forwards whichever delegate produced the write

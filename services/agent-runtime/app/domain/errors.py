@@ -69,6 +69,14 @@ class Unauthorized(AppError):
     code = "UNAUTHENTICATED"
 
 
+class GuardrailViolation(AppError):
+    """An agent tried to act outside its declared guardrail envelope (a tool not
+    on its allow-list, or a tier above its ceiling). Fail closed — no proposal
+    is created — and audited (BRD 53 PA-FR-030/BR-5)."""
+    status = 403
+    code = "GUARDRAIL_VIOLATION"
+
+
 class BudgetExhausted(AppError):
     status = 402
     code = "BUDGET_EXHAUSTED"

@@ -20,7 +20,7 @@ def build_worker(client: Client, container, *, task_queue: str) -> Worker:
         task_queue=task_queue,
         workflows=[AgentRunWorkflow],
         activities=[acts.run_graph, acts.create_proposal, acts.execute_proposal,
-                    acts.mark_awaiting, acts.finalize_run],
+                    acts.mark_awaiting, acts.finalize_run, acts.capture_transcript],
     )
 
 

@@ -13,14 +13,14 @@ from app.constants import TOPIC_AGENT_RUN
 from app.domain.entities import Run
 from app.domain.urn import run_urn
 from app.events.envelope import make_envelope
-from app.graphs import RUNNERS, GraphDeps
+from app.graphs import GRAPH_RUNNERS, RUNNERS, GraphDeps
 
 
 class RunEngine:
     def __init__(self, *, store, proposals, bus, realtime, llm, memory, case_reader,
                  settings, ingestion_reader=None, experiment_reader=None,
-                 dataset_reader=None, pipeline_reader=None, semantic_reader=None,
-                 catalog_reader=None, transcripts=None) -> None:
+                 dataset_reader=None, pipeline_reader=None, pipeline_writer=None,
+                 semantic_reader=None, catalog_reader=None, transcripts=None) -> None:
         self._store = store
         self._proposals = proposals
         self._bus = bus
@@ -34,6 +34,7 @@ class RunEngine:
         self._experiment_reader = experiment_reader
         self._dataset_reader = dataset_reader
         self._pipeline_reader = pipeline_reader
+        self._pipeline_writer = pipeline_writer
         self._semantic_reader = semantic_reader
         self._catalog_reader = catalog_reader
         self._settings = settings
@@ -44,13 +45,28 @@ class RunEngine:
                          experiment_reader=self._experiment_reader,
                          dataset_reader=self._dataset_reader,
                          pipeline_reader=self._pipeline_reader,
+                         pipeline_writer=self._pipeline_writer,
                          semantic_reader=self._semantic_reader,
                          catalog_reader=self._catalog_reader,
                          prompt_params=prompt_params or {}, obo_token=obo_token)
 
     async def run_graph(self, run: Run, inputs: dict, *, obo_token: str | None,
                         prompt_params: dict):
-        _, runner = RUNNERS[run.agent_key]
+        # Fixed agents dispatch by agent_key; tenant CUSTOM agents (BRD 53) have
+        # their own agent_key that isn't in RUNNERS, so fall back to the shared
+        # graph their AgentVersion.graph_ref points at (GRAPH_RUNNERS — only
+        # tenant-safe graphs are registered there).
+        entry = RUNNERS.get(run.agent_key)
+        if entry is not None:
+            runner = entry[1]
+        else:
+            from app.domain.errors import NotFound
+            version = None
+            if run.agent_version is not None:
+                version = await self._store.get_agent_version(run.agent_key, run.agent_version)
+            runner = GRAPH_RUNNERS.get(version.graph_ref) if version else None
+            if runner is None:
+                raise NotFound(f"agent {run.agent_key} has no runnable graph")
         deps = self._deps(run, obo_token, prompt_params)
         return await runner(deps, inputs)
 

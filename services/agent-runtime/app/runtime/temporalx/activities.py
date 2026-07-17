@@ -7,11 +7,15 @@ Activities are instance methods bound to the container's REAL adapters; all IO
 
 from __future__ import annotations
 
+import logging
 from dataclasses import asdict
+from types import SimpleNamespace
 
 from temporalio import activity
 
 from app.graphs.base import WriteIntent
+
+log = logging.getLogger("agent_runtime.activities")
 
 
 class AgentActivities:
@@ -32,8 +36,42 @@ class AgentActivities:
             tenant_id=run.tenant_id, run_id=run.run_id, checkpoint_id="graph-final",
             seq=1, state_ref={"usage": outcome.usage, "trace": outcome.trace})
         wi = asdict(outcome.write_intent) if outcome.write_intent else None
+        # evidence travels so capture_transcript can record grounding (the inline
+        # path reads outcome.evidence; the Temporal path serializes it here).
         return {"final_text": outcome.final_text, "write_intent": wi,
-                "usage": outcome.usage, "trace": outcome.trace}
+                "usage": outcome.usage, "trace": outcome.trace,
+                "evidence": outcome.evidence}
+
+    @activity.defn(name="capture_transcript")
+    async def capture_transcript(self, req: dict, outcome: dict,
+                                 proposal_id: str | None) -> dict:
+        """SLM distillation (ART, task #72): capture the completed run into the
+        governed agent_transcripts corpus on the TEMPORAL path too — the inline
+        engine does this at engine.py:166, but the workflow uses run_graph (not
+        execute), so without this every Temporal-backed run (the default) yielded
+        ZERO transcripts and ProposalService.decide's attach_decision silently
+        no-op'd, losing the (input -> corrected-output) training pair. Strictly
+        best-effort: a capture failure NEVER fails the run (consent + PII
+        redaction are enforced inside TranscriptSink.capture)."""
+        if self._c.transcripts is None:
+            return {"captured": False, "reason": "sink_disabled"}
+        try:
+            run = await self._c.store.get_run(req["tenant_id"], req["run_id"])
+            if run is None:
+                return {"captured": False, "reason": "run_missing"}
+            wi_dict = outcome.get("write_intent")
+            shim = SimpleNamespace(
+                final_text=outcome.get("final_text"),
+                usage=outcome.get("usage", {}) or {},
+                evidence=outcome.get("evidence", []) or [],
+                write_intent=WriteIntent(**wi_dict) if wi_dict else None)
+            await self._c.transcripts.capture(
+                run, req.get("inputs", {}), shim, proposal_id)
+            return {"captured": True}
+        except Exception:  # noqa: BLE001 — never fail the run for a capture problem
+            log.warning("capture_transcript failed for run %s",
+                        req.get("run_id"), exc_info=True)
+            return {"captured": False, "reason": "error"}
 
     @activity.defn(name="create_proposal")
     async def create_proposal(self, req: dict, intent: dict) -> dict:

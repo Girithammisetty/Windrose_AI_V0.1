@@ -27,3 +27,33 @@ class CaseServiceClient:
             raise NotFound(f"case {case_id} not found")
         resp.raise_for_status()
         return resp.json().get("data") or {}
+
+    async def list_cases(self, *, tenant_id: str, workspace_id: str | None,
+                         limit: int = 100, auth_token: str) -> list[dict]:
+        """Open cases for a workspace — the worklist a decision model batch-runs
+        over (DM-FR-060). Each row carries display_projection, so the caller can
+        evaluate without a per-case fetch."""
+        params = {"limit": limit}
+        if workspace_id:
+            params["workspace_id"] = workspace_id
+        headers = {"Authorization": f"Bearer {auth_token}"}
+        async with httpx.AsyncClient(timeout=self._timeout) as client:
+            resp = await client.get(f"{self._base}/api/v1/cases",
+                                    headers=headers, params=params)
+        resp.raise_for_status()
+        return resp.json().get("data") or []
+
+    async def list_dispositions(self, *, tenant_id: str, auth_token: str) -> list[dict]:
+        """All dispositions for the caller's workspace (case-service's real
+        ListDispositions has no active-only filter — the caller filters).
+        case.apply_disposition's real input schema requires a disposition_id
+        (a real row, not free text), so the triage copilot must ground its
+        choice in this catalog rather than inventing a code (confirmed live
+        2026-07-17: every prior triage proposal failed tool-plane schema
+        validation because disposition_id was never supplied)."""
+        url = f"{self._base}/api/v1/dispositions"
+        headers = {"Authorization": f"Bearer {auth_token}"}
+        async with httpx.AsyncClient(timeout=self._timeout) as client:
+            resp = await client.get(url, headers=headers)
+        resp.raise_for_status()
+        return [d for d in (resp.json().get("data") or []) if d.get("active")]

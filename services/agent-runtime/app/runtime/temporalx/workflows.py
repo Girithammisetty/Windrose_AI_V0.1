@@ -56,6 +56,11 @@ class AgentRunWorkflow:
         final_text = outcome.get("final_text")
 
         if not outcome.get("write_intent"):
+            # SLM distillation (task #72): capture the read-only run transcript
+            # (no proposal). Mirrors the inline engine's capture at run completion.
+            await workflow.execute_activity(
+                "capture_transcript", args=[req, outcome, None],
+                start_to_close_timeout=short, retry_policy=retry)
             await workflow.execute_activity(
                 "finalize_run",
                 args=[req["tenant_id"], req["run_id"], "completed",
@@ -66,6 +71,16 @@ class AgentRunWorkflow:
 
         created = await workflow.execute_activity(
             "create_proposal", args=[req, outcome["write_intent"]],
+            start_to_close_timeout=short, retry_policy=retry)
+
+        # SLM distillation (task #72): capture the write-tier run transcript ONCE,
+        # right after the proposal exists (so the transcript carries proposal_id)
+        # and BEFORE the durable HITL wait — so the training pair is recorded for
+        # every write run regardless of the eventual decision. The human decision
+        # is joined onto this row later by ProposalService.decide's attach_decision
+        # (which no-op'd for Temporal runs until this capture existed).
+        await workflow.execute_activity(
+            "capture_transcript", args=[req, outcome, created["proposal_id"]],
             start_to_close_timeout=short, retry_policy=retry)
 
         if created["executed"]:  # auto-execute policy path

@@ -37,6 +37,7 @@ class Container:
     experiment_reader: Any
     dataset_reader: Any
     pipeline_reader: Any
+    pipeline_writer: Any
     semantic_reader: Any
     catalog_reader: Any
     tool_client: Any
@@ -45,7 +46,9 @@ class Container:
     token_verifier: Any
     proposal_service: ProposalService
     run_engine: RunEngine
+    transcripts: Any = None
     session_proj: Any = None
+    trainer: Any = None
     extras: dict = field(default_factory=dict)
 
 
@@ -63,6 +66,7 @@ def build_container(
     experiment_reader=None,
     dataset_reader=None,
     pipeline_reader=None,
+    pipeline_writer=None,
     semantic_reader=None,
     catalog_reader=None,
     bus=None,
@@ -261,6 +265,16 @@ def build_container(
             from app.adapters.fakes import FakePipelineReader
             pipeline_reader = FakePipelineReader()
 
+    # pipeline-orchestrator WRITER (BRD 52 ml-engineer: sandboxed, OBO-authorized
+    # training launches — reversible artifacts only; promotion stays a proposal)
+    if pipeline_writer is None:
+        if real:
+            from app.adapters.pipeline import PipelineWriter
+            pipeline_writer = PipelineWriter(settings.pipeline_orchestrator_url)
+        else:
+            from app.adapters.fakes import FakePipelineWriter
+            pipeline_writer = FakePipelineWriter()
+
     # semantic-service reader (dashboard-designer grounding: governed measures +
     # dimensions of the workspace's published semantic models)
     if semantic_reader is None:
@@ -315,19 +329,24 @@ def build_container(
         store=store, proposals=proposal_service, bus=bus, realtime=realtime, llm=llm,
         memory=memory, case_reader=case_reader, ingestion_reader=ingestion_reader,
         experiment_reader=experiment_reader, dataset_reader=dataset_reader,
-        pipeline_reader=pipeline_reader, semantic_reader=semantic_reader,
+        pipeline_reader=pipeline_reader, pipeline_writer=pipeline_writer,
+        semantic_reader=semantic_reader,
         catalog_reader=catalog_reader, settings=settings, transcripts=transcripts)
+
+    from app.adapters.trainer import build_trainer
 
     return Container(
         settings=settings, signing_key=signing_key, grant_issuer=grant_issuer,
         token_minter=token_minter, store=store, bus=bus, realtime=realtime, llm=llm,
         memory=memory, case_reader=case_reader, ingestion_reader=ingestion_reader,
         experiment_reader=experiment_reader, dataset_reader=dataset_reader,
-        pipeline_reader=pipeline_reader, semantic_reader=semantic_reader,
+        pipeline_reader=pipeline_reader, pipeline_writer=pipeline_writer,
+        semantic_reader=semantic_reader,
         catalog_reader=catalog_reader, tool_client=tool_client, authz=authz,
         kill_registry=kill_registry, token_verifier=token_verifier,
         proposal_service=proposal_service, run_engine=run_engine,
-        session_proj=session_proj,
+        transcripts=transcripts, session_proj=session_proj,
+        trainer=build_trainer(settings.slm_trainer_backend),
         extras={"mode": mode, "engines": engines,
                 # exposed for the outbox relay (app.main lifespan)
                 "session_factory": session_factory})

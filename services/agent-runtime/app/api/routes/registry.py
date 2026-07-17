@@ -85,6 +85,11 @@ async def list_agents(request: Request):
     defs = await c.store.list_agent_definitions()
     out = []
     for d in sorted(defs, key=lambda x: x.agent_key):
+        # BRD 53 isolation: platform agents (owner_tenant NULL) are visible to
+        # all; a tenant custom agent is visible only within its owning tenant.
+        if d.owner_tenant is not None and d.owner_tenant != principal.tenant_id \
+                and not is_operator(principal):
+            continue
         latest = await c.store.latest_published_version(d.agent_key)
         out.append(_definition_view(d, latest))
     return {"data": out}
@@ -194,6 +199,96 @@ async def put_tenant_config(request: Request, agent_key: str, body: dict = Body(
     await c.store.put_tenant_config(cfg)
     return {"data": {"agent_key": agent_key, "enabled": cfg.enabled,
                      "pinned_version": cfg.pinned_version}}
+
+
+# ---- BRD 53: tenant-authored CUSTOM agents (config over the shared graph) ----
+
+import re as _re
+
+# The ONLY graph a tenant custom agent may run on — the shared, platform-owned,
+# eval-gated safe template. A tenant can never name any other graph_ref.
+_CUSTOM_GRAPH_REF = "persona_copilot.v1"
+# Custom agents cap at write-proposal; higher tiers are operator-fixed-agent only.
+_TIER_RANK = {"read": 0, "write-proposal": 1, "write-direct": 2, "admin": 3}
+
+
+@router.post("/tenants/self/agents")
+async def create_custom_agent(request: Request, body: dict = Body(...)):
+    """Create a TENANT custom agent as governed CONFIGURATION (BRD 53) — never
+    code. The definition is scoped to the caller tenant (owner_tenant), forced
+    onto the shared persona_copilot.v1 graph, and its allow-list becomes the
+    AgentVersion.toolset that ProposalService enforces at runtime (PA-FR-030).
+    Envelope validated here (PA-FR-060): non-empty allow-list, propose_tool ∈
+    allow-list, tier ≤ write-proposal. Published immediately + enabled."""
+    principal = await principal_of(request)
+    await _require_agent_cap(request, principal, "ai.agent.admin")
+    c = request.app.state.container
+    tenant = principal.tenant_id
+
+    name = str(body.get("display_name") or body.get("name") or "").strip()
+    if not name:
+        raise PermissionDenied("display_name is required")  # 4xx envelope error
+    persona = str(body.get("persona") or "").strip()
+    if not persona:
+        raise EvalGateFailed("persona is required (an rbac role this agent serves)")
+    allowed_tools = body.get("allowed_tools") or []
+    if not isinstance(allowed_tools, list) or not allowed_tools:
+        raise EvalGateFailed("allowed_tools must be a non-empty list of tool ids")
+    allowed_tools = [str(t) for t in allowed_tools]
+    propose_tool = body.get("propose_tool")
+    if propose_tool is not None and propose_tool not in allowed_tools:
+        raise EvalGateFailed(f"propose_tool {propose_tool!r} must be in allowed_tools")
+    max_tier = str(body.get("max_tier") or "write-proposal")
+    if _TIER_RANK.get(max_tier, 99) > _TIER_RANK["write-proposal"]:
+        raise EvalGateFailed(
+            f"max_tier {max_tier!r} exceeds the custom-agent ceiling (write-proposal)")
+    # A tenant may NEVER name another graph_ref — it is forced to the shared one.
+    if body.get("graph_ref") and body["graph_ref"] != _CUSTOM_GRAPH_REF:
+        raise EvalGateFailed(
+            f"custom agents run only on {_CUSTOM_GRAPH_REF} (graph_ref is not configurable)")
+
+    slug = _re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")[:40] or "agent"
+    agent_key = f"cust-{str(tenant).replace('-', '')[:8]}-{slug}"
+    if await c.store.get_agent_definition(agent_key) is not None:
+        raise Conflict(f"a custom agent named {name!r} already exists")
+
+    await c.store.upsert_agent_definition(AgentDefinition(
+        agent_key=agent_key, display_name=name,
+        description=body.get("description", f"Tenant custom copilot for {persona}"),
+        owner_team=f"tenant:{tenant}", default_write_mode="proposal",
+        status="published", owner_tenant=tenant))
+
+    toolset = [{"tool_id": t, "version_range": ">=1.0.0"} for t in allowed_tools]
+    card = build_card(agent_key=agent_key, version=1, display_name=name,
+                      description=body.get("description", ""), write_mode="proposal",
+                      skills=[], endpoint=f"https://agent-runtime.internal/a2a/{agent_key}",
+                      eval_score_ref="persona-copilot-shared-gate")
+    sig = sign_card(c.signing_key, card)
+    card["signature"] = {"alg": "RS256", "kid": c.signing_key.kid, "value": sig}
+    await c.store.create_agent_version(AgentVersion(
+        agent_key=agent_key, version=1, graph_ref=_CUSTOM_GRAPH_REF,
+        graph_digest=graph_digest(_CUSTOM_GRAPH_REF), toolset=toolset,
+        model_config={"request_class": "chat", "max_rung": 1, "temperature": 0.2},
+        memory_policy={"scopes_readable": ["workspace", "tenant"], "scopes_writable": []},
+        # The SHARED graph is what carries the platform eval gate — every custom
+        # agent reuses it, so a passing shared-gate marker satisfies publish.
+        eval_gate={"suite_id": "persona-copilot-suite"},
+        eval_gate_result_id="persona-copilot-shared-gate",
+        a2a_card=card, card_signature=sig,
+        principal_ref=f"spiffe://windrose/ns/ai/agent/{agent_key}", status="published"))
+
+    # Enable it for the tenant and carry the persona/prompt/propose_tool that the
+    # shared graph reads at runtime (prompt_params is the config channel).
+    await c.store.put_tenant_config(TenantAgentConfig(
+        tenant_id=tenant, agent_key=agent_key, enabled=True,
+        prompt_params={"persona": persona,
+                       "system_prompt": str(body.get("system_prompt") or "")[:2000],
+                       "propose_tool": propose_tool},
+        auto_execute_policy={}, self_approval=False))
+
+    return {"data": {"agent_key": agent_key, "status": "published",
+                     "graph_ref": _CUSTOM_GRAPH_REF, "allowed_tools": allowed_tools,
+                     "persona": persona, "owner_tenant": tenant}}
 
 
 @router.post("/rollouts")

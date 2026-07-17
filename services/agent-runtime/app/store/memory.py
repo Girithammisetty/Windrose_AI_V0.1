@@ -20,7 +20,9 @@ from app.domain.entities import (
     Session,
     SftDataset,
     SftExample,
+    SlmAdapter,
     TenantAgentConfig,
+    TrainingJob,
     Transcript,
     now,
 )
@@ -39,8 +41,38 @@ class InMemoryStore:
         self._transcripts: dict[str, Transcript] = {}
         self._sft_datasets: dict[str, SftDataset] = {}
         self._sft_examples: dict[str, list[SftExample]] = {}
+        self._training_jobs: dict[str, TrainingJob] = {}
+        self._slm_adapters: dict[str, SlmAdapter] = {}
         self._checkpoints: dict[str, list[dict]] = {}
+        self._decision_models: dict[str, object] = {}  # BRD 54
+        self._outcome_labels: dict[tuple, object] = {}  # BRD 55
         self.outbox: list[dict] = []
+
+    # ---- decision models (BRD 54) ------------------------------------------
+    async def create_decision_model(self, m) -> None:
+        import copy as _c
+        self._decision_models[m.model_id] = _c.copy(m)
+
+    async def get_decision_model(self, tenant_id: str, model_id: str):
+        m = self._decision_models.get(model_id)
+        return m if m and m.tenant_id == tenant_id else None
+
+    async def list_decision_models(self, tenant_id: str) -> list:
+        return [m for m in self._decision_models.values() if m.tenant_id == tenant_id]
+
+    # ---- outcome labels (BRD 55) -------------------------------------------
+    async def upsert_outcome_label(self, lab) -> None:
+        import copy as _c
+        self._outcome_labels[(lab.tenant_id, lab.decision_ref)] = _c.copy(lab)
+
+    async def list_outcome_labels(self, tenant_id: str, *, decision_type=None) -> list:
+        out = [l for (t, _), l in self._outcome_labels.items() if t == tenant_id]
+        if decision_type:
+            out = [l for l in out if l.decision_type == decision_type]
+        return out
+
+    async def get_outcome_label(self, tenant_id: str, decision_ref: str):
+        return self._outcome_labels.get((tenant_id, decision_ref))
 
     async def connect(self) -> None:  # parity with SqlStore
         return None
@@ -270,6 +302,45 @@ class InMemoryStore:
         if d is None or d.tenant_id != tenant_id:
             return []
         return [copy.copy(r) for r in self._sft_examples.get(dataset_id, [])[:limit]]
+
+    # ---- SLM training jobs + adapters (milestone 3/4) ----------------------
+    async def record_training_job(self, j: TrainingJob) -> None:
+        self._training_jobs[j.job_id] = copy.copy(j)
+
+    async def update_training_job(self, j: TrainingJob) -> None:
+        self._training_jobs[j.job_id] = copy.copy(j)
+
+    async def get_training_job(self, tenant_id: str, job_id: str) -> TrainingJob | None:
+        j = self._training_jobs.get(job_id)
+        return copy.copy(j) if j and j.tenant_id == tenant_id else None
+
+    async def list_training_jobs(
+        self, tenant_id: str, *, archetype: str | None = None, limit: int = 50,
+    ) -> list[TrainingJob]:
+        out = [j for j in self._training_jobs.values() if j.tenant_id == tenant_id]
+        if archetype:
+            out = [j for j in out if j.archetype == archetype]
+        out.sort(key=lambda j: j.created_at, reverse=True)
+        return [copy.copy(j) for j in out[:limit]]
+
+    async def record_slm_adapter(self, a: SlmAdapter) -> None:
+        self._slm_adapters[a.adapter_id] = copy.copy(a)
+
+    async def update_slm_adapter(self, a: SlmAdapter) -> None:
+        self._slm_adapters[a.adapter_id] = copy.copy(a)
+
+    async def get_slm_adapter(self, tenant_id: str, adapter_id: str) -> SlmAdapter | None:
+        a = self._slm_adapters.get(adapter_id)
+        return copy.copy(a) if a and a.tenant_id == tenant_id else None
+
+    async def list_slm_adapters(
+        self, tenant_id: str, *, archetype: str | None = None, limit: int = 50,
+    ) -> list[SlmAdapter]:
+        out = [a for a in self._slm_adapters.values() if a.tenant_id == tenant_id]
+        if archetype:
+            out = [a for a in out if a.archetype == archetype]
+        out.sort(key=lambda a: a.created_at, reverse=True)
+        return [copy.copy(a) for a in out[:limit]]
 
     async def supersede_pending(
         self, *, tenant_id: str, run_id: str, tool_id: str, urns: list[str],
