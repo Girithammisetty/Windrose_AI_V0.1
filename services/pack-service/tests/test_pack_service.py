@@ -47,7 +47,7 @@ def test_inc1_kinds_and_reversibility_contract():
     # inc1 materializes self-contained kinds (no dataset/four-eyes chain).
     # inc3 adds case_fields (case-service custom-field catalog) here.
     assert set(installer.INC1_KINDS) == {"dispositions", "case_fields", "display_labels",
-                                         "guardrails", "roles", "decision_models"}
+                                         "guardrails", "agent_configs", "roles", "decision_models"}
     assert "saved_queries" not in installer.INC1_KINDS  # needs its datasets first
     # Roles/case_fields carry a real Core delete verb → reversible; dispositions/
     # decision tables do not (tombstoned honestly on uninstall).
@@ -55,6 +55,7 @@ def test_inc1_kinds_and_reversibility_contract():
     assert "case_fields" in installer.REVERSIBLE_KINDS  # DELETE /case-fields/{id}
     assert "display_labels" in installer.REVERSIBLE_KINDS  # DELETE /tenants/self/labels/{key}
     assert "guardrails" in installer.REVERSIBLE_KINDS  # PUT empty envelope clears it
+    assert "agent_configs" in installer.REVERSIBLE_KINDS  # PUT empty prompt_params clears it
     assert "dispositions" not in installer.REVERSIBLE_KINDS
     assert "decision_models" not in installer.REVERSIBLE_KINDS
 
@@ -151,3 +152,8 @@ def test_plan_materializes_case_fields(tmp_path):
     guard_ops = [o for o in ops if o["kind"] == "guardrails"]
     assert guard_ops and all(o["action"] == "create" for o in guard_ops)
     assert {"case-triage", "analytics"} <= {o["name"] for o in guard_ops}
+    # agent_configs (inc5) — prompt-param specialization of the same fixed agents,
+    # now materialized (was installer-deferred).
+    cfg_ops = [o for o in ops if o["kind"] == "agent_configs"]
+    assert cfg_ops and all(o["action"] == "create" for o in cfg_ops)
+    assert {"case-triage", "analytics"} <= {o["name"] for o in cfg_ops}

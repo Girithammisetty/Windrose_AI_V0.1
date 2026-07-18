@@ -31,7 +31,8 @@ from app.domain import catalog
 # approver AND without the data-ingestion chain — so they install cleanly on
 # their own. (saved_queries/dashboards need the pack's datasets first, which is
 # a deferred kind; they're reported `deferred` in the plan, not faked.)
-INC1_KINDS = ("dispositions", "case_fields", "display_labels", "guardrails", "roles", "decision_models")
+INC1_KINDS = ("dispositions", "case_fields", "display_labels", "guardrails",
+              "agent_configs", "roles", "decision_models")
 
 # inc2 data chain, in dependency order. datasets ingest first; the semantic
 # model + verified queries are authored + SUBMITTED as governed drafts (NOT
@@ -46,7 +47,8 @@ INC2_PHASE2_KINDS = ("dashboards",)
 # uninstall. Others are ledgered + tombstoned honestly (PKG-FR-025): the object
 # is retained and loses its pack-origin marker, because Core has no delete verb
 # for it yet — a real, surfaced gap in the materialization contract (PKG-FR-030).
-REVERSIBLE_KINDS = {"roles", "saved_queries", "dashboards", "case_fields", "display_labels", "guardrails"}
+REVERSIBLE_KINDS = {"roles", "saved_queries", "dashboards", "case_fields",
+                    "display_labels", "guardrails", "agent_configs"}
 
 
 def _packctl_client():
@@ -102,7 +104,7 @@ def plan(client, manifest) -> list[dict]:
             continue
         if comp.kind not in materializable:
             ops.append({"kind": comp.kind, "identity": comp.identity, "action": "deferred",
-                        "detail": "not materialized yet (cases / agents / memories / pipelines)"})
+                        "detail": "not materialized yet (cases / memories / pipelines)"})
             continue
         for name in _component_names(manifest, comp):
             action = "exists" if name in existing.get(comp.kind, set()) else "create"
@@ -180,6 +182,8 @@ def _component_names(manifest, comp) -> list[str]:
         return [lbl["key"] for lbl in doc]
     if comp.kind == "guardrails":
         return [gd["agent_key"] for gd in doc]
+    if comp.kind == "agent_configs":
+        return [ac["agent_key"] for ac in doc]
     if comp.kind == "roles":
         return [r["name"] for r in doc]
     if comp.kind == "saved_queries":
@@ -248,6 +252,12 @@ def run_install(client, manifest, origin_of: Callable[[str, str], str]) -> list[
                     do("guardrails", comp, gd["agent_key"],
                        lambda gd=gd, env=env: client.ensure_guardrail(
                            comp.identity, gd["agent_key"], env))
+            elif kind == "agent_configs":
+                for ac in doc:
+                    do("agent_configs", comp, ac["agent_key"],
+                       lambda ac=ac: ac["agent_key"] if client.ensure_agent_config(
+                           comp.identity, ac["agent_key"], ac.get("prompt_params", {}),
+                           ac.get("enabled", True)) else None)
             elif kind == "roles":
                 for role in doc:
                     do("roles", comp, role["name"],
@@ -312,6 +322,10 @@ def run_uninstall(client, ledger: list[dict]) -> list[dict]:
             ok = client.delete_guardrail(tid)
             outcomes.append({"ledger_id": row["id"], "deleted": ok,
                              "detail": "agent guardrail cleared" if ok else "clear failed"})
+        elif kind == "agent_configs" and tid:
+            ok = client.clear_agent_config(tid)
+            outcomes.append({"ledger_id": row["id"], "deleted": ok,
+                             "detail": "agent specialization cleared" if ok else "clear failed"})
         elif kind == "dashboards" and tid:
             r = client._req("DELETE", f"{e.chart}/api/v1/dashboards/{tid}", tok)
             ok = r.status_code in (200, 204)

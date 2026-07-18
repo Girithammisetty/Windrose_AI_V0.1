@@ -564,16 +564,36 @@ class PlatformClient:
     # ---- agent-runtime per-tenant agent config -------------------------------
     def ensure_agent_config(self, identity: str, agent_key: str,
                             prompt_params: dict, enabled: bool = True) -> bool:
+        """Specialize a FIXED platform agent for this tenant by setting its
+        prompt_params (persona/domain/instructions). The PUT is a partial upsert,
+        so this does NOT disturb the agent's guardrail_policy (inc4). Idempotent:
+        a noop when the stored prompt_params + enabled already match. Requires
+        ai.agent.admin."""
         tok = self.author_token()
-        r = self._req("PUT",
-                      f"{self.endpoints.agent}/api/v1/registry/tenants/self/agents/{agent_key}",
-                      tok, headers=JSON, json={"enabled": enabled,
-                                               "prompt_params": prompt_params})
+        base = f"{self.endpoints.agent}/api/v1/registry/tenants/self/agents/{agent_key}"
+        g = self._req("GET", base, tok)
+        if g.status_code == 200:
+            d = g.json().get("data") or {}
+            if d.get("prompt_params") == prompt_params and d.get("enabled", True) == enabled:
+                self._record("agent_configs", identity, "noop", None, f"{agent_key} prompt_params")
+                return True
+        r = self._req("PUT", base, tok, headers=JSON,
+                      json={"enabled": enabled, "prompt_params": prompt_params})
         okd = r.status_code == 200
         self._record("agent_configs", identity, "create" if okd else "failed", None,
                      f"{agent_key} prompt_params set" if okd
                      else f"{agent_key} {r.status_code}: {r.text[:200]}")
         return okd
+
+    def clear_agent_config(self, agent_key: str) -> bool:
+        """Reversal: remove the pack's prompt-param specialization (PUT empty
+        prompt_params + re-enable). The partial upsert preserves any guardrail
+        envelope on the agent; there is no DELETE for a tenant agent config."""
+        r = self._req("PUT",
+                      f"{self.endpoints.agent}/api/v1/registry/tenants/self/agents/{agent_key}",
+                      self.author_token(), headers=JSON,
+                      json={"enabled": True, "prompt_params": {}})
+        return r.status_code in (200, 201)
 
     # ---- per-agent security envelope (guardrails, BRD 53 inc2) ---------------
     def ensure_guardrail(self, identity: str, agent_key: str,
