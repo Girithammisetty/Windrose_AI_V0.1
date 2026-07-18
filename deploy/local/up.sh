@@ -204,6 +204,11 @@ boot_platform_extra      # query, semantic, chart, usage, audit, notification, e
 # this point (boot_platform_extra's start_chart just ran).
 ( cd "$E2E" && "$PY" lib/seed.py chart_dashboard_tool "$TENANT_ID" ) 2>&1 | tee "$LOG_DIR/seed_chart_dashboard_tool.log"
 
+# BRD 56 inc2: register the dataset.entity.merge write-proposal tool + point
+# tool-plane's mcp_backends at dataset-service's facade, so an approved steward
+# entity-merge proposal federates to a real confirm-merge (four-eyes, ER-FR-030).
+( cd "$E2E" && "$PY" lib/seed.py entity_merge_tool "$TENANT_ID" ) 2>&1 | tee "$LOG_DIR/seed_entity_merge_tool.log"
+
 # ---- bff-graphql (Node) ----
 start_bff() {
   say "install + boot bff-graphql (Apollo, verifies harness JWKS, forwards bearer)"
@@ -263,6 +268,17 @@ start_ui() {
   ok "ui-web serving at $UI_URL"
 }
 start_ui
+
+# ============================================================ reconcile
+# The rbac permissions projection lives in Redis and the Go services read it
+# directly (no synchronous fallback on a miss), so a cold Redis / restart would
+# otherwise 403 every request until each tenant is rebuilt by hand. Self-heal
+# all tenants now so a fresh boot is immediately usable. Idempotent + non-fatal.
+if [ "$PLATFORM_ONLY" = 0 ]; then
+  say "reconciling rbac projections (self-heal after restart)"
+  ( cd "$LOCAL_DIR" && ./reconcile.sh ) 2>&1 | tee "$LOG_DIR/reconcile.log" \
+    || warn "reconcile reported errors (see $LOG_DIR/reconcile.log)"
+fi
 
 # ============================================================ banner
 # accurate native-service RSS (includes uvicorn workers / next-server children,

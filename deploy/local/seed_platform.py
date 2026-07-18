@@ -307,6 +307,25 @@ def verify_persona_capabilities(label="verify"):
     return all_ok
 
 
+def activate_personas():
+    """Promote the seeded personas from 'invited' to 'active' via identity's real
+    admin activate endpoint (the admin equivalent of accepting an invite). Needed
+    so they are assignable — otherwise the case assign/reassign picker (active
+    users only) has nothing to offer. Idempotent."""
+    say("activating persona accounts (invited -> active) so they are assignable")
+    admin_tok = c.user_token("admin@demo.windrose", TENANT, ["platform.admin"],
+                             workspace_id=WORKSPACE)
+    n = 0
+    for email, p in PERSONAS.items():
+        r = d.req("POST", f"{c.IDENTITY}/api/v1/users/{p['sub']}/activate",
+                  admin_tok, headers=d.J())
+        if r.status_code == 200:
+            n += 1
+        else:
+            warn(f"activate {email}: {r.status_code} {r.text[:120]}")
+    ok(f"{n}/{len(PERSONAS)} persona account(s) active")
+
+
 def seed_persona_grants():
     """Grant each persona its authorization through rbac's REAL role/grant path,
     then let rbac's worker materialize the durable perm:* projection and verify
@@ -406,6 +425,12 @@ def ensure_platform_seeded():
     os.makedirs(os.path.dirname(out_env), exist_ok=True)
     write_personas_env(out_env)
     ok(f"persona login map written: {out_env}")
+
+    # Personas are pre-provisioned WORKING accounts (they log in and decide), so
+    # they must be 'active' — an invited-forever account is not assignable, which
+    # breaks case assign/reassign (needs >=2 active users). A real user activates
+    # by accepting the invite / first login; do the admin-path equivalent here.
+    activate_personas()
 
     # REAL grant path for the four personas: group memberships -> rbac's worker
     # materializes the durable, differentiated perm:* projection the UI gate
