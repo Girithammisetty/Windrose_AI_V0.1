@@ -48,6 +48,7 @@ import {
   mapWebhookEndpoint, mapWebhookDelivery, mapNotificationTemplate, mapEmailSuppression,
   mapTool, mapToolVersion, mapToolHealth, mapTenantToolSettings, mapByoSubmission,
   mapAgentDefinition, mapAgentVersionInfo, mapTenantAgentConfig, mapAgentRunListItem,
+  mapDecisionModel, mapBatchEvaluate,
 } from "../schema/map.js";
 
 /** GraphQL ChartSourceInput (camel) -> chart-service source body (snake). */
@@ -372,6 +373,15 @@ export const resolvers = {
 
     workspace: (_p: unknown, a: { id: string }, ctx: GraphQLContext) =>
       nullOn404(ctx.clients.rbac.workspace(a.id).then((d) => mapWorkspace(ctx, d))),
+
+    // BYO-P4: the caller tenant's OIDC IdP. 404 (never configured) → the
+    // "unconfigured" shape rather than null, so the admin screen always renders.
+    tenantIdp: (_p: unknown, _a: unknown, ctx: GraphQLContext) =>
+      nullOn404(ctx.clients.identity.tenantIdp()).then((d) =>
+        d
+          ? { __typename: "TenantIdpConfig" as const, configured: true, issuer: d.issuer, clientId: d.client_id, discoveryUrl: d.discovery_url, enabled: d.enabled, updatedAt: d.updated_at ?? null }
+          : { __typename: "TenantIdpConfig" as const, configured: false, issuer: null, clientId: null, discoveryUrl: null, enabled: false, updatedAt: null },
+      ),
 
     groups: async (
       _p: unknown,
@@ -1537,11 +1547,29 @@ export const resolvers = {
     tenantAgentConfig: (_p: unknown, a: { agentKey: string }, ctx: GraphQLContext) =>
       nullOn404(ctx.clients.agent.tenantAgentConfig(a.agentKey).then(mapTenantAgentConfig)),
 
+    agentCeilings: (_p: unknown, _a: unknown, ctx: GraphQLContext) =>
+      ctx.clients.agent.agentCeilings().then((d) => ({
+        maxBudgetTokens: d.max_budget_tokens,
+        maxTier: d.max_tier,
+        updatedAt: d.updated_at ?? null,
+        updatedBy: d.updated_by ?? null,
+      })),
+
     agentRuns: async (_p: unknown, a: ConnectionArgs & { agentKey?: string }, ctx: GraphQLContext) => {
       const { limit } = toLimitCursor(a, ctx.config.limits);
       const page = await ctx.clients.agent.agentRuns({ agentKey: a.agentKey, limit });
       return toConnection(page, (d) => mapAgentRunListItem(ctx, d));
     },
+
+    // ---- BRD 54 inc2: governed decision tables ------------------------------
+    decisionModels: (_p: unknown, _a: unknown, ctx: GraphQLContext) =>
+      ctx.clients.agent.decisionModels().then((rows) => rows.map(mapDecisionModel)),
+
+    decisionModel: (_p: unknown, a: { id: string }, ctx: GraphQLContext) =>
+      nullOn404(ctx.clients.agent.decisionModel(a.id).then(mapDecisionModel)),
+
+    decisionModelVersions: (_p: unknown, a: { id: string }, ctx: GraphQLContext) =>
+      ctx.clients.agent.decisionModelVersions(a.id).then((rows) => rows.map(mapDecisionModel)),
   },
 
   Mutation: {
@@ -1580,6 +1608,23 @@ export const resolvers = {
     ) => {
       const d = await ctx.clients.identity.setEmbedConfig(a.tenantId, a.allowedOrigins, a.idempotencyKey);
       return { __typename: "SetEmbedConfigResult" as const, embedSecret: d.embed_secret, allowedOrigins: d.allowed_origins };
+    },
+
+    setTenantIdp: async (
+      _p: unknown,
+      a: { input: { issuer: string; clientId?: string; discoveryUrl?: string; enabled?: boolean }; idempotencyKey?: string },
+      ctx: GraphQLContext,
+    ) => {
+      const d = await ctx.clients.identity.setTenantIdp(
+        { issuer: a.input.issuer, client_id: a.input.clientId, discovery_url: a.input.discoveryUrl, enabled: a.input.enabled },
+        a.idempotencyKey,
+      );
+      return { __typename: "TenantIdpConfig" as const, configured: true, issuer: d.issuer, clientId: d.client_id, discoveryUrl: d.discovery_url, enabled: d.enabled, updatedAt: d.updated_at ?? null };
+    },
+
+    deleteTenantIdp: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      await ctx.clients.identity.deleteTenantIdp();
+      return true;
     },
 
     addGroupMember: async (
@@ -4175,6 +4220,158 @@ export const resolvers = {
       // the config for the full row rather than fabricate the missing fields.
       const d = await ctx.clients.agent.tenantAgentConfig(a.agentKey);
       return mapTenantAgentConfig(d);
+    },
+
+    createCustomAgent: async (
+      _p: unknown,
+      a: {
+        input: {
+          displayName: string;
+          persona: string;
+          systemPrompt?: string;
+          allowedTools: string[];
+          proposeTool?: string | null;
+          dataScopeWorkspaces?: string[];
+          budgetMaxTokensPerSession?: number;
+          blockPiiEgress?: boolean;
+          redactPii?: boolean;
+        };
+      },
+      ctx: GraphQLContext,
+    ) => {
+      const i = a.input;
+      const dataScope =
+        i.dataScopeWorkspaces && i.dataScopeWorkspaces.length > 0
+          ? { workspaces: i.dataScopeWorkspaces }
+          : undefined;
+      const budget =
+        i.budgetMaxTokensPerSession != null
+          ? { max_tokens_per_session: i.budgetMaxTokensPerSession }
+          : undefined;
+      const pii =
+        i.blockPiiEgress || i.redactPii
+          ? { block_pii_egress: !!i.blockPiiEgress, redact: !!i.redactPii }
+          : undefined;
+      const d = await ctx.clients.agent.createCustomAgent({
+        display_name: i.displayName,
+        persona: i.persona,
+        system_prompt: i.systemPrompt,
+        allowed_tools: i.allowedTools,
+        propose_tool: i.proposeTool ?? undefined,
+        data_scope: dataScope,
+        budget,
+        pii,
+      });
+      return {
+        agentKey: d.agent_key,
+        status: d.status,
+        graphRef: d.graph_ref,
+        allowedTools: d.allowed_tools ?? [],
+        persona: d.persona,
+        ownerTenant: d.owner_tenant,
+        guardrailPolicy: d.guardrail_policy ?? {},
+      };
+    },
+
+    autobindPersonaCopilots: (
+      _p: unknown,
+      a: { roles: string[]; proposeTool?: string | null },
+      ctx: GraphQLContext,
+    ) =>
+      ctx.clients.agent.autobindPersonaCopilots(a.roles, a.proposeTool ?? undefined).then((d) => ({
+        created: (d.created ?? []).map((x) => ({ role: x.role, agentKey: x.agent_key })),
+        skipped: (d.skipped ?? []).map((x) => ({ role: x.role, agentKey: x.agent_key })),
+      })),
+
+    setAgentCeilings: (
+      _p: unknown,
+      a: { maxBudgetTokens: number; maxTier: string },
+      ctx: GraphQLContext,
+    ) =>
+      ctx.clients.agent.setAgentCeilings(a.maxBudgetTokens, a.maxTier).then((d) => ({
+        maxBudgetTokens: d.max_budget_tokens,
+        maxTier: d.max_tier,
+        updatedAt: d.updated_at ?? null,
+        updatedBy: d.updated_by ?? null,
+      })),
+
+    // ---- BRD 54 inc2: governed decision tables ------------------------------
+    createDecisionModel: async (
+      _p: unknown,
+      a: {
+        input: {
+          name: string;
+          workspaceId?: string;
+          rules: Array<{ when: Array<{ column: string; op: string; value?: unknown }>; then: { dispositionCode: string; severity: string }; note?: string }>;
+          defaultOutcome?: { dispositionCode: string; severity: string } | null;
+        };
+        idempotencyKey?: string;
+      },
+      ctx: GraphQLContext,
+    ) => {
+      const d = await ctx.clients.agent.createDecisionModel(
+        {
+          name: a.input.name,
+          workspace_id: a.input.workspaceId,
+          rules: a.input.rules.map((r) => ({
+            when: r.when.map((c) => ({ column: c.column, op: c.op, value: c.value })),
+            then: { disposition_code: r.then.dispositionCode, severity: r.then.severity },
+            note: r.note,
+          })),
+          default_outcome: a.input.defaultOutcome
+            ? { disposition_code: a.input.defaultOutcome.dispositionCode, severity: a.input.defaultOutcome.severity }
+            : null,
+        },
+        a.idempotencyKey,
+      );
+      return mapDecisionModel(d);
+    },
+
+    batchEvaluateDecisionModel: async (
+      _p: unknown,
+      a: { id: string; input: { workspaceId?: string; caseIds?: string[]; limit?: number }; propose?: boolean; idempotencyKey?: string },
+      ctx: GraphQLContext,
+    ) => {
+      const d = await ctx.clients.agent.batchEvaluateDecisionModel(
+        a.id,
+        { workspace_id: a.input.workspaceId, case_ids: a.input.caseIds, limit: a.input.limit },
+        Boolean(a.propose),
+        a.idempotencyKey,
+      );
+      return mapBatchEvaluate(d);
+    },
+
+    approveDecisionModel: async (
+      _p: unknown, a: { id: string; idempotencyKey?: string }, ctx: GraphQLContext,
+    ) => mapDecisionModel(await ctx.clients.agent.approveDecisionModel(a.id, a.idempotencyKey)),
+
+    newDecisionModelVersion: async (
+      _p: unknown,
+      a: {
+        id: string;
+        input: {
+          rules: Array<{ when: Array<{ column: string; op: string; value?: unknown }>; then: { dispositionCode: string; severity: string }; note?: string }>;
+          defaultOutcome?: { dispositionCode: string; severity: string } | null;
+        };
+        idempotencyKey?: string;
+      },
+      ctx: GraphQLContext,
+    ) => {
+      const d = await ctx.clients.agent.newDecisionModelVersion(
+        a.id,
+        {
+          rules: a.input.rules.map((r) => ({
+            when: r.when.map((c) => ({ column: c.column, op: c.op, value: c.value })),
+            then: { disposition_code: r.then.dispositionCode, severity: r.then.severity },
+            note: r.note,
+          })),
+          default_outcome: a.input.defaultOutcome
+            ? { disposition_code: a.input.defaultOutcome.dispositionCode, severity: a.input.defaultOutcome.severity }
+            : null,
+        },
+        a.idempotencyKey,
+      );
+      return mapDecisionModel(d);
     },
   },
 

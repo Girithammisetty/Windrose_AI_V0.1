@@ -131,6 +131,36 @@ export interface PutTenantAgentConfigBody {
   self_approval?: boolean;
 }
 
+/** BRD 53 inc2b: author a custom agent + its guardrail envelope (inc2). Mirrors
+ * app/api/routes/registry.py create_custom_agent — server validates + clamps. */
+export interface CreateCustomAgentBody {
+  display_name: string;
+  persona: string;
+  system_prompt?: string;
+  allowed_tools: string[];
+  propose_tool?: string | null;
+  data_scope?: { workspaces?: string[]; dataset_urns?: string[] };
+  budget?: { max_tokens_per_session?: number };
+  pii?: { block_pii_egress?: boolean; redact?: boolean };
+}
+
+export interface CustomAgentResultDTO {
+  agent_key: string;
+  status: string;
+  graph_ref: string;
+  allowed_tools: string[];
+  persona: string;
+  owner_tenant: string;
+  guardrail_policy?: Record<string, unknown>;
+}
+
+export interface AgentCeilingsDTO {
+  max_budget_tokens: number;
+  max_tier: string;
+  updated_at?: string | null;
+  updated_by?: string | null;
+}
+
 /** run_view row on the Tier 2b GET /runs list (adds created_at). */
 export interface AgentRunListItemDTO {
   id: string;
@@ -143,6 +173,64 @@ export interface AgentRunListItemDTO {
   error?: unknown;
   final_text?: string | null;
   created_at?: string;
+}
+
+// ---- BRD 54 inc2: decision-model DTOs (agent-runtime decision_view) --------
+
+export interface DecisionConditionDTO {
+  column: string;
+  op: string;
+  value?: unknown;
+}
+export interface DecisionOutcomeDTO {
+  disposition_code: string;
+  severity: string;
+}
+export interface DecisionRuleDTO {
+  when: DecisionConditionDTO[];
+  then: DecisionOutcomeDTO | null;
+  note?: string;
+}
+export interface DecisionModelDTO {
+  id: string;
+  name: string;
+  version: number;
+  status: string;
+  workspace_id?: string | null;
+  dataset_urn?: string | null;
+  created_by?: string | null;
+  approved_by?: string | null;
+  approved_at?: string | null;
+  rules: DecisionRuleDTO[];
+  default_outcome?: DecisionOutcomeDTO | null;
+}
+export interface CreateDecisionModelBody {
+  name: string;
+  workspace_id?: string;
+  rules: DecisionRuleDTO[];
+  default_outcome?: DecisionOutcomeDTO | null;
+}
+export interface BatchEvaluateRowDTO {
+  case_id: string;
+  matched: boolean;
+  rule_index: number | null;
+  explanation: string;
+  outcome: DecisionOutcomeDTO | null;
+  proposal_id?: string;
+  proposal_status?: string;
+  executed?: boolean;
+}
+export interface BatchEvaluateDTO {
+  model_id: string;
+  proposed: boolean;
+  summary: {
+    cases: number;
+    matched: number;
+    unmatched: number;
+    proposals_created: number;
+    by_outcome: Record<string, number>;
+  };
+  results: BatchEvaluateRowDTO[];
 }
 
 export class AgentClient {
@@ -280,6 +368,46 @@ export class AgentClient {
     return r.data;
   }
 
+  /** POST /registry/tenants/self/agents — author a tenant CUSTOM agent (BRD 53)
+   * as governed configuration + its guardrail envelope (inc2: data_scope,
+   * budget, pii). Needs ai.agent.admin; validated + clamped server-side. */
+  async createCustomAgent(body: CreateCustomAgentBody): Promise<CustomAgentResultDTO> {
+    const r = await this.http.post<{ data: CustomAgentResultDTO }>(
+      "/api/v1/registry/tenants/self/agents",
+      { body },
+    );
+    return r.data;
+  }
+
+  /** POST /registry/tenants/self/personas/autobind — bind persona copilots for
+   * pack roles (BRD 53 inc3, PA-FR-010). Idempotent; needs ai.agent.admin. */
+  async autobindPersonaCopilots(
+    roles: string[],
+    proposeTool?: string | null,
+  ): Promise<{ created: { role: string; agent_key: string }[]; skipped: { role: string; agent_key: string }[] }> {
+    const r = await this.http.post<{
+      data: { created: { role: string; agent_key: string }[]; skipped: { role: string; agent_key: string }[] };
+    }>("/api/v1/registry/tenants/self/personas/autobind", {
+      body: { roles, propose_tool: proposeTool ?? undefined },
+    });
+    return r.data;
+  }
+
+  /** GET /registry/platform/agent-ceilings — operator-only platform ceilings. */
+  async agentCeilings(): Promise<AgentCeilingsDTO> {
+    const r = await this.http.get<{ data: AgentCeilingsDTO }>("/api/v1/registry/platform/agent-ceilings");
+    return r.data;
+  }
+
+  /** PUT /registry/platform/agent-ceilings — set them (operator-only). */
+  async setAgentCeilings(maxBudgetTokens: number, maxTier: string): Promise<AgentCeilingsDTO> {
+    const r = await this.http.put<{ data: AgentCeilingsDTO }>(
+      "/api/v1/registry/platform/agent-ceilings",
+      { body: { max_budget_tokens: maxBudgetTokens, max_tier: maxTier } },
+    );
+    return r.data;
+  }
+
   // ---- Tier 2b: run history (any tenant principal; tenant-scoped by RLS) ----
 
   agentRuns(params: { agentKey?: string; limit: number }): Promise<Page<AgentRunListItemDTO>> {
@@ -302,6 +430,69 @@ export class AgentClient {
     return this.http.get<Page<SftDatasetDTO>>("/api/v1/sft-datasets", {
       query: { "filter[agent_key]": params.agentKey, limit: params.limit },
     });
+  }
+
+  // ---- BRD 54 inc2: governed decision tables (authoring + batch) ------------
+
+  async decisionModels(): Promise<DecisionModelDTO[]> {
+    const r = await this.http.get<{ data: DecisionModelDTO[] }>("/api/v1/decision-models");
+    return r.data ?? [];
+  }
+
+  async decisionModel(id: string): Promise<DecisionModelDTO> {
+    const r = await this.http.get<{ data: DecisionModelDTO } | DecisionModelDTO>(
+      `/api/v1/decision-models/${encodeURIComponent(id)}`,
+    );
+    return unwrap<DecisionModelDTO>(r);
+  }
+
+  async createDecisionModel(body: CreateDecisionModelBody, idempotencyKey?: string): Promise<DecisionModelDTO> {
+    const r = await this.http.post<{ data: DecisionModelDTO } | DecisionModelDTO>(
+      "/api/v1/decision-models",
+      { body, idempotencyKey },
+    );
+    return unwrap<DecisionModelDTO>(r);
+  }
+
+  /** All versions of one logical table, newest first — the change log. */
+  async decisionModelVersions(id: string): Promise<DecisionModelDTO[]> {
+    const r = await this.http.get<{ data: DecisionModelDTO[] }>(
+      `/api/v1/decision-models/${encodeURIComponent(id)}/versions`,
+    );
+    return r.data ?? [];
+  }
+
+  /** Four-eyes approval of the logic: publish a draft (author ≠ approver). */
+  async approveDecisionModel(id: string, idempotencyKey?: string): Promise<DecisionModelDTO> {
+    const r = await this.http.post<{ data: DecisionModelDTO } | DecisionModelDTO>(
+      `/api/v1/decision-models/${encodeURIComponent(id)}/approve`,
+      { idempotencyKey },
+    );
+    return unwrap<DecisionModelDTO>(r);
+  }
+
+  /** Edit = a new draft version (prior version stays immutable). */
+  async newDecisionModelVersion(id: string, body: { rules?: DecisionRuleDTO[]; default_outcome?: DecisionOutcomeDTO | null }, idempotencyKey?: string): Promise<DecisionModelDTO> {
+    const r = await this.http.post<{ data: DecisionModelDTO } | DecisionModelDTO>(
+      `/api/v1/decision-models/${encodeURIComponent(id)}/versions`,
+      { body, idempotencyKey },
+    );
+    return unwrap<DecisionModelDTO>(r);
+  }
+
+  /** POST /decision-models/{id}/batch-evaluate — dry-run preview by default;
+   * ?propose=true mints one governed four-eyes proposal per matched case. */
+  async batchEvaluateDecisionModel(
+    id: string,
+    body: { workspace_id?: string; case_ids?: string[]; limit?: number },
+    propose: boolean,
+    idempotencyKey?: string,
+  ): Promise<BatchEvaluateDTO> {
+    const r = await this.http.post<{ data: BatchEvaluateDTO } | BatchEvaluateDTO>(
+      `/api/v1/decision-models/${encodeURIComponent(id)}/batch-evaluate`,
+      { body, query: { propose }, idempotencyKey },
+    );
+    return unwrap<BatchEvaluateDTO>(r);
   }
 }
 

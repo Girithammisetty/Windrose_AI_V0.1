@@ -23,6 +23,8 @@ import type {
   ProposalDTO, AgentRunDTO, AgentKillSwitchDTO,
   // Tier 2b: agent-runtime catalog/registry.
   AgentDefinitionDTO, AgentVersionDTO, TenantAgentConfigDTO, AgentRunListItemDTO,
+  // BRD 54 inc2: governed decision tables.
+  DecisionModelDTO, DecisionOutcomeDTO, BatchEvaluateDTO,
 } from "../clients/agent.js";
 import type {
   ToolKillSwitchDTO,
@@ -306,6 +308,7 @@ export function mapDataset(ctx: GraphQLContext, d: DatasetDTO) {
     id: d.id,
     urn: urn(ctx, "dataset", "dataset", d.id),
     name: d.name,
+    workspaceId: d.workspace_id ?? null,
     description: d.description ?? null,
     status: d.status ?? d.lifecycle ?? null,
     tags: d.tags ?? [],
@@ -2140,6 +2143,56 @@ export function mapTenantAgentConfig(d: TenantAgentConfigDTO) {
     promptParams: d.prompt_params ?? null,
     autoExecutePolicy: d.auto_execute_policy ?? null,
     selfApproval: d.self_approval ?? false,
+  };
+}
+
+function mapDecisionOutcome(o: DecisionOutcomeDTO | null | undefined) {
+  return o ? { dispositionCode: o.disposition_code, severity: o.severity } : null;
+}
+
+export function mapDecisionModel(d: DecisionModelDTO) {
+  return {
+    __typename: "DecisionModel" as const,
+    id: d.id,
+    name: d.name,
+    version: d.version,
+    status: d.status,
+    workspaceId: d.workspace_id ?? null,
+    datasetUrn: d.dataset_urn ?? null,
+    createdBy: d.created_by ?? null,
+    approvedBy: d.approved_by ?? null,
+    approvedAt: d.approved_at ?? null,
+    rules: (d.rules ?? []).map((r) => ({
+      when: (r.when ?? []).map((c) => ({ column: c.column, op: c.op, value: c.value ?? null })),
+      then: mapDecisionOutcome(r.then),
+      note: r.note ?? null,
+    })),
+    defaultOutcome: mapDecisionOutcome(d.default_outcome),
+  };
+}
+
+export function mapBatchEvaluate(d: BatchEvaluateDTO) {
+  return {
+    __typename: "BatchEvaluateResult" as const,
+    modelId: d.model_id,
+    proposed: d.proposed,
+    summary: {
+      cases: d.summary.cases,
+      matched: d.summary.matched,
+      unmatched: d.summary.unmatched,
+      proposalsCreated: d.summary.proposals_created,
+      byOutcome: d.summary.by_outcome ?? {},
+    },
+    results: (d.results ?? []).map((r) => ({
+      caseId: r.case_id,
+      matched: r.matched,
+      ruleIndex: r.rule_index,
+      explanation: r.explanation,
+      outcome: mapDecisionOutcome(r.outcome),
+      proposalId: r.proposal_id ?? null,
+      proposalStatus: r.proposal_status ?? null,
+      executed: r.executed ?? null,
+    })),
   };
 }
 

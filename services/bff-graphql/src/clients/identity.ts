@@ -103,6 +103,15 @@ export interface SetEmbedConfigDTO {
   allowed_origins: string[];
 }
 
+/** GET/PUT /api/v1/tenants/self/idp — the caller tenant's OIDC IdP (BYO-P4). */
+export interface IdpConfigDTO {
+  issuer: string;
+  client_id: string;
+  discovery_url: string;
+  enabled: boolean;
+  updated_at?: string | null;
+}
+
 export class IdentityClient {
   constructor(private readonly http: ServiceClient) {}
 
@@ -179,6 +188,20 @@ export class IdentityClient {
       body: { allowed_origins: allowedOrigins },
       idempotencyKey,
     });
+  }
+
+  // ---- BYO-P4: per-tenant OIDC IdP config (self-scoped, tenant admin) -------
+  /** GET /api/v1/tenants/self/idp — the caller tenant's OIDC IdP, or 404. */
+  tenantIdp(): Promise<IdpConfigDTO> {
+    return this.http.get<IdpConfigDTO>("/api/v1/tenants/self/idp");
+  }
+  /** PUT /api/v1/tenants/self/idp — register/update the caller tenant's IdP. */
+  setTenantIdp(body: { issuer: string; client_id?: string; discovery_url?: string; enabled?: boolean }, idempotencyKey?: string): Promise<IdpConfigDTO> {
+    return this.http.put<IdpConfigDTO>("/api/v1/tenants/self/idp", { body, idempotencyKey });
+  }
+  /** DELETE /api/v1/tenants/self/idp — turn off SSO for the caller's tenant. */
+  deleteTenantIdp(): Promise<void> {
+    return this.http.delete<void>("/api/v1/tenants/self/idp");
   }
 
   // ---- Tier 4b: identity/rbac admin — user + service-account lifecycle -----

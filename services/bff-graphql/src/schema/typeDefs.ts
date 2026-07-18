@@ -419,6 +419,24 @@ export const typeDefs = gql`
     allowedOrigins: [String!]!
   }
 
+  """A tenant's own OIDC identity provider (BYO-P4). When set + enabled, an ID
+  token whose issuer matches routes to THIS tenant at login. configured is
+  false when the tenant has never set up SSO."""
+  type TenantIdpConfig {
+    configured: Boolean!
+    issuer: String
+    clientId: String
+    discoveryUrl: String
+    enabled: Boolean!
+    updatedAt: DateTime
+  }
+  input SetTenantIdpInput {
+    issuer: String!
+    clientId: String
+    discoveryUrl: String
+    enabled: Boolean
+  }
+
   # ============================ admin: audit (audit-service) ===================
   """
   A WORM audit-trail event (audit-service GET /audit/search). The actor and
@@ -477,6 +495,7 @@ export const typeDefs = gql`
     id: ID!
     urn: String!
     name: String!
+    workspaceId: String
     description: String
     status: String
     tags: [String!]!
@@ -3365,6 +3384,45 @@ export const typeDefs = gql`
     selfApproval: Boolean
   }
 
+  """BRD 53 inc2b: author a tenant CUSTOM agent as governed configuration plus
+  its guardrail envelope (inc2). The server validates + clamps: allowedTools must
+  be tenant-enabled, dataScope workspaces must be UUIDs, budget is capped to the
+  platform ceiling, tier can never exceed write-proposal."""
+  input CreateCustomAgentInput {
+    displayName: String!
+    persona: String!
+    systemPrompt: String
+    allowedTools: [String!]!
+    proposeTool: String
+    dataScopeWorkspaces: [ID!]
+    budgetMaxTokensPerSession: Int
+    blockPiiEgress: Boolean
+    redactPii: Boolean
+  }
+
+  """The created custom agent, echoing the stored (validated + clamped) policy."""
+  type CustomAgentResult {
+    agentKey: ID!
+    status: String!
+    graphRef: String!
+    allowedTools: [String!]!
+    persona: String!
+    ownerTenant: ID!
+    guardrailPolicy: JSON
+  }
+
+  """One role -> its bound persona copilot (BRD 53 inc3 PA-FR-010)."""
+  type PersonaBinding { role: String! agentKey: ID! }
+  type AutobindResult { created: [PersonaBinding!]! skipped: [PersonaBinding!]! }
+
+  """Operator-set platform ceilings that clamp every tenant custom agent (BR-8)."""
+  type AgentCeilings {
+    maxBudgetTokens: Int!
+    maxTier: String!
+    updatedAt: String
+    updatedBy: String
+  }
+
   """One row in the tenant run history (agent-runtime GET /runs, Tier 2b).
   Deliberately lighter than AgentRun — no per-row trace/tokenStream fan-out;
   open the run detail (Query.agentRun) for those."""
@@ -3400,6 +3458,10 @@ export const typeDefs = gql`
 
     """Workspaces (rbac-service GET /workspaces). \`archived\`: null|"only"|"with". Admin only."""
     workspaces(first: Int = 50, after: String, archived: String): WorkspaceConnection!
+    """The caller tenant's own OIDC IdP config (BYO-P4, identity-service GET
+    /tenants/self/idp). configured is false when SSO has never been set up.
+    Needs the tenant-admin identity scope."""
+    tenantIdp: TenantIdpConfig!
     """A single workspace (rbac-service GET /workspaces/{id})."""
     workspace(id: ID!): Workspace
 
@@ -3929,9 +3991,77 @@ export const typeDefs = gql`
     """The caller-tenant's config for one agent (GET /registry/tenants/self/
     agents/{key}). Operator/tenant.admin."""
     tenantAgentConfig(agentKey: String!): TenantAgentConfig
+    """Operator-only: the platform ceilings that clamp every custom agent (BRD 53
+    inc3). Errors for non-operators downstream."""
+    agentCeilings: AgentCeilings!
     """Run history for the caller's tenant (agent-runtime GET /runs), newest
     first. Any tenant principal; tenant-scoped downstream by RLS."""
     agentRuns(agentKey: String, first: Int = 50): AgentRunListItemConnection!
+
+    # ---- BRD 54 inc2: governed decision tables --------------------------------
+    """Tenant decision tables (agent-runtime GET /decision-models). Needs
+    case.disposition.read."""
+    decisionModels: [DecisionModel!]!
+    """One decision table by id (GET /decision-models/{id})."""
+    decisionModel(id: ID!): DecisionModel
+    """Change log: every version of one logical table, newest first."""
+    decisionModelVersions(id: ID!): [DecisionModel!]!
+  }
+
+  "One typed condition in a decision-table rule (BRD 54 DM-FR-010/051)."
+  type DecisionCondition { column: String! op: String! value: JSON }
+  "The disposition + severity a rule (or the default) applies."
+  type DecisionOutcome { dispositionCode: String! severity: String! }
+  "A first-match rule: all conditions must hold; then apply the outcome."
+  type DecisionRule { when: [DecisionCondition!]! then: DecisionOutcome note: String }
+  """A governed decision table — deterministic condition→outcome rules that
+   execute to the same four-eyes proposal an agent produces."""
+  type DecisionModel {
+    id: ID!
+    name: String!
+    version: Int!
+    status: String!
+    workspaceId: String
+    datasetUrn: String
+    createdBy: String
+    approvedBy: String
+    approvedAt: String
+    rules: [DecisionRule!]!
+    defaultOutcome: DecisionOutcome
+  }
+  input DecisionConditionInput { column: String! op: String! value: JSON }
+  input DecisionOutcomeInput { dispositionCode: String! severity: String! }
+  input DecisionRuleInput { when: [DecisionConditionInput!]! then: DecisionOutcomeInput! note: String }
+  input CreateDecisionModelInput {
+    name: String!
+    workspaceId: String
+    rules: [DecisionRuleInput!]!
+    defaultOutcome: DecisionOutcomeInput
+  }
+  input BatchEvaluateInput { workspaceId: String caseIds: [ID!] limit: Int }
+  "One case's evaluation in a batch run."
+  type BatchEvaluateRow {
+    caseId: ID!
+    matched: Boolean!
+    ruleIndex: Int
+    explanation: String!
+    outcome: DecisionOutcome
+    proposalId: ID
+    proposalStatus: String
+    executed: Boolean
+  }
+  type BatchEvaluateSummary {
+    cases: Int!
+    matched: Int!
+    unmatched: Int!
+    proposalsCreated: Int!
+    byOutcome: JSON!
+  }
+  type BatchEvaluateResult {
+    modelId: ID!
+    proposed: Boolean!
+    summary: BatchEvaluateSummary!
+    results: [BatchEvaluateRow!]!
   }
 
   type Mutation {
@@ -3952,6 +4082,11 @@ export const typeDefs = gql`
     presenting the old one starts getting 401s from /token/embed. Tenant admin
     only (identity.tenant.update)."""
     setEmbedConfig(tenantId: ID!, allowedOrigins: [String!]!, idempotencyKey: String): SetEmbedConfigResult!
+    """Register/update the caller tenant's OIDC IdP (BYO-P4, PUT /tenants/self/
+    idp). The issuer must be globally unique. Needs the tenant-admin scope."""
+    setTenantIdp(input: SetTenantIdpInput!, idempotencyKey: String): TenantIdpConfig!
+    """Turn off SSO for the caller's tenant (DELETE /tenants/self/idp)."""
+    deleteTenantIdp: Boolean!
 
     """Add a user to a group (rbac-service PUT /groups/{id}/members/{userId}). Idempotent. Admin only."""
     addGroupMember(groupId: ID!, userId: ID!, idempotencyKey: String): Boolean!
@@ -4869,5 +5004,35 @@ export const typeDefs = gql`
     (destructive/admin auto is rejected downstream, AC-5), self-approval.
     Requires tenant.admin downstream."""
     putTenantAgentConfig(agentKey: String!, input: TenantAgentConfigInput!, idempotencyKey: String): TenantAgentConfig!
+
+    """BRD 53 inc2b: author a tenant custom agent (POST /registry/tenants/self/
+    agents) with its guardrail envelope. Needs ai.agent.admin; the server
+    validates + clamps the envelope and forces the shared safe graph."""
+    createCustomAgent(input: CreateCustomAgentInput!): CustomAgentResult!
+
+    """BRD 53 inc3: bind persona copilots for the given (pack) roles. Idempotent;
+    needs ai.agent.admin."""
+    autobindPersonaCopilots(roles: [String!]!, proposeTool: String): AutobindResult!
+
+    """Operator-only: set the platform ceilings that clamp every custom agent."""
+    setAgentCeilings(maxBudgetTokens: Int!, maxTier: String!): AgentCeilings!
+
+    # ---- BRD 54 inc2: governed decision tables --------------------------------
+    """Author + publish a decision table (agent-runtime POST /decision-models).
+    Outcome disposition_codes are validated against the workspace catalog. Needs
+    case.disposition.create."""
+    createDecisionModel(input: CreateDecisionModelInput!, idempotencyKey: String): DecisionModel!
+    """Run a decision table across a worklist (POST /decision-models/{id}/
+    batch-evaluate). propose=false (default) is a dry-run preview with no side
+    effect; propose=true mints one governed four-eyes proposal per matched
+    case — no batch bypass of approval."""
+    batchEvaluateDecisionModel(id: ID!, input: BatchEvaluateInput!, propose: Boolean = false, idempotencyKey: String): BatchEvaluateResult!
+    """Four-eyes approval of the decision LOGIC (POST /decision-models/{id}/
+    approve): publish a draft table. The approver must differ from the author.
+    Needs case.disposition.create."""
+    approveDecisionModel(id: ID!, idempotencyKey: String): DecisionModel!
+    """Edit a table as a new DRAFT version (POST /decision-models/{id}/versions);
+    the prior version is never mutated. Needs case.disposition.create."""
+    newDecisionModelVersion(id: ID!, input: CreateDecisionModelInput!, idempotencyKey: String): DecisionModel!
   }
 `;
