@@ -19,6 +19,10 @@ import {
 import { WindroseLogo } from "@/components/brand/WindroseLogo";
 import { Button } from "@/components/ui/button";
 
+/* Demo request destination. Opens the visitor's mail client — swap the address
+ * for your real sales/demo inbox (or point at a demo-request form route). */
+const DEMO_HREF = "mailto:hello@windrose.ai?subject=Windrose%20AI%20%E2%80%94%20demo%20request";
+
 /* ------------------------------------------------------------------ */
 /* scroll-reveal (dependency-free)                                     */
 /* ------------------------------------------------------------------ */
@@ -352,9 +356,17 @@ export default function WelcomeContent() {
             <a href="#solutions" className="transition-colors hover:text-foreground">Solutions</a>
             <a href="#faq" className="transition-colors hover:text-foreground">FAQ</a>
           </nav>
-          <Button asChild>
-            <Link href="/login">Sign in</Link>
-          </Button>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/login"
+              className="hidden text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:block"
+            >
+              Sign in
+            </Link>
+            <Button asChild>
+              <a href={DEMO_HREF}>Request a demo</a>
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -380,9 +392,9 @@ export default function WelcomeContent() {
             </p>
             <div className="mt-9 flex flex-wrap items-center gap-3">
               <Button asChild size="lg">
-                <Link href="/login">
-                  Get started <ArrowRight className="size-4" />
-                </Link>
+                <a href={DEMO_HREF}>
+                  Request a demo <ArrowRight className="size-4" />
+                </a>
               </Button>
               <Button asChild size="lg" variant="outline">
                 <a href="#capabilities">See the capabilities</a>
@@ -645,10 +657,13 @@ export default function WelcomeContent() {
             record that speaks for itself when anyone asks.
           </p>
           <Button asChild size="lg" className="mt-2">
-            <Link href="/login">
-              Get started <ArrowRight className="size-4" />
-            </Link>
+            <a href={DEMO_HREF}>
+              Request a demo <ArrowRight className="size-4" />
+            </a>
           </Button>
+          <Link href="/login" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+            Already a customer? Sign in
+          </Link>
         </div>
       </section>
 
