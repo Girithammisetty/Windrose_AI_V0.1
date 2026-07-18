@@ -93,14 +93,22 @@ immediately and you can skip the CSI step above.
    Auth is dynamic — `values-hetzner.yaml` sets `JWKS_URL` to identity-service's
    live endpoint, so no JWT signing secret is needed for dev.
 
-3. **App chart.**
+3. **GHCR pull secret.** Windrose's GHCR packages are private and Hetzner has no
+   cloud workload identity, so pods authenticate with a docker-registry secret
+   (`values-hetzner.yaml` references it as `global.imagePullSecrets: [ghcr-pull]`):
+   ```bash
+   export GHCR_USERNAME=<your-gh-user> GHCR_TOKEN=<PAT with read:packages>
+   deploy/k8s/data-tier/create-ghcr-pull-secret.sh
+   ```
+
+4. **App chart.**
    ```bash
    helm upgrade --install windrose deploy/helm/windrose \
      -f deploy/helm/windrose/values-hetzner.yaml \
      --set global.imageTag=<sha>
    ```
 
-4. **Ingress DNS.** Point an A record at any agent node's public IP
+5. **Ingress DNS.** Point an A record at any agent node's public IP
    (`terraform output agent_ips`); Traefik serves 80/443.
 
 ## Security note

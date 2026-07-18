@@ -9,9 +9,13 @@
 # (see deploy/terraform/hetzner/README.md), then this chart on top.
 
 global:
-  # Keep the public GHCR images (values.yaml default) — Hetzner has no private
-  # registry requirement. Override global.imageTag at deploy time.
+  # GHCR images (values.yaml default). Override global.imageTag at deploy time.
   registry: ghcr.io/windrose-ai
+  # Private GHCR packages: no cloud workload identity on Hetzner, so pods pull
+  # via a docker-registry secret. Create it with create-ghcr-pull-secret.sh
+  # (in deploy/k8s/data-tier), which makes the `ghcr-pull` secret below.
+  imagePullSecrets:
+    - name: ghcr-pull
 
 # No Workload Identity on Hetzner — a plain KSA is fine.
 serviceAccount:
