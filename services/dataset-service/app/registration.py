@@ -27,6 +27,12 @@ MANIFEST: list[str] = [
     "dataset.profile.read",
     "dataset.lineage.update",
     "dataset.lineage.read",
+    # BRD 56: run entity resolution over a dataset (produces a link/view layer).
+    "dataset.entity.execute",
+    # BRD 56 inc2: read resolved-entity runs/clusters/candidates; confirm a
+    # below-auto merge (four-eyes proposal execution federates to the facade).
+    "dataset.entity.read",
+    "dataset.entity.merge",
 ]
 
 

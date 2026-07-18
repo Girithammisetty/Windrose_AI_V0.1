@@ -14,6 +14,7 @@ from sqlalchemy import (
     BigInteger,
     Boolean,
     DateTime,
+    Float,
     Integer,
     Text,
     UniqueConstraint,
@@ -139,4 +140,89 @@ class ProcessedEventRow(Base):
 
     event_id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True)
     tenant_id: Mapped[str] = mapped_column(UUID(as_uuid=False), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+# ---- BRD 56 inc2: persisted entity resolution -----------------------------
+
+
+class ResolutionConfigRow(Base):
+    __tablename__ = "resolution_configs"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "dataset_id", "entity_type", "version_no"),
+    )
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(UUID(as_uuid=False), nullable=False, index=True)
+    dataset_id: Mapped[str] = mapped_column(UUID(as_uuid=False), nullable=False)
+    entity_type: Mapped[str] = mapped_column(Text, nullable=False)
+    version_no: Mapped[int] = mapped_column(Integer, nullable=False)
+    deterministic_keys: Mapped[list] = mapped_column(JSONB, nullable=False, default=list)
+    scoring_fields: Mapped[list] = mapped_column(JSONB, nullable=False, default=list)
+    blocking_fields: Mapped[list] = mapped_column(JSONB, nullable=False, default=list)
+    auto_merge_threshold: Mapped[float] = mapped_column(Float, nullable=False, default=0.85)
+    review_threshold: Mapped[float] = mapped_column(Float, nullable=False, default=0.60)
+    pk_column: Mapped[str] = mapped_column(Text, nullable=False)
+    created_by: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class ResolutionRunRow(Base):
+    __tablename__ = "resolution_runs"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(UUID(as_uuid=False), nullable=False, index=True)
+    dataset_id: Mapped[str] = mapped_column(UUID(as_uuid=False), nullable=False)
+    config_id: Mapped[str] = mapped_column(UUID(as_uuid=False), nullable=False)
+    entity_type: Mapped[str] = mapped_column(Text, nullable=False)
+    record_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    resolved_entity_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    merged_cluster_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    review_candidate_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    status: Mapped[str] = mapped_column(Text, nullable=False, default="completed")
+    created_by: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class ResolvedEntityRow(Base):
+    __tablename__ = "resolved_entities"
+
+    resolved_entity_id: Mapped[str] = mapped_column(Text, primary_key=True)
+    run_id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(UUID(as_uuid=False), nullable=False, index=True)
+    dataset_id: Mapped[str] = mapped_column(UUID(as_uuid=False), nullable=False)
+    entity_type: Mapped[str] = mapped_column(Text, nullable=False)
+    member_count: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+    method: Mapped[str] = mapped_column(Text, nullable=False)
+
+
+class ResolvedEntityMemberRow(Base):
+    __tablename__ = "resolved_entity_members"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True)
+    resolved_entity_id: Mapped[str] = mapped_column(Text, nullable=False, index=True)
+    run_id: Mapped[str] = mapped_column(UUID(as_uuid=False), nullable=False, index=True)
+    tenant_id: Mapped[str] = mapped_column(UUID(as_uuid=False), nullable=False, index=True)
+    member_pk: Mapped[str] = mapped_column(Text, nullable=False)
+    method: Mapped[str] = mapped_column(Text, nullable=False)
+    evidence: Mapped[list] = mapped_column(JSONB, nullable=False, default=list)
+
+
+class MergeCandidateRow(Base):
+    __tablename__ = "merge_candidates"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True)
+    run_id: Mapped[str] = mapped_column(UUID(as_uuid=False), nullable=False, index=True)
+    tenant_id: Mapped[str] = mapped_column(UUID(as_uuid=False), nullable=False, index=True)
+    dataset_id: Mapped[str] = mapped_column(UUID(as_uuid=False), nullable=False)
+    entity_type: Mapped[str] = mapped_column(Text, nullable=False)
+    left_pk: Mapped[str] = mapped_column(Text, nullable=False)
+    right_pk: Mapped[str] = mapped_column(Text, nullable=False)
+    score: Mapped[float] = mapped_column(Float, nullable=False)
+    evidence: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+    status: Mapped[str] = mapped_column(Text, nullable=False, default="pending")
+    proposal_id: Mapped[str | None] = mapped_column(Text)
+    decided_by: Mapped[str | None] = mapped_column(Text)
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

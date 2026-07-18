@@ -18,11 +18,17 @@ from app.domain.entities import (
     Dataset,
     DatasetStatus,
     DatasetVersion,
+    EntityMergeCandidate,
+    EntityResolutionConfig,
+    EntityResolutionRun,
     Lifecycle,
     LineageEdge,
+    MergeCandidateStatus,
     Profile,
     ProfileErrorCategory,
     ProfileStatus,
+    ResolvedEntity,
+    ResolvedEntityMember,
     Visibility,
 )
 from app.domain.errors import (
@@ -131,6 +137,27 @@ def _dataset_urns(tenant_id: str, dataset: Dataset, versions: list[DatasetVersio
     urns = {dataset_urn(tenant_id, dataset.id)}
     urns.update(version_urn(tenant_id, dataset.id, v.version_no) for v in versions)
     return urns
+
+
+def _run_to_dict(r: EntityResolutionRun) -> dict:
+    return {
+        "run_id": r.id, "dataset_id": r.dataset_id, "config_id": r.config_id,
+        "entity_type": r.entity_type, "record_count": r.record_count,
+        "resolved_entity_count": r.resolved_entity_count,
+        "merged_cluster_count": r.merged_cluster_count,
+        "review_candidate_count": r.review_candidate_count, "status": r.status,
+        "created_by": r.created_by, "created_at": r.created_at,
+    }
+
+
+def _candidate_to_dict(c: EntityMergeCandidate) -> dict:
+    return {
+        "id": c.id, "run_id": c.run_id, "dataset_id": c.dataset_id,
+        "entity_type": c.entity_type, "left_pk": c.left_pk, "right_pk": c.right_pk,
+        "score": c.score, "evidence": c.evidence, "status": c.status,
+        "proposal_id": c.proposal_id, "decided_by": c.decided_by,
+        "decided_at": c.decided_at, "created_at": c.created_at,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -318,6 +345,215 @@ class DatasetService(_Base):
         columns = [str(c) for c in df.columns]
         rows = df.where(pd.notna(df), None).to_dict(orient="records")
         return columns, rows
+
+    async def resolve_entities(
+        self, tenant_id: str, dataset_id: str, *, config: dict, pk_column: str,
+        row_limit: int = 20000, persist: bool = False, ctx: CallCtx | None = None,
+        created_by: str | None = None,
+    ) -> dict:
+        """BRD 56: run first-party entity resolution over a dataset's real rows
+        and return the governed resolved-entity view (clusters + lineage) + the
+        below-auto merge candidates a steward reviews (four-eyes). Read-only over
+        the SOURCE — it links records, never mutates them (ER-FR-050).
+
+        inc2: when ``persist`` is set the config is versioned (ER-FR-001), and the
+        run + resolved clusters + member lineage + merge candidates are stored
+        (ER-FR-010/040) so decisions can read them and stewards can review merges.
+        """
+        from app.domain.entity_resolution import ResolutionConfig, ScoringField, resolve
+
+        columns, rows = await self.read_rows(tenant_id, dataset_id, row_limit)
+        if pk_column not in columns:
+            raise ValidationFailed(f"pk_column '{pk_column}' is not a column of this dataset")
+
+        def _cols(names):
+            missing = [c for c in names if c not in columns]
+            if missing:
+                raise ValidationFailed(f"unknown column(s): {', '.join(missing)}")
+            return list(names)
+
+        det_keys = [_cols(k) for k in (config.get("deterministic_keys") or [])]
+        scoring = [ScoringField(column=_cols([f["column"]])[0], weight=float(f.get("weight", 1.0)))
+                   for f in (config.get("scoring_fields") or [])]
+        blocking = _cols(config.get("blocking_fields") or [])
+        if not det_keys and not scoring:
+            raise ValidationFailed("config needs at least one deterministic_key or scoring_field")
+
+        entity_type = str(config.get("entity_type") or "entity")
+        auto_thr = float(config.get("auto_merge_threshold", 0.85))
+        review_thr = float(config.get("review_threshold", 0.60))
+        cfg = ResolutionConfig(
+            entity_type=entity_type, deterministic_keys=det_keys, scoring_fields=scoring,
+            blocking_fields=blocking, auto_merge_threshold=auto_thr, review_threshold=review_thr)
+        result = resolve(rows, cfg, pk_column=pk_column)
+
+        multi = [c for c in result.clusters if len(c.member_pks) > 1]
+        out = {
+            "dataset_id": dataset_id,
+            "entity_type": entity_type,
+            "record_count": len(rows),
+            "resolved_entity_count": len(result.clusters),
+            "merged_cluster_count": len(multi),
+            "review_candidate_count": len(result.merge_candidates),
+            "clusters": [
+                {"resolved_entity_id": c.resolved_entity_id, "member_pks": c.member_pks,
+                 "confidence": c.confidence, "method": c.method, "evidence": c.evidence}
+                for c in result.clusters],
+            "merge_candidates": [
+                {"left_pk": m.left_pk, "right_pk": m.right_pk, "score": m.score,
+                 "evidence": m.evidence} for m in result.merge_candidates],
+        }
+        if not persist:
+            return out
+
+        now = self.clock.now()
+        actor_sub = created_by or (ctx.actor.get("id") if ctx else None) or "system"
+        async with self.uow(tenant_id) as uow:
+            repo = uow.entity_resolution
+            version_no = await repo.next_config_version(dataset_id, entity_type)
+            config_id = str(uuid7())
+            await repo.add_config(EntityResolutionConfig(
+                id=config_id, tenant_id=tenant_id, dataset_id=dataset_id,
+                entity_type=entity_type, version_no=version_no,
+                deterministic_keys=det_keys,
+                scoring_fields=[{"column": f.column, "weight": f.weight} for f in scoring],
+                blocking_fields=blocking, auto_merge_threshold=auto_thr,
+                review_threshold=review_thr, pk_column=pk_column,
+                created_by=actor_sub, created_at=now))
+
+            run_id = str(uuid7())
+            await repo.add_run(EntityResolutionRun(
+                id=run_id, tenant_id=tenant_id, dataset_id=dataset_id, config_id=config_id,
+                entity_type=entity_type, record_count=len(rows),
+                resolved_entity_count=len(result.clusters), merged_cluster_count=len(multi),
+                review_candidate_count=len(result.merge_candidates), status="completed",
+                created_by=actor_sub, created_at=now))
+
+            await repo.add_resolved_entities([
+                ResolvedEntity(
+                    resolved_entity_id=c.resolved_entity_id, run_id=run_id, tenant_id=tenant_id,
+                    dataset_id=dataset_id, entity_type=entity_type,
+                    member_count=len(c.member_pks), confidence=c.confidence, method=c.method)
+                for c in result.clusters])
+
+            members: list[ResolvedEntityMember] = []
+            ev_by_pk: dict[str, list[dict]] = {}
+            for c in result.clusters:
+                for e in c.evidence:
+                    ev_by_pk.setdefault(c.resolved_entity_id, [])
+            for c in result.clusters:
+                for pk in c.member_pks:
+                    members.append(ResolvedEntityMember(
+                        id=str(uuid7()), resolved_entity_id=c.resolved_entity_id, run_id=run_id,
+                        tenant_id=tenant_id, member_pk=pk, method=c.method,
+                        evidence=c.evidence if len(c.member_pks) > 1 else []))
+            await repo.add_members(members)
+
+            await repo.add_candidates([
+                EntityMergeCandidate(
+                    id=str(uuid7()), run_id=run_id, tenant_id=tenant_id, dataset_id=dataset_id,
+                    entity_type=entity_type, left_pk=m.left_pk, right_pk=m.right_pk,
+                    score=m.score, evidence=m.evidence, status=MergeCandidateStatus.PENDING,
+                    proposal_id=None, decided_by=None, decided_at=None, created_at=now)
+                for m in result.merge_candidates])
+
+            if ctx is not None:
+                await self._emit(
+                    uow, ctx, "dataset.entity_resolution.run",
+                    dataset_urn(tenant_id, dataset_id),
+                    {"run_id": run_id, "config_id": config_id, "config_version": version_no,
+                     "entity_type": entity_type, "resolved_entity_count": len(result.clusters),
+                     "merged_cluster_count": len(multi),
+                     "review_candidate_count": len(result.merge_candidates)})
+            await uow.commit()
+
+        out.update({"run_id": run_id, "config_id": config_id, "config_version": version_no})
+        return out
+
+    async def list_resolution_runs(self, tenant_id: str, dataset_id: str,
+                                   limit: int = 50) -> list[dict]:
+        """ER-FR-010: prior resolution runs for a dataset (newest first)."""
+        async with self.uow(tenant_id) as uow:
+            runs = await uow.entity_resolution.list_runs(dataset_id, limit)
+        return [_run_to_dict(r) for r in runs]
+
+    async def get_resolution_run(self, tenant_id: str, run_id: str) -> dict:
+        """ER-FR-010/040: a run's resolved clusters + member lineage (AC-4)."""
+        async with self.uow(tenant_id) as uow:
+            run = await uow.entity_resolution.get_run(run_id)
+            if run is None:
+                raise NotFound(f"resolution run {run_id} not found")
+            entities = await uow.entity_resolution.list_resolved_entities(run_id)
+            members = await uow.entity_resolution.list_members(run_id)
+        members_by_entity: dict[str, list[dict]] = {}
+        for m in members:
+            members_by_entity.setdefault(m.resolved_entity_id, []).append(
+                {"member_pk": m.member_pk, "method": m.method, "evidence": m.evidence})
+        return {
+            **_run_to_dict(run),
+            "clusters": [
+                {"resolved_entity_id": e.resolved_entity_id, "member_count": e.member_count,
+                 "confidence": e.confidence, "method": e.method,
+                 "members": members_by_entity.get(e.resolved_entity_id, [])}
+                for e in entities],
+        }
+
+    async def list_merge_candidates(self, tenant_id: str, run_id: str,
+                                    status: str | None = None) -> list[dict]:
+        """ER-FR-030: the merge candidates a steward reviews for a run."""
+        async with self.uow(tenant_id) as uow:
+            cands = await uow.entity_resolution.list_candidates(run_id, status)
+        return [_candidate_to_dict(c) for c in cands]
+
+    async def get_merge_candidate(self, tenant_id: str, candidate_id: str) -> dict:
+        async with self.uow(tenant_id) as uow:
+            c = await uow.entity_resolution.get_candidate(candidate_id)
+            if c is None:
+                raise NotFound(f"merge candidate {candidate_id} not found")
+        return _candidate_to_dict(c)
+
+    async def link_merge_proposal(self, tenant_id: str, candidate_id: str,
+                                  proposal_id: str) -> None:
+        """Record the governed proposal a steward opened over a pending candidate
+        (ER-FR-030). The confirm itself lands via ``apply_entity_merge`` when the
+        four-eyes proposal is approved."""
+        async with self.uow(tenant_id) as uow:
+            c = await uow.entity_resolution.get_candidate(candidate_id)
+            if c is None:
+                raise NotFound(f"merge candidate {candidate_id} not found")
+            if c.status != MergeCandidateStatus.PENDING:
+                raise Conflict(f"merge candidate is already {c.status}")
+            await uow.entity_resolution.set_candidate_proposal(candidate_id, proposal_id)
+            await uow.commit()
+
+    async def apply_entity_merge(
+        self, tenant_id: str, *, candidate_id: str, decided_by: str, approve: bool,
+        ctx: CallCtx | None = None,
+    ) -> dict:
+        """ER-FR-030 execution: the four-eyes proposal for a merge candidate was
+        DECIDED. On approve, the candidate is confirmed (link layer only — the SoR
+        is never mutated, BR-4/ER-FR-050); on reject it is closed. Idempotent: a
+        second decide on a settled candidate is a no-op returning current state."""
+        now = self.clock.now()
+        async with self.uow(tenant_id) as uow:
+            c = await uow.entity_resolution.get_candidate(candidate_id)
+            if c is None:
+                raise NotFound(f"merge candidate {candidate_id} not found")
+            if c.status != MergeCandidateStatus.PENDING:
+                return _candidate_to_dict(c)
+            new_status = (MergeCandidateStatus.APPROVED if approve
+                          else MergeCandidateStatus.REJECTED)
+            await uow.entity_resolution.decide_candidate(
+                candidate_id, status=new_status, decided_by=decided_by, decided_at=now)
+            if ctx is not None:
+                await self._emit(
+                    uow, ctx, "dataset.entity_resolution.merge_decided",
+                    dataset_urn(tenant_id, c.dataset_id),
+                    {"candidate_id": candidate_id, "run_id": c.run_id, "status": new_status,
+                     "left_pk": c.left_pk, "right_pk": c.right_pk, "decided_by": decided_by})
+            await uow.commit()
+            settled = await uow.entity_resolution.get_candidate(candidate_id)
+        return _candidate_to_dict(settled)
 
     async def browse_rows(
         self, ctx: CallCtx, dataset_id: str, *, offset: int = 0, limit: int = 50,

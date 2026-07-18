@@ -565,6 +565,96 @@ def register_chart_dashboard_tool(tenant_id: str) -> str:
     return tid
 
 
+def register_entity_merge_tool(tenant_id: str) -> str:
+    """BRD 56 inc2: idempotently register the ``dataset.entity.merge`` write-
+    proposal tool and point tool-plane's mcp_backends at dataset-service's real
+    MCP backend facade (POST /internal/v1/mcp/invoke), so an approved steward
+    merge proposal is federated to a real confirm-merge instead of stopping at
+    the gateway. Mirrors register_chart_dashboard_tool() exactly."""
+    import psycopg
+
+    su = c.superadmin_token()
+    tid = "dataset.entity.merge"
+    ver = "1.0.0"
+    dataset_url = os.environ.get("DATASET_URL", "http://localhost:8304")
+
+    def _post(url, token, body):
+        return requests.post(url, json=body,
+                             headers={"Authorization": f"Bearer {token}",
+                                      "Content-Type": "application/json"}, timeout=15)
+
+    r = _post(f"{c.TOOL_REGISTRY}/api/v1/tools", su,
+             {"tool_id": tid, "display_name": "Confirm entity merge",
+              "owner_service": "dataset-service", "owner_team": "data",
+              "enabled_by_default": True, "side_effects": "reversible",
+              "tags": ["dataset", "entity-resolution", "merge"]})
+    if r.status_code not in (200, 201) and "already exists" not in r.text.lower():
+        print(f"register dataset.entity.merge tool: {r.status_code} {r.text[:150]}", file=sys.stderr)
+
+    r = _post(f"{c.TOOL_REGISTRY}/api/v1/tools/{tid}/versions", su,
+             {"version": ver,
+              "semantic_description": "Confirm a below-auto entity-resolution merge "
+              "candidate a steward reviewed. Use when a human has approved a proposal "
+              "to merge two records into one resolved entity (link layer only; the "
+              "source of record is never mutated).",
+              "input_schema": {"type": "object", "additionalProperties": False,
+                               "properties": {
+                                   "candidate_id": {"type": "string"},
+                                   "dataset_id": {"type": "string"},
+                                   "run_id": {"type": "string"},
+                                   "left_pk": {"type": "string"},
+                                   "right_pk": {"type": "string"},
+                                   "approve": {"type": "boolean"},
+                                   "workspace_id": {"type": "string"}},
+                               "required": ["candidate_id", "dataset_id"]},
+              "output_schema": {"type": "object", "additionalProperties": True},
+              "permission_tier": "write-proposal", "cost_weight": 1,
+              "declared_sla": {"p95_ms": 8000}, "side_effects": "reversible",
+              "examples": []})
+    if r.status_code not in (200, 201) and "already exists" not in r.text.lower():
+        print(f"register dataset.entity.merge version: {r.status_code} {r.text[:150]}", file=sys.stderr)
+
+    try:
+        with psycopg.connect("postgresql://windrose:windrose_dev@localhost:5432/tool_plane") as cn:
+            pubs = [row[0] for row in cn.execute(
+                "SELECT version FROM tool_versions WHERE tool_id=%s AND status='published' "
+                "AND version<>%s", (tid, ver)).fetchall()]
+        for vv in pubs:
+            requests.post(f"{c.TOOL_REGISTRY}/api/v1/tools/{tid}/versions/{vv}/deprecate",
+                          headers={"Authorization": f"Bearer {su}"}, timeout=15)
+    except Exception as e:
+        print(f"deprecate prior published dataset.entity.merge versions: {e}", file=sys.stderr)
+
+    pubr = requests.post(f"{c.TOOL_REGISTRY}/api/v1/tools/{tid}/versions/{ver}/publish",
+                         headers={"Authorization": f"Bearer {su}"}, timeout=20)
+    if pubr.status_code not in (200, 201) and "only draft" not in pubr.text:
+        print(f"publish dataset.entity.merge {ver}: {pubr.status_code} {pubr.text[:150]}",
+             file=sys.stderr)
+
+    tenant_tok = c.service_token("svc:seed", tenant_id, ["*"])
+    requests.put(f"{c.TOOL_REGISTRY}/api/v1/tenants/self/tools/{tid}",
+                headers={"Authorization": f"Bearer {tenant_tok}",
+                         "Content-Type": "application/json"},
+                json={"enabled": True}, timeout=15)
+
+    # Register dataset-service as the MCP backend for this tool. NOTE: mcp_backends
+    # is keyed by `name` (=owner_service); dataset-service already hosts the same
+    # /internal/v1/mcp/invoke facade, so this row serves the merge tool.
+    facade_url = f"{dataset_url}/internal/v1/mcp/invoke"
+    with psycopg.connect("postgresql://windrose:windrose_dev@localhost:5432/tool_plane",
+                         autocommit=True) as cn:
+        cn.execute("SELECT set_config('app.role','platform', false)")
+        cn.execute(
+            """INSERT INTO mcp_backends (name, tenant_id, internal_url, spiffe_id, kind, status)
+               VALUES ('dataset-service','00000000-0000-0000-0000-000000000000',%s,
+                       'spiffe://windrose/ns/tools/sa/mcp-gateway','internal','active')
+               ON CONFLICT (name) DO UPDATE SET internal_url=EXCLUDED.internal_url,
+                   spiffe_id=EXCLUDED.spiffe_id, status='active'""",
+            (facade_url,))
+    print(f"dataset.entity.merge registered + enabled; mcp_backends -> {facade_url}", file=sys.stderr)
+    return tid
+
+
 def seed_evalkey(tenant_id: str) -> str:
     """Mint a tenant-scoped virtual key that ALLOWS the ``judge`` request class so
     eval-service's LLM-judge calls (x-windrose-request-class: judge) pass
@@ -760,11 +850,14 @@ if __name__ == "__main__":
         register_ingestion_tool(sys.argv[2])
     elif cmd == "chart_dashboard_tool":
         register_chart_dashboard_tool(sys.argv[2])
+    elif cmd == "entity_merge_tool":
+        register_entity_merge_tool(sys.argv[2])
     elif cmd == "ml_lifecycle_tools":
         register_ml_lifecycle_tools(sys.argv[2])
     else:
         print("usage: seed.py {tenant|aigw <tenant_id>|evalkey <tenant_id>|"
              "inference_tool <tenant_id>|ingestion_tool <tenant_id>|"
-             "chart_dashboard_tool <tenant_id>|ml_lifecycle_tools <tenant_id>}",
+             "chart_dashboard_tool <tenant_id>|entity_merge_tool <tenant_id>|"
+             "ml_lifecycle_tools <tenant_id>}",
              file=sys.stderr)
         sys.exit(2)

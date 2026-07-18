@@ -20,13 +20,17 @@ const (
 	VerbAdmin   = "admin"
 	VerbExport  = "export"
 	VerbShare   = "share"
+	// VerbMerge: confirm an entity-resolution merge of two records into one
+	// resolved entity (BRD 56 inc2, ER-FR-030). A distinct verb so it can be
+	// granted independently of read/execute (a steward confirms; a viewer reads).
+	VerbMerge = "merge"
 )
 
 // AllVerbs is the closed verb set of RBC-FR-022.
 var AllVerbs = map[string]bool{
 	VerbRead: true, VerbList: true, VerbCreate: true, VerbUpdate: true,
 	VerbDelete: true, VerbExecute: true, VerbAssign: true, VerbApprove: true,
-	VerbAdmin: true, VerbExport: true, VerbShare: true,
+	VerbAdmin: true, VerbExport: true, VerbShare: true, VerbMerge: true,
 }
 
 // ActionDef is a catalog entry. Actions are static, code-defined strings
@@ -97,6 +101,7 @@ var canonicalSpecs = []resourceSpec{
 	{"dataset", "dataset", []string{VerbRead, VerbList, VerbCreate, VerbUpdate, VerbDelete, VerbExport, VerbShare}, true, "datasets"},
 	{"dataset", "profile", []string{VerbRead, VerbExecute}, true, "profiling"},
 	{"dataset", "lineage", []string{VerbRead}, true, "lineage graph"},
+	{"dataset", "entity", []string{VerbExecute, VerbRead, VerbMerge}, true, "entity resolution"},
 	// query
 	{"query", "query", []string{VerbRead, VerbList, VerbCreate, VerbUpdate, VerbDelete, VerbExecute, VerbShare}, true, "saved queries"},
 	{"query", "execution", []string{VerbRead, VerbList, VerbExecute, VerbExport}, true, "query executions"},
@@ -128,6 +133,8 @@ var canonicalSpecs = []resourceSpec{
 	// pipeline
 	{"pipeline", "template", []string{VerbRead, VerbList, VerbCreate, VerbUpdate, VerbDelete}, true, "pipeline templates"},
 	{"pipeline", "run", []string{VerbRead, VerbList, VerbCreate, VerbExecute}, true, "pipeline runs"},
+	{"pipeline", "schedule", []string{VerbRead, VerbList, VerbCreate, VerbUpdate, VerbDelete, VerbExecute}, true, "pipeline schedules"},
+	{"pipeline", "quota", []string{VerbAdmin}, false, "tenant pipeline quotas"},
 	{"pipeline", "component", []string{VerbRead, VerbList}, true, "pipeline component catalog"},
 	{"pipeline", "algorithm", []string{VerbRead, VerbList}, true, "pipeline algorithm templates"},
 	// experiment

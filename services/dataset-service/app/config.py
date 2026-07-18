@@ -27,6 +27,9 @@ class Settings(BaseSettings):
         "spiffe://windrose/ns/data/sa/pipeline-orchestrator",
         "spiffe://windrose/ns/data/sa/inference-service",
         "spiffe://windrose/ns/data/sa/semantic-service",
+        # BRD 56 inc2: the tool-plane MCP gateway federates approved
+        # dataset.entity.merge proposals to the /internal/v1/mcp/invoke facade.
+        "spiffe://windrose/ns/tools/sa/mcp-gateway",
     ]
 
     # Adapter selection (CONVENTIONS.md END STATE). The RUNTIME DEFAULT is True:

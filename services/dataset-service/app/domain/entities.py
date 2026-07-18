@@ -124,3 +124,96 @@ class LineageEdge:
     run_urn: str | None = None
     properties: dict | None = None
     actor: dict | None = None
+
+
+# ---- BRD 56 inc2: persisted entity resolution -----------------------------
+
+
+class MergeCandidateStatus(StrEnum):
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+
+
+@dataclass(slots=True)
+class EntityResolutionConfig:
+    """ER-FR-001: a tenant-scoped, VERSIONED resolution config. Re-resolving a
+    dataset under changed rules mints a new version so every run is attributable
+    to the exact rules that produced it (BR-5)."""
+    id: str
+    tenant_id: str
+    dataset_id: str
+    entity_type: str
+    version_no: int
+    deterministic_keys: list[list[str]]
+    scoring_fields: list[dict]
+    blocking_fields: list[str]
+    auto_merge_threshold: float
+    review_threshold: float
+    pk_column: str
+    created_by: str
+    created_at: datetime
+
+
+@dataclass(slots=True)
+class EntityResolutionRun:
+    """ER-FR-010/040: one execution of a config version over a dataset's rows,
+    with the aggregate counts the run produced (audit + reproducibility)."""
+    id: str
+    tenant_id: str
+    dataset_id: str
+    config_id: str
+    entity_type: str
+    record_count: int
+    resolved_entity_count: int
+    merged_cluster_count: int
+    review_candidate_count: int
+    status: str
+    created_by: str
+    created_at: datetime
+
+
+@dataclass(slots=True)
+class ResolvedEntity:
+    """ER-FR-010: a stable resolved cluster produced by a run."""
+    resolved_entity_id: str
+    run_id: str
+    tenant_id: str
+    dataset_id: str
+    entity_type: str
+    member_count: int
+    confidence: float
+    method: str
+
+
+@dataclass(slots=True)
+class ResolvedEntityMember:
+    """ER-FR-040: lineage — which source record joined which cluster, on what
+    matching evidence (reconstructable + defensible under exam)."""
+    id: str
+    resolved_entity_id: str
+    run_id: str
+    tenant_id: str
+    member_pk: str
+    method: str
+    evidence: list[dict]
+
+
+@dataclass(slots=True)
+class EntityMergeCandidate:
+    """ER-FR-030: a below-auto, above-review probable merge PROPOSED for a
+    steward's four-eyes review — never silently merged (BR-1)."""
+    id: str
+    run_id: str
+    tenant_id: str
+    dataset_id: str
+    entity_type: str
+    left_pk: str
+    right_pk: str
+    score: float
+    evidence: dict
+    status: str
+    proposal_id: str | None
+    decided_by: str | None
+    decided_at: datetime | None
+    created_at: datetime

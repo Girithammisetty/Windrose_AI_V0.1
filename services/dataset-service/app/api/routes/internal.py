@@ -68,6 +68,53 @@ async def register_version(
     return await idempotent(request, response, c.deps.uow_factory, tenant_id, work)
 
 
+@router.post("/mcp/invoke")
+async def tool_facade(request: Request, spiffe: str = Depends(require_internal)):
+    """BRD 56 inc2 — the governed MCP backend the tool-plane federates to when a
+    four-eyes-approved ``dataset.entity.merge`` proposal executes. It confirms a
+    reviewed merge candidate (link layer only; the SoR is never mutated,
+    ER-FR-050/BR-4). Defense-in-depth: re-authorizes the DECIDER (obo_sub — the
+    approver, per the proposal-execution contract) against the real OPA sidecar
+    before applying, so a spoofed gateway call still can't confirm a merge the
+    approver couldn't perform themselves."""
+    from app.api.auth import Principal
+    from app.domain.urn import dataset_urn
+
+    c = request.app.state.container
+    try:
+        body = json.loads(await request.body())
+    except json.JSONDecodeError as exc:
+        raise ValidationFailed("body must be JSON") from exc
+    tool_id = body.get("tool_id")
+    if tool_id != "dataset.entity.merge":
+        raise NotFound(f"unknown tool_id {tool_id!r}")
+    args = body.get("args") or {}
+    tenant_id = body.get("tenant") or body.get("tenant_id")
+    obo_sub = body.get("obo_sub")
+    candidate_id = args.get("candidate_id")
+    dataset_id = args.get("dataset_id")
+    if not (tenant_id and obo_sub and candidate_id and dataset_id):
+        raise ValidationFailed("tenant, obo_sub, args.candidate_id, args.dataset_id required")
+    approve = bool(args.get("approve", True))
+
+    # Re-check the effective human holds dataset.entity.merge on the dataset
+    # (the actor performing the apply is the approver, ART execution contract).
+    principal = Principal(
+        sub=obo_sub, tenant_id=tenant_id, typ="user", scopes=[tool_id],
+        workspace_id=args.get("workspace_id"))
+    if not await request.app.state.authz.allow(
+            principal, "dataset.entity.merge", dataset_urn(tenant_id, dataset_id)):
+        return {"output": {"applied": False, "error": "not allowed: dataset.entity.merge"}}
+
+    ctx = CallCtx(
+        tenant_id=tenant_id, actor={"type": "user", "id": obo_sub},
+        trace_id=getattr(request.state, "trace_id", None))
+    result = await c.dataset_service.apply_entity_merge(
+        tenant_id, candidate_id=candidate_id, decided_by=obo_sub, approve=approve, ctx=ctx)
+    return {"output": {"applied": True, "candidate_id": candidate_id,
+                       "status": result.get("status")}}
+
+
 def _internal_tenant(request: Request) -> str:
     """Tenant for GET internal detail routes: the mesh-forwarded
     ``x-windrose-tenant-id`` header (semantic-service sends it — SEM-FR-002)."""

@@ -12,7 +12,17 @@ import dataclasses
 from collections import defaultdict
 from datetime import datetime
 
-from app.domain.entities import Dataset, DatasetVersion, LineageEdge, Profile
+from app.domain.entities import (
+    Dataset,
+    DatasetVersion,
+    EntityMergeCandidate,
+    EntityResolutionConfig,
+    EntityResolutionRun,
+    LineageEdge,
+    Profile,
+    ResolvedEntity,
+    ResolvedEntityMember,
+)
 from app.domain.ports import DatasetFilters, Page
 from app.utils import decode_cursor, encode_cursor
 
@@ -28,6 +38,12 @@ class MemoryState:
         self.outbox: list[tuple[str, dict]] = []
         self.idempotency: dict[tuple[str, str], dict] = {}
         self.version_locks: dict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
+        # BRD 56 inc2 entity resolution
+        self.er_configs: dict[str, EntityResolutionConfig] = {}
+        self.er_runs: dict[str, EntityResolutionRun] = {}
+        self.resolved_entities: list[ResolvedEntity] = []
+        self.resolved_members: list[ResolvedEntityMember] = []
+        self.merge_candidates: dict[str, EntityMergeCandidate] = {}
 
     def events_of_type(self, event_type: str) -> list[dict]:
         return [e for _, e in self.outbox if e["event_type"] == event_type]
@@ -328,6 +344,82 @@ class MemoryIdempotencyRepo:
         }
 
 
+class MemoryEntityResolutionRepo:
+    """In-memory mirror of SqlEntityResolutionRepo for the unit/dev tier."""
+
+    def __init__(self, state: MemoryState, tenant_id: str):
+        self.state, self.tenant_id = state, tenant_id
+
+    async def next_config_version(self, dataset_id: str, entity_type: str) -> int:
+        vs = [c.version_no for c in self.state.er_configs.values()
+              if c.tenant_id == self.tenant_id and c.dataset_id == dataset_id
+              and c.entity_type == entity_type]
+        return (max(vs) + 1) if vs else 1
+
+    async def add_config(self, cfg: EntityResolutionConfig) -> None:
+        self.state.er_configs[cfg.id] = _copy(cfg)
+
+    async def get_config(self, config_id: str) -> EntityResolutionConfig | None:
+        c = self.state.er_configs.get(config_id)
+        return _copy(c) if c and c.tenant_id == self.tenant_id else None
+
+    async def add_run(self, run: EntityResolutionRun) -> None:
+        self.state.er_runs[run.id] = _copy(run)
+
+    async def get_run(self, run_id: str) -> EntityResolutionRun | None:
+        r = self.state.er_runs.get(run_id)
+        return _copy(r) if r and r.tenant_id == self.tenant_id else None
+
+    async def list_runs(self, dataset_id: str, limit: int = 50) -> list[EntityResolutionRun]:
+        rs = [r for r in self.state.er_runs.values()
+              if r.tenant_id == self.tenant_id and r.dataset_id == dataset_id]
+        rs.sort(key=lambda r: r.created_at, reverse=True)
+        return [_copy(r) for r in rs[:limit]]
+
+    async def add_resolved_entities(self, items: list[ResolvedEntity]) -> None:
+        self.state.resolved_entities.extend(_copy(e) for e in items)
+
+    async def add_members(self, items: list[ResolvedEntityMember]) -> None:
+        self.state.resolved_members.extend(_copy(m) for m in items)
+
+    async def add_candidates(self, items: list[EntityMergeCandidate]) -> None:
+        for c in items:
+            self.state.merge_candidates[c.id] = _copy(c)
+
+    async def list_resolved_entities(self, run_id: str) -> list[ResolvedEntity]:
+        return sorted(
+            [_copy(e) for e in self.state.resolved_entities
+             if e.tenant_id == self.tenant_id and e.run_id == run_id],
+            key=lambda e: e.resolved_entity_id)
+
+    async def list_members(self, run_id: str) -> list[ResolvedEntityMember]:
+        return [_copy(m) for m in self.state.resolved_members
+                if m.tenant_id == self.tenant_id and m.run_id == run_id]
+
+    async def list_candidates(self, run_id: str,
+                              status: str | None = None) -> list[EntityMergeCandidate]:
+        cs = [c for c in self.state.merge_candidates.values()
+              if c.tenant_id == self.tenant_id and c.run_id == run_id
+              and (status is None or c.status == status)]
+        cs.sort(key=lambda c: c.score, reverse=True)
+        return [_copy(c) for c in cs]
+
+    async def get_candidate(self, candidate_id: str) -> EntityMergeCandidate | None:
+        c = self.state.merge_candidates.get(candidate_id)
+        return _copy(c) if c and c.tenant_id == self.tenant_id else None
+
+    async def set_candidate_proposal(self, candidate_id: str, proposal_id: str) -> None:
+        c = self.state.merge_candidates.get(candidate_id)
+        if c and c.tenant_id == self.tenant_id:
+            c.proposal_id = proposal_id
+
+    async def decide_candidate(self, candidate_id: str, *, status: str,
+                               decided_by: str, decided_at: datetime) -> None:
+        c = self.state.merge_candidates.get(candidate_id)
+        if c and c.tenant_id == self.tenant_id:
+            c.status, c.decided_by, c.decided_at = status, decided_by, decided_at
+
+
 class MemoryUnitOfWork:
     """Mutations apply immediately (unit-tier simplification); outbox entries are
     staged and flushed on commit so tests still observe emit-after-commit order."""
@@ -341,6 +433,7 @@ class MemoryUnitOfWork:
         self.lineage = MemoryLineageRepo(state, tenant_id)
         self.outbox = MemoryOutboxRepo(state, self._staged_outbox)
         self.idempotency = MemoryIdempotencyRepo(state, tenant_id)
+        self.entity_resolution = MemoryEntityResolutionRepo(state, tenant_id)
         self._state = state
 
     async def __aenter__(self):

@@ -15,16 +15,31 @@ from sqlalchemy import func, select, text, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from app.domain.entities import Dataset, DatasetVersion, LineageEdge, Profile
+from app.domain.entities import (
+    Dataset,
+    DatasetVersion,
+    EntityMergeCandidate,
+    EntityResolutionConfig,
+    EntityResolutionRun,
+    LineageEdge,
+    Profile,
+    ResolvedEntity,
+    ResolvedEntityMember,
+)
 from app.domain.ports import DatasetFilters, Page
 from app.store.orm import (
     DatasetRow,
     DatasetVersionRow,
     IdempotencyKeyRow,
     LineageEdgeRow,
+    MergeCandidateRow,
     OutboxRow,
     ProcessedEventRow,
     ProfileRow,
+    ResolutionConfigRow,
+    ResolutionRunRow,
+    ResolvedEntityMemberRow,
+    ResolvedEntityRow,
 )
 from app.utils import decode_cursor, encode_cursor, utcnow, uuid7
 
@@ -479,6 +494,121 @@ class SqlIdempotencyRepo:
         await self.s.flush()
 
 
+_ERCONFIG_FIELDS = [f.name for f in dataclasses.fields(EntityResolutionConfig)]
+_ERRUN_FIELDS = [f.name for f in dataclasses.fields(EntityResolutionRun)]
+_RESOLVED_FIELDS = [f.name for f in dataclasses.fields(ResolvedEntity)]
+_MEMBER_FIELDS = [f.name for f in dataclasses.fields(ResolvedEntityMember)]
+_CAND_FIELDS = [f.name for f in dataclasses.fields(EntityMergeCandidate)]
+
+
+class SqlEntityResolutionRepo:
+    """BRD 56 inc2 persistence: versioned configs, runs, resolved clusters +
+    lineage, and the four-eyes merge-candidate queue. RLS scopes every read to
+    the UoW's tenant via app.tenant_id."""
+
+    def __init__(self, session: AsyncSession, tenant_id: str):
+        self.s = session
+        self.tenant_id = tenant_id
+
+    async def next_config_version(self, dataset_id: str, entity_type: str) -> int:
+        stmt = select(func.max(ResolutionConfigRow.version_no)).where(
+            ResolutionConfigRow.dataset_id == dataset_id,
+            ResolutionConfigRow.entity_type == entity_type,
+        )
+        cur = (await self.s.execute(stmt)).scalar_one_or_none()
+        return (cur or 0) + 1
+
+    async def add_config(self, cfg: EntityResolutionConfig) -> None:
+        row = ResolutionConfigRow()
+        _apply(row, cfg, _ERCONFIG_FIELDS)
+        self.s.add(row)
+        await self.s.flush()
+
+    async def get_config(self, config_id: str) -> EntityResolutionConfig | None:
+        row = await self.s.get(ResolutionConfigRow, config_id)
+        return _to_entity(row, _ERCONFIG_FIELDS, EntityResolutionConfig) if row else None
+
+    async def add_run(self, run: EntityResolutionRun) -> None:
+        row = ResolutionRunRow()
+        _apply(row, run, _ERRUN_FIELDS)
+        self.s.add(row)
+        await self.s.flush()
+
+    async def get_run(self, run_id: str) -> EntityResolutionRun | None:
+        row = await self.s.get(ResolutionRunRow, run_id)
+        return _to_entity(row, _ERRUN_FIELDS, EntityResolutionRun) if row else None
+
+    async def list_runs(self, dataset_id: str, limit: int = 50) -> list[EntityResolutionRun]:
+        stmt = (
+            select(ResolutionRunRow)
+            .where(ResolutionRunRow.dataset_id == dataset_id)
+            .order_by(ResolutionRunRow.created_at.desc())
+            .limit(limit)
+        )
+        rows = (await self.s.execute(stmt)).scalars().all()
+        return [_to_entity(r, _ERRUN_FIELDS, EntityResolutionRun) for r in rows]
+
+    async def add_resolved_entities(self, items: list[ResolvedEntity]) -> None:
+        for e in items:
+            row = ResolvedEntityRow()
+            _apply(row, e, _RESOLVED_FIELDS)
+            self.s.add(row)
+        await self.s.flush()
+
+    async def add_members(self, items: list[ResolvedEntityMember]) -> None:
+        for m in items:
+            row = ResolvedEntityMemberRow()
+            _apply(row, m, _MEMBER_FIELDS)
+            self.s.add(row)
+        await self.s.flush()
+
+    async def add_candidates(self, items: list[EntityMergeCandidate]) -> None:
+        for c in items:
+            row = MergeCandidateRow()
+            _apply(row, c, _CAND_FIELDS)
+            self.s.add(row)
+        await self.s.flush()
+
+    async def list_resolved_entities(self, run_id: str) -> list[ResolvedEntity]:
+        stmt = select(ResolvedEntityRow).where(ResolvedEntityRow.run_id == run_id).order_by(
+            ResolvedEntityRow.resolved_entity_id)
+        rows = (await self.s.execute(stmt)).scalars().all()
+        return [_to_entity(r, _RESOLVED_FIELDS, ResolvedEntity) for r in rows]
+
+    async def list_members(self, run_id: str) -> list[ResolvedEntityMember]:
+        stmt = select(ResolvedEntityMemberRow).where(ResolvedEntityMemberRow.run_id == run_id)
+        rows = (await self.s.execute(stmt)).scalars().all()
+        return [_to_entity(r, _MEMBER_FIELDS, ResolvedEntityMember) for r in rows]
+
+    async def list_candidates(self, run_id: str,
+                              status: str | None = None) -> list[EntityMergeCandidate]:
+        stmt = select(MergeCandidateRow).where(MergeCandidateRow.run_id == run_id)
+        if status:
+            stmt = stmt.where(MergeCandidateRow.status == status)
+        stmt = stmt.order_by(MergeCandidateRow.score.desc())
+        rows = (await self.s.execute(stmt)).scalars().all()
+        return [_to_entity(r, _CAND_FIELDS, EntityMergeCandidate) for r in rows]
+
+    async def get_candidate(self, candidate_id: str) -> EntityMergeCandidate | None:
+        row = await self.s.get(MergeCandidateRow, candidate_id)
+        return _to_entity(row, _CAND_FIELDS, EntityMergeCandidate) if row else None
+
+    async def set_candidate_proposal(self, candidate_id: str, proposal_id: str) -> None:
+        await self.s.execute(
+            update(MergeCandidateRow)
+            .where(MergeCandidateRow.id == candidate_id)
+            .values(proposal_id=proposal_id))
+        await self.s.flush()
+
+    async def decide_candidate(self, candidate_id: str, *, status: str,
+                               decided_by: str, decided_at: datetime) -> None:
+        await self.s.execute(
+            update(MergeCandidateRow)
+            .where(MergeCandidateRow.id == candidate_id)
+            .values(status=status, decided_by=decided_by, decided_at=decided_at))
+        await self.s.flush()
+
+
 class SqlUnitOfWork:
     def __init__(self, session_factory: async_sessionmaker, tenant_id: str):
         self.tenant_id = tenant_id
@@ -498,6 +628,7 @@ class SqlUnitOfWork:
         self.lineage = SqlLineageRepo(self._session, self.tenant_id)
         self.outbox = SqlOutboxRepo(self._session, self.tenant_id)
         self.idempotency = SqlIdempotencyRepo(self._session, self.tenant_id)
+        self.entity_resolution = SqlEntityResolutionRepo(self._session, self.tenant_id)
         return self
 
     async def __aexit__(self, exc_type, exc, tb) -> None:
