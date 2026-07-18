@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
 import { ToastHost } from "./ToastHost";
+import { CommandPalette } from "./CommandPalette";
 import { CopilotDrawer } from "@/components/copilot/CopilotDrawer";
 import { SessionProvider, type SessionInfo } from "@/lib/session/SessionContext";
 import { useProposalsInbox } from "@/lib/graphql/hooks";
@@ -56,6 +57,7 @@ function ShellInner({ children, session }: { children: React.ReactNode; session:
       </div>
       <CopilotDrawer budgetExhausted={budgetExhausted} />
       <ToastHost />
+      <CommandPalette />
     </div>
   );
 }
