@@ -96,27 +96,51 @@ func (s *Store) ListRoles(ctx context.Context, tenant uuid.UUID, cursor string, 
 	args := []any{limit + 1}
 	where := "true"
 	if cursor != "" {
-		cid, err := uuid.Parse(cursor)
-		if err != nil {
+		// Composite cursor "<0|1>:<uuid>" for the (system DESC, id DESC) order.
+		curSystem, cidStr, ok := strings.Cut(cursor, ":")
+		cid, err := uuid.Parse(cidStr)
+		if !ok || err != nil {
 			return page, &ValidationError{Code: CodeValidationFailed, Message: "invalid cursor"}
 		}
-		where = "id > $2"
-		args = append(args, cid)
+		sysBool := curSystem == "1"
+		// Rows AFTER the cursor in (system DESC, id DESC): a lower system class,
+		// or the same class with a smaller (older) id.
+		where = "(system < $2 OR (system = $2 AND id < $3))"
+		args = append(args, sysBool, cid)
 	}
 	err := s.WithTenant(ctx, tenant, func(tx pgx.Tx) error {
-		rows, err := tx.Query(ctx, `SELECT `+roleCols+` FROM roles WHERE `+where+` ORDER BY id LIMIT $1`, args...)
+		// System roles first (a small, stable set — always on page 1 so their
+		// "Edit hidden" behavior is visible), then newest-first custom roles so
+		// a just-created role is near the TOP of page 1 rather than buried past
+		// 50 older ones. UUIDv7 ids are time-ordered.
+		rows, err := tx.Query(ctx, `SELECT `+roleCols+` FROM roles WHERE `+where+` ORDER BY system DESC, id DESC LIMIT $1`, args...)
 		if err != nil {
 			return err
 		}
-		defer rows.Close()
+		var roles []domain.Role
 		for rows.Next() {
 			r, err := scanRole(rows)
 			if err != nil {
+				rows.Close()
 				return err
 			}
-			page.Data = append(page.Data, r)
+			roles = append(roles, r)
 		}
-		return rows.Err()
+		rows.Close()
+		if err := rows.Err(); err != nil {
+			return err
+		}
+		// Populate each role's action set (they live in a separate table) so list
+		// rows carry actions — the roles admin edit dialog prefills its actions
+		// textarea from these; an empty set otherwise disables Save. Sequential
+		// (one query at a time per pgx conn) after the cursor is drained.
+		for i := range roles {
+			if roles[i].Actions, err = roleActionsTx(ctx, tx, roles[i].ID); err != nil {
+				return err
+			}
+		}
+		page.Data = roles
+		return nil
 	})
 	if err != nil {
 		return page, err
@@ -124,7 +148,12 @@ func (s *Store) ListRoles(ctx context.Context, tenant uuid.UUID, cursor string, 
 	if len(page.Data) > limit {
 		page.Data = page.Data[:limit]
 		page.HasMore = true
-		page.NextCursor = page.Data[limit-1].ID.String()
+		last := page.Data[limit-1]
+		sys := "0"
+		if last.System {
+			sys = "1"
+		}
+		page.NextCursor = sys + ":" + last.ID.String()
 	}
 	return page, nil
 }

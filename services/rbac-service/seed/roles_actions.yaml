@@ -137,6 +137,9 @@ roles:
       - dataset.profile.read
       - dataset.profile.execute
       - dataset.lineage.read
+      - dataset.entity.execute
+      - dataset.entity.read
+      - dataset.entity.merge
       - query.query.read
       - query.query.list
       - query.query.create
@@ -296,6 +299,9 @@ roles:
       - dataset.profile.read
       - dataset.profile.execute
       - dataset.lineage.read
+      - dataset.entity.execute
+      - dataset.entity.read
+      - dataset.entity.merge
       - query.query.read
       - query.query.list
       - query.query.create
@@ -363,6 +369,12 @@ roles:
       - pipeline.run.list
       - pipeline.run.create
       - pipeline.run.execute
+      - pipeline.schedule.read
+      - pipeline.schedule.list
+      - pipeline.schedule.create
+      - pipeline.schedule.update
+      - pipeline.schedule.delete
+      - pipeline.schedule.execute
       - inference.job.read
       - inference.job.list
       - inference.job.create
