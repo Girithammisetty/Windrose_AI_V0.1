@@ -50,7 +50,7 @@ async function gql<T = any>(page: Page, query: string, variables?: Record<string
 
 const DATASETS_Q = /* GraphQL */ `
   query Datasets($first: Int) {
-    datasets(first: $first) { nodes { id urn name status rowCount } pageInfo { hasMore } }
+    datasets(first: $first) { nodes { id urn name workspaceId status rowCount } pageInfo { hasMore } }
   }
 `;
 const CONNECTIONS_Q = /* GraphQL */ `
@@ -143,10 +143,16 @@ test.describe("Data -> Pipeline -> Run -> Schedule lifecycle", () => {
     }
 
     // A second real dataset to collide the rename against, if one exists.
-    const others = await gql<{ datasets: { nodes: { id: string; name: string }[] } }>(page, DATASETS_Q, {
-      first: 10,
-    });
-    const collisionName = others.datasets.nodes.find((d) => d.id !== ds.id)?.name;
+    // Dataset-name uniqueness is WORKSPACE-scoped, so the collision candidate
+    // must be a DIFFERENT-named dataset in the SAME workspace as ds — a
+    // same-named dataset in another workspace does NOT 409.
+    const others = await gql<{
+      datasets: { nodes: { id: string; name: string; workspaceId: string | null }[] };
+    }>(page, DATASETS_Q, { first: 20 });
+    const dsWorkspace = others.datasets.nodes.find((d) => d.id === ds.id)?.workspaceId;
+    const collisionName = others.datasets.nodes.find(
+      (d) => d.id !== ds.id && d.workspaceId === dsWorkspace && d.name !== ds.name,
+    )?.name;
 
     await page.goto(`/data/datasets/${ds.id}`);
     await expect(page.getByRole("heading", { name: ds.name, exact: true })).toBeVisible();
@@ -212,7 +218,9 @@ test.describe("Data -> Pipeline -> Run -> Schedule lifecycle", () => {
     await configPanel.getByLabel("expression", { exact: true }).fill("1 == 1");
 
     // 3) write-to-warehouse: materialize the transformed output as a new dataset.
-    const outputName = `e2e-pipeline-out-${uniq}`;
+    // output_dataset_name is a restricted_string (Iceberg table name): only
+    // [a-zA-Z0-9_\s] — hyphens are rejected, so keep the name underscore-safe.
+    const outputName = `e2e_pipeline_out_${uniq.replace(/-/g, "_")}`;
     await page.locator('[data-entry="write-to-warehouse"]').click();
     await configPanel.getByLabel("output_dataset_name", { exact: true }).fill(outputName);
 
@@ -347,7 +355,13 @@ test.describe("Data -> Pipeline -> Run -> Schedule lifecycle", () => {
       TEMPLATES_Q,
       { first: 25 },
     );
-    const target = templates.pipelineTemplates.nodes.find((t) => !t.archived);
+    // Prefer a real seeded template (runnable/validated) over leftover
+    // `e2e-*` artifacts from prior runs, which are drafts — "run now" on a draft
+    // correctly refuses ("active version is a draft"), so scheduling one would
+    // fail the run-now step for the wrong reason.
+    const target =
+      templates.pipelineTemplates.nodes.find((t) => !t.archived && !t.name.startsWith("e2e-")) ??
+      templates.pipelineTemplates.nodes.find((t) => !t.archived);
     if (!target) {
       test.fixme(true, "No pipeline template exists in this tenant to attach a schedule to.");
       return;
@@ -471,7 +485,9 @@ test.describe("Data -> Pipeline -> Run -> Schedule lifecycle", () => {
     const systemRow = page.locator('[role="row"]').filter({ has: page.getByText("system", { exact: true }) }).first();
     await expect(systemRow).toBeVisible({ timeout: 20_000 });
     await systemRow.click();
-    await expect(page.getByText(/immutable/i)).toBeVisible({ timeout: 10_000 });
+    // The selected-role detail panel shows the immutability notice. Match its
+    // specific copy — the page-level description also contains "immutable".
+    await expect(page.getByText(/reject every mutation/i)).toBeVisible({ timeout: 10_000 });
     await expect(page.getByRole("button", { name: "Edit", exact: true })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Delete", exact: true })).toHaveCount(0);
   });

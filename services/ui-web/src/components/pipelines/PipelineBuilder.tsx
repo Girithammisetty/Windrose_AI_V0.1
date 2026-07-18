@@ -64,7 +64,10 @@ export function PipelineBuilder({
 
   const stepByName = useMemo(() => new Map(steps.map((s) => [s.name, s])), [steps]);
 
-  const placeAt = () => ({ x: 60 + (nodes.length % 5) * 60, y: 60 + (nodes.length % 6) * 40 });
+  // Space newly-added nodes so consecutive cards never overlap: the x step must
+  // exceed the node width (NODE_W = 190) or a node's drag-handle header covers
+  // the previous node's output port (blocking clicks + drag-to-connect).
+  const placeAt = () => ({ x: 60 + (nodes.length % 5) * 220, y: 60 + (nodes.length % 6) * 120 });
 
   const addStep = (step: PipelineStepType, at?: { x: number; y: number }) => {
     addNode(nodeFromStep(step, at ?? placeAt()));

@@ -13,6 +13,7 @@ import { normalizeArgsDiff } from "@/lib/diff";
 import { isDestructiveTool } from "@/lib/agentic/proposals";
 import { GraphQLRequestError } from "@/lib/graphql/client";
 import { t } from "@/lib/i18n/messages";
+import { toolLabel, agentLabel } from "@/lib/labels";
 import type { Proposal } from "@/lib/graphql/types";
 
 type Mode = "view" | "reject" | "edit" | "respond";
@@ -102,14 +103,14 @@ export function ProposalDetail({ proposal }: { proposal: Proposal }) {
     <Card data-proposal-detail={proposal.id}>
       <CardHeader className="flex-row flex-wrap items-center gap-2">
         <AiLabel />
-        <CardTitle className="text-base">{proposal.tool}</CardTitle>
+        <CardTitle className="text-base">{toolLabel(proposal.tool)}</CardTitle>
         <StatusChip status={proposal.status} className="ml-1" />
         {destructive && (
           <span className="rounded-full bg-destructive/15 px-2 py-0.5 text-xs font-medium text-destructive">
             destructive
           </span>
         )}
-        <span className="ml-auto text-xs text-muted-foreground">{proposal.agentKey}</span>
+        {proposal.agentKey && <span className="ml-auto text-xs text-muted-foreground">{agentLabel(proposal.agentKey)}</span>}
       </CardHeader>
       <CardContent className="space-y-4">
         {proposal.rationale && (

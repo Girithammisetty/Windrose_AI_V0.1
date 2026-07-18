@@ -4,10 +4,10 @@ import { PageHeader } from "@/components/shell/PageHeader";
 import { AsyncBoundary } from "@/components/primitives/AsyncBoundary";
 import { StatusChip } from "@/components/primitives/StatusChip";
 import { ConfirmDialog } from "@/components/primitives/ConfirmDialog";
-import { Card, CardContent, CardHeader, CardTitle, Badge, Textarea, Label } from "@/components/ui/primitives";
+import { Card, CardContent, CardHeader, CardTitle, Badge, Textarea, Label, Input } from "@/components/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/lib/session/SessionContext";
-import { useTenant, useSetEmbedConfig } from "@/lib/graphql/hooks";
+import { useTenant, useSetEmbedConfig, useTenantIdp, useSetTenantIdp, useDeleteTenantIdp } from "@/lib/graphql/hooks";
 import { GraphQLRequestError } from "@/lib/graphql/client";
 import { formatLocal } from "@/lib/utils";
 
@@ -83,6 +83,8 @@ export default function AdminTenantPage() {
 
             <EmbedConfigCard tenantId={tenant.id} configured={tenant.embedConfig?.configured ?? false}
               allowedOrigins={tenant.embedConfig?.allowedOrigins ?? []} updatedAt={tenant.embedConfig?.updatedAt ?? null} />
+
+            <IdentityProviderCard />
           </div>
         )}
       </AsyncBoundary>
@@ -185,6 +187,93 @@ function EmbedConfigCard({
         confirmLabel="Rotate"
         onConfirm={rotate}
       />
+    </Card>
+  );
+}
+
+/**
+ * Bring-your-own OIDC identity provider (BYO-P4). A tenant registers their own
+ * Okta/Auth0/Entra/Keycloak here; an inbound ID token whose issuer matches then
+ * routes to THIS tenant at login. The issuer is globally unique — SSO is off
+ * for the tenant until configured, and turning it off is one click.
+ */
+function IdentityProviderCard() {
+  const query = useTenantIdp();
+  const cfg = query.data;
+  const save = useSetTenantIdp();
+  const remove = useDeleteTenantIdp();
+  const error = (save.error ?? remove.error) instanceof GraphQLRequestError
+    ? (save.error ?? remove.error) as GraphQLRequestError : null;
+
+  const [issuer, setIssuer] = useState<string | null>(null);
+  const [clientId, setClientId] = useState<string | null>(null);
+  const [discoveryUrl, setDiscoveryUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (issuer === null && cfg) {
+      setIssuer(cfg.issuer ?? "");
+      setClientId(cfg.clientId ?? "");
+      setDiscoveryUrl(cfg.discoveryUrl ?? "");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cfg]);
+
+  const configured = cfg?.configured ?? false;
+  const submit = () => {
+    if (!issuer?.trim()) return;
+    save.mutate({
+      issuer: issuer.trim(),
+      clientId: (clientId ?? "").trim() || undefined,
+      discoveryUrl: (discoveryUrl ?? "").trim() || undefined,
+      enabled: true,
+    });
+  };
+
+  return (
+    <Card className="lg:col-span-2">
+      <CardHeader className="flex-row items-center justify-between">
+        <CardTitle className="text-sm">Single sign-on (SSO)</CardTitle>
+        <Badge variant={configured && cfg?.enabled ? "success" : "secondary"}>
+          {configured ? (cfg?.enabled ? "enabled" : "disabled") : "not configured"}
+        </Badge>
+      </CardHeader>
+      <CardContent className="space-y-3 text-sm">
+        <p className="text-xs text-muted-foreground">
+          Bring your own identity provider (Okta, Auth0, Entra ID, Keycloak — any OIDC IdP).
+          Users sign in against your IdP; a token whose issuer matches yours routes to this tenant.
+          The issuer must be unique across the platform.
+        </p>
+        <div className="space-y-1.5">
+          <Label htmlFor="idp-issuer">Issuer URL</Label>
+          <Input id="idp-issuer" placeholder="https://your-org.okta.com"
+            value={issuer ?? ""} onChange={(e) => setIssuer(e.target.value)} />
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="idp-client">Client ID (optional)</Label>
+            <Input id="idp-client" placeholder="windrose-web"
+              value={clientId ?? ""} onChange={(e) => setClientId(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="idp-discovery">Discovery URL (optional)</Label>
+            <Input id="idp-discovery" placeholder="defaults to issuer + /.well-known/openid-configuration"
+              value={discoveryUrl ?? ""} onChange={(e) => setDiscoveryUrl(e.target.value)} />
+          </div>
+        </div>
+        {cfg?.updatedAt && <Row label="Last updated" value={formatLocal(cfg.updatedAt)} />}
+        {error && <p role="alert" className="text-xs text-destructive" data-testid="mutation-error">{error.message}</p>}
+        <div className="flex items-center gap-2">
+          <Button size="sm" disabled={!issuer?.trim() || save.isPending} onClick={submit}>
+            {save.isPending ? "Saving…" : configured ? "Update SSO" : "Enable SSO"}
+          </Button>
+          {configured && (
+            <Button size="sm" variant="outline" disabled={remove.isPending}
+              onClick={() => remove.mutate(undefined, { onSuccess: () => { setIssuer(""); setClientId(""); setDiscoveryUrl(""); } })}>
+              {remove.isPending ? "Removing…" : "Turn off SSO"}
+            </Button>
+          )}
+        </div>
+      </CardContent>
     </Card>
   );
 }

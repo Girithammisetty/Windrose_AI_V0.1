@@ -6,7 +6,7 @@ import { LayoutDashboard, Plus } from "lucide-react";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { AsyncBoundary } from "@/components/primitives/AsyncBoundary";
 import { Can } from "@/components/authz/Can";
-import { Card, CardHeader, CardTitle, CardDescription, Badge } from "@/components/ui/primitives";
+import { Card, CardHeader, CardTitle, Badge } from "@/components/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { CreateDashboardDialog } from "@/components/charts/CreateDashboardDialog";
 import { FEATURE_GATES } from "@/lib/authz/registry";
@@ -65,7 +65,6 @@ export default function DashboardsPage() {
                     {d.module && <Badge variant="secondary">{d.module}</Badge>}
                   </div>
                   <CardTitle className="text-base">{d.title}</CardTitle>
-                  <CardDescription className="truncate font-mono text-xs">{d.urn}</CardDescription>
                 </CardHeader>
               </Card>
             </Link>

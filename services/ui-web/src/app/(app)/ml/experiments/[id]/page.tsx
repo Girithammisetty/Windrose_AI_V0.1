@@ -76,7 +76,7 @@ export default function ExperimentDetailPage({ params }: { params: Promise<{ id:
           <>
             <PageHeader
               title={exp.name}
-              description={exp.description ?? exp.urn}
+              description={exp.description ?? undefined}
               actions={
                 <div className="flex items-center gap-2">
                   <Can gate={FEATURE_GATES.updateExperiment}>

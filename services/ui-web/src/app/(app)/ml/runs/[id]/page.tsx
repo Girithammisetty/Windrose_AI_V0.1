@@ -101,8 +101,7 @@ export default function RunDetailPage({ params }: { params: Promise<{ id: string
         {run && (
           <>
             <PageHeader
-              title={run.name ?? run.urn}
-              description={run.urn}
+              title={run.name ?? "Training run"}
               actions={
                 <div className="flex items-center gap-2">
                   {/* Register needs the owning experiment id; the run detail

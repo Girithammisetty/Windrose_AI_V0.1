@@ -20,6 +20,7 @@ import {
   riskOf,
 } from "@/lib/agentic/proposals";
 import { cn } from "@/lib/utils";
+import { toolLabel, agentLabel } from "@/lib/labels";
 import { t } from "@/lib/i18n/messages";
 import type { Proposal } from "@/lib/graphql/types";
 
@@ -168,7 +169,7 @@ export default function InboxPage() {
                           data-destructive={destructive ? "true" : "false"}
                         />
                         <AiLabel />
-                        <span className="truncate text-sm font-medium">{p.tool}</span>
+                        <span className="truncate text-sm font-medium">{toolLabel(p.tool)}</span>
                         {risk.risk === "high" && (
                           <span
                             className="ml-auto inline-flex items-center gap-1 text-xs text-destructive"
@@ -179,7 +180,7 @@ export default function InboxPage() {
                         )}
                       </div>
                       <p className="mt-1 truncate text-xs text-muted-foreground">{p.rationale ?? p.predictedEffect?.summary}</p>
-                      <p className="mt-1 text-[11px] text-muted-foreground">{p.agentKey}</p>
+                      {p.agentKey && <p className="mt-1 text-[11px] text-muted-foreground">{agentLabel(p.agentKey)}</p>}
                     </Card>
                   </div>
                 );
@@ -211,7 +212,7 @@ export default function InboxPage() {
             <ul className="mt-2 space-y-0.5 text-xs">
               {toolSummary.map((s) => (
                 <li key={s.tool} className="flex justify-between">
-                  <span className="font-mono">{s.tool}</span>
+                  <span>{toolLabel(s.tool)}</span>
                   <span>{s.count}</span>
                 </li>
               ))}

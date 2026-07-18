@@ -22,6 +22,8 @@ export interface AsyncBoundaryProps {
   error?: unknown;
   isEmpty?: boolean;
   emptyTitle?: string;
+  /** Optional one-line guidance under the empty title (what to do next). */
+  emptyHint?: string;
   emptyCta?: React.ReactNode;
   onRetry?: () => void;
   skeleton?: React.ReactNode;
@@ -39,6 +41,7 @@ export function AsyncBoundary({
   error,
   isEmpty,
   emptyTitle,
+  emptyHint,
   emptyCta,
   onRetry,
   skeleton,
@@ -96,6 +99,7 @@ export function AsyncBoundary({
       <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed p-10 text-center">
         <Inbox className="size-8 text-muted-foreground" aria-hidden />
         <p className="font-medium">{emptyTitle ?? t("state.empty")}</p>
+        {emptyHint && <p className="max-w-sm text-sm text-muted-foreground">{emptyHint}</p>}
         {emptyCta}
       </div>
     );

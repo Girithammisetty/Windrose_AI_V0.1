@@ -78,7 +78,6 @@ export default function DashboardDetailPage({ params }: { params: Promise<{ id: 
           <>
             <PageHeader
               title={dash.title}
-              description={dash.urn}
               actions={
                 <>
                   {dash.module && <Badge variant="secondary">{dash.module}</Badge>}

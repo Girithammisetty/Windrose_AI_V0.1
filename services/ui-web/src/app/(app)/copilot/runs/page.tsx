@@ -64,7 +64,7 @@ export default function AgentRunsIndex() {
             <Input
               value={value}
               onChange={(e) => setValue(e.target.value)}
-              placeholder="run id or wr:tenant:agent_run:agent_run/..."
+              placeholder="Search by run ID"
               aria-label={t("agentRuns.openById")}
               className="max-w-md"
             />

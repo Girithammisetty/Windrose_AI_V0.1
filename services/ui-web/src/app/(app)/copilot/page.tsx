@@ -14,10 +14,20 @@ import { cn } from "@/lib/utils";
 import { t } from "@/lib/i18n/messages";
 
 /** Full-page copilot (UI-FR / §5). Same thread engine as the drawer; persistent AI label. */
+const COPILOT_AGENTS = [
+  { key: "analytics", label: "Analytics (default)" },
+  { key: "ml-engineer", label: "ML Engineer" },
+  { key: "model-training", label: "Model Training" },
+  { key: "inference", label: "Inference" },
+  { key: "dashboard-designer", label: "Dashboard Designer" },
+  { key: "governance", label: "Governance" },
+];
+
 export default function CopilotPage() {
   const session = useSession();
   const contextUrn = `wr:${session.tenantId}:workspace:${session.workspaceId}`;
-  const { messages, streaming, send } = useCopilotThread(contextUrn);
+  const [agentKey, setAgentKey] = useState<string>("analytics");
+  const { messages, streaming, send } = useCopilotThread(contextUrn, agentKey);
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -27,7 +37,30 @@ export default function CopilotPage() {
 
   return (
     <div className="mx-auto flex h-[calc(100vh-8rem)] max-w-3xl flex-col">
-      <PageHeader title={t("copilot.title")} actions={<AiLabel />} />
+      <PageHeader
+        title={t("copilot.title")}
+        actions={
+          <div className="flex items-center gap-2">
+            <label htmlFor="copilot-agent" className="text-xs text-muted-foreground">
+              Agent
+            </label>
+            <select
+              id="copilot-agent"
+              aria-label="Copilot agent"
+              value={agentKey}
+              onChange={(e) => setAgentKey(e.target.value)}
+              className="h-8 rounded-md border bg-background px-2 text-sm"
+            >
+              {COPILOT_AGENTS.map((a) => (
+                <option key={a.key} value={a.key}>
+                  {a.label}
+                </option>
+              ))}
+            </select>
+            <AiLabel />
+          </div>
+        }
+      />
       <Card className="flex flex-1 flex-col overflow-hidden">
         <AiDisclosure />
         <div ref={scrollRef} className="flex-1 space-y-3 overflow-auto p-4">

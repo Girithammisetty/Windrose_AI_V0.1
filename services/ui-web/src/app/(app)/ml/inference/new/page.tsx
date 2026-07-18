@@ -71,7 +71,7 @@ export default function NewInferenceJobPage() {
       <div>
         <PageHeader title="New inference job" />
         <div role="alert" data-testid="no-access" className="rounded-lg border border-dashed p-8 text-center text-muted-foreground">
-          You do not have permission to submit inference jobs (needs inference.job.create).
+          You don&apos;t have access to submit prediction jobs. Ask an admin if you need it.
         </div>
       </div>
     );

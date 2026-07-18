@@ -99,7 +99,7 @@ export default function NewExperimentPage() {
       <div>
         <PageHeader title="New experiment" />
         <div role="alert" data-testid="no-access" className="rounded-lg border border-dashed p-8 text-center text-muted-foreground">
-          You do not have permission to create experiments (needs experiment.experiment.create).
+          You don&apos;t have access to create experiments. Ask an admin if you need it.
         </div>
       </div>
     );

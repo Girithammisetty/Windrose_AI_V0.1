@@ -169,7 +169,16 @@ function CreateRoleDialog({
     if (!name.trim() || actions.length === 0) return;
     const done = { onSuccess: (r: Role) => { onOpenChange(false); reset(); onSaved(r); } };
     if (editRole) {
-      update.mutate({ id: editRole.id, input: { name: name.trim(), actions } }, done);
+      // Omit `actions` when unchanged so a name-only edit doesn't bump the role
+      // version (updateRole bumps whenever an actions array is provided). The
+      // API contract is "omit a field to leave it unchanged".
+      const orig = [...editRole.actions].sort();
+      const next = [...actions].sort();
+      const actionsChanged = orig.length !== next.length || orig.some((a, i) => a !== next[i]);
+      update.mutate(
+        { id: editRole.id, input: { name: name.trim(), ...(actionsChanged ? { actions } : {}) } },
+        done,
+      );
     } else {
       create.mutate({ name: name.trim(), actions }, done);
     }

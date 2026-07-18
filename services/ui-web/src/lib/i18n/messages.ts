@@ -12,6 +12,7 @@ export const en = {
   "nav.ml": "ML",
   "nav.dashboards": "Dashboards",
   "nav.cases": "Cases",
+  "nav.decisions": "Decision Tables",
   "nav.admin": "Admin",
   "nav.copilot": "Copilot",
   "nav.inbox": "Approvals",

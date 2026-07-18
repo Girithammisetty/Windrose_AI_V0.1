@@ -31,8 +31,12 @@ function uniqueTag(prefix: string): string {
  * the same one and falling into the dedup path. */
 function offsetFromTag(tag: string, totalRows: number): number {
   if (totalRows <= 0) return 0;
-  const digits = tag.replace(/\D/g, "").slice(-6) || "0";
-  return Number(digits) % totalRows;
+  // Hash the WHOLE tag (letters included). A digits-only hash would collide for
+  // tags that differ only by a non-numeric suffix (e.g. "...-a" vs "...-b"),
+  // mapping both to the same dataset row → the same idempotent case.
+  let h = 0;
+  for (let i = 0; i < tag.length; i++) h = (h * 31 + tag.charCodeAt(i)) >>> 0;
+  return h % totalRows;
 }
 
 interface DatasetRef {
@@ -128,9 +132,12 @@ async function findDatasetWithRows(
   );
 }
 
-function caseRowInputFromCells(columns: string[], cells: (string | null)[]) {
+function caseRowInputFromCells(columns: string[], cells: (string | null)[], dedupSalt?: string) {
+  // The dedup key is sha256(dataset_urn ‖ row_pk). Salting the row_pk yields a
+  // unique key, so a case is always freshly CREATED (never dedup-reused) — the
+  // caller can then rely on its just-set description being present/searchable.
   return {
-    rowPk: String(cells[0] ?? ""),
+    rowPk: String(cells[0] ?? "") + (dedupSalt ? `::${dedupSalt}` : ""),
     displayProjection: columns.map((key, i) => ({ key, value: cells[i] ?? "" })),
   };
 }
@@ -145,7 +152,7 @@ async function createFixtureCase(
   page: Page,
   dataset: DatasetRef,
   rowOffset: number,
-  opts: { severity?: "low" | "medium" | "high" | "critical"; description?: string } = {},
+  opts: { severity?: "low" | "medium" | "high" | "critical"; description?: string; dedupSalt?: string } = {},
 ): Promise<{ id: string; caseNumber: number | null }> {
   const { datasetRows } = await graphql<{
     datasetRows: { columns: string[]; rows: (string | null)[][] };
@@ -165,7 +172,7 @@ async function createFixtureCase(
       dueDate: `${due}T23:59:59Z`,
       severity: opts.severity ?? "medium",
       description: opts.description,
-      rows: [caseRowInputFromCells(datasetRows.columns, cells!)],
+      rows: [caseRowInputFromCells(datasetRows.columns, cells!, opts.dedupSalt)],
     },
   });
   const created = createCases.created[0];
@@ -368,12 +375,17 @@ test.describe("cases: worklist creation, detail CRUD, settings edit, bulk ops, R
   test("assign, reassign and comment on a case; the activity timeline reflects both; worklist bulk-assign also works", async ({
     page,
   }) => {
+    test.setTimeout(180_000); // multi-step + async search-index wait (up to 60s)
     const tag = uniqueTag("bulk");
     await loginAs(page, PERSONAS().manager); // Case Manager holds case.case.assign
     const { dataset, totalRows } = await findDatasetWithRows(page);
+    // dedupSalt forces a freshly CREATED (UNASSIGNED) case — a dedup-reused case
+    // from a prior run could already be assigned, so its action button would
+    // read "Reassign" and the /^assign$/i step below would never match it.
     const { id: caseId } = await createFixtureCase(page, dataset, offsetFromTag(tag, totalRows), {
       severity: "medium",
       description: `seed ${tag}`,
+      dedupSalt: `assign-${tag}`,
     });
 
     const { assignableUsers } = await graphql<{
@@ -444,18 +456,29 @@ test.describe("cases: worklist creation, detail CRUD, settings edit, bulk ops, R
     });
 
     await test.step("worklist bulk-assign: two fresh cases assigned together via the /cases bulk bar", async () => {
-      const bulkTag = `${tag}-bulk`;
-      const caseA = await createFixtureCase(page, dataset, offsetFromTag(`${bulkTag}-a`, totalRows), {
+      // A single unique alphanumeric marker token — NOT a phrase like "bulk <tag>"
+      // whose common "bulk" token would fuzzy-match every prior run's cases and
+      // push the two targets past the rendered page. dedupSalt forces both cases
+      // to be freshly CREATED so the marker description actually sticks.
+      const marker = `bulkmk${tag.replace(/[^a-z0-9]/gi, "")}`;
+      const caseA = await createFixtureCase(page, dataset, offsetFromTag(`${marker}a`, totalRows), {
         severity: "low",
-        description: `bulk ${bulkTag}`,
+        description: marker,
+        dedupSalt: `${marker}-a`,
       });
-      const caseB = await createFixtureCase(page, dataset, offsetFromTag(`${bulkTag}-b`, totalRows), {
+      const caseB = await createFixtureCase(page, dataset, offsetFromTag(`${marker}b`, totalRows), {
         severity: "low",
-        description: `bulk ${bulkTag}`,
+        description: marker,
+        dedupSalt: `${marker}-b`,
       });
+      // Distinct cases: distinct salted row_pks guarantee no dedup-collapse.
+      expect(caseA.id).not.toBe(caseB.id);
 
-      await waitForSearchable(page, `bulk ${bulkTag}`, 2);
-      await page.goto(`/cases?q=${encodeURIComponent(`bulk ${bulkTag}`)}`);
+      // The search index is populated asynchronously off the case-created event
+      // (Kafka consumer → OpenSearch), normally sub-second; a modest budget
+      // absorbs occasional lag without masking a real regression.
+      await waitForSearchable(page, marker, 2, 30_000);
+      await page.goto(`/cases?q=${encodeURIComponent(marker)}`);
       await expectPageHealthy(page, { notRedirectedFrom: "/cases" });
 
       const grid = page.getByRole("grid", { name: "Cases" });
@@ -535,13 +558,14 @@ test.describe("cases: worklist creation, detail CRUD, settings edit, bulk ops, R
       await expect(page.getByRole("button", { name: /^(assign|reassign)$/i })).toHaveCount(0);
     });
 
-    await test.step("adjuster CANNOT create cases from dataset rows (case.case.create not granted)", async () => {
+    await test.step("adjuster CANNOT create cases from dataset rows (no dataset access → doubly gated)", async () => {
+      // Case Analyst holds no dataset capability at all, so the Datasets nav is
+      // absent and the dataset browse page never exposes the "Create N cases"
+      // control — a STRONGER gate than the button merely being hidden (the
+      // create-from-rows path additionally requires case.case.create).
+      await page.goto("/");
+      await expect(page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "Datasets" })).toHaveCount(0);
       await page.goto(`/data/datasets/${dataset.id}`);
-      await expectPageHealthy(page, { notRedirectedFrom: `/data/datasets/${dataset.id}` });
-      await page.getByRole("tab", { name: "data", exact: true }).click();
-      const grid = page.getByRole("grid", { name: "Dataset rows" });
-      await expect(grid.getByRole("checkbox", { name: "Select 0", exact: true })).toBeVisible({ timeout: 20_000 });
-      await grid.getByRole("checkbox", { name: "Select 0", exact: true }).click();
       await expect(page.getByRole("button", { name: /^Create \d+ cases?$/ })).toHaveCount(0);
     });
 

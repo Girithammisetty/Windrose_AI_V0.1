@@ -57,6 +57,16 @@ export default function DataDatasetsPage() {
       <PageHeader
         title="Datasets"
         description="Search the full dataset index; rows link to schema, profile, lineage, and query."
+        actions={
+          <div className="flex items-center gap-2">
+            <Button size="sm" asChild>
+              <a href="/data/upload">Upload a file</a>
+            </Button>
+            <Button variant="ghost" size="sm" asChild>
+              <a href="/data/connections">Connect a data source</a>
+            </Button>
+          </div>
+        }
       />
 
       <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -80,10 +90,16 @@ export default function DataDatasetsPage() {
         error={query.error}
         isEmpty={rows.length === 0}
         emptyTitle="No datasets yet"
+        emptyHint="Upload a file (CSV, Excel or JSON) to get started — or connect a data source if your data lives elsewhere."
         emptyCta={
-          <Button variant="outline" size="sm" asChild>
-            <a href="/data/connections">Create connection</a>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button size="sm" asChild>
+              <a href="/data/upload">Upload a file</a>
+            </Button>
+            <Button variant="outline" size="sm" asChild>
+              <a href="/data/connections">Connect a data source</a>
+            </Button>
+          </div>
         }
         onRetry={() => query.refetch()}
       >
@@ -97,9 +113,12 @@ export default function DataDatasetsPage() {
           onLoadMore={() => query.fetchNextPage()}
           onRowActivate={(d) => router.push(`/data/datasets/${d.id}`)}
           emptyState={
-            <div className="flex flex-col items-center gap-2 p-10 text-muted-foreground">
+            <div className="flex flex-col items-center gap-3 p-10 text-center text-muted-foreground">
               <Database className="size-8" />
-              <p>No datasets</p>
+              <p>No datasets match your search.</p>
+              <Button size="sm" asChild>
+                <a href="/data/upload">Upload a file</a>
+              </Button>
             </div>
           }
         />

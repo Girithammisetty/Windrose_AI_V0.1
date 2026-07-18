@@ -59,7 +59,7 @@ export default function DatasetDetailPage({ params }: { params: Promise<{ id: st
           <>
             <PageHeader
               title={d.name}
-              description={d.urn}
+              description={`${formatNumber(d.rowCount)} rows`}
               actions={
                 <div className="flex items-center gap-2">
                   <Can gate={FEATURE_GATES.editDataset}>

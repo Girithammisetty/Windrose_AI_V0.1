@@ -143,6 +143,10 @@ export function SchemaField({
     widget = (
       <Textarea
         {...common}
+        // a11y name = the exact param name (matches every specialized branch);
+        // the visible <Label> also carries the required "*", so relying on it
+        // would give an accessible name of "name*" and break by-label lookups.
+        aria-label={param.name}
         value={strValue}
         onChange={(e) => onChange(e.target.value)}
         placeholder={param.type === "array" ? "[ ]" : "{ }"}
@@ -154,6 +158,7 @@ export function SchemaField({
     widget = (
       <Input
         {...common}
+        aria-label={param.name}
         type={numeric ? "number" : "text"}
         min={numeric && param.min != null ? param.min : undefined}
         max={numeric && param.max != null ? param.max : undefined}

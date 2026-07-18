@@ -53,7 +53,7 @@ export default function CaseDetailPage({ params }: { params: Promise<{ id: strin
           <>
             <PageHeader
               title={headlineOf(c)}
-              description={c.urn}
+              description={c.caseNumber != null ? `Case #${c.caseNumber}` : undefined}
               actions={
                 <div className="flex items-center gap-2">
                   <DeadlineChip days={summarizeProjection(c.displayProjection)?.deadlineDays} />
@@ -966,6 +966,14 @@ function ActivityPanel({ caseId }: { caseId: string }) {
     return nv && typeof nv === "object" ? (nv.comment_id ?? null) : null;
   }
 
+  // The timeline now carries the comment body (case-service joins case_comments),
+  // so it's readable for EVERY comment, not just this session's. Fall back to the
+  // session-local cache only if the join returned nothing (e.g. just-deleted).
+  function commentBodyOf(a: CaseActivity): string | undefined {
+    const nv = a.newValue as { body?: string } | null | undefined;
+    return nv && typeof nv === "object" && typeof nv.body === "string" ? nv.body : undefined;
+  }
+
   return (
     <div className="space-y-3">
       <Can gate={FEATURE_GATES.manageCase}>
@@ -1000,7 +1008,11 @@ function ActivityPanel({ caseId }: { caseId: string }) {
           {activities.map((a) => {
             const isComment = a.eventType === "comment.added";
             const commentId = isComment ? commentIdOf(a) : null;
-            const cachedBody = commentId ? bodies[commentId] : undefined;
+            // Prefer the body the timeline now carries; fall back to the
+            // session-local cache (e.g. an optimistic just-posted comment).
+            const cachedBody = isComment
+              ? (commentBodyOf(a) ?? (commentId ? bodies[commentId] : undefined))
+              : undefined;
             const mine = a.actorType === "user" && a.actorId === session.userId;
             const withinWindow =
               !!a.occurredAt && Date.now() - new Date(a.occurredAt).getTime() <= COMMENT_EDIT_WINDOW_MS;

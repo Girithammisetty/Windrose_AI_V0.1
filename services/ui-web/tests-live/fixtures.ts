@@ -35,7 +35,9 @@ export const PERSONAS = () => liveContext().personas;
 export async function loginAs(page: Page, email: string): Promise<void> {
   await page.goto("/login");
   await page.getByLabel("Email").fill(email);
-  await page.getByRole("button", { name: /sign in/i }).click();
+  // exact match: the login page also has a "Sign in with SSO" button (BYO OIDC),
+  // so a loose /sign in/i regex is now ambiguous.
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await page.waitForURL("**/");
   await expect(page.getByRole("heading", { name: /welcome/i })).toBeVisible();
 }

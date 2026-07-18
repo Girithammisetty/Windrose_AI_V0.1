@@ -36,6 +36,7 @@ const ALLOWED_AGENT_KEYS = new Set([
   "onboarding",
   "dashboard-designer",
   "model-training",
+  "ml-engineer",
   "inference",
   "governance",
   "meta-router",
