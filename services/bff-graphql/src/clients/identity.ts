@@ -178,6 +178,12 @@ export class IdentityClient {
     });
   }
 
+  /** GET /api/v1/tenants — cross-tenant list (identity requireSuperAdmin gates
+   * it; the BFF forwards the JWT). Used by the platform-admin all-tenants view. */
+  tenants(limit: number, cursor?: string): Promise<Page<TenantDTO>> {
+    return this.http.get<Page<TenantDTO>>("/api/v1/tenants", { query: { limit, cursor } });
+  }
+
   /** GET /api/v1/tenants/{id} — the tenant object + its settings. */
   tenant(id: string): Promise<TenantDTO> {
     return this.http.get<TenantDTO>(`/api/v1/tenants/${encodeURIComponent(id)}`);

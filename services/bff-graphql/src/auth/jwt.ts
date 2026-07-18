@@ -24,6 +24,8 @@ export interface Claims extends JWTPayload {
   agent_version?: string;
   obo_sub?: string;
   scopes?: string[];
+  /** First-class cross-tenant platform operator (identity-service). */
+  platform_admin?: boolean;
 }
 
 export interface VerifiedIdentity {

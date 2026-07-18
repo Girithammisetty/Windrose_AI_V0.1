@@ -346,6 +346,9 @@ export const resolvers = {
         tenantId: c.tenant_id ?? "",
         type: c.typ ?? "user",
         scopes: c.scopes ?? [],
+        // Defensive OR: honor the clean claim, but also a token that carries the
+        // platform.admin scope without the (newer) boolean.
+        isPlatformAdmin: c.platform_admin === true || (c.scopes ?? []).includes("platform.admin"),
         workspaceId: c.workspace_id ?? "",
       };
     },
@@ -376,6 +379,13 @@ export const resolvers = {
 
     tenant: (_p: unknown, a: { id: string }, ctx: GraphQLContext) =>
       nullOn404(ctx.clients.identity.tenant(a.id).then((d) => mapTenant(ctx, d))),
+
+    // Cross-tenant list for the platform-admin all-tenants view. identity's
+    // requireSuperAdmin gate enforces (a tenant admin's JWT is rejected there).
+    tenants: (_p: unknown, a: { limit?: number }, ctx: GraphQLContext) =>
+      ctx.clients.identity
+        .tenants(a.limit ?? 200)
+        .then((p) => p.data.map((d) => mapTenant(ctx, d))),
 
     // ---- admin: rbac workspaces + groups -------------------------------------
     workspaces: async (

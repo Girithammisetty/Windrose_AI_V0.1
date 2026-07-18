@@ -56,6 +56,8 @@ export const typeDefs = gql`
     tenantId: ID!
     type: String!
     scopes: [String!]!
+    "First-class cross-tenant platform operator (distinct from the per-tenant Admin role)."
+    isPlatformAdmin: Boolean!
     """
     The caller's role display names, read from rbac-service's permissions_flat
     projection (rbac GET /me/capabilities, JWT forwarded). Display-only data for
@@ -3510,6 +3512,9 @@ export const typeDefs = gql`
 
     """The caller's tenant + settings (identity-service GET /tenants/{id}). Admin only."""
     tenant(id: ID!): Tenant
+
+    """All tenants (identity-service GET /tenants). Platform-admin only (identity's requireSuperAdmin enforces)."""
+    tenants(limit: Int): [Tenant!]!
 
     """
     Search the WORM audit trail (audit-service GET /audit/search). Admin only.
