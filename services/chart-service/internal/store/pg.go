@@ -77,11 +77,20 @@ func insertOutboxTx(ctx context.Context, tx pgx.Tx, envs []event.Envelope) error
 // CreateDashboard inserts a dashboard + outbox events atomically.
 func (s *PG) CreateDashboard(ctx context.Context, d *domain.Dashboard, envs []event.Envelope) error {
 	return s.withTenant(ctx, d.TenantID, func(tx pgx.Tx) error {
+		// tags is `TEXT[] NOT NULL DEFAULT '{}'`, but a nil Go slice binds to SQL
+		// NULL (the column DEFAULT only applies when the column is omitted, not
+		// when NULL is passed explicitly), which violates the constraint. Callers
+		// that don't set tags — e.g. an approved dashboard-designer proposal —
+		// would otherwise fail the INSERT. Coalesce to an empty array.
+		tags := d.Tags
+		if tags == nil {
+			tags = []string{}
+		}
 		_, err := tx.Exec(ctx,
 			`INSERT INTO dashboards (id,tenant_id,workspace_id,name,module,description,layout,meta,tags,owner_user_id,status,archived)
 			 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,false)`,
 			d.ID, d.TenantID, d.WorkspaceID, d.Name, d.Module, d.Description,
-			jsonOr(d.Layout, "[]"), jsonOr(d.Meta, "{}"), d.Tags, d.OwnerUserID, statusOr(d.Status))
+			jsonOr(d.Layout, "[]"), jsonOr(d.Meta, "{}"), tags, d.OwnerUserID, statusOr(d.Status))
 		if err != nil {
 			if isUnique(err) {
 				return domain.EConflict("dashboard name already exists in this workspace/module")

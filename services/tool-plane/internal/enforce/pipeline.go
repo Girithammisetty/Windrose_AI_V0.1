@@ -197,8 +197,6 @@ func (p *Pipeline) run(ctx context.Context, req Request) Outcome {
 	affected := domain.AffectedURNs(tv.InputSchema, req.Args, req.TenantStr)
 	oboURNs := domain.AffectedOboURNs(tv.InputSchema, req.Args, req.TenantStr)
 	oc.affectedURNs = affected
-	fmt.Fprintf(os.Stderr, "WRDBG tool=%s affected=%v oboURNs=%v hasKey=%v\n",
-		req.ToolID, affected, oboURNs, domain.OboURNFields(tv.InputSchema))
 
 	// Step 3a: cross-tenant URN guard (BR-12/AC-13): a URN whose tenant segment
 	// != caller tenant → 404-shaped denial + security.cross_tenant_denied. Applies

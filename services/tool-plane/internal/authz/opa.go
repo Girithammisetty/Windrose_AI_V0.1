@@ -88,6 +88,20 @@ func (c *OPAClient) Check(ctx context.Context, in Input) (Decision, error) {
 	if in.Args == nil {
 		in.Args = map[string]any{}
 	}
+	// The normative OPA input (BRD §3) models these as arrays; a nil Go slice
+	// marshals to JSON `null`, and the policy's `object.get(input,"x",[])` only
+	// defaults when the key is ABSENT — a present `null` stays null, and
+	// `every urn in null` is NOT vacuously true, which would spuriously fail
+	// obo_grant/toolset for a caller with an empty set. Emit `[]`, never null.
+	if in.AffectedURNs == nil {
+		in.AffectedURNs = []string{}
+	}
+	if in.OboGrants == nil {
+		in.OboGrants = []string{}
+	}
+	if in.Toolset == nil {
+		in.Toolset = []string{}
+	}
 	body, _ := json.Marshal(map[string]any{"input": in})
 	url := fmt.Sprintf("%s/v1/data/%s", c.BaseURL, c.Path)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))

@@ -151,9 +151,30 @@ func (s *Server) handleToolFacade(w http.ResponseWriter, r *http.Request) {
 			slog.Warn("facade skip chart: invalid config", "err", verr, "name", cname, "chart_type", usedType)
 			continue
 		}
-		dmRaw := json.RawMessage("{}")
+		// semantic_model is REQUIRED for the chart to compile at render time
+		// (resolve.modelFromChart reads DisplayMeta.semantic_model). The
+		// dashboard-designer supplies the grounded model per chart; without it
+		// the created dashboard renders "model is required". Carry it through.
+		model, _ := cm["model"].(string)
+		if model == "" {
+			model, _ = cm["semantic_model"].(string)
+		}
+		dm := map[string]any{}
 		if len(filters) > 0 {
-			if b, err := json.Marshal(map[string]any{"filters": filters}); err == nil {
+			dm["filters"] = filters
+		}
+		if model != "" {
+			dm["semantic_model"] = model
+			// The semantic model is referenced by NAME, so the render-time
+			// compile (resolve.workspaceFromChart → CompileRequest.WorkspaceID)
+			// needs the owning workspace to disambiguate it — without it the
+			// semantic service rejects with "workspace_id required when model is
+			// named by name". Carry the dashboard's workspace through.
+			dm["workspace_id"] = wsID.String()
+		}
+		dmRaw := json.RawMessage("{}")
+		if len(dm) > 0 {
+			if b, err := json.Marshal(dm); err == nil {
 				dmRaw = b
 			}
 		}

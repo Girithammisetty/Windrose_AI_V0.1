@@ -110,7 +110,23 @@ async def mcp_invoke(request: Request, body: McpInvokeRequest,
         tenant_id=body.tenant, typ="agent_obo" if body.agent_id else "service",
         agent_id=body.agent_id, obo_sub=body.obo_sub,
         workspace_id=body.args.get("workspace_id"))
-    if not await request.app.state.authz.allow(principal, action, None):
+
+    # Defense-in-depth capability check for the EFFECTIVE HUMAN (obo_sub).
+    # Evaluate it as a USER, not as agent_obo: the OPA authz_input agent_obo path
+    # additionally requires the ACTION to be in the caller's delegated token
+    # scopes (windrose_authz_input.rego `user_path`+`scope_ok`) — a gate tool-plane
+    # already enforced upstream on the agent's signed toolset, and one this
+    # internal facade never receives scopes to satisfy. What we must verify here
+    # is simply whether the deciding human holds the action (via their rbac
+    # projection: admin flag / workspace or tenant role actions). Checking the
+    # obo_sub as agent_obo with empty scopes always deny-by-defaults regardless of
+    # the human's real capability.
+    authz_principal = principal
+    if body.obo_sub:
+        authz_principal = Principal(
+            sub=body.obo_sub, tenant_id=body.tenant, typ="user",
+            workspace_id=body.args.get("workspace_id"))
+    if not await request.app.state.authz.allow(authz_principal, action, None):
         return _mcp_output(403, {"error": f"not allowed: {action}"})
 
     ctx = principal.ctx(getattr(request.state, "trace_id", None))

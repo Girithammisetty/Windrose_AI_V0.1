@@ -353,15 +353,25 @@ func (s *PG) ListTimeline(ctx context.Context, tenant, caseID uuid.UUID, limit i
 			}
 			return err
 		}
-		q := `SELECT id, case_id, event_type, actor_type, actor_id, via_agent, proposal_urn, old_value, new_value, occurred_at
-			FROM case_events WHERE case_id=$1`
+		// Enrich comment events with the comment body (LEFT JOIN case_comments on
+		// the new_value.comment_id) so the timeline is self-contained — there is no
+		// separate list-comments route, and a comment body must be readable from
+		// the timeline itself, not only on the create response.
+		q := `SELECT ce.id, ce.case_id, ce.event_type, ce.actor_type, ce.actor_id,
+				ce.via_agent, ce.proposal_urn, ce.old_value, ce.new_value, ce.occurred_at, cc.body
+			FROM case_events ce
+			LEFT JOIN case_comments cc
+				ON ce.new_value ? 'comment_id'
+				AND cc.id = (ce.new_value->>'comment_id')::uuid
+				AND cc.deleted_at IS NULL
+			WHERE ce.case_id=$1`
 		args := []any{caseID}
 		if before != nil {
 			args = append(args, *before)
-			q += ` AND occurred_at < $2`
+			q += ` AND ce.occurred_at < $2`
 		}
 		args = append(args, limit)
-		q += ` ORDER BY occurred_at DESC LIMIT $` + strconv.Itoa(len(args))
+		q += ` ORDER BY ce.occurred_at DESC LIMIT $` + strconv.Itoa(len(args))
 		rows, err := tx.Query(ctx, q, args...)
 		if err != nil {
 			return err
@@ -371,7 +381,8 @@ func (s *PG) ListTimeline(ctx context.Context, tenant, caseID uuid.UUID, limit i
 			var a domain.Activity
 			var viaAgent, oldV, newV []byte
 			var proposalURN *string
-			if err := rows.Scan(&a.ID, &a.CaseID, &a.EventType, &a.ActorType, &a.ActorID, &viaAgent, &proposalURN, &oldV, &newV, &a.OccurredAt); err != nil {
+			var commentBody *string
+			if err := rows.Scan(&a.ID, &a.CaseID, &a.EventType, &a.ActorType, &a.ActorID, &viaAgent, &proposalURN, &oldV, &newV, &a.OccurredAt, &commentBody); err != nil {
 				return err
 			}
 			if len(viaAgent) > 0 {
@@ -388,6 +399,16 @@ func (s *PG) ListTimeline(ctx context.Context, tenant, caseID uuid.UUID, limit i
 			}
 			if len(newV) > 0 {
 				_ = json.Unmarshal(newV, &a.NewValue)
+			}
+			// Surface the joined comment body so a comment is readable straight
+			// from the timeline (no separate list-comments route).
+			if commentBody != nil {
+				if a.NewValue == nil {
+					a.NewValue = map[string]any{}
+				}
+				if m, ok := a.NewValue.(map[string]any); ok {
+					m["body"] = *commentBody
+				}
 			}
 			out = append(out, a)
 		}

@@ -1,6 +1,10 @@
 package authz
 
 import (
+	"context"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 )
@@ -71,4 +75,40 @@ func TestExecuteRegistered(t *testing.T) {
 		}
 	}
 	t.Fatalf("pipeline action %q missing from Manifest()", ActionToolExecute)
+}
+
+// TestOPAInputNeverNullSlices guards the null-vs-empty-array bug: a nil Go slice
+// marshals to JSON `null`, and the policy's `object.get(input,"x",[])` only
+// defaults when the key is ABSENT — a present `null` makes `every x in null`
+// non-vacuous, spuriously failing obo_grant/toolset for an empty set. The client
+// must emit `[]` for affected_urns / obo_grants / toolset.
+func TestOPAInputNeverNullSlices(t *testing.T) {
+	var got map[string]any
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var body struct {
+			Input map[string]any `json:"input"`
+		}
+		_ = json.NewDecoder(r.Body).Decode(&body)
+		got = body.Input
+		_, _ = w.Write([]byte(`{"result":{"allow":true,"reason":"allow"}}`))
+	}))
+	defer srv.Close()
+
+	c := NewOPAClient(srv.URL)
+	// Input with nil AffectedURNs / OboGrants / Toolset (the empty-set case).
+	if _, err := c.Check(context.Background(), Input{Tenant: "t", ToolID: "x.y.z"}); err != nil {
+		t.Fatalf("check: %v", err)
+	}
+	for _, k := range []string{"affected_urns", "obo_grants", "toolset"} {
+		v, ok := got[k]
+		if !ok {
+			t.Fatalf("%s missing from OPA input", k)
+		}
+		if v == nil {
+			t.Fatalf("%s marshaled as JSON null; must be [] so rego `every` is vacuously true", k)
+		}
+		if _, isArr := v.([]any); !isArr {
+			t.Fatalf("%s should be a JSON array, got %T", k, v)
+		}
+	}
 }
