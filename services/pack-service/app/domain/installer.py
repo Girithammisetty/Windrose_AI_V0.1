@@ -33,6 +33,15 @@ from app.domain import catalog
 # a deferred kind; they're reported `deferred` in the plan, not faked.)
 INC1_KINDS = ("dispositions", "roles", "decision_models")
 
+# inc2 data chain, in dependency order. datasets ingest first; the semantic
+# model + verified queries are authored + SUBMITTED as governed drafts (NOT
+# approved — a pack must not bypass four-eyes; a distinct human steward approves
+# them in the normal review UI). saved queries create against the ingested
+# datasets. Dashboards depend on the model's PUBLISHED measure projection, so
+# they materialize in the second phase (run_complete), after approval.
+INC2_PHASE1_KINDS = ("datasets", "semantic_models", "verified_queries", "saved_queries")
+INC2_PHASE2_KINDS = ("dashboards",)
+
 # Kinds whose Core service exposes a real revert (delete) verb → reversible on
 # uninstall. Others are ledgered + tombstoned honestly (PKG-FR-025): the object
 # is retained and loses its pack-origin marker, because Core has no delete verb
@@ -82,17 +91,21 @@ def plan(client, manifest) -> list[dict]:
     doesn't materialize are `deferred` with a reason."""
     ops: list[dict] = []
     existing = _existing_names(client)
+    materializable = set(INC1_KINDS) | set(INC2_PHASE1_KINDS)
     for comp in manifest.components:
-        if comp.kind not in INC1_KINDS:
-            ops.append({"kind": comp.kind, "identity": comp.identity,
-                        "action": "deferred",
-                        "detail": "not materialized by pack-service inc1 "
-                                  "(needs a four-eyes approver or data-ingestion chain)"})
+        if comp.kind in INC2_PHASE2_KINDS:
+            # Dashboards materialize in phase 2, after a steward publishes the
+            # semantic model (their measure projection resolves only then).
+            ops.append({"kind": comp.kind, "identity": comp.identity, "action": "after_approval",
+                        "detail": "materializes once the semantic model is approved"})
+            continue
+        if comp.kind not in materializable:
+            ops.append({"kind": comp.kind, "identity": comp.identity, "action": "deferred",
+                        "detail": "not materialized yet (cases / agents / memories / pipelines)"})
             continue
         for name in _component_names(manifest, comp):
             action = "exists" if name in existing.get(comp.kind, set()) else "create"
-            ops.append({"kind": comp.kind, "identity": comp.identity,
-                        "name": name, "action": action})
+            ops.append({"kind": comp.kind, "identity": comp.identity, "name": name, "action": action})
     return ops
 
 
@@ -117,6 +130,11 @@ def _existing_names(client) -> dict[str, set[str]]:
     out["decision_models"] = {str(d.get("name")) for d in (dm.json().get("data") or [])
                               if dm.status_code == 200 and d.get("workspace_id") == ws
                               and d.get("name")}
+    out["datasets"] = names(
+        client._req("GET", f"{e.dataset}/api/v1/datasets?workspace_id={ws}", tok), "name")
+    sm = client._req("GET", f"{e.semantic}/api/v1/models?filter[workspace_id]={ws}", tok)
+    out["semantic_models"] = names(sm, "name")
+    out["verified_queries"] = set()  # nl_text is the identity; treat as always-new in the plan
     return out
 
 
@@ -133,6 +151,12 @@ def _component_names(manifest, comp) -> list[str]:
         return [q["name"] for q in (doc if isinstance(doc, list) else [doc])]
     if comp.kind == "decision_models":
         return [dm["name"] for dm in (doc if isinstance(doc, list) else [doc])]
+    if comp.kind == "datasets":
+        return [ds["name"] for ds in (doc if isinstance(doc, list) else [doc])]
+    if comp.kind == "semantic_models":
+        return [doc["name"]]
+    if comp.kind == "verified_queries":
+        return [f"{comp.identity}_{i}" for i in range(len(doc))]
     return [comp.identity]
 
 
@@ -183,7 +207,13 @@ def run_install(client, manifest, origin_of: Callable[[str, str], str]) -> list[
                        lambda dm=dm: client.ensure_decision_model(
                            dm.get("identity", comp.identity), dm["name"], dm["rules"],
                            dm.get("default_outcome")))
-    return records
+
+    # inc2 data chain: datasets + semantic/verified DRAFTS + saved queries.
+    # Dashboards are held for run_complete (they need the model's published
+    # measure projection — a steward must approve the model first).
+    data_records, pending_dashboards = run_data_chain(client, manifest, origin_of)
+    records.extend(data_records)
+    return records, pending_dashboards
 
 
 def _urn_id(urn: str | None) -> str | None:
@@ -228,6 +258,212 @@ def run_uninstall(client, ledger: list[dict]) -> list[dict]:
                              "detail": f"Core exposes no revert verb for '{kind}'; "
                                        "object retained, pack-origin marker cleared"})
     return outcomes
+
+
+JSON_H = {"Content-Type": "application/json"}
+
+
+def _rec(kind: str, identity: str, origin_of, *, action: str, urn=None,
+         target_id=None, detail="", reversible=False) -> dict:
+    return {
+        "id": str(uuid.uuid4()), "kind": kind, "identity": identity,
+        "target_urn": urn, "target_id": target_id or _urn_id(urn),
+        "origin": origin_of(kind, identity), "action": action, "detail": detail,
+        "reversible": reversible,
+    }
+
+
+def _measure_urn(client, name: str) -> str:
+    return f"wr:{client.tenant_id}:semantic:measure/{name}"
+
+
+def _expand_sources(client, sources, saved_query_ids: dict) -> list[dict]:
+    out = []
+    for i, s in enumerate(sources or []):
+        if "measure" in s:
+            out.append({"position": i, "source_type": "semantic_measure",
+                        "source_urn": _measure_urn(client, s["measure"])})
+        elif "saved_query" in s:
+            qid = saved_query_ids.get(s["saved_query"])
+            out.append({"position": i, "source_type": "saved_query",
+                        "source_urn": f"wr:{client.tenant_id}:query:query/{qid}"})
+        else:
+            out.append({"position": i, **s})
+    return out
+
+
+def _semantic_draft(client, name: str, desc: str, definition: dict):
+    """Create + PATCH + SUBMIT a semantic model as a governed DRAFT — never
+    approve (four-eyes: a distinct human steward publishes it). Returns
+    (model_id, published, detail)."""
+    import time  # noqa: PLC0415
+
+    e = client.endpoints
+    author = client.author_token()
+    r = client._req("GET", f"{e.semantic}/api/v1/models?filter[workspace_id]={client.workspace_id}", author)
+    model = None
+    if r.status_code == 200:
+        for m in r.json().get("data", []):
+            if m.get("name") == name:
+                model = m
+                break
+    if model and model.get("published_version_id"):
+        return model["id"], True, f"{name!r} already published"
+    if not model:
+        cr = client._req("POST", f"{e.semantic}/api/v1/models", author, headers=JSON_H,
+                         json={"workspace_id": client.workspace_id, "name": name,
+                               "description": desc, "definition": definition})
+        if cr.status_code != 201:
+            return None, False, f"create {cr.status_code}: {cr.text[:200]}"
+        model = cr.json()["data"]
+    mid = model["id"]
+    client._req("PATCH", f"{e.semantic}/api/v1/models/{mid}/versions/1", author,
+                headers=JSON_H, json={"definition": definition})
+    # submit; the dataset projection is eventually consistent with ingestion, so
+    # a just-ingested dataset can 422 "not found" for a moment — retry.
+    rs = client._req("POST", f"{e.semantic}/api/v1/models/{mid}/versions/1/submit",
+                     author, headers=JSON_H, json={})
+    for _ in range(6):
+        if not (rs.status_code == 422 and "not found" in rs.text):
+            break
+        time.sleep(2.0)
+        rs = client._req("POST", f"{e.semantic}/api/v1/models/{mid}/versions/1/submit",
+                         author, headers=JSON_H, json={})
+    if rs.status_code != 200:
+        return mid, False, f"submit {rs.status_code}: {rs.text[:200]}"
+    return mid, False, "submitted — awaiting a steward's four-eyes approval"
+
+
+def _semantic_published(client, name: str):
+    """(model_id, published?) for a pack semantic model by name."""
+    e = client.endpoints
+    r = client._req("GET", f"{e.semantic}/api/v1/models?filter[workspace_id]={client.workspace_id}",
+                    client.author_token())
+    if r.status_code == 200:
+        for m in r.json().get("data", []):
+            if m.get("name") == name:
+                return m["id"], bool(m.get("published_version_id"))
+    return None, False
+
+
+def run_data_chain(client, manifest, origin_of):
+    """inc2 phase 1: ingest datasets, author the semantic model + verified
+    queries as governed DRAFTS (submitted, NOT approved), create saved queries.
+    Returns (records, pending_dashboards: bool)."""
+    from pathlib import Path  # noqa: PLC0415
+
+    from packctl.manifest import load_component_file  # noqa: PLC0415
+
+    records: list[dict] = []
+    dataset_urns: dict[str, str] = {}
+
+    # datasets — ingested as the installing user (no four-eyes).
+    for comp in manifest.components_of("datasets"):
+        doc = load_component_file(manifest, comp)
+        for ds in (doc if isinstance(doc, list) else [doc]):
+            path = Path(manifest.pack_dir) / ds["file"]
+            urn = client.ensure_dataset(ds["identity"], ds["name"],
+                                        path.read_bytes(), ds.get("format", "csv"))
+            act = client.actions[-1] if client.actions else {}
+            if urn:
+                dataset_urns[ds["identity"]] = urn
+            records.append(_rec("datasets", ds["name"], origin_of,
+                                action=act.get("action", "failed" if not urn else "create"),
+                                urn=urn, detail=act.get("detail", "")))
+
+    # semantic models — authored as governed DRAFTS (submitted, not approved).
+    for comp in manifest.components_of("semantic_models"):
+        doc = load_component_file(manifest, comp)
+        definition = dict(doc["definition"])
+        for entity in definition.get("entities", []):
+            ref = entity.pop("dataset", None)
+            if ref and dataset_urns.get(ref):
+                entity["dataset_urn"] = dataset_urns[ref]
+        mid, published, detail = _semantic_draft(client, doc["name"], doc.get("description", ""), definition)
+        action = "failed" if mid is None else ("noop" if published else "submitted")
+        records.append(_rec("semantic_models", doc["name"], origin_of,
+                            action=action, target_id=mid,
+                            urn=(f"wr:{client.tenant_id}:semantic:model/{mid}" if mid else None),
+                            detail=detail))
+
+    # verified queries — create + submit as drafts (no approve).
+    for comp in manifest.components_of("verified_queries"):
+        doc = load_component_file(manifest, comp)
+        for i, vq in enumerate(doc):
+            e = client.endpoints
+            author = client.author_token()
+            cr = client._req("POST", f"{e.semantic}/api/v1/verified-queries", author, headers=JSON_H,
+                             json={"workspace_id": client.workspace_id, "nl_text": vq["nl_text"],
+                                   "sql_text": vq["sql_text"], "model": vq.get("model"),
+                                   "tags": vq.get("tags", [])})
+            if cr.status_code == 201:
+                vid = cr.json()["data"]["id"]
+                client._req("POST", f"{e.semantic}/api/v1/verified-queries/{vid}/submit", author, headers=JSON_H, json={})
+                records.append(_rec("verified_queries", f"{comp.identity}_{i}", origin_of,
+                                    action="submitted", target_id=vid, detail="submitted — awaiting approval"))
+            else:
+                # 409 = already present (idempotent) → noop; else honest failure.
+                records.append(_rec("verified_queries", f"{comp.identity}_{i}", origin_of,
+                                    action="noop" if cr.status_code == 409 else "failed",
+                                    detail=cr.text[:120]))
+
+    # saved queries — created against the ingested datasets (no four-eyes).
+    for comp in manifest.components_of("saved_queries"):
+        doc = load_component_file(manifest, comp)
+        for q in (doc if isinstance(doc, list) else [doc]):
+            qid = client.ensure_saved_query(q["identity"], q["name"], q["sql"],
+                                            q.get("description", ""), q.get("tags", []))
+            act = client.actions[-1] if client.actions else {}
+            records.append(_rec("saved_queries", q["name"], origin_of,
+                                action=act.get("action", "failed" if not qid else "create"),
+                                target_id=qid, urn=act.get("urn"),
+                                reversible=(act.get("action") == "create" and bool(qid)),
+                                detail=act.get("detail", "")))
+
+    pending_dashboards = len(manifest.components_of("dashboards")) > 0
+    return records, pending_dashboards
+
+
+def run_complete(client, manifest, origin_of):
+    """inc2 phase 2: once a steward has published the pack's semantic model(s),
+    materialize the dashboards (their measure projection now resolves). Returns
+    (records, ok, detail). ok=False (with detail) if a model is still awaiting
+    approval — nothing is materialized."""
+    # Every semantic model the pack ships must be published first.
+    for comp in manifest.components_of("semantic_models"):
+        from packctl.manifest import load_component_file  # noqa: PLC0415
+        doc = load_component_file(manifest, comp)
+        _mid, pub = _semantic_published(client, doc["name"])
+        if not pub:
+            return [], False, f"semantic model {doc['name']!r} is not published yet — a steward must approve it first"
+
+    from packctl.manifest import load_component_file  # noqa: PLC0415
+
+    records: list[dict] = []
+    # re-derive saved-query ids (dashboards may source them) by name.
+    saved_query_ids: dict[str, str] = {}
+    for comp in manifest.components_of("saved_queries"):
+        for q in (load_component_file(manifest, comp) or []):
+            e = client.endpoints
+            r = client._req("GET", f"{e.query}/api/v1/queries?workspace_id={client.workspace_id}", client.author_token())
+            if r.status_code == 200:
+                for row in r.json().get("data", []):
+                    if row.get("name") == q["name"]:
+                        saved_query_ids[q["identity"]] = row["id"]
+
+    for comp in manifest.components_of("dashboards"):
+        spec = dict(load_component_file(manifest, comp))
+        for chart in spec.get("charts", []):
+            chart["sources"] = _expand_sources(client, chart.get("sources", []), saved_query_ids)
+        res = client.ensure_dashboard(comp.identity, spec)
+        act = client.actions[-1] if client.actions else {}
+        did = res.get("id") if isinstance(res, dict) else None
+        records.append(_rec("dashboards", spec.get("name", comp.identity), origin_of,
+                            action=("create" if did else "failed"),
+                            target_id=did, urn=(f"wr:{client.tenant_id}:chart:dashboard/{did}" if did else None),
+                            reversible=bool(did),
+                            detail=f"{res.get('warmed', 0)}/{res.get('total', 0)} charts resolve data" if isinstance(res, dict) else ""))
+    return records, True, "dashboards materialized"
 
 
 def _unbind_role_group(client, e, tok, *, role_name: str, role_id: str) -> None:

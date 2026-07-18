@@ -1718,6 +1718,11 @@ export interface PackUninstallResult {
   reversed: number;
   tombstoned: number;
 }
+export interface PackCompleteResult {
+  id: string;
+  status: string;
+  dashboards: PackLedgerRow[];
+}
 
 export interface CreateWritebackInput {
   connectionId: string;

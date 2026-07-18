@@ -51,7 +51,7 @@ import {
   mapDecisionModel, mapBatchEvaluate,
   mapResolutionRun, mapResolutionRunDetail, mapResolveEntities, mapMergeCandidate,
   mapEntityMergeProposal, mapMaterializeResolved,
-  mapPack, mapPackInstall, mapPackInstallPlan, mapPackUninstall,
+  mapPack, mapPackInstall, mapPackInstallPlan, mapPackUninstall, mapPackComplete,
 } from "../schema/map.js";
 
 /** GraphQL ChartSourceInput (camel) -> chart-service source body (snake). */
@@ -4510,6 +4510,10 @@ export const resolvers = {
     uninstallPack: async (
       _p: unknown, a: { installId: string; idempotencyKey?: string }, ctx: GraphQLContext,
     ) => mapPackUninstall(await ctx.clients.pack.uninstall(a.installId, a.idempotencyKey)),
+
+    completePackInstall: async (
+      _p: unknown, a: { installId: string; idempotencyKey?: string }, ctx: GraphQLContext,
+    ) => mapPackComplete(await ctx.clients.pack.complete(a.installId, a.idempotencyKey)),
   },
 
   // ------------------------------------------------------------ field resolvers

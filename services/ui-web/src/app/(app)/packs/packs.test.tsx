@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { screen, waitFor, within } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithProviders } from "@/test/utils";
 
@@ -69,7 +69,7 @@ describe("PacksPage (BRD 23 capability packs)", () => {
   });
 
   it("installs and shows the materialization ledger", async () => {
-    handler = (doc: string, vars: any) => {
+    handler = (doc: string) => {
       if (doc.includes("mutation InstallPack")) {
         return { installPack: { id: "i-1", pack: "card-disputes", version: "1.0.0", workspaceId: "ws",
           status: "installed", summary: { created: 10 },

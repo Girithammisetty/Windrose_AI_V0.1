@@ -556,6 +556,18 @@ export function useUninstallPack(workspaceId: string) {
   });
 }
 
+/** Phase 2: after the semantic model is approved, materialize the dashboards. */
+export function useCompletePackInstall(workspaceId: string) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (installId: string) =>
+      graphqlRequest<ops.CompletePackInstallResult>(ops.COMPLETE_PACK_INSTALL, {
+        installId, idempotencyKey: crypto.randomUUID(),
+      }).then((r) => r.completePackInstall),
+    onSuccess: () => client.invalidateQueries({ queryKey: qk.packInstalls(workspaceId) }),
+  });
+}
+
 /** Batch-run a decision table over a worklist. propose=false previews (dry-run,
  * no side effect); propose=true mints one governed proposal per matched case. */
 export function useBatchEvaluateDecisionModel() {

@@ -85,6 +85,12 @@ export interface UninstallResultDTO {
   outcomes: { ledger_id: string; deleted: boolean; detail: string }[];
 }
 
+/** Pack install/complete materialize into Core (dataset ingestion + profiling,
+ * semantic submit, dashboard chart warming) — deliberately long-running, so
+ * these calls override the BFF's default 10s downstream cap (BFF-FR-032). */
+const PLAN_TIMEOUT = 60_000;
+const INSTALL_TIMEOUT = 300_000;
+
 export class PackClient {
   constructor(private readonly http: ServiceClient) {}
 
@@ -104,6 +110,7 @@ export class PackClient {
   async plan(pack: string, workspaceId: string, version?: string): Promise<InstallPlanDTO> {
     const r = await this.http.post<{ data: InstallPlanDTO }>("/api/v1/installs", {
       body: { pack, version, workspace_id: workspaceId, dry_run: true },
+      timeoutMs: PLAN_TIMEOUT,
     });
     return r.data;
   }
@@ -114,7 +121,7 @@ export class PackClient {
   ): Promise<InstallResultDTO> {
     const r = await this.http.post<{ data: InstallResultDTO }>("/api/v1/installs", {
       body: { pack, version, workspace_id: workspaceId, dry_run: false },
-      idempotencyKey,
+      idempotencyKey, timeoutMs: INSTALL_TIMEOUT,
     });
     return r.data;
   }
@@ -136,8 +143,23 @@ export class PackClient {
   async uninstall(id: string, idempotencyKey?: string): Promise<UninstallResultDTO> {
     const r = await this.http.post<{ data: UninstallResultDTO }>(
       `/api/v1/installs/${encodeURIComponent(id)}/uninstall`,
-      { idempotencyKey },
+      { idempotencyKey, timeoutMs: INSTALL_TIMEOUT },
     );
     return r.data;
   }
+
+  /** Phase 2: after the semantic model is approved, materialize dashboards. */
+  async complete(id: string, idempotencyKey?: string): Promise<CompleteResultDTO> {
+    const r = await this.http.post<{ data: CompleteResultDTO }>(
+      `/api/v1/installs/${encodeURIComponent(id)}/complete`,
+      { idempotencyKey, timeoutMs: INSTALL_TIMEOUT },
+    );
+    return r.data;
+  }
+}
+
+export interface CompleteResultDTO {
+  id: string;
+  status: string;
+  dashboards: LedgerRowDTO[];
 }

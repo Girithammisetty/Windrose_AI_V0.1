@@ -30,7 +30,7 @@ import type {
 } from "../clients/agent.js";
 import type {
   PackSummaryDTO, PackDetailDTO, PlanOpDTO, LedgerRowDTO, InstallDTO,
-  InstallPlanDTO, InstallResultDTO, UninstallResultDTO,
+  InstallPlanDTO, InstallResultDTO, UninstallResultDTO, CompleteResultDTO,
 } from "../clients/pack.js";
 import type {
   ToolKillSwitchDTO,
@@ -2365,6 +2365,14 @@ export function mapPackUninstall(d: UninstallResultDTO) {
   return {
     __typename: "PackUninstallResult" as const,
     id: d.id, status: d.status, reversed: d.reversed, tombstoned: d.tombstoned,
+  };
+}
+
+export function mapPackComplete(d: CompleteResultDTO) {
+  return {
+    __typename: "PackCompleteResult" as const,
+    id: d.id, status: d.status,
+    dashboards: (d.dashboards ?? []).map(mapPackLedgerRow),
   };
 }
 

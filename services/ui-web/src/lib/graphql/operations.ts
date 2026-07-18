@@ -144,6 +144,7 @@ import type {
   PackInstall,
   PackInstallPlan,
   PackUninstallResult,
+  PackCompleteResult,
   DatasetColumn,
   SemanticModelSummary,
   SemanticModelVersion,
@@ -586,6 +587,15 @@ export const UNINSTALL_PACK = /* GraphQL */ `
   }
 `;
 export interface UninstallPackResult { uninstallPack: PackUninstallResult }
+
+export const COMPLETE_PACK_INSTALL = /* GraphQL */ `
+  mutation CompletePackInstall($installId: ID!, $idempotencyKey: String!) {
+    completePackInstall(installId: $installId, idempotencyKey: $idempotencyKey) {
+      id status dashboards { ${LEDGER_FIELDS} }
+    }
+  }
+`;
+export interface CompletePackInstallResult { completePackInstall: PackCompleteResult }
 
 export const DELETE_CONNECTION = /* GraphQL */ `
   mutation DeleteConnection($id: ID!) {

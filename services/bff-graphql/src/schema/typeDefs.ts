@@ -4263,6 +4263,8 @@ export const typeDefs = gql`
   }
   "Outcome of reversing an install (PKG-FR-025)."
   type PackUninstallResult { id: ID! status: String! reversed: Int! tombstoned: Int! }
+  "Outcome of phase 2 (dashboards materialized after the semantic model is approved)."
+  type PackCompleteResult { id: ID! status: String! dashboards: [PackLedgerRow!]! }
 
   type Mutation {
     """
@@ -5261,5 +5263,9 @@ export const typeDefs = gql`
     whose Core service exposes a revert verb, tombstone the rest honestly.
     Needs pack.install.execute."""
     uninstallPack(installId: ID!, idempotencyKey: String): PackUninstallResult!
+    """Phase 2: after a steward approves the pack's semantic model, materialize
+    its dashboards (POST /installs/{id}/complete). Errors if still awaiting
+    approval. Needs pack.install.execute."""
+    completePackInstall(installId: ID!, idempotencyKey: String): PackCompleteResult!
   }
 `;

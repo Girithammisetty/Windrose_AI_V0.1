@@ -83,6 +83,8 @@ def test_plan_marks_inc1_kinds_create_and_others_deferred():
     # inc1 kinds present in card-disputes are planned as create
     assert kinds.get("dispositions") == "create"
     assert kinds.get("decision_models") == "create"
-    # a kind pack-service inc1 does not materialize is reported deferred, honestly
-    assert any(o["action"] == "deferred" for o in ops)
-    assert any(o["kind"] == "semantic_models" and o["action"] == "deferred" for o in ops)
+    # inc2 data chain is now materializable (create), not faked
+    assert kinds.get("datasets") == "create"
+    assert kinds.get("semantic_models") == "create"
+    # dashboards wait for the steward to approve the semantic model (phase 2)
+    assert any(o["kind"] == "dashboards" and o["action"] == "after_approval" for o in ops)

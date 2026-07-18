@@ -4,8 +4,10 @@ import { PageHeader } from "@/components/shell/PageHeader";
 import { AsyncBoundary } from "@/components/primitives/AsyncBoundary";
 import { StatusChip } from "@/components/primitives/StatusChip";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import {
   usePacks, usePack, usePackInstalls, usePlanPackInstall, useInstallPack, useUninstallPack,
+  useCompletePackInstall,
 } from "@/lib/graphql/hooks";
 import { useCapabilities } from "@/lib/authz/useCapabilities";
 import { FEATURE_GATES } from "@/lib/authz/registry";
@@ -81,8 +83,12 @@ function InstalledSection({ installs, workspaceId, canInstall }:
 function InstalledRow({ install, workspaceId, canInstall }:
   { install: PackInstall; workspaceId: string; canInstall: boolean }) {
   const uninstall = useUninstallPack(workspaceId);
+  const complete = useCompletePackInstall(workspaceId);
   const [result, setResult] = useState<{ reversed: number; tombstoned: number } | null>(null);
   const s = install.summary ?? {};
+  const awaiting = install.status === "awaiting_approval";
+  const completeErr = complete.error instanceof GraphQLRequestError ? complete.error : null;
+
   return (
     <div className="rounded-lg border p-3" data-testid="pack-install-row">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -91,16 +97,35 @@ function InstalledRow({ install, workspaceId, canInstall }:
           <span className="text-xs text-muted-foreground">v{install.version}</span>
           <StatusChip status={install.status} />
           <span className="text-xs text-muted-foreground">
-            {s.created ?? 0} created · {s.deferred ?? 0} deferred
+            {s.created ?? 0} created
+            {s.submitted ? ` · ${s.submitted} awaiting approval` : ""}
+            {s.dashboards ? ` · ${s.dashboards} dashboards` : ""}
           </span>
         </div>
-        {canInstall && install.status !== "uninstalled" && (
-          <Button size="sm" variant="outline" disabled={uninstall.isPending}
-            onClick={() => uninstall.mutate(install.id, { onSuccess: (r) => setResult(r) })}>
-            {uninstall.isPending ? "Uninstalling…" : "Uninstall"}
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {canInstall && awaiting && (
+            <Button size="sm" disabled={complete.isPending}
+              onClick={() => complete.mutate(install.id)}>
+              {complete.isPending ? "Completing…" : "Complete install"}
+            </Button>
+          )}
+          {canInstall && install.status !== "uninstalled" && (
+            <Button size="sm" variant="outline" disabled={uninstall.isPending}
+              onClick={() => uninstall.mutate(install.id, { onSuccess: (r) => setResult(r) })}>
+              {uninstall.isPending ? "Uninstalling…" : "Uninstall"}
+            </Button>
+          )}
+        </div>
       </div>
+
+      {awaiting && (
+        <p className="mt-2 text-xs text-muted-foreground" data-testid="pack-awaiting">
+          The pack&apos;s semantic model is submitted for four-eyes review — a steward must{" "}
+          <Link href="/data/semantic-models" className="text-primary underline">approve it</Link>{" "}
+          before its dashboards can materialize. Then click <em>Complete install</em>.
+        </p>
+      )}
+      {completeErr && <p role="alert" className="mt-2 text-xs text-destructive">{completeErr.message}</p>}
       {result && (
         <p className="mt-2 text-xs text-muted-foreground" data-testid="pack-uninstall-result">
           Reversed {result.reversed} object{result.reversed === 1 ? "" : "s"} · {result.tombstoned} tombstoned
@@ -216,10 +241,12 @@ function PlanView({ plan }: { plan: PackPlanOp[] }) {
   return (
     <div className="mt-2 rounded-md border bg-muted/40 p-2" data-testid="pack-plan">
       <p className="mb-1 font-medium">
-        Plan: {counts.create ?? 0} create · {counts.exists ?? 0} already present · {counts.deferred ?? 0} deferred
+        Plan: {counts.create ?? 0} create · {counts.exists ?? 0} already present
+        {counts.after_approval ? ` · ${counts.after_approval} after approval` : ""}
+        {counts.deferred ? ` · ${counts.deferred} deferred` : ""}
       </p>
       <div className="max-h-40 overflow-y-auto">
-        {plan.filter((o) => o.action !== "deferred").map((o, i) => (
+        {plan.filter((o) => o.action === "create" || o.action === "exists").map((o, i) => (
           <div key={i} className="flex items-center gap-2">
             <span className={o.action === "create" ? "text-primary" : "text-muted-foreground"}>{o.action}</span>
             <span className="font-mono">{o.kind}</span>

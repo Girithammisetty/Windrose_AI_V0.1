@@ -60,20 +60,66 @@ async def create_install(
             status="installing", plan=plan, created_by=principal.effective_user)
 
     origin_of = installer.origin_tag(manifest.name, manifest.version)
-    ledger = await asyncio.to_thread(installer.run_install, client, manifest, origin_of)
+    ledger, pending_dashboards = await asyncio.to_thread(installer.run_install, client, manifest, origin_of)
 
-    created = sum(1 for r in ledger if r["action"] == "create")
+    # If dashboards are pending, try to complete now — succeeds only when the
+    # pack's semantic model is already published (e.g. an idempotent re-install);
+    # on a fresh install it stays awaiting_approval until a steward publishes it.
+    if pending_dashboards and not any(r["action"] == "failed" for r in ledger):
+        dash, ok, _detail = await asyncio.to_thread(installer.run_complete, client, manifest, origin_of)
+        if ok:
+            ledger += dash
+            pending_dashboards = False
+
     failed = sum(1 for r in ledger if r["action"] == "failed")
-    summary = {"created": created, "failed": failed, "actions": len(ledger),
-               "deferred": len([o for o in plan if o["action"] == "deferred"])}
+    submitted = sum(1 for r in ledger if r["action"] == "submitted")
+    status = "failed" if failed else ("awaiting_approval" if pending_dashboards else "installed")
+    summary = {
+        "created": sum(1 for r in ledger if r["action"] == "create"),
+        "submitted": submitted, "failed": failed, "actions": len(ledger),
+        "deferred": len([o for o in plan if o["action"] == "deferred"]),
+        "awaiting_dashboards": len([o for o in plan if o["action"] == "after_approval"]) if pending_dashboards else 0,
+    }
     async with db.tenant_tx(principal.tenant_id) as conn:
         await repo.add_materialized(conn, install_id, principal.tenant_id, ledger)
-        await repo.set_install_status(
-            conn, install_id, "failed" if failed else "installed", summary)
+        await repo.set_install_status(conn, install_id, status, summary)
 
     return {"data": {"id": install_id, "pack": manifest.name, "version": manifest.version,
-                     "workspace_id": ws, "status": "failed" if failed else "installed",
-                     "summary": summary, "ledger": ledger}}
+                     "workspace_id": ws, "status": status, "summary": summary, "ledger": ledger}}
+
+
+@router.post("/installs/{install_id}/complete")
+async def complete_install(
+    request: Request, install_id: str,
+    principal: Principal = Depends(require("pack.install.execute")),
+):
+    """Phase 2: after a steward has approved the pack's semantic model, materialize
+    the dashboards (their measure projection now resolves) and flip the install to
+    installed. Returns the dashboard ledger additions, or 422 if still awaiting
+    approval."""
+    db = request.app.state.db
+    settings = request.app.state.settings
+    user_jwt = get_bearer(request)
+    async with db.tenant_tx(principal.tenant_id) as conn:
+        row = await repo.get_install(conn, install_id)
+        if row is None:
+            raise NotFound(f"install {install_id} not found")
+    manifest = catalog.load_manifest(row["pack_name"])
+    client = installer.build_client(settings, principal.tenant_id, str(row["workspace_id"]), user_jwt)
+    origin_of = installer.origin_tag(manifest.name, manifest.version)
+
+    dash, ok, detail = await asyncio.to_thread(installer.run_complete, client, manifest, origin_of)
+    if not ok:
+        raise ValidationFailed(detail)
+
+    async with db.tenant_tx(principal.tenant_id) as conn:
+        await repo.add_materialized(conn, install_id, principal.tenant_id, dash)
+        await repo.set_install_status(conn, install_id, "installed",
+                                      {**(repo.jloads(row.get("summary")) or {}),
+                                       "dashboards": sum(1 for r in dash if r["action"] == "create"),
+                                       "awaiting_dashboards": 0})
+    return {"data": {"id": install_id, "status": "installed",
+                     "dashboards": [_ledger_view({**d, "tombstoned": False}) for d in dash]}}
 
 
 @router.get("/installs")
@@ -119,7 +165,7 @@ async def uninstall(
             raise NotFound(f"install {install_id} not found")
         ledger = [_ledger_view(m) for m in await repo.get_ledger(conn, install_id)]
 
-    client = installer.build_client(settings, principal.tenant_id, row["workspace_id"], user_jwt)
+    client = installer.build_client(settings, principal.tenant_id, str(row["workspace_id"]), user_jwt)
     outcomes = await asyncio.to_thread(installer.run_uninstall, client, ledger)
 
     deleted = sum(1 for o in outcomes if o["deleted"])
