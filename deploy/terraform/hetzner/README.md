@@ -67,20 +67,31 @@ immediately and you can skip the CSI step above.
 
 ## Then: deploy Windrose (either option)
 
-1. **Data tier in-cluster.** Deploy the same components you run locally in
-   `deploy/docker-compose.dev.yml` — Postgres, Redpanda (or Kafka), MinIO,
-   ClickHouse, OpenSearch, Redis, OPA, Ollama — as Deployments/StatefulSets with
-   `hcloud-volumes` PVCs. Point Ollama at a small model:
-   `kubectl exec deploy/ollama -- ollama pull llama3.2:3b`.
-
-2. **Secrets.** No cloud secret manager here — create `windrose-secrets`
-   directly (full key list in `deploy/CONFIG.md`):
+1. **Data tier in-cluster.** The stateful deps (Postgres, Redpanda, MinIO,
+   Iceberg REST, OpenSearch, ClickHouse, OPA, Keycloak, Temporal, MLflow, Ollama,
+   Trino) ship as a kustomize bundle — see `deploy/k8s/data-tier/README.md`:
    ```bash
-   kubectl create secret generic windrose-secrets \
-     --from-literal=POSTGRES_HOST=postgres --from-literal=POSTGRES_PORT=5432 \
-     --from-literal=KAFKA_BOOTSTRAP=redpanda:9092 \
-     --from-literal=REDIS_URL=redis://redis:6379/0 # ...
+   # one manual pre-step (OPA policy bundle), then:
+   kubectl apply -k deploy/k8s/data-tier
+   kubectl -n windrose exec deploy/ollama -- ollama pull llama3.2:3b
    ```
+   **Optional add-ons** (kept out of the kustomization so `apply -k` stays lean):
+   Vault (dev-mode BYO-secrets backend) and Mailpit (SMTP capture, UI on `:8025`):
+   ```bash
+   kubectl apply -f deploy/k8s/data-tier/optional-vault-mailpit.yaml
+   ```
+
+2. **Secrets.** No cloud secret manager here — `create-secrets.sh` builds
+   `windrose-secrets` from `deploy/CONFIG.md`'s key contract, pointed at the data
+   tier (idempotent; values overridable via env):
+   ```bash
+   cd deploy/k8s/data-tier && ./create-secrets.sh
+   # if you deployed the optional add-ons, wire them in:
+   VAULT_ADDR=http://vault:8200 VAULT_TOKEN=windrose_dev_root \
+     SMTP_HOST=mailpit SMTP_PORT=1025 ./create-secrets.sh
+   ```
+   Auth is dynamic — `values-hetzner.yaml` sets `JWKS_URL` to identity-service's
+   live endpoint, so no JWT signing secret is needed for dev.
 
 3. **App chart.**
    ```bash
