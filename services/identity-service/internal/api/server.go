@@ -134,6 +134,10 @@ func (s *Server) Router() http.Handler {
 				r.Post("/tenants/{id}/provisioning/retry", s.handleRetryProvisioning)
 				r.Get("/tenants/{id}/provisioning", s.handleProvisioningStatus)
 				r.Post("/keys/rotate", s.handleRotateKeys)
+				// First-class platform-admin registry (cross-tenant operators).
+				r.Get("/platform/admins", s.handleListPlatformAdmins)
+				r.Post("/platform/admins", s.handleCreatePlatformAdmin)
+				r.Delete("/platform/admins/{id}", s.handleDeletePlatformAdmin)
 				// IDN-FR-009 (Should): platform version registry — stub.
 				r.Get("/platform-versions", s.handleNotImplemented("platform version registry (IDN-FR-009)"))
 			})

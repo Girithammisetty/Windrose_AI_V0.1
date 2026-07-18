@@ -25,6 +25,13 @@ type Store interface {
 	// machine at the persistence boundary, IDN-FR-003).
 	TransitionTenant(ctx context.Context, id uuid.UUID, from, to TenantStatus, evs ...OutboxEvent) error
 
+	// --- platform admins (platform-scoped, RLS-exempt; first-class cross-tenant
+	// operator, distinct from the per-tenant "Admin" role) ---
+	IsPlatformAdmin(ctx context.Context, sub, email string) (bool, error)
+	ListPlatformAdmins(ctx context.Context) ([]*PlatformAdmin, error)
+	CreatePlatformAdmin(ctx context.Context, pa *PlatformAdmin) error
+	DeletePlatformAdmin(ctx context.Context, id uuid.UUID) error
+
 	// --- cells ---
 	CreateCell(ctx context.Context, c *Cell) error
 	ListCells(ctx context.Context) ([]*Cell, error)
@@ -126,6 +133,18 @@ type TenantFilter struct {
 	Status string
 	CellID string
 	Cloud  string
+}
+
+// PlatformAdmin is a first-class, cross-tenant platform operator. It lives in a
+// platform-scoped (RLS-exempt) registry — NOT the per-tenant rbac "Admin" role.
+// A user matched here (by sub or email) has the platform scopes + platform_admin
+// claim injected at login.
+type PlatformAdmin struct {
+	ID        uuid.UUID `json:"id"`
+	UserSub   string    `json:"user_sub,omitempty"`
+	Email     string    `json:"email"`
+	GrantedBy string    `json:"granted_by,omitempty"`
+	GrantedAt time.Time `json:"granted_at"`
 }
 
 // SigningKey is the platform key registry row (IDN-FR-050..052).

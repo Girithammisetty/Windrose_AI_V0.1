@@ -251,6 +251,53 @@ func (s *Store) DeleteTenantDisplayLabel(ctx context.Context, tenantID uuid.UUID
 	return err
 }
 
+// --- platform admins (RLS-exempt registry; queried directly off the pool) ---
+
+func (s *Store) IsPlatformAdmin(ctx context.Context, sub, email string) (bool, error) {
+	var exists bool
+	err := s.pool.QueryRow(ctx,
+		`SELECT EXISTS(SELECT 1 FROM platform_admins
+		   WHERE ($1 <> '' AND user_sub = $1) OR ($2 <> '' AND lower(email) = lower($2)))`,
+		sub, email).Scan(&exists)
+	return exists, err
+}
+
+func (s *Store) ListPlatformAdmins(ctx context.Context) ([]*domain.PlatformAdmin, error) {
+	rows, err := s.pool.Query(ctx,
+		`SELECT id, user_sub, email, granted_by, granted_at FROM platform_admins ORDER BY granted_at DESC`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := []*domain.PlatformAdmin{}
+	for rows.Next() {
+		pa := &domain.PlatformAdmin{}
+		var sub *string
+		if err := rows.Scan(&pa.ID, &sub, &pa.Email, &pa.GrantedBy, &pa.GrantedAt); err != nil {
+			return nil, err
+		}
+		if sub != nil {
+			pa.UserSub = *sub
+		}
+		out = append(out, pa)
+	}
+	return out, rows.Err()
+}
+
+func (s *Store) CreatePlatformAdmin(ctx context.Context, pa *domain.PlatformAdmin) error {
+	_, err := s.pool.Exec(ctx,
+		`INSERT INTO platform_admins (id, user_sub, email, granted_by, granted_at)
+		 VALUES ($1, NULLIF($2,''), lower($3), $4, $5)
+		 ON CONFLICT (email) DO UPDATE SET user_sub = COALESCE(EXCLUDED.user_sub, platform_admins.user_sub)`,
+		pa.ID, pa.UserSub, pa.Email, pa.GrantedBy, pa.GrantedAt)
+	return err
+}
+
+func (s *Store) DeletePlatformAdmin(ctx context.Context, id uuid.UUID) error {
+	_, err := s.pool.Exec(ctx, `DELETE FROM platform_admins WHERE id = $1`, id)
+	return err
+}
+
 func (s *Store) ListTenants(ctx context.Context, f domain.TenantFilter, page domain.PageRequest) ([]*domain.Tenant, domain.PageInfo, error) {
 	q := `SELECT ` + tenantCols + ` FROM tenants WHERE 1=1`
 	args := []any{}

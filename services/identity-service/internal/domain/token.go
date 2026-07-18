@@ -29,7 +29,11 @@ type Claims struct {
 	AgentVersion string    `json:"agent_version,omitempty"`
 	OBOSub       string    `json:"obo_sub,omitempty"` // original user for agent_obo
 	Scopes       []string  `json:"scopes"`
-	SessionID    string    `json:"session_id,omitempty"`
+	// PlatformAdmin (IDN: first-class cross-tenant operator) marks a human
+	// platform administrator. It is a clean UI/BFF signal that travels alongside
+	// the injected platform scopes; backend predicates still key off the scopes.
+	PlatformAdmin bool   `json:"platform_admin,omitempty"`
+	SessionID     string `json:"session_id,omitempty"`
 	// Embedded-UI (IDN-FR-043): workspace-scoped embed tokens. `Embed` marks
 	// the token as an embed token; `Surface` is the UI-surface allowlist; the
 	// UI enforces both. `FrameAncestors` is the tenant's allowed embedding

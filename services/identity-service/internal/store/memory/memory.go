@@ -20,8 +20,9 @@ import (
 type Store struct {
 	mu sync.RWMutex
 
-	tenants      map[uuid.UUID]*domain.Tenant
-	cells        map[uuid.UUID]*domain.Cell
+	tenants        map[uuid.UUID]*domain.Tenant
+	platformAdmins map[uuid.UUID]*domain.PlatformAdmin
+	cells          map[uuid.UUID]*domain.Cell
 	modules      map[uuid.UUID][]string // tenantID -> modules
 	steps        map[string]*domain.ProvisioningStep
 	users        map[uuid.UUID]*domain.User
@@ -39,8 +40,9 @@ type Store struct {
 
 func New() *Store {
 	return &Store{
-		tenants:      map[uuid.UUID]*domain.Tenant{},
-		cells:        map[uuid.UUID]*domain.Cell{},
+		tenants:        map[uuid.UUID]*domain.Tenant{},
+		platformAdmins: map[uuid.UUID]*domain.PlatformAdmin{},
+		cells:          map[uuid.UUID]*domain.Cell{},
 		modules:      map[uuid.UUID][]string{},
 		steps:        map[string]*domain.ProvisioningStep{},
 		users:        map[uuid.UUID]*domain.User{},
@@ -61,6 +63,46 @@ func (s *Store) appendOutboxLocked(evs []domain.OutboxEvent) {
 		e := ev
 		s.outbox = append(s.outbox, &e)
 	}
+}
+
+// --- platform admins (RLS-exempt registry) ---
+
+func (s *Store) IsPlatformAdmin(_ context.Context, sub, email string) (bool, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	for _, pa := range s.platformAdmins {
+		if (sub != "" && pa.UserSub == sub) || (email != "" && strings.EqualFold(pa.Email, email)) {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func (s *Store) ListPlatformAdmins(_ context.Context) ([]*domain.PlatformAdmin, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	out := []*domain.PlatformAdmin{}
+	for _, pa := range s.platformAdmins {
+		cp := *pa
+		out = append(out, &cp)
+	}
+	return out, nil
+}
+
+func (s *Store) CreatePlatformAdmin(_ context.Context, pa *domain.PlatformAdmin) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	cp := *pa
+	cp.Email = strings.ToLower(cp.Email)
+	s.platformAdmins[pa.ID] = &cp
+	return nil
+}
+
+func (s *Store) DeletePlatformAdmin(_ context.Context, id uuid.UUID) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	delete(s.platformAdmins, id)
+	return nil
 }
 
 // --- tenants ---

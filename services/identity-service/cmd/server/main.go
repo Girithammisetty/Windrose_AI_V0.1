@@ -95,6 +95,26 @@ func main() {
 		log.Warn("store: in-memory (set DATABASE_URL for postgres)")
 	}
 
+	// Bootstrap first-class platform admins from env (idempotent upsert). Lets an
+	// operator (or the dev seed) designate cross-tenant platform admins without a
+	// pre-existing platform.admin token — resolves the chicken-and-egg on the
+	// super-admin-gated management API.
+	if raw := os.Getenv("PLATFORM_ADMIN_BOOTSTRAP_EMAILS"); raw != "" {
+		for _, e := range strings.Split(raw, ",") {
+			email, err := domain.ValidateEmail(strings.TrimSpace(e))
+			if err != nil {
+				continue
+			}
+			if err := store.CreatePlatformAdmin(context.Background(), &domain.PlatformAdmin{
+				ID: uuid.New(), Email: email, GrantedBy: "bootstrap", GrantedAt: time.Now().UTC(),
+			}); err != nil {
+				log.Warn("platform-admin bootstrap upsert failed", "email", email, "error", err)
+			} else {
+				log.Info("platform-admin bootstrapped", "email", email)
+			}
+		}
+	}
+
 	clock := time.Now
 
 	// Signing keys (BYO Infra Hardening Phase 2, docs/design/

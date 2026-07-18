@@ -104,11 +104,23 @@ func (s *TokenService) OIDCLogin(ctx context.Context, req OIDCLoginRequest, trac
 	// Best-effort: a login must not fail because the profile write lagged.
 	_ = s.Store.UpdateUser(ctx, user)
 
+	// First-class platform admin: a user in the platform_admins registry logs in
+	// with the platform scopes + platform_admin claim, so every existing operator
+	// predicate (IsSuperAdmin, RequireSuperAdmin, require_operator, IsPlatform)
+	// lights up. OIDC normally mints empty scopes (authz runs off the rbac
+	// projection); this is the one deliberate, registry-gated exception.
+	scopes := []string{}
+	platformAdmin := false
+	if isPA, _ := s.Store.IsPlatformAdmin(ctx, user.ID.String(), user.Email); isPA {
+		scopes = []string{"platform.admin", "super_admin", "operator", "ai.platform.admin"}
+		platformAdmin = true
+	}
 	tok, expiresIn, err := s.Issuer.Issue(Claims{
-		Subject:  user.ID.String(),
-		TenantID: tenant.ID,
-		Typ:      TypUser,
-		Scopes:   []string{},
+		Subject:       user.ID.String(),
+		TenantID:      tenant.ID,
+		Typ:           TypUser,
+		Scopes:        scopes,
+		PlatformAdmin: platformAdmin,
 	})
 	if err != nil {
 		return nil, err
