@@ -29,10 +29,17 @@ production** (move to a Secret + rotate).
 `+` two bootstrap Jobs (`minio-createbuckets`, `mlflow-createdb`) and the
 `clickhouse-config` / `trino-catalog` ConfigMaps.
 
-> Vault, otel-collector, mailpit, and temporal-ui from the compose file are
-> **not** included — they're optional for the core data plane. Add them the same
-> way if you need BYO-secrets, in-cluster tracing, an email sink, or the
-> Temporal web UI.
+> **Optional add-ons** live in `optional-vault-mailpit.yaml` (kept out of the
+> kustomization so `apply -k` stays lean) — Vault (dev-mode BYO-secrets backend)
+> and Mailpit (SMTP capture, UI on `:8025`):
+> ```bash
+> kubectl apply -f deploy/k8s/data-tier/optional-vault-mailpit.yaml
+> # then wire them into the secret:
+> VAULT_ADDR=http://vault:8200 VAULT_TOKEN=windrose_dev_root \
+>   SMTP_HOST=mailpit SMTP_PORT=1025 ./create-secrets.sh
+> ```
+> otel-collector and temporal-ui from the compose file are still omitted — add
+> them the same way if you need in-cluster tracing or the Temporal web UI.
 
 ## Apply
 

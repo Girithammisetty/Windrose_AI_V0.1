@@ -46,11 +46,18 @@ CLICKHOUSE_PASSWORD="${CLICKHOUSE_PASSWORD:-windrose_dev}"
 # Optional providers — empty runs Ollama-only (see deploy/CONFIG.md).
 OPENAI_API_KEY="${OPENAI_API_KEY:-}"
 ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY:-}"
-# Optional SMTP sink (deploy mailpit and set these to mailpit:1025 to capture mail).
+# Optional SMTP sink (deploy mailpit via optional-vault-mailpit.yaml, then set
+# SMTP_HOST=mailpit to capture mail).
 SMTP_HOST="${SMTP_HOST:-}"
 SMTP_PORT="${SMTP_PORT:-1025}"
 SMTP_USER="${SMTP_USER:-}"
 SMTP_PASSWORD="${SMTP_PASSWORD:-}"
+
+# Optional BYO-secrets backend (deploy vault via optional-vault-mailpit.yaml,
+# then set VAULT_ADDR=http://vault:8200 VAULT_TOKEN=windrose_dev_root). Left empty
+# by default so services don't try to reach a Vault that isn't deployed.
+VAULT_ADDR="${VAULT_ADDR:-}"
+VAULT_TOKEN="${VAULT_TOKEN:-}"
 
 command -v kubectl >/dev/null || { echo "kubectl not found" >&2; exit 1; }
 kubectl get namespace "$NS" >/dev/null 2>&1 || kubectl create namespace "$NS"
@@ -85,6 +92,8 @@ kubectl create secret generic windrose-secrets -n "$NS" \
   --from-literal=SMTP_PORT="$SMTP_PORT" \
   --from-literal=SMTP_USER="$SMTP_USER" \
   --from-literal=SMTP_PASSWORD="$SMTP_PASSWORD" \
+  --from-literal=VAULT_ADDR="$VAULT_ADDR" \
+  --from-literal=VAULT_TOKEN="$VAULT_TOKEN" \
   --dry-run=client -o yaml | kubectl apply -f -
 
 echo "windrose-secrets applied to namespace '$NS' ($(kubectl get secret windrose-secrets -n "$NS" -o jsonpath='{.data}' | tr ',' '\n' | grep -c ':') keys). Values not printed."

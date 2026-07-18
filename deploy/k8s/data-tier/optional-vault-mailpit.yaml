@@ -1,0 +1,98 @@
+# OPTIONAL add-ons (not in kustomization.yaml, so `apply -k` skips them):
+#   * Vault (dev mode) — real Vault API for ingestion connector secrets, when
+#     SECRETS_BACKEND=vault. Omit to use the default (no BYO-secrets backend).
+#   * Mailpit — local SMTP sink for notification-service's email channel; captures
+#     mail instead of relaying, browsable on :8025.
+#
+# Apply on top of the base data tier:
+#   kubectl apply -f deploy/k8s/data-tier/optional-vault-mailpit.yaml
+#
+# Then point windrose-secrets at them (re-run create-secrets.sh with):
+#   VAULT_ADDR=http://vault:8200 VAULT_TOKEN=windrose_dev_root \
+#   SMTP_HOST=mailpit SMTP_PORT=1025 ./create-secrets.sh
+#
+# Dev-only: Vault runs in-memory dev mode (data lost on restart, root token
+# known). NOT for production — run a real sealed Vault or use the cloud secret
+# backend (SECRETS_BACKEND=aws|azure|gcp).
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vault
+  namespace: windrose
+spec:
+  selector: { app: vault }
+  ports:
+    - { name: http, port: 8200, targetPort: 8200 }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vault
+  namespace: windrose
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: vault }
+  template:
+    metadata:
+      labels: { app: vault }
+    spec:
+      containers:
+        - name: vault
+          image: hashicorp/vault:1.18
+          args: ["server", "-dev"]
+          env:
+            - { name: VAULT_DEV_ROOT_TOKEN_ID, value: windrose_dev_root }
+            - { name: VAULT_DEV_LISTEN_ADDRESS, value: "0.0.0.0:8200" }
+          ports:
+            - containerPort: 8200
+          securityContext:
+            capabilities:
+              add: ["IPC_LOCK"] # matches compose cap_add (mlock; a no-op in dev)
+          readinessProbe:
+            httpGet: { path: /v1/sys/health, port: 8200 }
+            periodSeconds: 5
+          resources:
+            requests: { cpu: "50m", memory: 64Mi }
+            limits: { memory: 256Mi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mailpit
+  namespace: windrose
+spec:
+  selector: { app: mailpit }
+  ports:
+    - { name: smtp, port: 1025, targetPort: 1025 }
+    - { name: http, port: 8025, targetPort: 8025 }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mailpit
+  namespace: windrose
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: mailpit }
+  template:
+    metadata:
+      labels: { app: mailpit }
+    spec:
+      containers:
+        - name: mailpit
+          image: axllent/mailpit:v1.20
+          env:
+            - { name: MP_SMTP_AUTH_ACCEPT_ANY, value: "true" }
+            - { name: MP_SMTP_AUTH_ALLOW_INSECURE, value: "true" }
+          ports:
+            - containerPort: 1025
+            - containerPort: 8025
+          readinessProbe:
+            exec: { command: ["/mailpit", "readyz"] }
+            periodSeconds: 5
+          resources:
+            requests: { cpu: "50m", memory: 64Mi }
+            limits: { memory: 256Mi }
