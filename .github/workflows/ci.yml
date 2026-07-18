@@ -194,8 +194,12 @@ jobs:
     name: test-node (${{ matrix.name }})
     steps:
       - uses: actions/checkout@v4
-      - name: Enable corepack (pnpm)
-        run: corepack enable
+      - name: Enable corepack + pin pnpm (Node 20 compatible)
+        # Pin to the version both services declare in packageManager. Without an
+        # explicit pin, corepack downloads its latest default (pnpm 11.x), which
+        # requires Node >=22.13 (uses node:sqlite) and crashes on the Node 20
+        # runner this repo targets (ui-web engines: node >=20 <21).
+        run: corepack prepare pnpm@9.15.9 --activate
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
@@ -288,8 +292,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Enable corepack (pnpm)
-        run: corepack enable
+      - name: Enable corepack + pin pnpm (Node 20 compatible)
+        # Pin to the version both services declare in packageManager. Without an
+        # explicit pin, corepack downloads its latest default (pnpm 11.x), which
+        # requires Node >=22.13 (uses node:sqlite) and crashes on the Node 20
+        # runner this repo targets (ui-web engines: node >=20 <21).
+        run: corepack prepare pnpm@9.15.9 --activate
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
@@ -435,8 +443,12 @@ jobs:
         with:
           enable-cache: true
 
-      - name: Enable corepack (pnpm)
-        run: corepack enable
+      - name: Enable corepack + pin pnpm (Node 20 compatible)
+        # Pin to the version both services declare in packageManager. Without an
+        # explicit pin, corepack downloads its latest default (pnpm 11.x), which
+        # requires Node >=22.13 (uses node:sqlite) and crashes on the Node 20
+        # runner this repo targets (ui-web engines: node >=20 <21).
+        run: corepack prepare pnpm@9.15.9 --activate
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
