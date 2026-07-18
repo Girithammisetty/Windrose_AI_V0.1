@@ -1,4 +1,4 @@
-"""model-training agent (PRIORITY, ART-FR-040) — the REFERENCE proposal-mode graph. 
+"""model-training agent (PRIORITY, ART-FR-040) — the REFERENCE proposal-mode graph.
 Model-builder's "choose algorithm template -> fill
 params -> launch training run" as a GOVERNED, proposal-mode LangGraph agent. It
 grounds on (a) the pipeline-orchestrator algorithm-template catalog + the chosen

@@ -209,7 +209,7 @@ async def put_tenant_config(request: Request, agent_key: str, body: dict = Body(
             raise EvalGateFailed("guardrail_policy must be an object {data_scope?, budget?, pii?}")
         ceilings = await c.store.get_platform_ceilings()
         guardrail = _validate_guardrail_policy(
-            gp_body, budget_ceiling=int(ceilings.get("max_budget_tokens") or _BUDGET_TOKENS_CEILING))
+            gp_body, budget_ceiling=int(ceilings.get("max_budget_tokens") or _BUDGET_TOKENS_CEILING))  # noqa: E501
     else:
         guardrail = base.guardrail_policy
     cfg = TenantAgentConfig(
@@ -225,7 +225,7 @@ async def put_tenant_config(request: Request, agent_key: str, body: dict = Body(
 
 # ---- BRD 53: tenant-authored CUSTOM agents (config over the shared graph) ----
 
-import re as _re
+import re as _re  # noqa: E402
 
 # The ONLY graph a tenant custom agent may run on — the shared, platform-owned,
 # eval-gated safe template. A tenant can never name any other graph_ref.
@@ -259,7 +259,7 @@ def _validate_guardrail_policy(body: dict, *, budget_ceiling: int = _BUDGET_TOKE
         scope: dict = {}
         ws = ds.get("workspaces")
         if ws is not None:
-            if not isinstance(ws, list) or not all(isinstance(w, str) and _UUID_RE.match(w) for w in ws):
+            if not isinstance(ws, list) or not all(isinstance(w, str) and _UUID_RE.match(w) for w in ws):  # noqa: E501
                 raise EvalGateFailed("data_scope.workspaces must be a list of workspace UUIDs")
             scope["workspaces"] = [str(w) for w in ws]
         durns = ds.get("dataset_urns")
@@ -474,9 +474,9 @@ async def put_agent_ceilings(request: Request, body: dict = Body(...)):
     c = request.app.state.container
 
     mb = body.get("max_budget_tokens")
-    if not isinstance(mb, int) or isinstance(mb, bool) or mb < _BUDGET_TOKENS_FLOOR or mb > _BUDGET_TOKENS_CEILING:
+    if not isinstance(mb, int) or isinstance(mb, bool) or mb < _BUDGET_TOKENS_FLOOR or mb > _BUDGET_TOKENS_CEILING:  # noqa: E501
         raise EvalGateFailed(
-            f"max_budget_tokens must be an integer in [{_BUDGET_TOKENS_FLOOR}, {_BUDGET_TOKENS_CEILING}]")
+            f"max_budget_tokens must be an integer in [{_BUDGET_TOKENS_FLOOR}, {_BUDGET_TOKENS_CEILING}]")  # noqa: E501
     mt = str(body.get("max_tier") or "write-proposal")
     if _TIER_RANK.get(mt, 99) > _TIER_RANK["write-proposal"]:
         raise EvalGateFailed(f"max_tier {mt!r} cannot exceed write-proposal for custom agents")

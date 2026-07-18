@@ -72,10 +72,10 @@ async def test_put_attaches_guardrail_and_partial_upsert_preserves(client_and_co
 async def test_put_guardrail_budget_clamped_to_ceiling(client_and_container):
     client, _ = client_and_container
     r = await client.put(f"/api/v1/registry/tenants/self/agents/{_KEY}",
-                         json={"guardrail_policy": {"budget": {"max_tokens_per_session": 10_000_000}}},
+                         json={"guardrail_policy": {"budget": {"max_tokens_per_session": 10_000_000}}},  # noqa: E501
                          headers=_auth())
     assert r.status_code == 200, r.text
-    assert r.json()["data"]["guardrail_policy"]["budget"]["max_tokens_per_session"] == 200_000  # BR-8
+    assert r.json()["data"]["guardrail_policy"]["budget"]["max_tokens_per_session"] == 200_000  # BR-8  # noqa: E501
 
 
 async def test_put_guardrail_requires_agent_admin(client_and_container):

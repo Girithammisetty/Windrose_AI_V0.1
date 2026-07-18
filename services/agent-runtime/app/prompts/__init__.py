@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass
-from functools import lru_cache
+from functools import cache
 from importlib.resources import files
 
 # prompt id -> semantic version. Bump on a material edit to the .md; the content
@@ -70,7 +70,7 @@ def _digest(text: str) -> str:
     return "sha256:" + hashlib.sha256(text.encode("utf-8")).hexdigest()[:32]
 
 
-@lru_cache(maxsize=None)
+@cache
 def get(name: str) -> Prompt:
     """Load a prompt by id (e.g. ``"triage.system"``). Cached; the .md's single
     trailing newline (added by the authoring tool) is stripped so the text is the

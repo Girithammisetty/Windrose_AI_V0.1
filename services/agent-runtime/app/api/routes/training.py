@@ -86,7 +86,7 @@ async def list_adapters(
     principal = await principal_of(request)
     c = request.app.state.container
     rows = await c.store.list_slm_adapters(principal.tenant_id, archetype=archetype, limit=limit)
-    return {"data": [_adapter_view(a) for a in rows], "page": {"next_cursor": None, "has_more": False}}
+    return {"data": [_adapter_view(a) for a in rows], "page": {"next_cursor": None, "has_more": False}}  # noqa: E501
 
 
 @router.get("/slm-adapters/{adapter_id}")

@@ -43,13 +43,15 @@ from __future__ import annotations
 
 import os
 import time
-from dataclasses import dataclass, field
-from typing import Any, Callable
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any
 
 import jwt as pyjwt
 import pytest
 
 from app.adapters.fakes import (
+    FakeCaseReader,
     FakeChartCatalog,
     FakeDatasetReader,
     FakeExperimentReader,
@@ -59,11 +61,10 @@ from app.adapters.fakes import (
     FakePipelineWriter,
     FakeSemanticReader,
 )
-from app.adapters.fakes import FakeCaseReader
 from app.adapters.llm import AiGatewayLlmClient
 from app.agents.catalog import CATALOG
-from app.graphs.base import GraphDeps
 from app.graphs.analytics import run_analytics
+from app.graphs.base import GraphDeps
 from app.graphs.dashboard_designer import run_dashboard_designer
 from app.graphs.governance import run_governance
 from app.graphs.inference_agent import run_inference
@@ -284,5 +285,5 @@ async def test_agent_reasons_through_real_ai_gateway(require_ai_gateway, case: C
                 f"{case.agent_key} produced neither a proposal nor an answer")
 
     print(f"[roster] {case.agent_key}: usage={outcome.usage} "
-          f"write_intent={'yes:' + outcome.write_intent.tool_id if outcome.write_intent else 'none'} "
+          f"write_intent={'yes:' + outcome.write_intent.tool_id if outcome.write_intent else 'none'} "  # noqa: E501
           f"text={(outcome.final_text or '')[:80]!r}")

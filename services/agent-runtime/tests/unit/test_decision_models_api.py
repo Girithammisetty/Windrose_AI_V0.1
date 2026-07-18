@@ -8,7 +8,6 @@ import httpx
 import pytest
 
 from app.container import build_container
-from app.domain.entities import new_uuid
 from app.main import create_app
 from tests.conftest import TENANT_A, TENANT_B, make_settings, make_token
 
@@ -179,7 +178,7 @@ async def test_new_version_is_draft_and_prior_immutable(client_and_container):
     mid = await _publish(client)  # v1 published
     # edit → v2 draft; v1 stays published (what you approve is what runs)
     v2 = await client.post(f"/api/v1/decision-models/{mid}/versions",
-                           json={"rules": [{"when": [{"column": "amount", "op": "gt", "value": 5000}],
+                           json={"rules": [{"when": [{"column": "amount", "op": "gt", "value": 5000}],  # noqa: E501
                                             "then": {"disposition_code": "escalate_fraud_review",
                                                      "severity": "critical"}}]},
                            headers=_auth(sub="u-author"))
@@ -189,7 +188,7 @@ async def test_new_version_is_draft_and_prior_immutable(client_and_container):
     v1 = (await client.get(f"/api/v1/decision-models/{mid}", headers=_auth())).json()["data"]
     assert v1["status"] == "published" and v1["version"] == 1
     # approving v2 archives v1 → exactly one live version
-    await client.post(f"/api/v1/decision-models/{dv2['id']}/approve", headers=_auth(sub="u-approver"))
+    await client.post(f"/api/v1/decision-models/{dv2['id']}/approve", headers=_auth(sub="u-approver"))  # noqa: E501
     v1b = (await client.get(f"/api/v1/decision-models/{mid}", headers=_auth())).json()["data"]
     assert v1b["status"] == "archived"
     # the change log lists both, newest first

@@ -25,10 +25,10 @@ def test_compute_correct():
 
 def test_effectiveness_grouping():
     labs = [
-        OutcomeLabel("1", "t", "d1", "case.apply_disposition", "won", "won", True, producer="agent-x"),
-        OutcomeLabel("2", "t", "d2", "case.apply_disposition", "won", "lost", False, producer="agent-x"),
-        OutcomeLabel("3", "t", "d3", "case.apply_disposition", "won", "won", True, producer="table-y"),
-        OutcomeLabel("4", "t", "d4", "case.apply_disposition", None, "won", None, producer="table-y"),
+        OutcomeLabel("1", "t", "d1", "case.apply_disposition", "won", "won", True, producer="agent-x"),  # noqa: E501
+        OutcomeLabel("2", "t", "d2", "case.apply_disposition", "won", "lost", False, producer="agent-x"),  # noqa: E501
+        OutcomeLabel("3", "t", "d3", "case.apply_disposition", "won", "won", True, producer="table-y"),  # noqa: E501
+        OutcomeLabel("4", "t", "d4", "case.apply_disposition", None, "won", None, producer="table-y"),  # noqa: E501
     ]
     by_type = effectiveness(labs, by="decision_type")
     assert by_type[0]["total"] == 4 and by_type[0]["correct"] == 2

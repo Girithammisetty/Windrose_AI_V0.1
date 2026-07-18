@@ -27,9 +27,9 @@ from app.domain.errors import (
 
 # Tool-tier ordering for the max-tier guardrail ceiling (BRD 53 PA-FR-030).
 _TIER_RANK = {"read": 0, "write-proposal": 1, "write-direct": 2, "admin": 3}
-from app.domain.urn import proposal_urn
-from app.events.envelope import make_envelope
-from app.graphs.base import WriteIntent
+from app.domain.urn import proposal_urn  # noqa: E402
+from app.events.envelope import make_envelope  # noqa: E402
+from app.graphs.base import WriteIntent  # noqa: E402
 
 
 class ProposalService:

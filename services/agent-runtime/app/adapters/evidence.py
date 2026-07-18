@@ -68,7 +68,7 @@ def extract_text(data: bytes, content_type: str, *, max_chars: int) -> tuple[str
         if ct == "application/pdf":
             txt = _extract_pdf(data, max_chars)
             if not txt.strip():
-                return "", False, "pdf had no extractable text (likely scanned image — OCR is a follow-up)"
+                return "", False, "pdf had no extractable text (likely scanned image — OCR is a follow-up)"  # noqa: E501
             return txt[:max_chars], True, ""
         if _is_textual(ct):
             txt = data.decode("utf-8", errors="replace")

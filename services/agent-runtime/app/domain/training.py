@@ -52,7 +52,7 @@ class TrainingJobService:
             raise ValidationFailed("sft dataset has no training rows")
 
         examples = await self._store.list_sft_examples(tenant_id, sft_dataset_id, limit=100000)
-        jsonl = "\n".join(json.dumps({"messages": e.messages}, ensure_ascii=False) for e in examples)
+        jsonl = "\n".join(json.dumps({"messages": e.messages}, ensure_ascii=False) for e in examples)  # noqa: E501
 
         job = TrainingJob(
             job_id=new_uuid(), tenant_id=tenant_id, archetype=agent_key,

@@ -5,7 +5,7 @@ over threshold, stays quiet under it, and records the signal on the watch."""
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from types import SimpleNamespace
 
 import app.runtime.retrain_scheduler as mod
@@ -13,7 +13,7 @@ from app.domain.entities import RetrainWatch
 from app.store.memory import InMemoryStore
 from tests.conftest import TENANT_A
 
-_NOW = datetime(2026, 7, 17, 12, 0, 0, tzinfo=timezone.utc)
+_NOW = datetime(2026, 7, 17, 12, 0, 0, tzinfo=UTC)
 
 
 def _prop(status: str, agent_key: str = "case-triage", tenant: str = TENANT_A):

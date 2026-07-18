@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from app.runtime.orchestrator import Orchestrator
 
@@ -26,7 +26,7 @@ GOVERNANCE_AGENT = "governance"
 
 
 def _now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class RetrainScheduler:
@@ -48,7 +48,7 @@ class RetrainScheduler:
                 try:
                     await asyncio.wait_for(stop.wait(), timeout=self._interval)
                     return  # stop signalled
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     pass
 
     async def tick(self, now: datetime | None = None) -> int:

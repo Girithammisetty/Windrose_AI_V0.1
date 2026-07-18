@@ -1,4 +1,4 @@
-"""dashboard-designer agent (ART-FR-040) — the governed Insights "build a dashboard + charts" capability.
+"""dashboard-designer agent (ART-FR-040) — governed Insights "build a dashboard + charts".
 
 Proposal-mode LangGraph agent: it drafts a dashboard (a title + N charts) grounded
 STRICTLY in the real semantic layer (published measures + dimensions from

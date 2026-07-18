@@ -52,4 +52,4 @@ def resolve_archetype(agent_key: str, *, base_model: str | None = None) -> Arche
             f"base_model {base!r} is not a supported student "
             f"(one of {', '.join(KNOWN_BASE_MODELS)})"
         )
-    return Archetype(key=agent_key.strip(), base_model=base, model_alias=model_alias_for(agent_key.strip()))
+    return Archetype(key=agent_key.strip(), base_model=base, model_alias=model_alias_for(agent_key.strip()))  # noqa: E501

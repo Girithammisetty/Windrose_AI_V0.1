@@ -49,7 +49,8 @@ def upgrade() -> None:
             created_at       timestamptz NOT NULL DEFAULT now(),
             updated_at       timestamptz NOT NULL DEFAULT now()
         );
-        CREATE INDEX ix_transcripts_agent ON agent_transcripts (tenant_id, agent_key, created_at DESC);
+        CREATE INDEX ix_transcripts_agent
+            ON agent_transcripts (tenant_id, agent_key, created_at DESC);
         CREATE INDEX ix_transcripts_run ON agent_transcripts (tenant_id, run_id);
         CREATE UNIQUE INDEX ix_transcripts_proposal ON agent_transcripts (proposal_id)
             WHERE proposal_id IS NOT NULL;

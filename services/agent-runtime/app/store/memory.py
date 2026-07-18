@@ -89,9 +89,9 @@ class InMemoryStore:
         self._outcome_labels[(lab.tenant_id, lab.decision_ref)] = _c.copy(lab)
 
     async def list_outcome_labels(self, tenant_id: str, *, decision_type=None) -> list:
-        out = [l for (t, _), l in self._outcome_labels.items() if t == tenant_id]
+        out = [lbl for (t, _), lbl in self._outcome_labels.items() if t == tenant_id]
         if decision_type:
-            out = [l for l in out if l.decision_type == decision_type]
+            out = [lbl for lbl in out if lbl.decision_type == decision_type]
         return out
 
     async def get_outcome_label(self, tenant_id: str, decision_ref: str):
@@ -150,7 +150,7 @@ class InMemoryStore:
     async def count_corrections(self, tenant_id: str, agent_key: str, since) -> tuple[int, int]:
         corr = total = 0
         for p in self._proposals.values():
-            if getattr(p, "tenant_id", None) != tenant_id or getattr(p, "agent_key", None) != agent_key:
+            if getattr(p, "tenant_id", None) != tenant_id or getattr(p, "agent_key", None) != agent_key:  # noqa: E501
                 continue
             st = getattr(p, "status", None)
             if st in ("rejected", "edited_approved"):

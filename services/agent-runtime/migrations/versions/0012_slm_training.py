@@ -32,11 +32,11 @@ def upgrade() -> None:
             job_id         uuid PRIMARY KEY,
             tenant_id      uuid NOT NULL,
             archetype      text NOT NULL,               -- agent_key / archetype the SLM specializes
-            sft_dataset_id uuid NOT NULL,               -- the versioned SFT dataset consumed (milestone 2)
+            sft_dataset_id uuid NOT NULL,  -- the versioned SFT dataset consumed (milestone 2)
             base_model     text NOT NULL,               -- open student base to fine-tune
-            status         text NOT NULL DEFAULT 'queued',  -- queued|running|succeeded|failed|cancelled
-            params         jsonb NOT NULL DEFAULT '{}',      -- lora rank/alpha/epochs/teacher rung...
-            mlflow_run_ref text,                         -- MLflow run the trainer registered against
+            status         text NOT NULL DEFAULT 'queued',  -- queued|running|succeeded|failed
+            params         jsonb NOT NULL DEFAULT '{}',  -- lora rank/alpha/epochs/teacher rung...
+            mlflow_run_ref text,  -- MLflow run the trainer registered against
             adapter_id     uuid,                         -- set when a run succeeds
             error          jsonb,                        -- {reason, detail} on failure
             created_by     text,
@@ -45,7 +45,8 @@ def upgrade() -> None:
             started_at     timestamptz,
             finished_at    timestamptz
         );
-        CREATE INDEX ix_slm_jobs_archetype ON slm_training_jobs (tenant_id, archetype, created_at DESC);
+        CREATE INDEX ix_slm_jobs_archetype
+            ON slm_training_jobs (tenant_id, archetype, created_at DESC);
 
         CREATE TABLE slm_adapters (
             adapter_id       uuid PRIMARY KEY,
@@ -53,16 +54,17 @@ def upgrade() -> None:
             training_job_id  uuid NOT NULL,
             archetype        text NOT NULL,
             base_model       text NOT NULL,
-            adapter_uri      text NOT NULL,               -- artifact location (produced by real training)
+            adapter_uri      text NOT NULL,  -- artifact location (produced by real training)
             checksum         text NOT NULL DEFAULT '',
             model_alias      text NOT NULL,               -- the ladder-rung alias it would serve as
             promotion_status text NOT NULL DEFAULT 'candidate',  -- candidate|gated|promoted|demoted
-            eval_result_ref  text,                        -- the eval-gate result that cleared promotion
+            eval_result_ref  text,  -- the eval-gate result that cleared promotion
             target_rung_alias text,                       -- ai-gateway rung it was promoted to
             created_at       timestamptz NOT NULL DEFAULT now(),
             updated_at       timestamptz NOT NULL DEFAULT now()
         );
-        CREATE INDEX ix_slm_adapters_archetype ON slm_adapters (tenant_id, archetype, created_at DESC);
+        CREATE INDEX ix_slm_adapters_archetype
+            ON slm_adapters (tenant_id, archetype, created_at DESC);
 
         GRANT SELECT, INSERT, UPDATE, DELETE ON slm_training_jobs TO agent_runtime_app;
         GRANT SELECT, INSERT, UPDATE, DELETE ON slm_adapters TO agent_runtime_app;

@@ -63,7 +63,6 @@ def build_persona_copilot_graph(deps: GraphDeps):
     data_scope = policy.get("data_scope") or {}
     allowed_workspaces = {str(w) for w in (data_scope.get("workspaces") or [])}
     budget = policy.get("budget") or {}
-    pii = policy.get("pii") or {}
 
     async def ground(state: dict) -> dict:
         case: dict[str, Any] = {}
@@ -77,7 +76,7 @@ def build_persona_copilot_graph(deps: GraphDeps):
             # human could — data_scope is additive to RLS, never a relaxation
             # (BR-7). An out-of-scope read returns empty + a logged refusal; the
             # graph then produces an out-of-scope advisory with no write intent.
-            if allowed_workspaces and str((case or {}).get("workspace_id") or "") not in allowed_workspaces:
+            if allowed_workspaces and str((case or {}).get("workspace_id") or "") not in allowed_workspaces:  # noqa: E501
                 state["out_of_scope"] = True
                 state["case"] = {}
                 state["dispositions"] = []

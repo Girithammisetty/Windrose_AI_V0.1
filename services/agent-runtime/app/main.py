@@ -20,6 +20,7 @@ import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from windrose_common.logging import configure_json_logging
 
 from app.agents.catalog import seed_catalog
 from app.api.errors import TraceMiddleware, install_error_handlers
@@ -39,7 +40,6 @@ from app.api.routes import (
     transcripts,
 )
 from app.container import Container, build_container
-from windrose_common.logging import configure_json_logging
 
 configure_json_logging("agent-runtime")  # MASTER-FR-050: JSON stdout, mirrors Go's slog handler
 logger = logging.getLogger("agent-runtime")

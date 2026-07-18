@@ -66,7 +66,7 @@ async def test_curate_builds_a_versioned_deduped_consented_dataset():
 
     ds = await SftCurator(store).curate(tenant_id=TENANT, agent_key="triage", created_by="admin")
     assert ds.version == 1
-    assert ds.row_count == 2                 # edit + approve; reject/unconsented excluded, dup deduped
+    assert ds.row_count == 2                 # edit + approve; reject/unconsented excluded, dup deduped  # noqa: E501
     assert ds.source_count == 5              # all decided transcripts considered
     assert ds.consent_verified is True
     assert ds.curation_params["n_edit"] == 1 and ds.curation_params["n_approve"] == 1

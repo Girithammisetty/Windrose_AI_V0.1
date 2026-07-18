@@ -527,7 +527,7 @@ def build_ml_engineer_graph(deps: GraphDeps):
     def _route_entry(state: dict) -> str:
         # A refresh directive routes to the ingestion path; otherwise the normal
         # train -> evaluate -> propose-promote loop.
-        return "ingest" if (state.get("refresh_from_connection") or {}).get("connection_id") else "ground"
+        return "ingest" if (state.get("refresh_from_connection") or {}).get("connection_id") else "ground"  # noqa: E501
 
     g = StateGraph(dict)
     g.add_node("ground", ground)

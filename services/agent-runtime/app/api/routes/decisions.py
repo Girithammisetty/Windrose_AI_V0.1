@@ -14,17 +14,15 @@ from fastapi import APIRouter, Body, Query, Request
 
 from app.api.auth import principal_of
 from app.domain.decisions import (
-    Condition,
     DecisionModel,
     DecisionModelInvalid,
     Outcome,
-    Rule,
     evaluate,
     rules_from_json,
     rules_to_json,
     validate_model,
 )
-from app.domain.entities import Run, new_uuid, now
+from app.domain.entities import Run, new_uuid
 from app.domain.errors import NotFound, PermissionDenied, ValidationFailed
 from app.domain.urn import case_urn
 from app.graphs.base import WriteIntent

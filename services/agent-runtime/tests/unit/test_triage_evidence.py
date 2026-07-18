@@ -8,7 +8,7 @@ outcome (evidence + structured.evidence_docs + trace) for the eval judge / UI.
 
 from __future__ import annotations
 
-from app.adapters.fakes import FakeCaseReader, FakeEvidenceReader, FakeLlm, FakeMemory
+from app.adapters.fakes import FakeCaseReader, FakeEvidenceReader, FakeMemory
 from app.domain.ports import LlmResult
 from app.graphs.base import GraphDeps
 from app.graphs.triage import run_triage

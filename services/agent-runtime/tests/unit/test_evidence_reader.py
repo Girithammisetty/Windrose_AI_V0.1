@@ -8,8 +8,6 @@ and the whole read is bounded (doc count + per-doc + total char budget).
 
 from __future__ import annotations
 
-import zlib
-
 from app.adapters.evidence import EvidenceReader, extract_text
 
 
@@ -48,7 +46,7 @@ def test_extract_plain_and_structured_text():
     t, ok, _ = extract_text(b'{"code":"99490","minutes":22}', "application/json", max_chars=200)
     assert ok and "99490" in t
 
-    t, ok, _ = extract_text(b"<claim><amount>760.40</amount></claim>", "application/xml", max_chars=200)
+    t, ok, _ = extract_text(b"<claim><amount>760.40</amount></claim>", "application/xml", max_chars=200)  # noqa: E501
     assert ok and "760.40" in t
 
     t, ok, _ = extract_text(b"a,b\n1,2", "text/csv", max_chars=100)

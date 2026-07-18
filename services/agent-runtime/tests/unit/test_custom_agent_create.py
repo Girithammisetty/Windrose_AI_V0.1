@@ -233,7 +233,7 @@ async def test_retrain_watch_requires_fields_and_cap(client_and_container):
     client, _ = client_and_container
     # non-admin
     r = await client.post("/api/v1/registry/retrain-watches",
-                          json={"model_urn": "x", "watched_agent_key": "y"}, headers=_auth(sub="u-user"))
+                          json={"model_urn": "x", "watched_agent_key": "y"}, headers=_auth(sub="u-user"))  # noqa: E501
     assert r.status_code == 403
     # missing watched_agent_key
     r2 = await client.post("/api/v1/registry/retrain-watches",

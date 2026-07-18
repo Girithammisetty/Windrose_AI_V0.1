@@ -28,9 +28,9 @@ def _t(*, decision, corrected=None, agent="triage"):
 
 
 async def _dataset_with_rows(store: InMemoryStore, agent="triage"):
-    await store.record_transcript(_t(decision="edit", corrected={"disposition": "approve"}, agent=agent))
+    await store.record_transcript(_t(decision="edit", corrected={"disposition": "approve"}, agent=agent))  # noqa: E501
     await store.record_transcript(_t(decision="approve", agent=agent))
-    ds = await SftCurator(store).curate(tenant_id=TENANT, agent_key=agent, created_by="u", params={})
+    ds = await SftCurator(store).curate(tenant_id=TENANT, agent_key=agent, created_by="u", params={})  # noqa: E501
     assert ds.row_count > 0
     return ds
 
@@ -97,7 +97,7 @@ async def test_promote_and_demote_lifecycle():
     svc = TrainingJobService(store, FakeGpuTrainer())
     job = await svc.submit(tenant_id=TENANT, agent_key="triage", sft_dataset_id=ds.dataset_id)
 
-    promoted = await svc.promote(tenant_id=TENANT, adapter_id=job.adapter_id, eval_result_ref="eval-1")
+    promoted = await svc.promote(tenant_id=TENANT, adapter_id=job.adapter_id, eval_result_ref="eval-1")  # noqa: E501
     assert promoted.promotion_status == "promoted"
     assert promoted.target_rung_alias == "slm-triage" and promoted.eval_result_ref == "eval-1"
 
