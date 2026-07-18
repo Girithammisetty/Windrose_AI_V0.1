@@ -96,7 +96,8 @@ def upgrade() -> None:
             method text NOT NULL,
             evidence jsonb NOT NULL DEFAULT '[]'::jsonb
         );
-        CREATE INDEX ix_rem_entity ON resolved_entity_members (tenant_id, run_id, resolved_entity_id);
+        CREATE INDEX ix_rem_entity ON resolved_entity_members
+            (tenant_id, run_id, resolved_entity_id);
 
         CREATE TABLE merge_candidates (
             id uuid PRIMARY KEY,

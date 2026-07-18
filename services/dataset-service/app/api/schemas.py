@@ -8,7 +8,8 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from app.domain.entities import Dataset, DatasetVersion
-from app.domain.naming import RESOLVE_NAMESPACE, safe_relation as _safe_relation
+from app.domain.naming import RESOLVE_NAMESPACE
+from app.domain.naming import safe_relation as _safe_relation
 from app.domain.urn import dataset_urn, version_urn
 from app.utils import etag_for
 

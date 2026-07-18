@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import pytest
 
+from app.domain.errors import NotFound, ValidationFailed
 from app.domain.services import CallCtx
 from tests.conftest import TENANT_A, TENANT_B
 
@@ -83,7 +84,7 @@ async def test_run_detail_has_clusters_and_member_lineage(svc, container):
 
 async def test_run_isolated_by_tenant(svc, container):
     out = await _resolve(svc)
-    with pytest.raises(Exception):
+    with pytest.raises(NotFound):
         await container.dataset_service.get_resolution_run(TENANT_B, out["run_id"])
 
 
@@ -224,6 +225,6 @@ async def test_materialize_creates_governed_resolved_dataset(svc, container, mon
 async def test_materialize_requires_warehouse_writer(svc, container):
     out = await _resolve(svc)
     container.dataset_service.deps.iceberg_writer = None
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationFailed):
         await container.dataset_service.materialize_resolved_entities(
             _ctx(), out["run_id"], workspace_id="ws-claims")

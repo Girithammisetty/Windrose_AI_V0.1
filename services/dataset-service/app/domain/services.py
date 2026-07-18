@@ -440,10 +440,6 @@ class DatasetService(_Base):
                 for c in result.clusters])
 
             members: list[ResolvedEntityMember] = []
-            ev_by_pk: dict[str, list[dict]] = {}
-            for c in result.clusters:
-                for e in c.evidence:
-                    ev_by_pk.setdefault(c.resolved_entity_id, [])
             for c in result.clusters:
                 for pk in c.member_pks:
                     members.append(ResolvedEntityMember(

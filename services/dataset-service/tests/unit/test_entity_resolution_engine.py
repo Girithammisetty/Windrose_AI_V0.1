@@ -18,8 +18,8 @@ from app.domain.entity_resolution import (
 _ROWS = [
     {"pk": "r1", "name": "Viktor Petrov", "dob": "1980-05-01", "national_id": "AB123"},
     {"pk": "r2", "name": "V. A. Petrov", "dob": "1980-05-01", "national_id": "AB123"},  # det key
-    {"pk": "r3", "name": "Victor Petrov", "dob": "1980-05-01", "national_id": None},    # prob merge
-    {"pk": "r4", "name": "Viktor Petroff", "dob": "1975-11-20", "national_id": None},   # blocked (dob)
+    {"pk": "r3", "name": "Victor Petrov", "dob": "1980-05-01", "national_id": None},  # prob
+    {"pk": "r4", "name": "Viktor Petroff", "dob": "1975-11-20", "national_id": None},  # blocked
     {"pk": "r5", "name": "Maria Lopez", "dob": "1990-01-01", "national_id": "ZZ999"},   # singleton
 ]
 
