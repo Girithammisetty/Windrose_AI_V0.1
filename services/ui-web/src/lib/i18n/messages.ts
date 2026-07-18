@@ -529,6 +529,7 @@ export const en = {
 
   // ---- Tier 2b: notification inbox / preferences (notification-service) ----
   "nav.notifications": "Notifications",
+  "nav.help": "Help",
   "notifications.title": "Notifications",
   "notifications.subtitle": "Your in-app inbox and delivery preferences.",
   "notifications.bell": "Notifications",

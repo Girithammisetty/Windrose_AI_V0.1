@@ -213,7 +213,8 @@ describe("fail-safe defaults", () => {
     expect(allows(publicGate, empty)).toBe(true);
     expect(allows(cap("case.case.read"), empty)).toBe(false);
     expect(allows(role(ADMIN_ROLE), empty)).toBe(false);
-    expect(navKeys(empty)).toEqual(["home", "copilot"]);
+    // home, copilot, and help are the public-gated items every viewer sees.
+    expect(navKeys(empty)).toEqual(["home", "copilot", "help"]);
   });
 });
 

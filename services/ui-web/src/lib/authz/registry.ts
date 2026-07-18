@@ -9,7 +9,7 @@
  * enforce every action. Fail-safe: a capability the client cannot confirm HIDES
  * the feature (absent capability → not shown).
  */
-import { Database, FlaskConical, BarChart3, Briefcase, Shield, Bot, Inbox, Home, LineChart, Plug, Workflow, Terminal, DownloadCloud, Bell, TableProperties, Fingerprint, Boxes } from "lucide-react";
+import { Database, FlaskConical, BarChart3, Briefcase, Shield, Bot, Inbox, Home, LineChart, Plug, Workflow, Terminal, DownloadCloud, Bell, TableProperties, Fingerprint, Boxes, HelpCircle } from "lucide-react";
 import type { MessageKey } from "@/lib/i18n/messages";
 
 /** The tenant-admin role short-circuits every action check (rbac BR-7). */
@@ -142,6 +142,9 @@ export const NAV_ITEMS: NavItem[] = [
    * notification-service NOTIF-FR-020/012). Every seeded role holds
    * notification.inbox.read. The TopBar bell is gated identically. */
   { key: "notifications", href: "/notifications", icon: Bell, label: "nav.notifications", gate: cap("notification.inbox.read") },
+  // Help Center — pack-scoped end-user + admin guides. Public so every persona
+  // sees it; the page auto-scopes content to the tenant's installed pack.
+  { key: "help", href: "/help", icon: HelpCircle, label: "nav.help", gate: publicGate },
   { key: "admin", href: "/admin", icon: Shield, label: "nav.admin", gate: role(ADMIN_ROLE) },
 ];
 

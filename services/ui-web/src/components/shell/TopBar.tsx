@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Bot, LogOut, Bell, Search } from "lucide-react";
+import { Bot, LogOut, Bell, Search, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { Can } from "@/components/authz/Can";
@@ -72,6 +72,9 @@ export function TopBar() {
         <Can gate={FEATURE_GATES.viewNotifications}>
           <NotificationBell />
         </Can>
+        <Button asChild variant="ghost" size="icon" aria-label={t("nav.help")} title={t("nav.help")}>
+          <Link href="/help"><HelpCircle className="size-4" /></Link>
+        </Button>
         <ThemeToggle />
         <Button variant="ghost" size="icon" onClick={signOut} aria-label={t("action.signOut")} title={t("action.signOut")}>
           <LogOut className="size-4" />
