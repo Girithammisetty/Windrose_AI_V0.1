@@ -56,11 +56,6 @@ deferred:
       connector materialization. The pack ships seed datasets in the exact
       landing shape; production connectors are configured through the product
       Data > Connections UI.
-  - kind: eval_sets
-    reason: >-
-      INS-FR shipped golden sets (pa_golden, appeal_golden, denial_golden)
-      require eval-service write APIs whose action names are not yet in the
-      rbac canonical catalog (Core follow-up noted in rbac catalog.go).
   - kind: write_adapters
     reason: >-
       INS-FR-061 SoR write adapters (Facets PA decision, Guidewire notes, EDI

@@ -16,10 +16,14 @@ import jwt as pyjwt
 logger = logging.getLogger(__name__)
 
 MANIFEST: list[str] = [
-    "eval.dataset.write",
+    # eval.dataset + eval.case use the rbac closed verb set (create/update),
+    # reconciled from the former non-closed write/curate (inc8) so they register.
     "eval.dataset.read",
-    "eval.case.curate",
+    "eval.dataset.create",
+    "eval.dataset.update",
     "eval.case.read",
+    "eval.case.create",
+    "eval.case.update",
     "eval.scorer.admin",
     "eval.suite.write",
     "eval.run.execute",

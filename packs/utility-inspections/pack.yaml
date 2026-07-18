@@ -73,12 +73,6 @@ deferred:
       contract and customer credentials; every such write stays
       proposal-mode with human approval — no autonomous work-order creation,
       deferral, or crew dispatch, ever.
-  - kind: eval_sets
-    reason: >-
-      Golden eval sets (finding triage, false-detection screening,
-      deadline-risk ranking, deferral-rationale quality) require
-      eval-service write APIs whose action names are not yet in the rbac
-      canonical catalog (Core follow-up noted in rbac catalog.go).
   - kind: ontology
     reason: >-
       Ontology registration (Asset, Circuit, District, Finding, Detection,

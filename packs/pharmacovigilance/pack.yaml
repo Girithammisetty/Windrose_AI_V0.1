@@ -70,13 +70,6 @@ deferred:
       and customer gateway credentials; every such write stays proposal-mode
       with Safety Officer approval — no autonomous regulatory submission,
       ever.
-  - kind: eval_sets
-    reason: >-
-      Golden eval sets (validity determination, seriousness classification,
-      expectedness vs RSI, duplicate detection, expedited-vs-periodic
-      routing) require eval-service write APIs whose action names are not
-      yet in the rbac canonical catalog (Core follow-up noted in rbac
-      catalog.go).
   - kind: ontology
     reason: >-
       Ontology registration (Case/ICSR, AdverseEvent, Product,

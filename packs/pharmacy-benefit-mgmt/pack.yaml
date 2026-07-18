@@ -75,11 +75,6 @@ deferred:
       adherence intervention log) execute only behind pack-service's
       materialization contract and customer credentials; all platform-side
       writes remain proposal-mode per BR-1/BR-10.
-  - kind: eval_sets
-    reason: >-
-      BRD 28 §4 golden eval sets (4, incl. Rx PA agreement-rate per AC-2)
-      require eval-service write APIs whose action names are not yet in the
-      rbac canonical catalog (Core follow-up noted in rbac catalog.go).
   - kind: model_archetypes
     reason: >-
       BRD 28 §4 archetypes (rx_pa_confidence, adherence_event_risk) await

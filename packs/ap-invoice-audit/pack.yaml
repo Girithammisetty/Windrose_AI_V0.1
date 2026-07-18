@@ -53,6 +53,8 @@ components:
     - { file: "pipelines/templates.yaml", identity: "pipelines" }
   display_labels:
     - { file: "labels/display.yaml", identity: "ap_vocabulary" }
+  eval_sets:
+    - { file: "evals/triage_gold.yaml", identity: "triage_gold" }
 deferred:
   - kind: agent_recipes
     reason: >-
@@ -80,13 +82,6 @@ deferred:
       customer credentials; every such write stays proposal-mode with
       human approval — no autonomous payment movement or vendor-master
       change, ever.
-  - kind: eval_sets
-    reason: >-
-      Golden eval sets (duplicate-pair matching, BEC banking-change
-      triage, split-invoicing detection, release-vs-block calibration)
-      require eval-service write APIs whose action names are not yet in
-      the rbac canonical catalog (Core follow-up noted in rbac
-      catalog.go).
   - kind: ontology
     reason: >-
       Ontology registration (Vendor, VendorBankAccount, PurchaseOrder,

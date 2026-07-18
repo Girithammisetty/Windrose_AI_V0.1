@@ -75,11 +75,6 @@ deferred:
       notification) execute only behind pack-service's materialization
       contract and customer credentials; BR-1/BR-8 keep every platform-side
       write proposal-mode, and AC-8 forbids autonomous recovery writes.
-  - kind: eval_sets
-    reason: >-
-      BRD 27 §4 golden sets (FWA scoring, outlier detection, packet
-      drafting, evidence completeness) require eval-service write APIs
-      whose action names are not yet in the rbac canonical catalog.
   - kind: model_archetypes
     reason: >-
       BRD 27 §4 archetypes (fwa_ensemble_v1, provider_outlier_v1) await

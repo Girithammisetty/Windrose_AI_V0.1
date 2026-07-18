@@ -76,12 +76,6 @@ deferred:
       execute only behind pack-service's materialization contract and
       customer credentials; every such write stays proposal-mode with human
       approval — no autonomous restoration, removal, or strike change, ever.
-  - kind: eval_sets
-    reason: >-
-      Golden eval sets (appeal triage, counter-speech/satire false-positive
-      detection, brigading-signal ranking, duplicate-appeal detection)
-      require eval-service write APIs whose action names are not yet in the
-      rbac canonical catalog (Core follow-up noted in rbac catalog.go).
   - kind: ontology
     reason: >-
       Ontology registration (Account, Content, EnforcementDecision, Policy,

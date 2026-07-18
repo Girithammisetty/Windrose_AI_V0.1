@@ -440,6 +440,7 @@ start_pack() {
   export PACK_CHART_URL="$CHART_URL" PACK_CASE_URL="$CASE_URL"
   export PACK_AGENT_URL="$AGENT_RUNTIME_URL" PACK_MEMORY_URL="$MEMORY_URL"
   export PACK_PIPELINE_URL="$PIPELINE_URL" PACK_IDENTITY_URL="$IDENTITY_URL"
+  export PACK_EVAL_URL="$EVAL_URL"
   py_migrate pack-service
   say "boot pack-service"; py_boot pack pack-service "$PORT_PACK"
   wait_ready pack "$PACK_URL" || { warn "pack-service not ready — SKIPPED"; SKIPPED+=("pack"); return 1; }

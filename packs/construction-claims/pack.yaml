@@ -76,12 +76,6 @@ deferred:
       credentials; every such write stays proposal-mode with human approval
       — no autonomous change-order execution, payment movement, or default
       declaration, ever.
-  - kind: eval_sets
-    reason: >-
-      Golden eval sets (entitlement triage, delay-analysis method selection,
-      quantum reasonableness ranking, notice-timeliness screening) require
-      eval-service write APIs whose action names are not yet in the rbac
-      canonical catalog (Core follow-up noted in rbac catalog.go).
   - kind: ontology
     reason: >-
       Ontology registration (Project, Contract, Party, Surety, Claim,

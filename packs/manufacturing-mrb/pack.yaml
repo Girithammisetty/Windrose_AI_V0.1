@@ -79,12 +79,6 @@ deferred:
       contract and customer credentials; every such write stays
       proposal-mode with human approval — no autonomous material release,
       hold, or supplier action, ever.
-  - kind: eval_sets
-    reason: >-
-      Golden eval sets (disposition triage accuracy, containment-scope
-      recall on suspect lots, SCAR-routing precision, escape-risk ranking)
-      require eval-service write APIs whose action names are not yet in the
-      rbac canonical catalog (Core follow-up noted in rbac catalog.go).
   - kind: ontology
     reason: >-
       Ontology registration (Nonconformance, Lot, Part, Characteristic,

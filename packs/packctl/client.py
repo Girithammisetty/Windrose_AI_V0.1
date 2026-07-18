@@ -38,6 +38,7 @@ class Endpoints:
     memory: str = "http://localhost:8307"
     pipeline: str = "http://localhost:8313"
     identity: str = "http://localhost:8301"
+    eval: str = "http://localhost:8324"
 
 
 @dataclass
@@ -718,6 +719,72 @@ class PlatformClient:
                       f"{self.endpoints.pipeline}/api/v1/pipelines/{pipeline_id}",
                       self.author_token())
         return r.status_code in (200, 204)
+
+    # ---- eval golden sets (eval-service dataset + cases) --------------------
+    def ensure_eval_set(self, identity: str, dataset_key: str, agent_key: str,
+                        cases: list[dict], description: str = "") -> str | None:
+        """Materialize a golden eval set: an eval DATASET (draft) + its
+        input->expected CASES (created active) + freeze it (a frozen dataset is
+        the immutable golden set an eval run scores against). Idempotent: a
+        dataset already frozen is a noop; cases are skipped by source_ref.
+        Requires eval.dataset.create/update + eval.case.create/update (reconciled
+        to the closed verb set in inc8). Returns the dataset_key, or None."""
+        tok = self.author_token()
+        e = self.endpoints.eval
+        # idempotency: already materialized (frozen)?
+        lst = self._req("GET", f"{e}/api/v1/datasets?agent_key={agent_key}&limit=200", tok)
+        if lst.status_code == 200:
+            for d in lst.json().get("data", []):
+                if d.get("dataset_key") == dataset_key and d.get("status") == "frozen":
+                    self._record("eval_sets", identity, "noop", None, f"{dataset_key} frozen")
+                    return dataset_key
+        cr = self._req("POST", f"{e}/api/v1/datasets", tok, headers=JSON,
+                       json={"dataset_key": dataset_key, "agent_key": agent_key,
+                             "description": description,
+                             "provenance_summary": {"source": "pack"}})
+        if cr.status_code != 201:
+            self._record("eval_sets", identity, "failed", None,
+                         f"{dataset_key} dataset {cr.status_code}: {cr.text[:150]}")
+            return None
+        d = cr.json().get("data", cr.json())
+        version = d.get("version", 1)
+        # cases already present in this draft (idempotency by source_ref)
+        have: set[str] = set()
+        gc = self._req("GET", f"{e}/api/v1/cases?filter[dataset_key]={dataset_key}"
+                              f"&filter[status]=active&limit=200", tok)
+        if gc.status_code == 200:
+            for c in gc.json().get("data", []):
+                if c.get("source_ref"):
+                    have.add(c["source_ref"])
+        wrote = 0
+        for case in cases:
+            sref = f"pack:{dataset_key}:{case['key']}"
+            if sref in have:
+                continue
+            r = self._req("POST", f"{e}/api/v1/cases", tok, headers=JSON,
+                          json={"dataset_key": dataset_key, "agent_key": agent_key,
+                                "input": case["input"], "expected": case["expected"],
+                                # eval_cases.source is a closed enum; pack goldens
+                                # are operator-curated => "manual". source_ref
+                                # carries the stable pack key for idempotency.
+                                "source": "manual", "source_ref": sref,
+                                "tags": [str(t) for t in case.get("tags", [])],
+                                "weight": case.get("weight", 1.0), "status": "active"})
+            if r.status_code == 201:
+                wrote += 1
+            else:
+                self._record("eval_sets", identity, "failed", None,
+                             f"{dataset_key} case {case['key']} {r.status_code}: {r.text[:120]}")
+                return None
+        # freeze the version (requires >=1 active case) — the immutable golden set
+        fr = self._req("POST",
+                       f"{e}/api/v1/datasets/{dataset_key}/versions/{version}/freeze",
+                       tok, headers=JSON, json={})
+        frozen = fr.status_code == 200
+        self._record("eval_sets", identity, "create", None,
+                     f"{dataset_key}: {wrote} golden cases, "
+                     + ("frozen" if frozen else f"freeze {fr.status_code}"))
+        return dataset_key
 
     # ---- agent-runtime governed decision tables (BRD 54 inc2) ----------------
     def ensure_decision_model(self, identity: str, name: str, rules: list[dict],

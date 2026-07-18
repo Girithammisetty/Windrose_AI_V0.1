@@ -72,12 +72,6 @@ deferred:
       pack-service's materialization contract and customer credentials;
       every such write stays proposal-mode with human approval — no
       autonomous credit movement or network filing, ever.
-  - kind: eval_sets
-    reason: >-
-      Golden eval sets (dispute triage, deadline-risk ranking, chargeback
-      reason-code selection, first-party fraud escalation) require
-      eval-service write APIs whose action names are not yet in the rbac
-      canonical catalog (Core follow-up noted in rbac catalog.go).
   - kind: ontology
     reason: >-
       Ontology registration (Cardholder, Account, Card, Transaction,

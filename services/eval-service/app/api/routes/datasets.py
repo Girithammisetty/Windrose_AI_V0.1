@@ -17,7 +17,7 @@ def _ctx(request: Request, principal: Principal):
 async def create_dataset(
     request: Request,
     body: DatasetCreate,
-    principal: Principal = Depends(require("eval.dataset.write")),
+    principal: Principal = Depends(require("eval.dataset.create")),
 ):
     svc = request.app.state.container.dataset_service
     d = await svc.create(_ctx(request, principal), body.model_dump())
@@ -54,7 +54,7 @@ async def freeze_dataset(
     request: Request,
     dataset_key: str,
     version: int,
-    principal: Principal = Depends(require("eval.dataset.write")),
+    principal: Principal = Depends(require("eval.dataset.update")),
 ):
     svc = request.app.state.container.dataset_service
     d = await svc.freeze(_ctx(request, principal), dataset_key, version)

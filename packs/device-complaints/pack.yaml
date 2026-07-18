@@ -76,12 +76,6 @@ deferred:
       materialization contract and customer credentials; every such write
       stays proposal-mode with human approval — no autonomous regulatory
       submission, ever.
-  - kind: eval_sets
-    reason: >-
-      Golden eval sets (reportability decision-tree accuracy, deadline-risk
-      ranking, duplicate detection, CAPA-trigger trend calls) require
-      eval-service write APIs whose action names are not yet in the rbac
-      canonical catalog (Core follow-up noted in rbac catalog.go).
   - kind: ontology
     reason: >-
       Ontology registration (Complaint, Device, Product, Lot,

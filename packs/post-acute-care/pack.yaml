@@ -70,12 +70,6 @@ deferred:
       update, referral response, hospice certification narrative) execute only
       behind pack-service's materialization contract and customer credentials;
       all platform-side writes remain proposal-mode per BR-1.
-  - kind: eval_sets
-    reason: >-
-      BRD 29 §4's five golden eval sets (OASIS drafting, PDGM comorbidity
-      capture, MDS Section GG, referral triage ranking, hospice LCD narrative)
-      require eval-service write APIs whose action names are not yet in the
-      rbac canonical catalog (Core follow-up noted in rbac catalog.go).
   - kind: model_archetypes
     reason: >-
       BRD 29 §4 archetypes (rehospitalization_30d_risk,

@@ -77,20 +77,20 @@ roles:
       - tool.byo.approve
       # eval-service (Tier 2a): explicit for explain-chain readability, same
       # as every other Admin binding — Admin itself bypasses via the
-      # projection admin flag. READ-ONLY subset for now: eval.dataset.write,
-      # eval.suite.write, eval.case.curate, eval.canary.manage, eval.slo.operator
-      # are real actions eval-service's own routes require, but their verbs
-      # (write/curate/manage/operator) aren't in rbac's closed verb set
-      # (domain.AllVerbs: read/list/create/update/delete/execute/assign/
-      # approve/admin/export/share) — eval-service predates that grammar and
-      # was never fixed. Binding them here would fail EnsureSystemRoles at
-      # boot. Flagged as a follow-up: rename eval-service's action verbs to
-      # the closed set (its own registration.py + require() calls), or
-      # relax the grammar — a real decision, not made here.
+      # projection admin flag. eval.dataset + eval.case are RECONCILED to the
+      # closed verb set (inc8): the former write/curate became create+update, so
+      # golden eval sets (a dataset + its input->expected cases) are now bindable
+      # + materializable. eval.suite.write, eval.canary.manage, eval.slo.operator
+      # still use non-closed verbs (write/manage/operator) — binding them would
+      # fail EnsureSystemRoles at boot — and remain a follow-up (out of inc8).
       - eval.run.read
       - eval.run.execute
       - eval.case.read
+      - eval.case.create
+      - eval.case.update
       - eval.dataset.read
+      - eval.dataset.create
+      - eval.dataset.update
       - eval.gate.read
       - eval.scorer.admin
       - eval.slo.read
@@ -242,7 +242,11 @@ roles:
       - eval.run.read
       - eval.run.execute
       - eval.case.read
+      - eval.case.create
+      - eval.case.update
       - eval.dataset.read
+      - eval.dataset.create
+      - eval.dataset.update
       - eval.gate.read
       - eval.scorer.admin
       - eval.slo.read

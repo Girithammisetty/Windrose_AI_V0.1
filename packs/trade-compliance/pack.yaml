@@ -76,13 +76,6 @@ deferred:
       credentials; every such write stays proposal-mode with human
       approval — no autonomous holds, releases, filings, or disclosures,
       ever.
-  - kind: eval_sets
-    reason: >-
-      Golden eval sets (HS classification review, screening match
-      adjudication, origin/transshipment risk ranking, license-determination
-      escalation) require eval-service write APIs whose action names are not
-      yet in the rbac canonical catalog (Core follow-up noted in rbac
-      catalog.go).
   - kind: ontology
     reason: >-
       Ontology registration (Shipment, EntryLine, HsCode, OriginClaim,

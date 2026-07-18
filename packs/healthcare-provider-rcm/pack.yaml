@@ -76,12 +76,6 @@ deferred:
       materialization contract and customer credentials; per BRD 26 BR-1 the
       coding-write adapter refuses without a signed grant and all
       platform-side writes remain proposal-mode.
-  - kind: eval_sets
-    reason: >-
-      BRD 26 §4 golden sets (coding, denial-response, underpayment,
-      collections) require eval-service write APIs whose action names are not
-      yet in the rbac canonical catalog (Core follow-up noted in rbac
-      catalog.go).
   - kind: model_archetypes
     reason: >-
       BRD 26 §4 archetypes (denial_reversal_probability,

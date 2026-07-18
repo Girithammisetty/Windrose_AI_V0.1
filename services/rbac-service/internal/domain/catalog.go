@@ -147,13 +147,13 @@ var canonicalSpecs = []resourceSpec{
 	{"inference", "job", []string{VerbRead, VerbList, VerbCreate, VerbUpdate, VerbDelete, VerbExecute}, true, "inference jobs"},
 	{"inference", "schedule", []string{VerbRead, VerbList, VerbCreate, VerbUpdate, VerbDelete}, true, "inference schedules"},
 	// eval (eval-service: suites/runs/cases/canaries/scorers/gates/trends/SLOs).
-	// READ-ONLY subset for now — eval-service's own require() calls use verbs
-	// (write/curate/manage/operator) outside this catalog's closed verb set;
-	// eval.suite has no valid verb at all yet and is intentionally absent.
-	// Reconciling eval-service's action names to the closed set (or extending
-	// it) is a follow-up decision, not made here.
-	{"eval", "dataset", []string{VerbRead}, true, "eval datasets"},
-	{"eval", "case", []string{VerbRead}, true, "eval case curation queue"},
+	// eval.dataset + eval.case are RECONCILED to the closed verb set (inc8): the
+	// former non-closed write/curate became create+update, so eval-service can
+	// register them and pack-service can materialize golden eval sets (a dataset
+	// + its input->expected cases). eval.suite/canary/slo still use non-closed
+	// verbs (write/manage/operator) and remain a follow-up (out of inc8 scope).
+	{"eval", "dataset", []string{VerbRead, VerbCreate, VerbUpdate}, true, "eval datasets (golden sets)"},
+	{"eval", "case", []string{VerbRead, VerbCreate, VerbUpdate}, true, "eval golden cases"},
 	{"eval", "run", []string{VerbRead, VerbExecute}, true, "eval scoring runs"},
 	{"eval", "gate", []string{VerbRead}, true, "eval quality gates"},
 	{"eval", "scorer", []string{VerbAdmin}, true, "eval scorer registry"},

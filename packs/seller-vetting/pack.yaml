@@ -73,12 +73,6 @@ deferred:
       only behind pack-service's materialization contract and customer
       credentials; every such write stays proposal-mode with human approval
       — no autonomous takedown, suspension, or payout hold, ever.
-  - kind: eval_sets
-    reason: >-
-      Golden eval sets (counterfeit triage, claim-evidence sufficiency,
-      ring-linkage confirmation, reinstatement plan-of-action grading)
-      require eval-service write APIs whose action names are not yet in the
-      rbac canonical catalog (Core follow-up noted in rbac catalog.go).
   - kind: ontology
     reason: >-
       Ontology registration (Seller, Listing, Brand, RightsHolder, Claim,

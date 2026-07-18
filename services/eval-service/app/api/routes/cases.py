@@ -15,7 +15,7 @@ def _ctx(request, principal):
 
 @router.post("/cases", status_code=201)
 async def create_case(
-    request: Request, body: CaseCreate, principal: Principal = Depends(require("eval.case.curate"))
+    request: Request, body: CaseCreate, principal: Principal = Depends(require("eval.case.create"))
 ):
     svc = request.app.state.container.case_service
     c = await svc.create(_ctx(request, principal), body.model_dump())
@@ -50,7 +50,7 @@ async def get_case(
 
 @router.post("/cases/{case_id}/promote")
 async def promote_case(
-    request: Request, case_id: str, principal: Principal = Depends(require("eval.case.curate"))
+    request: Request, case_id: str, principal: Principal = Depends(require("eval.case.update"))
 ):
     svc = request.app.state.container.case_service
     return data(dump(await svc.promote(_ctx(request, principal), case_id)))
@@ -61,7 +61,7 @@ async def attest_case(
     request: Request,
     case_id: str,
     body: AttestBody,
-    principal: Principal = Depends(require("eval.case.curate")),
+    principal: Principal = Depends(require("eval.case.update")),
 ):
     svc = request.app.state.container.case_service
     return data(dump(await svc.attest(_ctx(request, principal), case_id, body.attested_by)))
@@ -69,7 +69,7 @@ async def attest_case(
 
 @router.post("/cases/{case_id}/reject")
 async def reject_case(
-    request: Request, case_id: str, principal: Principal = Depends(require("eval.case.curate"))
+    request: Request, case_id: str, principal: Principal = Depends(require("eval.case.update"))
 ):
     svc = request.app.state.container.case_service
     return data(dump(await svc.reject(_ctx(request, principal), case_id)))
@@ -77,7 +77,7 @@ async def reject_case(
 
 @router.post("/cases/{case_id}/retire")
 async def retire_case(
-    request: Request, case_id: str, principal: Principal = Depends(require("eval.case.curate"))
+    request: Request, case_id: str, principal: Principal = Depends(require("eval.case.update"))
 ):
     svc = request.app.state.container.case_service
     return data(dump(await svc.retire(_ctx(request, principal), case_id)))
@@ -88,7 +88,7 @@ async def patch_case(
     request: Request,
     case_id: str,
     body: CasePatch,
-    principal: Principal = Depends(require("eval.case.curate")),
+    principal: Principal = Depends(require("eval.case.update")),
 ):
     svc = request.app.state.container.case_service
     patch = {k: v for k, v in body.model_dump().items() if v is not None}

@@ -1,0 +1,77 @@
+# Golden eval set (eval-service dataset + cases) for the AP exception-triage
+# agent. Each case is an input exception → the expected disposition a correct
+# triage must propose, drawn from the pack's disposition taxonomy
+# (cases/dispositions.yaml). These are the regression goldens an eval RUN scores
+# the case-triage agent against: duplicate-pair matching, BEC banking-change
+# triage, split-invoicing detection, shell-vendor escalation, and the
+# release-vs-block / recovery calibration boundary. Materialized as a FROZEN
+# eval dataset (the immutable golden set); frozen sets are reference artifacts,
+# retained on uninstall.
+- dataset_key: ap_exception_triage_gold
+  agent_key: case-triage
+  description: >-
+    Golden accounts-payable exception-triage cases: the expected disposition for
+    each canonical exception pattern (duplicate, BEC banking-change, split
+    invoicing, shell vendor, price variance, cleared release).
+  cases:
+    - key: bec_banking_change
+      tags: [bec, banking_change, fraud]
+      input:
+        exception_type: suspicious_banking_change
+        vendor: "Meridian IT Partners"
+        fraud_indicator: bec_suspect
+        amount: "148200.00"
+        days_to_deadline: "2"
+        note: "Emailed request to change remittance bank account 2 days before a $148,200 payment run; requester domain differs from the vendor-master contact by one character."
+      expected:
+        disposition: escalate_fraud_investigation
+    - key: ocr_duplicate_invoice
+      tags: [duplicate, ocr]
+      input:
+        exception_type: duplicate_invoice
+        vendor: "BlueRidge Logistics"
+        fraud_indicator: none
+        amount: "23410.00"
+        note: "IV-2102 (BRL-1O442) matches paid IV-2101 (BRL-10442) on vendor, amount and date; invoice numbers differ by one OCR-confusable character (O vs 0) — a rescan resubmitted through email."
+      expected:
+        disposition: block_payment_confirmed_error
+    - key: shell_vendor_no_po
+      tags: [shell_vendor, fraud, missing_po]
+      input:
+        exception_type: missing_po
+        vendor: "Quartzline Services LLC"
+        fraud_indicator: shell_vendor_suspect
+        amount: "9840.00"
+        note: "New services-only vendor, no W-9/TIN verification, never sanctions-screened, remittance address collides with an AP employee's home address, sequential invoice numbers from 0001, no goods receipt."
+      expected:
+        disposition: escalate_fraud_investigation
+    - key: split_invoicing_threshold
+      tags: [split_invoicing, controls]
+      input:
+        exception_type: missing_po
+        vendor: "Sterling Consulting Group"
+        fraud_indicator: split_invoicing
+        amount: "4950.00"
+        note: "One of three same-week consulting invoices each exactly $50 under the $5,000 single-approver threshold, so none reached dual approval; aggregate is a $14,850 engagement."
+      expected:
+        disposition: escalate_fraud_investigation
+    - key: price_variance_negotiable
+      tags: [price_variance, recovery]
+      input:
+        exception_type: price_variance
+        vendor: "Helix Raw Materials GmbH"
+        fraud_indicator: none
+        amount: "52300.00"
+        note: "Invoice bills raw materials 12% above the PO unit price; quantity and receipt match, price is the only gap. Vendor previously granted an 8% credit on the same pattern."
+      expected:
+        disposition: partial_credit_recovery
+    - key: missing_receipt_cleared
+      tags: [release, three_way_match]
+      input:
+        exception_type: missing_po
+        vendor: "Cortland Facilities Group"
+        fraud_indicator: none
+        amount: "3120.00"
+        note: "Non-PO facilities invoice within tolerance; goods receipt later confirmed by the requesting cost-center manager and the exception is documented — no fraud indicators."
+      expected:
+        disposition: release_payment_cleared

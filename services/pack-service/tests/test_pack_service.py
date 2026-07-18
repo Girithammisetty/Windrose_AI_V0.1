@@ -47,7 +47,8 @@ def test_inc1_kinds_and_reversibility_contract():
     # inc1 materializes self-contained kinds (no dataset/four-eyes chain).
     # inc3 adds case_fields (case-service custom-field catalog) here.
     assert set(installer.INC1_KINDS) == {"dispositions", "case_fields", "display_labels",
-                                         "guardrails", "agent_configs", "roles", "decision_models"}
+                                         "guardrails", "agent_configs", "eval_sets",
+                                         "roles", "decision_models"}
     assert "saved_queries" not in installer.INC1_KINDS  # needs its datasets first
     # Roles/case_fields carry a real Core delete verb → reversible; dispositions/
     # decision tables do not (tombstoned honestly on uninstall).
@@ -172,3 +173,8 @@ def test_plan_materializes_case_fields(tmp_path):
     # path, materializable (was deferred behind the agent-token barrier).
     mem_ops = [o for o in ops if o["kind"] == "memories"]
     assert mem_ops and all(o["action"] == "create" for o in mem_ops)
+    # eval_sets (inc8) — golden eval dataset, materializable (was deferred behind
+    # the eval-service unregisterable-verb barrier, now reconciled).
+    eval_ops = [o for o in ops if o["kind"] == "eval_sets"]
+    assert eval_ops and all(o["action"] == "create" for o in eval_ops)
+    assert any(o["name"] == "ap_exception_triage_gold" for o in eval_ops)

@@ -55,12 +55,6 @@ deferred:
       RACAuditPackage, with phi:true field tagging) awaits pack-service;
       entity semantics are carried today by the two semantic models and the
       seed dataset schemas.
-  - kind: eval_sets
-    reason: >-
-      CMM-FR-001 golden sets (code_selection, enrollment, documentation,
-      care_plan per evals/*.jsonl) require eval-service write APIs whose
-      action names are not yet in the rbac canonical catalog (Core follow-up
-      noted in rbac catalog.go).
   - kind: agent_recipes
     reason: >-
       CMM-FR-030..101 bespoke recipes (enrollment_scanner, care_scribe,

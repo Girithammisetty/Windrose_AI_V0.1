@@ -32,7 +32,7 @@ from app.domain import catalog
 # their own. (saved_queries/dashboards need the pack's datasets first, which is
 # a deferred kind; they're reported `deferred` in the plan, not faked.)
 INC1_KINDS = ("dispositions", "case_fields", "display_labels", "guardrails",
-              "agent_configs", "roles", "decision_models")
+              "agent_configs", "eval_sets", "roles", "decision_models")
 
 # inc2 data chain, in dependency order. datasets ingest first; the semantic
 # model + verified queries are authored + SUBMITTED as governed drafts (NOT
@@ -67,7 +67,7 @@ def _endpoints(settings: Settings):
         chart=settings.chart_url, case=settings.case_url,
         rbac=settings.rbac_svc_url, agent=settings.agent_url,
         memory=settings.memory_url, pipeline=settings.pipeline_url,
-        identity=settings.identity_url,
+        identity=settings.identity_url, eval=settings.eval_url,
     )
 
 
@@ -191,6 +191,8 @@ def _component_names(manifest, comp) -> list[str]:
         return [gd["agent_key"] for gd in doc]
     if comp.kind == "agent_configs":
         return [ac["agent_key"] for ac in doc]
+    if comp.kind == "eval_sets":
+        return [es["dataset_key"] for es in doc]
     if comp.kind == "cases":
         return [r["row_pk"] for r in doc.get("rows", [])]
     if comp.kind == "pipelines":
@@ -272,6 +274,12 @@ def run_install(client, manifest, origin_of: Callable[[str, str], str]) -> list[
                        lambda ac=ac: ac["agent_key"] if client.ensure_agent_config(
                            comp.identity, ac["agent_key"], ac.get("prompt_params", {}),
                            ac.get("enabled", True)) else None)
+            elif kind == "eval_sets":
+                for es in doc:
+                    do("eval_sets", comp, es["dataset_key"],
+                       lambda es=es: client.ensure_eval_set(
+                           comp.identity, es["dataset_key"], es["agent_key"],
+                           es.get("cases", []), es.get("description", "")))
             elif kind == "roles":
                 for role in doc:
                     do("roles", comp, role["name"],

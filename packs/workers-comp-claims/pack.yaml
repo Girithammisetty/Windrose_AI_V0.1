@@ -75,12 +75,6 @@ deferred:
       materialization contract and customer credentials; every such write
       stays proposal-mode with human approval — no autonomous benefit
       decision, payment, or state filing, ever.
-  - kind: eval_sets
-    reason: >-
-      Golden eval sets (compensability triage, deadline-risk ranking,
-      SIU red-flag scoring, fee-schedule variance detection) require
-      eval-service write APIs whose action names are not yet in the rbac
-      canonical catalog (Core follow-up noted in rbac catalog.go).
   - kind: ontology
     reason: >-
       Ontology registration (Claim, Claimant, Employer, Policy, BodyPart,

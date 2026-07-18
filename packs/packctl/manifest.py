@@ -47,12 +47,13 @@ SUPPORTED_KINDS = (
     "pipelines",          # pipeline-orchestrator algorithm-template pipelines
     "display_labels",     # identity-service per-tenant UI label overrides (inc3)
     "guardrails",         # agent-runtime per-agent security envelope (inc4)
+    "eval_sets",          # eval-service golden dataset + cases (inc8)
 )
 
 # Deferred kinds we RECOGNIZE (from BRD 23/24..31) so packs can declare them
 # for the future pack-service without packctl pretending to install them.
 KNOWN_DEFERRED_KINDS = (
-    "ontology", "eval_sets", "agent_recipes",
+    "ontology", "agent_recipes",
     "connection_templates", "model_archetypes",
     "case_schemas", "write_adapters",
 )

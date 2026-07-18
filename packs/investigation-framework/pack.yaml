@@ -46,10 +46,6 @@ deferred:
     reason: >-
       INV-FR-080 five investigation case schemas await case-service schema
       materialization; the lifecycle vocabulary ships as dispositions instead.
-  - kind: eval_sets
-    reason: >-
-      INV abstract golden sets await eval-service pack write APIs (rbac
-      catalog gap noted in Core).
   - kind: ontology
     reason: "investigation_base ontology registration awaits pack-service."
   - kind: model_archetypes
