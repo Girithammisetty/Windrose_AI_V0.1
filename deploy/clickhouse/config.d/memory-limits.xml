@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<!--
+  Dev-only memory guardrails for the audit WORM store.
+
+  The dev Docker VM (~8 GB) is shared across the whole stack (~25 services).
+  ClickHouse's default `max_server_memory_usage_to_ram_ratio=0.9` sizes its
+  memory tracker against detected RAM, so with no container limit it targeted
+  ~7 GB it does not own and the kernel OOM-killed it (exit 137). That crash
+  froze the BYO SIEM audit-export watermark (audit-service inserts to
+  ClickHouse before publishing audit.export.v1), and /readyz returned
+  clickhouse_down.
+
+  Fix: pin an ABSOLUTE server memory cap (1.5 GiB) that sits well below the
+  container's mem_limit (2.5 GiB, set in docker-compose.dev.yml). CH takes
+  min(max_server_memory_usage, ratio * cgroup_ram); the ratio is set to 0.6 so
+  0.6 * 2.5 GiB = 1.5 GiB and the absolute is the binding limit rather than
+  being clamped lower. When a query would exceed the tracker it fails with
+  MEMORY_LIMIT_EXCEEDED instead of the server being SIGKILLed, so the container
+  stays up and the export path keeps draining. Sized for a low-volume dev audit
+  trail, not production.
+-->
+<clickhouse>
+    <max_server_memory_usage>1610612736</max_server_memory_usage>       <!-- 1.5 GiB absolute cap -->
+    <max_server_memory_usage_to_ram_ratio>0.6</max_server_memory_usage_to_ram_ratio>
+
+    <!-- Shrink the big default caches, which reserve memory that counts
+         against the tracker (mark cache defaults to 5 GiB). -->
+    <mark_cache_size>268435456</mark_cache_size>                 <!-- 256 MiB -->
+    <uncompressed_cache_size>268435456</uncompressed_cache_size> <!-- 256 MiB -->
+</clickhouse>
