@@ -1,0 +1,213 @@
+# Platform dependencies: OPA (policy engine), Keycloak (dev IdP for SSO login),
+# Temporal (pipeline orchestration), MLflow (experiment tracking), Ollama (local
+# CPU LLM). OPA needs the rbac Rego bundle as a ConfigMap — create it once (a
+# manual pre-step, see README): the mount is required for authz to work.
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: opa
+  namespace: windrose
+spec:
+  selector: { app: opa }
+  ports:
+    - { name: http, port: 8281, targetPort: 8281 }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: opa
+  namespace: windrose
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: opa }
+  template:
+    metadata:
+      labels: { app: opa }
+    spec:
+      containers:
+        - name: opa
+          image: openpolicyagent/opa:1.4.2
+          args: ["run", "--server", "--addr=0.0.0.0:8281", "--log-level=error", "/policy"]
+          ports:
+            - containerPort: 8281
+          volumeMounts:
+            - { name: policy, mountPath: /policy, readOnly: true }
+          resources:
+            requests: { cpu: "50m", memory: 64Mi }
+            limits: { memory: 256Mi }
+      volumes:
+        - name: policy
+          configMap:
+            name: opa-policy # created from services/rbac-service/policy (see README)
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak
+  namespace: windrose
+spec:
+  selector: { app: keycloak }
+  ports:
+    - { name: http, port: 8080, targetPort: 8080 }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  namespace: windrose
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: keycloak }
+  template:
+    metadata:
+      labels: { app: keycloak }
+    spec:
+      containers:
+        - name: keycloak
+          image: quay.io/keycloak/keycloak:26.0
+          args: ["start-dev"]
+          env:
+            - { name: KC_BOOTSTRAP_ADMIN_USERNAME, value: admin }
+            - { name: KC_BOOTSTRAP_ADMIN_PASSWORD, value: admin }
+          ports:
+            - containerPort: 8080
+          resources:
+            requests: { cpu: "100m", memory: 384Mi }
+            limits: { memory: 768Mi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: temporal
+  namespace: windrose
+spec:
+  selector: { app: temporal }
+  ports:
+    - { name: grpc, port: 7233, targetPort: 7233 }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: temporal
+  namespace: windrose
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: temporal }
+  template:
+    metadata:
+      labels: { app: temporal }
+    spec:
+      containers:
+        - name: temporal
+          image: temporalio/auto-setup:1.25.2
+          env:
+            - { name: DB, value: postgres12 }
+            - { name: DB_PORT, value: "5432" }
+            - { name: POSTGRES_USER, value: windrose }
+            - { name: POSTGRES_PWD, value: windrose_dev }
+            - { name: POSTGRES_SEEDS, value: postgres }
+          ports:
+            - containerPort: 7233
+          resources:
+            requests: { cpu: "100m", memory: 256Mi }
+            limits: { memory: 768Mi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mlflow
+  namespace: windrose
+spec:
+  selector: { app: mlflow }
+  ports:
+    - { name: http, port: 5000, targetPort: 5000 }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mlflow
+  namespace: windrose
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: mlflow }
+  template:
+    metadata:
+      labels: { app: mlflow }
+    spec:
+      containers:
+        - name: mlflow
+          image: ghcr.io/mlflow/mlflow:v3.14.0
+          env:
+            - { name: MLFLOW_S3_ENDPOINT_URL, value: http://minio:9000 }
+            - { name: AWS_ACCESS_KEY_ID, value: windrose }
+            - { name: AWS_SECRET_ACCESS_KEY, value: windrose_dev }
+          command:
+            - bash
+            - -c
+            - >
+              pip install --no-cache-dir psycopg2-binary boto3 >/tmp/pipe.log 2>&1 &&
+              mlflow server --host 0.0.0.0 --port 5000
+              --backend-store-uri postgresql://windrose:windrose_dev@postgres:5432/mlflow
+              --artifacts-destination s3://windrose-ml/mlflow --serve-artifacts
+          ports:
+            - containerPort: 5000
+          readinessProbe:
+            httpGet: { path: /health, port: 5000 }
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          resources:
+            requests: { cpu: "100m", memory: 384Mi }
+            limits: { memory: 1Gi }
+---
+# Ollama — local CPU LLM (NOT in docker-compose.dev.yml; on the Mac dev stack it
+# runs natively on the host. In-cluster it needs its own Deployment + a volume
+# for pulled models). Pull a small model after rollout:
+#   kubectl -n windrose exec deploy/ollama -- ollama pull llama3.2:3b
+apiVersion: v1
+kind: Service
+metadata:
+  name: ollama
+  namespace: windrose
+spec:
+  selector: { app: ollama }
+  ports:
+    - { name: http, port: 11434, targetPort: 11434 }
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: ollama
+  namespace: windrose
+spec:
+  serviceName: ollama
+  replicas: 1
+  selector:
+    matchLabels: { app: ollama }
+  template:
+    metadata:
+      labels: { app: ollama }
+    spec:
+      containers:
+        - name: ollama
+          image: ollama/ollama:0.5.7
+          ports:
+            - containerPort: 11434
+          resources:
+            requests: { cpu: "500m", memory: 2Gi }
+            limits: { memory: 8Gi } # a 3B/7B-Q4 model fits; raise for larger models
+          volumeMounts:
+            - { name: ollamadata, mountPath: /root/.ollama }
+  volumeClaimTemplates:
+    - metadata:
+        name: ollamadata
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: hcloud-volumes
+        resources:
+          requests:
+            storage: 20Gi

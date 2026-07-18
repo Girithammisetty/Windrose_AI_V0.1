@@ -1,0 +1,22 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# In-cluster data tier for self-hosted Windrose (k3s / Hetzner), translated from
+# deploy/docker-compose.dev.yml. Apply with:  kubectl apply -k deploy/k8s/data-tier
+#
+# One manual pre-step first (the OPA policy bundle can't be inlined without
+# drifting from the source Rego) — see README.md.
+
+namespace: windrose
+
+resources:
+  - namespace.yaml
+  - core-postgres.yaml
+  - cache-messaging.yaml
+  - objectstore.yaml
+  - search-audit.yaml
+  - platform-deps.yaml
+
+commonLabels:
+  app.kubernetes.io/part-of: windrose-data-tier
+  app.kubernetes.io/managed-by: kustomize

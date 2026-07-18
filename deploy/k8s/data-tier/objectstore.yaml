@@ -1,0 +1,135 @@
+# MinIO (S3 API) + bucket bootstrap + the Iceberg REST catalog (backed by MinIO,
+# with a persistent file-backed sqlite JDBC catalog so restarts don't wipe table
+# registrations — see the long note in docker-compose.dev.yml).
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio
+  namespace: windrose
+spec:
+  selector: { app: minio }
+  ports:
+    - { name: s3, port: 9000, targetPort: 9000 }
+    - { name: console, port: 9001, targetPort: 9001 }
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: minio
+  namespace: windrose
+spec:
+  serviceName: minio
+  replicas: 1
+  selector:
+    matchLabels: { app: minio }
+  template:
+    metadata:
+      labels: { app: minio }
+    spec:
+      containers:
+        - name: minio
+          image: minio/minio:RELEASE.2025-04-08T15-41-24Z
+          args: ["server", "/data", "--console-address", ":9001"]
+          env:
+            - { name: MINIO_ROOT_USER, value: windrose }
+            - { name: MINIO_ROOT_PASSWORD, value: windrose_dev }
+          ports:
+            - containerPort: 9000
+            - containerPort: 9001
+          readinessProbe:
+            exec: { command: ["mc", "ready", "local"] }
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests: { cpu: "100m", memory: 256Mi }
+            limits: { memory: 1Gi }
+          volumeMounts:
+            - { name: miniodata, mountPath: /data }
+  volumeClaimTemplates:
+    - metadata:
+        name: miniodata
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: hcloud-volumes
+        resources:
+          requests:
+            storage: 20Gi
+---
+# Create the platform buckets once MinIO is ready (compose: minio-init).
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: minio-createbuckets
+  namespace: windrose
+spec:
+  backoffLimit: 20
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: mc
+          image: minio/mc:RELEASE.2025-04-08T15-39-49Z
+          command:
+            - /bin/sh
+            - -c
+            - >
+              until mc alias set local http://minio:9000 windrose windrose_dev; do sleep 2; done &&
+              mc mb -p local/windrose-datasets local/windrose-warehouse local/windrose-profiles
+              local/windrose-uploads local/windrose-ml &&
+              echo 'buckets ready'
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iceberg-rest
+  namespace: windrose
+spec:
+  selector: { app: iceberg-rest }
+  ports:
+    - { name: rest, port: 8181, targetPort: 8181 }
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: iceberg-rest
+  namespace: windrose
+spec:
+  serviceName: iceberg-rest
+  replicas: 1
+  selector:
+    matchLabels: { app: iceberg-rest }
+  template:
+    metadata:
+      labels: { app: iceberg-rest }
+    spec:
+      containers:
+        - name: iceberg-rest
+          image: apache/iceberg-rest-fixture:1.9.2
+          env:
+            - { name: CATALOG_WAREHOUSE, value: "s3://windrose-warehouse/" }
+            - { name: CATALOG_IO__IMPL, value: org.apache.iceberg.aws.s3.S3FileIO }
+            - { name: CATALOG_CATALOG__IMPL, value: org.apache.iceberg.jdbc.JdbcCatalog }
+            - { name: CATALOG_URI, value: "jdbc:sqlite:/persist/iceberg_catalog.db" }
+            - { name: CATALOG_JDBC_INIT__CATALOG__TABLES, value: "true" }
+            - { name: CATALOG_S3_ENDPOINT, value: http://minio:9000 }
+            - { name: CATALOG_S3_PATH__STYLE__ACCESS, value: "true" }
+            - { name: AWS_REGION, value: us-east-1 }
+            - { name: AWS_ACCESS_KEY_ID, value: windrose }
+            - { name: AWS_SECRET_ACCESS_KEY, value: windrose_dev }
+          ports:
+            - containerPort: 8181
+          volumeMounts:
+            - { name: icebergdata, mountPath: /persist }
+          resources:
+            requests: { cpu: "100m", memory: 256Mi }
+            limits: { memory: 768Mi }
+  volumeClaimTemplates:
+    - metadata:
+        name: icebergdata
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: hcloud-volumes
+        resources:
+          requests:
+            storage: 5Gi

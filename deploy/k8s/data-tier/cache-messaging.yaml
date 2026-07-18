@@ -1,0 +1,101 @@
+# Redis (cache / RBAC projection / realtime dedup) + Redpanda (Kafka API).
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: windrose
+spec:
+  selector: { app: redis }
+  ports:
+    - { name: redis, port: 6379, targetPort: 6379 }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: windrose
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: redis }
+  template:
+    metadata:
+      labels: { app: redis }
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          ports:
+            - containerPort: 6379
+          readinessProbe:
+            exec: { command: ["redis-cli", "ping"] }
+            periodSeconds: 5
+          resources:
+            requests: { cpu: "50m", memory: 64Mi }
+            limits: { memory: 256Mi }
+---
+# Redpanda — single-node Kafka-compatible broker. Unlike compose (which
+# advertises OUTSIDE://localhost for host access), in-cluster clients reach it
+# at redpanda:9092, so we advertise that name on a single listener.
+apiVersion: v1
+kind: Service
+metadata:
+  name: redpanda
+  namespace: windrose
+spec:
+  selector: { app: redpanda }
+  ports:
+    - { name: kafka, port: 9092, targetPort: 9092 }
+    - { name: schema-registry, port: 8081, targetPort: 8081 }
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redpanda
+  namespace: windrose
+spec:
+  serviceName: redpanda
+  replicas: 1
+  selector:
+    matchLabels: { app: redpanda }
+  template:
+    metadata:
+      labels: { app: redpanda }
+    spec:
+      containers:
+        - name: redpanda
+          image: redpandadata/redpanda:v24.2.4
+          args:
+            - redpanda
+            - start
+            - --overprovisioned
+            - --smp=1
+            - --memory=1G
+            - --reserve-memory=0M
+            - --node-id=0
+            - --check=false
+            - --kafka-addr=PLAINTEXT://0.0.0.0:9092
+            - --advertise-kafka-addr=PLAINTEXT://redpanda:9092
+          ports:
+            - containerPort: 9092
+            - containerPort: 8081
+          readinessProbe:
+            exec:
+              command: ["sh", "-c", "rpk cluster health | grep -q 'Healthy:.*true'"]
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          resources:
+            requests: { cpu: "250m", memory: 1Gi }
+            limits: { memory: 1500Mi }
+          volumeMounts:
+            - { name: redpandadata, mountPath: /var/lib/redpanda/data }
+  volumeClaimTemplates:
+    - metadata:
+        name: redpandadata
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: hcloud-volumes
+        resources:
+          requests:
+            storage: 10Gi

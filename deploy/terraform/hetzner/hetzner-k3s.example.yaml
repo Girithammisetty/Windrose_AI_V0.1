@@ -1,0 +1,56 @@
+# ALTERNATIVE to the Terraform module: config for the `hetzner-k3s` CLI
+# (https://github.com/vitobotta/hetzner-k3s) — the simplest way to get an HA-
+# capable k3s cluster on Hetzner. Pick EITHER this OR main.tf, not both.
+#
+#   brew install vitobotta/tap/hetzner_k3s          # or download the release binary
+#   export HCLOUD_TOKEN=...                          # Hetzner Cloud API token
+#   hetzner-k3s create --config hetzner-k3s.yaml     # writes ./kubeconfig
+#
+# This mirrors the Terraform shape: 1 small control plane + 3 cpx41 agents,
+# built-in Traefik + servicelb, hcloud-csi enabled. Same "dev/staging, CPU-only,
+# cheapest" profile.
+
+hetzner_token: <use HCLOUD_TOKEN env instead of hardcoding>
+cluster_name: windrose
+kubeconfig_path: "./kubeconfig"
+k3s_version: v1.31.4+k3s1        # pin explicitly; bump deliberately
+
+networking:
+  ssh:
+    port: 22
+    use_agent: false
+    public_key_path: "~/.ssh/id_ed25519.pub"
+    private_key_path: "~/.ssh/id_ed25519"
+  allowed_networks:
+    ssh:
+      - 0.0.0.0/0                # TIGHTEN to your IP/32 before staging
+    api:
+      - 0.0.0.0/0               # TIGHTEN to your IP/32 before staging
+  public_network:
+    ipv4: true
+    ipv6: true
+  private_network:
+    enabled: true
+    subnet: 10.0.0.0/16
+
+datacenters:
+  - nbg1                         # or fsn1 / hel1 (EU), ash / hil (US)
+
+masters_pool:
+  instance_type: cx22           # 2 vCPU / 4 GB — fine for a single-CP dev cluster
+  instance_count: 1             # set 3 for an HA control plane
+  location: nbg1
+
+worker_node_pools:
+  - name: windrose-workers
+    instance_type: cpx41        # 8 vCPU / 16 GB — holds the whole stack
+    instance_count: 3           # ~48 GB total working set
+    location: nbg1
+
+# hetzner-k3s installs the hcloud Cloud Controller Manager + CSI by default,
+# giving you `hcloud-volumes` StorageClass out of the box (real block storage
+# for Postgres/ClickHouse/OpenSearch/MinIO PVCs). Traefik + klipper servicelb
+# come from k3s — no paid load balancer needed for dev.
+addons:
+  cloud_controller_manager: true
+  csi_driver: true

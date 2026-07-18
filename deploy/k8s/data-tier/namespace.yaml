@@ -1,0 +1,11 @@
+# The in-cluster data tier for a self-hosted (k3s/Hetzner) Windrose cluster.
+# Translated 1:1 from deploy/docker-compose.dev.yml — same images, ports, and
+# env. Deploy the app chart (values-hetzner.yaml) into this same namespace so
+# ClusterIP DNS names (postgres, redpanda, minio, ...) resolve.
+#
+# DEV/STAGING credentials are inline (windrose / windrose_dev), matching the
+# compose stack. NOT for production — move to a Secret + rotate there.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: windrose

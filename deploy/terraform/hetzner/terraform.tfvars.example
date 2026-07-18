@@ -1,0 +1,17 @@
+# Copy to terraform.tfvars and fill in. Do NOT commit the real file (it holds
+# your SSH key / can hold the token). Prefer `export TF_VAR_hcloud_token=...`
+# for the token so it never touches disk.
+
+# hcloud_token   = "REDACTED_SET_VIA_TF_VAR"   # better: TF_VAR_hcloud_token
+ssh_public_key = "ssh-ed25519 AAAA... you@laptop"
+
+# Lock these down before staging — default is world-open for first bring-up.
+admin_cidrs = ["203.0.113.4/32"]
+
+# --- sizing (defaults are the recommended dev/staging shape) ---
+# location           = "nbg1"      # or fsn1 / hel1 (EU), ash / hil (US)
+# network_zone       = "eu-central"
+# control_plane_type = "cx22"      # 2 vCPU / 4 GB
+# agent_count        = 3
+# agent_type         = "cpx41"     # 8 vCPU / 16 GB each -> ~48 GB total
+# k3s_channel        = "stable"

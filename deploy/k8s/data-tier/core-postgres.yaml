@@ -1,0 +1,85 @@
+# Postgres (pgvector) — the shared relational store for every service, plus the
+# mlflow + temporal backing databases. Mirrors compose: wal_level=logical,
+# max_connections=500, `vector` extension available.
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: windrose
+spec:
+  selector: { app: postgres }
+  ports:
+    - name: pg
+      port: 5432
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: windrose
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels: { app: postgres }
+  template:
+    metadata:
+      labels: { app: postgres }
+    spec:
+      containers:
+        - name: postgres
+          image: pgvector/pgvector:pg16
+          args: ["postgres", "-c", "wal_level=logical", "-c", "max_connections=500"]
+          env:
+            - { name: POSTGRES_USER, value: windrose }
+            - { name: POSTGRES_PASSWORD, value: windrose_dev }
+            - { name: POSTGRES_DB, value: windrose }
+            - { name: PGDATA, value: /var/lib/postgresql/data/pgdata }
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - { name: pgdata, mountPath: /var/lib/postgresql/data }
+          readinessProbe:
+            exec: { command: ["pg_isready", "-U", "windrose"] }
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests: { cpu: "250m", memory: 512Mi }
+            limits: { memory: 2Gi }
+  volumeClaimTemplates:
+    - metadata:
+        name: pgdata
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: hcloud-volumes # adjust for your cluster's CSI
+        resources:
+          requests:
+            storage: 20Gi
+---
+# Create the `mlflow` database once Postgres is up (compose: mlflow-init).
+# Temporal's auto-setup image creates its own databases, so only mlflow is
+# needed here.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mlflow-createdb
+  namespace: windrose
+spec:
+  backoffLimit: 20
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: createdb
+          image: postgres:16-alpine
+          env:
+            - { name: PGPASSWORD, value: windrose_dev }
+          command:
+            - sh
+            - -c
+            - >
+              until pg_isready -h postgres -U windrose; do sleep 2; done;
+              psql -h postgres -U windrose -tc
+              "SELECT 1 FROM pg_database WHERE datname='mlflow'" | grep -q 1 ||
+              createdb -h postgres -U windrose mlflow

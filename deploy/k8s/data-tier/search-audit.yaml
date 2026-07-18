@@ -1,0 +1,143 @@
+# OpenSearch (case triage list/search/facets) + ClickHouse (append-only audit
+# WORM store). ClickHouse gets the same config.d guardrails as compose, inlined
+# as a ConfigMap.
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: opensearch
+  namespace: windrose
+spec:
+  selector: { app: opensearch }
+  ports:
+    - { name: http, port: 9200, targetPort: 9200 }
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: opensearch
+  namespace: windrose
+spec:
+  serviceName: opensearch
+  replicas: 1
+  selector:
+    matchLabels: { app: opensearch }
+  template:
+    metadata:
+      labels: { app: opensearch }
+    spec:
+      # OpenSearch requires vm.max_map_count>=262144 on the node. A privileged
+      # init container sets it (needs no change to the node image).
+      initContainers:
+        - name: sysctl
+          image: busybox:1.36
+          command: ["sh", "-c", "sysctl -w vm.max_map_count=262144"]
+          securityContext:
+            privileged: true
+      containers:
+        - name: opensearch
+          image: opensearchproject/opensearch:2.17.1
+          env:
+            - { name: discovery.type, value: single-node }
+            - { name: plugins.security.disabled, value: "true" }
+            - { name: OPENSEARCH_INITIAL_ADMIN_PASSWORD, value: Windrose_dev_123 }
+            - { name: OPENSEARCH_JAVA_OPTS, value: "-Xms512m -Xmx512m" }
+            # memory_lock needs an unbounded memlock ulimit; leave off in k8s dev.
+            - { name: bootstrap.memory_lock, value: "false" }
+          ports:
+            - containerPort: 9200
+          readinessProbe:
+            httpGet: { path: /_cluster/health, port: 9200 }
+            initialDelaySeconds: 15
+            periodSeconds: 5
+          resources:
+            requests: { cpu: "250m", memory: 1Gi }
+            limits: { memory: 1500Mi }
+          volumeMounts:
+            - { name: osdata, mountPath: /usr/share/opensearch/data }
+  volumeClaimTemplates:
+    - metadata:
+        name: osdata
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: hcloud-volumes
+        resources:
+          requests:
+            storage: 10Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: clickhouse-config
+  namespace: windrose
+data:
+  listen.xml: |
+    <clickhouse>
+        <listen_host>0.0.0.0</listen_host>
+    </clickhouse>
+  memory-limits.xml: |
+    <clickhouse>
+        <max_server_memory_usage>1610612736</max_server_memory_usage>
+        <max_server_memory_usage_to_ram_ratio>0.6</max_server_memory_usage_to_ram_ratio>
+        <mark_cache_size>268435456</mark_cache_size>
+        <uncompressed_cache_size>268435456</uncompressed_cache_size>
+    </clickhouse>
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: clickhouse
+  namespace: windrose
+spec:
+  selector: { app: clickhouse }
+  ports:
+    - { name: http, port: 8123, targetPort: 8123 }
+    - { name: native, port: 9000, targetPort: 9000 }
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: clickhouse
+  namespace: windrose
+spec:
+  serviceName: clickhouse
+  replicas: 1
+  selector:
+    matchLabels: { app: clickhouse }
+  template:
+    metadata:
+      labels: { app: clickhouse }
+    spec:
+      containers:
+        - name: clickhouse
+          image: clickhouse/clickhouse-server:24.8
+          env:
+            - { name: CLICKHOUSE_USER, value: windrose }
+            - { name: CLICKHOUSE_PASSWORD, value: windrose_dev }
+            - { name: CLICKHOUSE_DB, value: audit }
+            - { name: CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT, value: "1" }
+          ports:
+            - containerPort: 8123
+            - containerPort: 9000
+          readinessProbe:
+            httpGet: { path: /ping, port: 8123 }
+            periodSeconds: 5
+          resources:
+            requests: { cpu: "250m", memory: 1Gi }
+            limits: { memory: 2560Mi } # above CH's 1.5 GiB tracker (see memory-limits.xml)
+          volumeMounts:
+            - { name: chdata, mountPath: /var/lib/clickhouse }
+            - { name: chconfig, mountPath: /etc/clickhouse-server/config.d, readOnly: true }
+      volumes:
+        - name: chconfig
+          configMap:
+            name: clickhouse-config
+  volumeClaimTemplates:
+    - metadata:
+        name: chdata
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: hcloud-volumes
+        resources:
+          requests:
+            storage: 10Gi

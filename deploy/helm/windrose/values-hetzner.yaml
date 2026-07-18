@@ -1,0 +1,71 @@
+# Hetzner (k3s) overrides for dev/staging. Cloud-specific only — everything else
+# comes from values.yaml.
+#
+# Unlike the hyperscaler values, there is NO cloud secret manager, NO managed
+# Postgres, and NO native object store. So this profile self-hosts the data tier
+# IN-CLUSTER (the same components you already run in deploy/docker-compose.dev.yml:
+# Postgres, Redpanda/Kafka, MinIO, ClickHouse, OpenSearch, Redis, OPA, Ollama)
+# and points every endpoint at its ClusterIP DNS name. Deploy that infra first
+# (see deploy/terraform/hetzner/README.md), then this chart on top.
+
+global:
+  # Keep the public GHCR images (values.yaml default) — Hetzner has no private
+  # registry requirement. Override global.imageTag at deploy time.
+  registry: ghcr.io/windrose-ai
+
+# No Workload Identity on Hetzner — a plain KSA is fine.
+serviceAccount:
+  create: true
+  annotations: {}
+
+# k3s ships Traefik as the built-in ingress controller.
+ingress:
+  className: traefik
+  annotations: {}
+  # host: windrose.<your-domain>    # point an A record at any agent node IP
+
+# Real block storage via the hcloud-csi driver (installed post-apply). Backs the
+# Postgres/ClickHouse/OpenSearch/MinIO PVCs.
+storageClass: hcloud-volumes
+
+# No External Secrets Operator here — create the `windrose-secrets` Secret
+# directly (keys per deploy/CONFIG.md):
+#   kubectl create secret generic windrose-secrets \
+#     --from-literal=POSTGRES_HOST=postgres --from-literal=POSTGRES_PORT=5432 \
+#     --from-literal=POSTGRES_USER=windrose --from-literal=POSTGRES_PASSWORD=... \
+#     --from-literal=KAFKA_BOOTSTRAP=redpanda:9092 --from-literal=REDIS_URL=redis://redis:6379/0 \
+#     ...   # see deploy/CONFIG.md for the full key list
+externalSecrets:
+  enabled: false
+
+secrets:
+  create: false
+  name: windrose-secrets
+
+config:
+  WINDROSE_ENV: staging
+
+  # Object store = in-cluster MinIO (S3-compatible). The warehouse bucket lives
+  # in MinIO; services reach it via the S3 endpoint below.
+  ICEBERG_WAREHOUSE: s3://windrose-warehouse/
+  AWS_S3_ENDPOINT: http://minio:9000
+  AWS_REGION: us-east-1
+  OBJECTSTORE_REGION_HINT: eu-central
+
+  # Data/infra endpoints resolve to in-cluster services (deploy those first).
+  # Non-secret hosts can live here; credentials stay in windrose-secrets.
+  OPA_URL: http://opa:8281
+  ICEBERG_CATALOG_URI: http://iceberg-rest:8181
+  MLFLOW_TRACKING_URI: http://mlflow:5000
+  TEMPORAL_HOST: temporal:7233
+  OPENSEARCH_URL: http://opensearch:9200
+  OLLAMA_BASE_URL: http://ollama:11434
+
+  # CPU-only Ollama for dev/staging — pull a small model to keep RAM modest:
+  #   kubectl exec deploy/ollama -- ollama pull llama3.2:3b
+  # (7B-Q4 also fits ~6-8GB; latency on CPU is tolerable for staging.)
+
+  # Observability stays opt-in (unset = clean no-op). Point at an in-cluster
+  # collector or a vendor OTLP endpoint to receive traces:
+  # WINDROSE_OTEL_ENABLED: "true"
+  # OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector.observability.svc:4317
