@@ -56,12 +56,32 @@ class FakeMemory:
 
 
 class FakeCaseReader:
-    def __init__(self, case: dict | None = None) -> None:
+    # A default disposition catalog so the triage/copilot graphs can resolve the
+    # model's chosen disposition_code -> a real id (case.apply_disposition's schema
+    # requires disposition_id). Without this the graph raises "no dispositions
+    # available in tenant catalog"; the codes here cover FakeLlm's default output
+    # (duplicate_invoice) plus common fallbacks. Override via the `dispositions` arg.
+    _DEFAULT_DISPOSITIONS = [
+        {"id": "11111111-1111-4111-8111-111111111111", "code": "duplicate_invoice",
+         "label": "Duplicate invoice", "active": True},
+        {"id": "22222222-2222-4222-8222-222222222222", "code": "needs_review",
+         "label": "Needs review", "active": True},
+        {"id": "33333333-3333-4333-8333-333333333333", "code": "escalate",
+         "label": "Escalate", "active": True},
+    ]
+
+    def __init__(self, case: dict | None = None,
+                 dispositions: list[dict] | None = None) -> None:
         self._case = case or {"id": "c-91", "severity": "medium",
                               "display_projection": {"amount": "1250.50", "merchant": "ACME"}}
+        self._dispositions = (dispositions if dispositions is not None
+                              else list(self._DEFAULT_DISPOSITIONS))
 
     async def get_case(self, *, tenant_id, case_id, auth_token) -> dict:
         return {**self._case, "id": case_id}
+
+    async def list_dispositions(self, *, tenant_id, auth_token) -> list[dict]:
+        return list(self._dispositions)
 
 
 class FakeIngestionReader:
@@ -256,6 +276,20 @@ class FakePipelineWriter:
                            "dataset_refs": dataset_refs, "params": params,
                            "mode": mode, "workspace_id": workspace_id, "name": name})
         return {"id": f"run-{self._n}", "status": "queued"}
+
+
+class FakeEvidenceReader:
+    """Case-evidence reader double: returns pre-set extracted documents so the
+    triage/copilot grounding can be exercised without case-service/MinIO. Each
+    doc is ``{filename, content_type, text, extracted, note}``."""
+
+    def __init__(self, docs: list[dict] | None = None) -> None:
+        self._docs = docs or []
+        self.calls: list[dict] = []
+
+    async def read_case_evidence(self, *, tenant_id, case_id, auth_token) -> list[dict]:
+        self.calls.append({"tenant_id": tenant_id, "case_id": case_id})
+        return list(self._docs)
 
 
 class NoopRealtime:

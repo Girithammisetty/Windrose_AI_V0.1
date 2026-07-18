@@ -33,6 +33,7 @@ class Container:
     llm: Any
     memory: Any
     case_reader: Any
+    evidence_reader: Any
     ingestion_reader: Any
     experiment_reader: Any
     dataset_reader: Any
@@ -62,6 +63,7 @@ def build_container(
     tool_client=None,
     memory=None,
     case_reader=None,
+    evidence_reader=None,
     ingestion_reader=None,
     experiment_reader=None,
     dataset_reader=None,
@@ -225,6 +227,18 @@ def build_container(
             from app.adapters.fakes import FakeCaseReader
             case_reader = FakeCaseReader()
 
+    # case-evidence reader: reads + text-extracts a case's attachments so the
+    # triage/copilot graphs reason over the actual documents (the follow-up to
+    # task #77's attach/list/download). Wraps the real case client (which now
+    # exposes list_evidence/download_evidence); fake = empty in unit mode.
+    if evidence_reader is None:
+        if real and hasattr(case_reader, "list_evidence"):
+            from app.adapters.evidence import EvidenceReader
+            evidence_reader = EvidenceReader(case_reader)
+        else:
+            from app.adapters.fakes import FakeEvidenceReader
+            evidence_reader = FakeEvidenceReader()
+
     # ingestion-service reader (onboarding grounding: connector catalog + schema
     # preview)
     if ingestion_reader is None:
@@ -327,7 +341,8 @@ def build_container(
         transcripts=transcripts)
     run_engine = RunEngine(
         store=store, proposals=proposal_service, bus=bus, realtime=realtime, llm=llm,
-        memory=memory, case_reader=case_reader, ingestion_reader=ingestion_reader,
+        memory=memory, case_reader=case_reader, evidence_reader=evidence_reader,
+        ingestion_reader=ingestion_reader,
         experiment_reader=experiment_reader, dataset_reader=dataset_reader,
         pipeline_reader=pipeline_reader, pipeline_writer=pipeline_writer,
         semantic_reader=semantic_reader,
@@ -338,7 +353,8 @@ def build_container(
     return Container(
         settings=settings, signing_key=signing_key, grant_issuer=grant_issuer,
         token_minter=token_minter, store=store, bus=bus, realtime=realtime, llm=llm,
-        memory=memory, case_reader=case_reader, ingestion_reader=ingestion_reader,
+        memory=memory, case_reader=case_reader, evidence_reader=evidence_reader,
+        ingestion_reader=ingestion_reader,
         experiment_reader=experiment_reader, dataset_reader=dataset_reader,
         pipeline_reader=pipeline_reader, pipeline_writer=pipeline_writer,
         semantic_reader=semantic_reader,

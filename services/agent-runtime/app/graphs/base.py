@@ -20,6 +20,10 @@ class GraphDeps:
     llm: Any
     memory: Any = None
     case_reader: Any = None
+    # Reads + text-extracts a case's evidence attachments so the agent can reason
+    # over the ACTUAL documents (PDFs, letters, remits), not just the row
+    # projection. None = no document grounding (structured-only run).
+    evidence_reader: Any = None
     ingestion_reader: Any = None
     experiment_reader: Any = None
     dataset_reader: Any = None

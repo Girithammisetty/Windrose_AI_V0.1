@@ -18,7 +18,8 @@ from app.graphs import GRAPH_RUNNERS, RUNNERS, GraphDeps
 
 class RunEngine:
     def __init__(self, *, store, proposals, bus, realtime, llm, memory, case_reader,
-                 settings, ingestion_reader=None, experiment_reader=None,
+                 settings, evidence_reader=None, ingestion_reader=None,
+                 experiment_reader=None,
                  dataset_reader=None, pipeline_reader=None, pipeline_writer=None,
                  semantic_reader=None, catalog_reader=None, transcripts=None) -> None:
         self._store = store
@@ -28,6 +29,8 @@ class RunEngine:
         self._llm = llm
         self._memory = memory
         self._case_reader = case_reader
+        # Case-evidence reader (agent reasons over attached documents; None → off).
+        self._evidence_reader = evidence_reader
         # SLM distillation milestone 1: best-effort transcript capture (None → off).
         self._transcripts = transcripts
         self._ingestion_reader = ingestion_reader
@@ -41,6 +44,7 @@ class RunEngine:
 
     def _deps(self, run: Run, obo_token: str | None, prompt_params: dict) -> GraphDeps:
         return GraphDeps(llm=self._llm, memory=self._memory, case_reader=self._case_reader,
+                         evidence_reader=self._evidence_reader,
                          ingestion_reader=self._ingestion_reader,
                          experiment_reader=self._experiment_reader,
                          dataset_reader=self._dataset_reader,

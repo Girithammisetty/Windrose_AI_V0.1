@@ -34,12 +34,16 @@ TRIAGE_TOOL_VERSION = "1.2.0"
 
 _SYS = (
     "You are Windrose's insurance claims triage copilot. Given a claim case, "
-    "similar resolved cases, and the tenant's real disposition catalog, decide a "
-    "disposition. Respond with ONLY a JSON object: "
-    '{"severity": one of ["low","medium","high","critical"], '
+    "similar resolved cases, the ACTUAL text of documents attached to the case "
+    "(evidence), and the tenant's real disposition catalog, decide a "
+    "disposition. Treat the attached evidence documents as primary evidence: "
+    "when a document's content drives your decision, cite it by filename in the "
+    "rationale (e.g. \"per discharge_summary.pdf\"). Respond with ONLY a JSON "
+    'object: {"severity": one of ["low","medium","high","critical"], '
     '"disposition_code": the "code" of ONE entry from the given disposition '
     "catalog (copy it exactly — inventing a code is not allowed), "
-    '"rationale": one concise sentence citing the evidence}. No prose outside JSON.'
+    '"rationale": one concise sentence citing the specific evidence used}. '
+    "No prose outside JSON."
 )
 
 
@@ -66,6 +70,10 @@ def build_triage_graph(deps: GraphDeps):
                 dispositions = await deps.case_reader.list_dispositions(
                     tenant_id=state["tenant_id"], auth_token=deps.obo_token or "")
         state["dispositions"] = dispositions
+        # Evidence documents (the follow-up to attach/list/download #77): read +
+        # text-extract the case's attachments so the model reasons over the real
+        # documents, not just the row projection. Shared by the copilot graph.
+        await _fetch_evidence(deps, state)
         query = _case_query(case, state)
         if deps.memory is not None:
             try:
@@ -101,10 +109,12 @@ def build_triage_graph(deps: GraphDeps):
         catalog = [{"code": d.get("code"), "label": d.get("label")}
                    for d in state.get("dispositions", [])][:40]
         catalog_json = json.dumps(catalog, default=str)
+        evidence_block = _format_evidence(state.get("evidence_docs", []))
         user = (
             f"Persona: {persona}\n"
             f"Claim case (JSON): {case_json}\n"
             f"Similar resolved cases: {mem_json}\n"
+            f"{evidence_block}"
             f"Disposition catalog (pick disposition_code from here): {catalog_json}\n"
             "Decide the disposition now."
         )
@@ -169,6 +179,50 @@ def build_triage_graph(deps: GraphDeps):
     return g.compile()
 
 
+async def _fetch_evidence(deps: GraphDeps, state: dict) -> list[dict]:
+    """Read + text-extract the case's evidence attachments into
+    ``state['evidence_docs']`` (best-effort, bounded, never raises). Skipped in
+    replay mode (deterministic reproduction pins RAG, not live document reads).
+    A document that cannot be extracted still appears (extracted=False) so it is
+    never silently hidden from the model or the trace. Shared by triage + copilot.
+    """
+    docs: list[dict] = []
+    if deps.evidence_reader is not None and not deps.replay and state.get("case_id"):
+        try:
+            docs = await deps.evidence_reader.read_case_evidence(
+                tenant_id=state["tenant_id"], case_id=state["case_id"],
+                auth_token=deps.obo_token or "")
+        except Exception as exc:  # noqa: BLE001 — document grounding is best-effort
+            state.setdefault("trace", []).append(
+                {"event": "evidence_grounding_failed", "error": type(exc).__name__})
+    state["evidence_docs"] = docs
+    if docs:
+        state.setdefault("trace", []).append(
+            {"event": "evidence_grounded", "docs": len(docs),
+             "extracted": sum(1 for d in docs if d.get("extracted")),
+             "files": [d.get("filename") for d in docs][:10]})
+    return docs
+
+
+def _format_evidence(docs: list[dict]) -> str:
+    """Render the extracted evidence documents as a labelled prompt section the
+    model can cite from. Documents we could not extract still appear (so the
+    model knows they exist and can ask a human / flag it), but with no body."""
+    if not docs:
+        return ""
+    parts = ["Attached case evidence documents (actual extracted text — cite by "
+             "filename when used):"]
+    for d in docs:
+        fn = d.get("filename", "evidence")
+        ct = d.get("content_type", "")
+        if d.get("extracted") and d.get("text"):
+            parts.append(f"--- {fn} ({ct}) ---\n{d['text']}")
+        else:
+            note = d.get("note") or "content not extractable"
+            parts.append(f"--- {fn} ({ct}) --- [{note}]")
+    return "\n".join(parts) + "\n"
+
+
 def _case_query(case: dict, state: dict) -> str:
     proj = case.get("display_projection") or {}
     bits = [f"{k}={v}" for k, v in list(proj.items())[:6]]
@@ -218,6 +272,19 @@ async def run_triage(deps: GraphDeps, inputs: dict) -> GraphOutcome:
     graph = build_triage_graph(deps)
     state = dict(inputs)
     final = await graph.ainvoke(state)
+    # Grounding evidence surfaced for replay/eval scoring = retrieved memories
+    # (RAG) PLUS the attached documents actually read (as {content, source}), so
+    # the groundedness judge scores the rationale against the real documents too.
+    evidence = list(final.get("memories", []))
+    for d in final.get("evidence_docs", []):
+        if d.get("extracted") and d.get("text"):
+            evidence.append({"content": d["text"], "source": d.get("filename"),
+                             "kind": "case_evidence"})
+    structured = dict(final.get("disposition", {}))
+    structured["evidence_docs"] = [
+        {"filename": d.get("filename"), "content_type": d.get("content_type"),
+         "extracted": d.get("extracted"), "note": d.get("note")}
+        for d in final.get("evidence_docs", [])]
     return GraphOutcome(
         final_text=(f"Proposed disposition for case {inputs['case_id']}: "
                     f"{final['disposition']['severity']} / "
@@ -225,5 +292,5 @@ async def run_triage(deps: GraphDeps, inputs: dict) -> GraphOutcome:
         write_intent=final.get("write_intent"),
         usage=final.get("usage", {}),
         trace=final.get("trace", []),
-        structured=final.get("disposition", {}),
-        evidence=final.get("memories", []))
+        structured=structured,
+        evidence=evidence)

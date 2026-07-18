@@ -64,6 +64,19 @@ class CaseReader(Protocol):
     ) -> dict: ...
 
 
+class EvidenceReader(Protocol):
+    """Reads and text-extracts a case's evidence attachments so an agent can
+    reason over the ACTUAL unstructured documents (discharge summaries, remits,
+    dispute letters, PDFs) — not just the structured row projection. Returns a
+    bounded list of ``{filename, content_type, size_bytes, text, extracted,
+    note}`` records; ``extracted=False`` (with a ``note``) for content types the
+    reader cannot turn into text (e.g. images awaiting OCR)."""
+
+    async def read_case_evidence(
+        self, *, tenant_id: str, case_id: str, auth_token: str
+    ) -> list[dict]: ...
+
+
 class RealtimePublisher(Protocol):
     async def publish(self, *, topic: str, event: str, data: dict) -> None: ...
 

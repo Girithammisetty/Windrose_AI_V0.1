@@ -39,6 +39,8 @@ from app.graphs.triage import (
     TRIAGE_TOOL_ID,
     TRIAGE_TOOL_VERSION,
     _extract_json,
+    _fetch_evidence,
+    _format_evidence,
     _normalise,
     _resolve_disposition_id,
 )
@@ -51,7 +53,10 @@ _BASE_SYS = (
     "You are a Windrose decision copilot operating for a specific tenant persona. "
     "Follow the tenant's instruction below, but you may ONLY recommend outcomes "
     "the platform governs — you never take an action directly; a human approves "
-    "every recommendation. Respond with ONLY a JSON object: "
+    "every recommendation. When documents attached to the case (evidence) are "
+    "provided, treat them as primary evidence and cite the source filename in the "
+    "rationale when their content drives your recommendation. Respond with ONLY a "
+    "JSON object: "
     '{"severity": one of ["low","medium","high","critical"], '
     '"disposition_code": the "code" of ONE entry from the given disposition '
     'catalog (copy it exactly; inventing a code is not allowed), '
@@ -75,6 +80,8 @@ def build_persona_copilot_graph(deps: GraphDeps):
                     tenant_id=state["tenant_id"], auth_token=deps.obo_token or "")
         state["case"] = case
         state["dispositions"] = dispositions
+        # Reason over the case's attached documents (not just the row projection).
+        await _fetch_evidence(deps, state)
         memories: list[dict] = []
         if deps.memory is not None and case:
             try:
@@ -99,11 +106,13 @@ def build_persona_copilot_graph(deps: GraphDeps):
         catalog = [{"code": d.get("code"), "label": d.get("label")}
                    for d in state.get("dispositions", [])][:40]
         mems = [m.get("content", m) for m in state.get("memories", [])]
+        evidence_block = _format_evidence(state.get("evidence_docs", []))
         user = (
             f"Persona: {persona}\n"
             f"Tenant instruction: {tenant_instruction or '(none)'}\n"
             f"Claim case (JSON): {json.dumps(state.get('case') or {}, default=str)[:1500]}\n"
             f"Similar resolved cases: {json.dumps(mems, default=str)[:1000]}\n"
+            f"{evidence_block}"
             f"Disposition catalog (pick disposition_code from here): "
             f"{json.dumps(catalog, default=str)}\n"
             "Decide the disposition now."
