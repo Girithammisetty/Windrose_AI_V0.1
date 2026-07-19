@@ -52,6 +52,19 @@ func main() {
 	otelShutdown := otelx.InitFromEnv(ctx, "identity-service")
 	defer func() { _ = otelShutdown(context.Background()) }()
 
+	// Stabilization guard (rule: no fake/mock/stub in a runtime path). When
+	// REQUIRE_REAL_ADAPTERS=true — set in every real deploy — the service REFUSES
+	// to boot on an in-memory/fake adapter instead of silently faking success.
+	// Absent (local unit dev), the loud-warn fallbacks below keep dev
+	// self-contained. This is what stops a misconfigured prod (e.g. a secret that
+	// ships POSTGRES_*/REDIS_URL but not DATABASE_URL/REDIS_ADDR/KEYCLOAK_URL)
+	// from coming up "healthy" while provisioning users into a map.
+	requireReal := os.Getenv("REQUIRE_REAL_ADAPTERS") == "true"
+	mustReal := func(realEnv, adapter string) {
+		log.Error("REQUIRE_REAL_ADAPTERS=true but "+realEnv+" is unset — refusing to boot on the "+adapter+" fallback")
+		os.Exit(1)
+	}
+
 	var store domain.Store
 	ready := func() error { return nil }
 	if dsn := os.Getenv("DATABASE_URL"); dsn != "" {
@@ -91,6 +104,9 @@ func main() {
 		ready = func() error { return pool.Ping(context.Background()) }
 		log.Info("store: postgres")
 	} else {
+		if requireReal {
+			mustReal("DATABASE_URL", "in-memory store")
+		}
 		store = memory.New()
 		log.Warn("store: in-memory (set DATABASE_URL for postgres)")
 	}
@@ -154,6 +170,9 @@ func main() {
 		}
 		kc = &keycloak.HTTPAdmin{BaseURL: base, Token: tokenFn}
 	} else {
+		if requireReal {
+			mustReal("KEYCLOAK_URL", "fake Keycloak (user/realm provisioning would silently no-op)")
+		}
 		log.Warn("keycloak: fake (set KEYCLOAK_URL for a real Keycloak)")
 	}
 	// Local-equivalent infra adapters (adapters/localinfra): honest no-op
@@ -176,6 +195,9 @@ func main() {
 		deny = &denylist.Redis{Cmd: redisx.NewFromEnv(redisAddr, os.Getenv), Prefix: "denylist:apikey:", TTL: 24 * time.Hour}
 		log.Info("denylist: redis")
 	} else {
+		if requireReal {
+			mustReal("REDIS_ADDR", "in-memory API-key denylist (revocations would not propagate across replicas)")
+		}
 		log.Warn("denylist: in-memory (set REDIS_ADDR for multi-replica Redis)")
 	}
 
@@ -200,6 +222,9 @@ func main() {
 		lastAdmin = &rbacclient.Checker{BaseURL: rbacURL, Store: store, Issuer: issuer, Log: log}
 		log.Info("last-admin checker: rbac", "url", rbacURL)
 	} else {
+		if requireReal {
+			mustReal("RBAC_URL", "allow-all last-admin checker (BR-9 not enforced)")
+		}
 		log.Warn("last-admin checker: allow-all — BR-9 (last tenant admin cannot be deactivated) is NOT enforced; set RBAC_URL to enable the real rbac-backed checker")
 	}
 	users := &domain.UserService{Store: store, Keycloak: kc, LastAdmin: lastAdmin, Clock: clock}
@@ -268,6 +293,9 @@ func main() {
 			log.Warn("authorizer: OPA enabled but RBAC_URL unset — cannot register identity's guarded actions; they may deny as unknown_action")
 		}
 	} else {
+		if requireReal {
+			mustReal("OPA_URL", "token-scope authorizer fallback (does not honor rbac projection grants)")
+		}
 		log.Warn("authorizer: token-scope fallback (set OPA_URL for the real rbac-projection path; scope-based authz does NOT honor a tenant Admin's projection grant)")
 	}
 
@@ -286,7 +314,11 @@ func main() {
 	// draining the transactional outbox (MASTER-FR-030/034). KAFKA_BROKERS
 	// defaults to the local Redpanda so the runtime path has no log stub.
 	var publisher events.Publisher
-	if brokers := os.Getenv("KAFKA_BROKERS"); brokers != "false" {
+	kafkaBrokers := os.Getenv("KAFKA_BROKERS")
+	if requireReal && (kafkaBrokers == "" || kafkaBrokers == "false") {
+		mustReal("KAFKA_BROKERS", "log-only/localhost publisher (outbox events would not reach Kafka)")
+	}
+	if brokers := kafkaBrokers; brokers != "false" {
 		if brokers == "" {
 			brokers = "localhost:9092"
 		}

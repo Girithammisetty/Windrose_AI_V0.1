@@ -19,6 +19,17 @@ nameOverride: ""
 config:
   WINDROSE_ENV: production
 
+  # Stabilization: refuse to boot on any in-memory/fake adapter (rule: no
+  # fake/mock/stub in a runtime path). identity-service honors this today — with
+  # it "true" the service EXITS at boot instead of silently faking success
+  # unless it is given real DATABASE_URL, REDIS_ADDR, KAFKA_BROKERS, KEYCLOAK_URL,
+  # RBAC_URL, OPA_URL. NOTE: those are the env NAMES the Go services read — ensure
+  # the synced windrose-secrets provides them (it currently ships POSTGRES_* /
+  # REDIS_URL / KAFKA_BOOTSTRAP / KEYCLOAK_ADMIN_* under different names; reconcile
+  # them in the secret store / CD, or the guard will (by design) refuse to boot
+  # rather than run on a fake. Set "false" only to intentionally stage.)
+  REQUIRE_REAL_ADAPTERS: "true"
+
   # Identity / JWT (public issuer + audience; signing key/JWKS are SECRETS).
   JWT_ISSUER: https://identity.windrose.internal
   JWT_AUDIENCE: windrose
@@ -121,6 +132,7 @@ externalSecrets:
     - OBJECTSTORE_REGION
     - JWT_SIGNING_KEY_PEM
     - JWT_JWKS
+    - KEYCLOAK_URL
     - KEYCLOAK_ADMIN_USER
     - KEYCLOAK_ADMIN_PASSWORD
     - VAULT_ADDR

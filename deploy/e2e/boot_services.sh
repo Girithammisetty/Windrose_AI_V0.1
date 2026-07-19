@@ -24,6 +24,7 @@ start_identity() {
     MIGRATE_DATABASE_URL="${PG_BASE}/identity?sslmode=disable"
     DATABASE_URL="postgres://identity_app:identity_app@localhost:5432/identity?sslmode=disable"
     LISTEN_ADDR=":${PORT_IDENTITY}"
+    REQUIRE_REAL_ADAPTERS="true"
     KAFKA_BROKERS="$KAFKA_BROKERS" SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL"
     REDIS_ADDR="$REDIS_ADDR"
     KEYCLOAK_URL="http://localhost:8180"
