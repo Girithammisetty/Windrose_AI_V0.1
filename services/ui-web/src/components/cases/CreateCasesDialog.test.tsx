@@ -18,6 +18,17 @@ vi.mock("@/lib/graphql/client", async (importActual) => {
           },
         });
       }
+      if (doc.includes("AssignableUsers")) {
+        return Promise.resolve({
+          assignableUsers: {
+            nodes: [
+              { id: "u-ann", urn: "wr:t:user:user/u-ann", email: "ann@acme.co", fullName: "Ann Analyst" },
+              { id: "u-bob", urn: "wr:t:user:user/u-bob", email: "bob@acme.co", fullName: "Bob Analyst" },
+            ],
+            pageInfo: { nextCursor: null, hasMore: false },
+          },
+        });
+      }
       return Promise.resolve({});
     },
   };
@@ -95,6 +106,25 @@ describe("CreateCasesDialog", () => {
         ).length,
       ).toBeGreaterThan(0),
     );
+  });
+
+  it("routes the whole batch to one analyst picked by name", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(
+      <CreateCasesDialog
+        open
+        onOpenChange={() => {}}
+        datasetUrn="wr:t:dataset:dataset/ds-1"
+        rows={ROWS}
+      />,
+    );
+    // The assignee is a name picker (member-safe assignable users), not a raw id.
+    await waitFor(() => expect(screen.getByRole("option", { name: "Bob Analyst" })).toBeInTheDocument());
+    await user.selectOptions(screen.getByLabelText("Assign all to"), "u-bob");
+    await user.click(screen.getByRole("button", { name: /Create 2 cases/ }));
+
+    await waitFor(() => expect(latest).not.toBeNull());
+    expect(latest.input.assignedToId).toBe("u-bob");
   });
 
   it("blocks submit with no due date", async () => {

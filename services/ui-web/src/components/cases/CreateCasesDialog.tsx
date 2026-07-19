@@ -1,9 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Input, Label, Textarea } from "@/components/ui/primitives";
 import { Button } from "@/components/ui/button";
-import { useCreateCases } from "@/lib/graphql/hooks";
+import { useAssignableUsers, useCreateCases } from "@/lib/graphql/hooks";
 import { GraphQLRequestError } from "@/lib/graphql/client";
 import type { CaseRowInput } from "@/lib/graphql/types";
 
@@ -43,6 +43,14 @@ export function CreateCasesDialog({
   const [banner, setBanner] = useState<string | null>(null);
   const [result, setResult] = useState<{ created: number; deduplicated: number } | null>(null);
   const createMutation = useCreateCases();
+
+  // Member-safe assignable-analyst directory (needs case.case.assign, not admin
+  // scope) so a manager can route the whole batch to one analyst by name.
+  const assignableQ = useAssignableUsers();
+  const analysts = useMemo(
+    () => (assignableQ.data?.pages ?? []).flatMap((p) => p.nodes),
+    [assignableQ.data],
+  );
 
   useEffect(() => {
     if (open) {
@@ -158,13 +166,29 @@ export function CreateCasesDialog({
                 </div>
               </div>
               <div className="space-y-1">
-                <Label htmlFor="cc-assignee">Assign to (user id, optional)</Label>
-                <Input
+                <Label htmlFor="cc-assignee">Assign all to</Label>
+                <select
                   id="cc-assignee"
                   value={assignedToId}
                   onChange={(e) => setAssignedToId(e.target.value)}
-                  placeholder="leave blank for an unassigned queue"
-                />
+                  className="w-full rounded-md border bg-background px-2 py-1.5 text-sm"
+                >
+                  <option value="">Unassigned queue</option>
+                  {analysts.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.fullName || u.email}
+                    </option>
+                  ))}
+                </select>
+                {assignableQ.hasNextPage && (
+                  <button
+                    type="button"
+                    onClick={() => assignableQ.fetchNextPage()}
+                    className="text-xs text-muted-foreground hover:underline"
+                  >
+                    Load more people
+                  </button>
+                )}
               </div>
               <div className="space-y-1">
                 <Label htmlFor="cc-desc">Description (optional)</Label>
