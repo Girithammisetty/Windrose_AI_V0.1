@@ -36,6 +36,16 @@ def test_get_pack_detail_and_missing():
     assert catalog.get_pack("no-such-pack") is None
 
 
+def test_lint_pack_reports_clean_for_a_shipped_pack():
+    # inc19: the authoring linter over a real catalog pack — a shipped pack must
+    # lint clean (no errors), and a missing pack returns None.
+    report = catalog.lint_pack("card-disputes")
+    assert report is not None
+    assert report["ok"] is True and report["errors"] == 0
+    assert report["pack"] == "card-disputes"
+    assert catalog.lint_pack("no-such-pack") is None
+
+
 def test_origin_tag_and_urn_id():
     of = installer.origin_tag("card-disputes", "1.0.0")
     assert of("dispositions", "dispositions") == "pack:card-disputes@1.0.0:dispositions/dispositions"  # noqa: E501

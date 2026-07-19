@@ -21,3 +21,14 @@ async def get_pack(name: str, _: Principal = Depends(require("pack.pack.read")))
     if pack is None:
         raise NotFound(f"pack {name!r} not found in the catalog")
     return {"data": pack}
+
+
+@router.get("/packs/{name}/lint")
+async def lint_pack(name: str, _: Principal = Depends(require("pack.pack.read"))):
+    """Deep pack-authoring lint (packctl.lint) for one catalog pack — content +
+    cross-reference findings beyond the manifest schema. `data.ok` is False iff
+    any error finding. Pure/offline; the same checks `packctl lint` runs in CI."""
+    report = catalog.lint_pack(name)
+    if report is None:
+        raise NotFound(f"pack {name!r} not found in the catalog")
+    return {"data": report}

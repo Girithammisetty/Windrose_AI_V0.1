@@ -80,6 +80,19 @@ def load_manifest(name: str):
     return manifest.load_manifest(pack_dir)
 
 
+def lint_pack(name: str) -> dict | None:
+    """Run the pack-authoring linter (packctl.lint) over one catalog pack and
+    return its report as a dict, or None if the pack is absent. Pure/offline —
+    the same deep content + cross-reference checks `packctl lint` runs in CI."""
+    _packctl()  # ensure the packs dir (with packctl) is importable
+    from packctl.lint import lint_pack as _lint  # noqa: PLC0415
+
+    pack_dir = _packs_root() / name
+    if not (pack_dir / "pack.yaml").is_file():
+        return None
+    return _lint(pack_dir).as_dict()
+
+
 def _summary(m) -> dict:
     counts: dict[str, int] = {}
     for c in m.components:
