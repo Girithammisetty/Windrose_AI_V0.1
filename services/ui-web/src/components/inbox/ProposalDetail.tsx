@@ -35,6 +35,19 @@ export function ProposalDetail({ proposal }: { proposal: Proposal }) {
     JSON.stringify(normalizeArgsDiff(proposal.argsDiff).after, null, 2),
   );
   const destructive = isDestructiveTool(proposal.tool);
+  // Evidence the recommendation is grounded in (agent-runtime attaches these to
+  // predicted_effect.citations; older proposals simply have none).
+  const citations: { source: string; detail: string }[] = Array.isArray(
+    proposal.predictedEffect?.citations,
+  )
+    ? (proposal.predictedEffect!.citations as unknown[]).flatMap((c) => {
+        if (c && typeof c === "object" && "source" in c && "detail" in c) {
+          const { source, detail } = c as { source: unknown; detail: unknown };
+          return [{ source: String(source), detail: String(detail) }];
+        }
+        return [];
+      })
+    : [];
 
   function onDone(label: string) {
     push({ title: label, variant: "success" });
@@ -131,6 +144,19 @@ export function ProposalDetail({ proposal }: { proposal: Proposal }) {
                   `blast radius ${proposal.predictedEffect.blast_radius}`}
               </p>
             )}
+          </section>
+        )}
+        {citations.length > 0 && (
+          <section>
+            <h3 className="mb-1 text-xs font-semibold uppercase text-muted-foreground">Evidence cited</h3>
+            <ul className="space-y-1.5">
+              {citations.map((c, i) => (
+                <li key={`${c.source}-${i}`} className="text-sm">
+                  <span className="font-medium">{c.source}</span>
+                  <span className="text-muted-foreground"> — {c.detail}</span>
+                </li>
+              ))}
+            </ul>
           </section>
         )}
         {proposal.affectedUrns.length > 0 && (

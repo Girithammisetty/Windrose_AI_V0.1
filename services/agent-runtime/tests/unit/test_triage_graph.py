@@ -24,6 +24,34 @@ async def test_triage_produces_write_intent():
     assert outcome.usage["output_tokens"] > 0  # a model was invoked
 
 
+async def test_triage_summary_is_customer_relevant_and_citations_grounded():
+    """The proposal a reviewer sees carries the disposition's human LABEL and
+    plain language (no codes / URNs / arrows / SLA jargon), plus only citations
+    grounded in evidence actually provided — a fabricated source is dropped."""
+    llm = FakeLlm(content=(
+        '{"severity":"high","disposition_code":"duplicate_invoice",'
+        '"rationale":"This appears to repeat an invoice that was already paid.",'
+        '"evidence_citations":['
+        '{"source":"similar prior cases","detail":"Three earlier duplicates were denied."},'
+        '{"source":"imaginary.pdf","detail":"a source never provided to the model"}]}'))
+    deps = GraphDeps(llm=llm, memory=FakeMemory(results=[{"content": "resolved dup case"}]),
+                     case_reader=FakeCaseReader(), prompt_params={}, obo_token="tok")
+    outcome = await run_triage(deps, {"tenant_id": TENANT_A, "case_id": "c-91"})
+    pe = outcome.write_intent.predicted_effect
+
+    # Customer-relevant summary: human label, no internal code / arrow / SLA jargon.
+    assert "Duplicate invoice" in pe["summary"]
+    assert "->" not in pe["summary"]
+    assert "duplicate_invoice" not in pe["summary"]
+    assert "SLA" not in pe["summary"]
+
+    # Citations: the grounded precedent survives; the fabricated document is dropped.
+    sources = [c["source"] for c in pe["citations"]]
+    assert "similar prior cases" in sources
+    assert "imaginary.pdf" not in sources
+    assert any(t.get("event") == "citations_dropped_ungrounded" for t in outcome.trace)
+
+
 async def test_triage_defensive_on_bad_json():
     deps = GraphDeps(llm=FakeLlm(content="not json at all"), memory=FakeMemory(),
                      case_reader=FakeCaseReader(), prompt_params={})

@@ -149,9 +149,11 @@ def build_triage_graph(deps: GraphDeps):
             # Applying a disposition mutates the case (severity/assignee): the
             # invoking caller must hold case.case.update to propose it.
             required_action="case.case.update",
+            # Customer-relevant summary (human label, plain language) + the
+            # evidence the recommendation is grounded in — never raw codes/URNs.
             predicted_effect={
-                "summary": (f"Case {state['case_id']} severity -> {d['severity']}, "
-                            f"disposition {d['disposition_code']}; SLA timer restarts."),
+                "summary": _effect_summary(d, state.get("dispositions", [])),
+                "citations": d.get("citations", []),
                 "reversibility": "reversible", "blast_radius": 1})
         state.setdefault("trace", []).append(
             {"event": "proposal_created", "tool_id": TRIAGE_TOOL_ID})
@@ -226,8 +228,71 @@ def _normalise(parsed: dict, state: dict) -> dict:
     code = re.sub(r"[^a-z0-9_]+", "_", raw_code)
     rationale = str(parsed.get("rationale")
                     or "Model-assessed disposition based on case + precedent.")
+    citations = _validate_citations(parsed.get("evidence_citations"), state)
     return {"severity": sev, "disposition_code": code[:64] or "needs_review",
-            "rationale": rationale[:4000]}
+            "rationale": rationale[:4000], "citations": citations}
+
+
+def _humanise(code: str) -> str:
+    """A code (``deny_no_error_found``) → a readable label (``Deny no error
+    found``) for when the catalog has no explicit label to show a person."""
+    words = re.sub(r"[_\-]+", " ", str(code or "")).strip()
+    return (words[:1].upper() + words[1:]) if words else "Needs review"
+
+
+def _disposition_label(code: str, dispositions: list[dict]) -> str:
+    """The human catalog label for a disposition code (what a claims handler
+    reads), falling back to a humanised code — never the raw code/URN."""
+    for d in dispositions:
+        if str(d.get("code", "")).lower() == str(code).lower():
+            return str(d.get("label") or "").strip() or _humanise(code)
+    return _humanise(code)
+
+
+def _validate_citations(raw: Any, state: dict) -> list[dict]:
+    """Keep ONLY citations grounded in evidence actually put in front of the
+    model — a real attached document (by filename) or the similar-prior-cases
+    the graph retrieved. Sources that match nothing provided are dropped as
+    ungrounded (recorded in the trace, never silently hidden) so a proposal
+    never shows a customer a fabricated citation."""
+    docs = state.get("evidence_docs") or []
+    filenames = {str(d.get("filename", "")).lower()
+                 for d in docs if d.get("filename")}
+    has_precedent = bool(state.get("memories"))
+    kept: list[dict] = []
+    dropped: list[str] = []
+    for c in (raw if isinstance(raw, list) else [])[:8]:
+        if not isinstance(c, dict):
+            continue
+        source = str(c.get("source", "")).strip()[:160]
+        detail = str(c.get("detail") or c.get("quote") or "").strip()[:400]
+        if not source or not detail:
+            continue
+        low = source.lower()
+        grounded = (
+            any(fn and (fn in low or low in fn) for fn in filenames)
+            or (has_precedent and any(
+                k in low for k in ("case", "precedent", "prior", "similar", "history")))
+        )
+        (kept if grounded else dropped).append(
+            {"source": source, "detail": detail} if grounded else source)
+    if dropped:
+        state.setdefault("trace", []).append(
+            {"event": "citations_dropped_ungrounded", "sources": dropped[:10]})
+    return kept
+
+
+def _effect_summary(d: dict, dispositions: list[dict]) -> str:
+    """A plain-language, customer-relevant one-liner for the proposal's
+    ``predicted_effect.summary`` — the disposition's human LABEL and a priority
+    word, no codes / URNs / arrows / SLA-timer jargon.
+
+    e.g. ``Recommends resolving this claim as "Deny — no error found" and
+    setting priority to High.``"""
+    label = _disposition_label(d.get("disposition_code", ""), dispositions)
+    priority = str(d.get("severity", "medium")).capitalize()
+    return (f'Recommends resolving this claim as "{label}" '
+            f"and setting priority to {priority}.")
 
 
 def _resolve_disposition_id(code: str, dispositions: list[dict], state: dict) -> str:

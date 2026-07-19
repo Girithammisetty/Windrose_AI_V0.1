@@ -39,4 +39,22 @@ describe("ProposalDetail (UI-FR-033)", () => {
     renderWithProviders(<ProposalDetail proposal={{ ...proposal, tool: "delete_case" }} />);
     expect(screen.getByText(/destructive/i)).toBeInTheDocument();
   });
+
+  it("renders the evidence citations the recommendation is grounded in", () => {
+    const withCitations: Proposal = {
+      ...proposal,
+      predictedEffect: {
+        ...proposal.predictedEffect,
+        citations: [
+          { source: "discharge_summary.pdf", detail: "Patient discharged on 12 March." },
+          { source: "similar prior cases", detail: "Three earlier duplicates were denied." },
+        ],
+      },
+    };
+    renderWithProviders(<ProposalDetail proposal={withCitations} />);
+    expect(screen.getByText(/Evidence cited/i)).toBeInTheDocument();
+    expect(screen.getByText("discharge_summary.pdf")).toBeInTheDocument();
+    expect(screen.getByText(/Patient discharged on 12 March/)).toBeInTheDocument();
+    expect(screen.getByText(/Three earlier duplicates were denied/)).toBeInTheDocument();
+  });
 });

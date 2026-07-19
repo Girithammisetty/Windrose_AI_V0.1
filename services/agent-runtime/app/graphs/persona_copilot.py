@@ -39,6 +39,8 @@ from app.graphs.triage import (
     SEVERITIES,
     TRIAGE_TOOL_ID,
     TRIAGE_TOOL_VERSION,
+    _disposition_label,
+    _effect_summary,
     _extract_json,
     _fetch_evidence,
     _format_evidence,
@@ -172,8 +174,8 @@ def build_persona_copilot_graph(deps: GraphDeps):
             affected_urns=[case_urn(state["tenant_id"], state["case_id"])],
             workspace_id=workspace_id, required_action="case.case.update",
             predicted_effect={
-                "summary": (f"Case {state['case_id']} severity -> {d['severity']}, "
-                            f"disposition {d['disposition_code']} (custom copilot)."),
+                "summary": _effect_summary(d, state.get("dispositions", [])),
+                "citations": d.get("citations", []),
                 "reversibility": "reversible", "blast_radius": 1})
         state.setdefault("trace", []).append(
             {"event": "proposal_created", "tool_id": TRIAGE_TOOL_ID})
@@ -211,10 +213,14 @@ async def run_persona_copilot(deps: GraphDeps, inputs: dict) -> GraphOutcome:
 
     d = final.get("disposition") or {}
     advisory = final.get("write_intent") is None
-    text = (f"Advisory: recommend disposition {d.get('disposition_code')} "
-            f"(severity {d.get('severity')}). {d.get('rationale', '')}" if advisory
-            else f"Proposed disposition {d.get('disposition_code')} "
-                 f"(severity {d.get('severity')}) for approval.")
+    # Customer-relevant answer: the disposition's human label + plain-language
+    # rationale, never the raw code/severity token a person shouldn't have to read.
+    label = _disposition_label(d.get("disposition_code", ""), final.get("dispositions", []))
+    priority = str(d.get("severity", "medium")).capitalize()
+    text = (f'I recommend resolving this claim as "{label}" ({priority} priority). '
+            f"{d.get('rationale', '')}" if advisory
+            else f'I\'ve proposed resolving this claim as "{label}" ({priority} priority) '
+                 f"for a reviewer to approve. {d.get('rationale', '')}")
     text = text.strip()
     write_intent = final.get("write_intent")
 
@@ -229,10 +235,15 @@ async def run_persona_copilot(deps: GraphDeps, inputs: dict) -> GraphOutcome:
             d = {**d, "rationale": redact_text(str(d["rationale"]))}
         if write_intent is not None:
             write_intent.rationale = redact_text(write_intent.rationale or "")
-            summary = (write_intent.predicted_effect or {}).get("summary")
-            if summary:
-                write_intent.predicted_effect = {
-                    **write_intent.predicted_effect, "summary": redact_text(str(summary))}
+            pe = dict(write_intent.predicted_effect or {})
+            if pe.get("summary"):
+                pe["summary"] = redact_text(str(pe["summary"]))
+            if pe.get("citations"):
+                # Citation details are quoted straight from evidence — scrub any
+                # direct identifiers they carry before the proposal is shown.
+                pe["citations"] = [{**c, "detail": redact_text(str(c.get("detail", "")))}
+                                   for c in pe["citations"]]
+            write_intent.predicted_effect = pe
 
     return GraphOutcome(
         final_text=text,

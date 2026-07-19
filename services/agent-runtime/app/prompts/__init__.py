@@ -25,10 +25,10 @@ from importlib.resources import files
 # prompt id -> semantic version. Bump on a material edit to the .md; the content
 # digest is derived automatically and is the real drift signal.
 VERSIONS: dict[str, int] = {
-    "triage.system": 1,
+    "triage.system": 2,
     "analytics.system": 1,
     "governance.system": 1,
-    "persona_copilot.system": 1,
+    "persona_copilot.system": 2,
     "dashboard_designer.system": 1,
     "inference.system": 1,
     "meta_router.system": 1,
