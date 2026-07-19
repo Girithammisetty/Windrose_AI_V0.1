@@ -60,6 +60,13 @@ class RecordingClient:
         self._record("cases", identity, "create", dataset_urn, f"{len(rows)}")
         return ["c-1"]
 
+    def ensure_ontology_entity(self, identity, entity_key, name,
+                               attributes=None, relationships=None, description=""):
+        self.calls.append(("ontology", entity_key, name,
+                           len(attributes or []), len(relationships or [])))
+        self._record("ontology", identity, "create", None, entity_key)
+        return entity_key
+
 
 def _write_pack(tmp_path: Path) -> Path:
     (tmp_path / "pack.yaml").write_text(textwrap.dedent("""
@@ -80,7 +87,7 @@ def _write_pack(tmp_path: Path) -> Path:
           decision_models:
             - { file: "decisions.yaml", identity: "triage_table" }
         deferred:
-          - { kind: ontology, reason: "not in core" }
+          - { kind: connection_templates, reason: "not in core" }
     """))
     (tmp_path / "decisions.yaml").write_text(textwrap.dedent("""
         - identity: triage_table
@@ -145,7 +152,7 @@ def test_ledger_records_actions_and_deferred(tmp_path):
     ledger = json.loads(result.ledger_path.read_text())
     assert ledger["result"] == "installed"
     assert ledger["pack"] == "order-test"
-    assert ledger["deferred"][0]["kind"] == "ontology"
+    assert ledger["deferred"][0]["kind"] == "connection_templates"
     assert any(a["kind"] == "datasets" and a["action"] == "create"
                for a in ledger["actions"])
 
@@ -164,3 +171,42 @@ def test_failure_stops_install_and_marks_ledger_failed(tmp_path):
 def test_install_order_constant_is_complete():
     from packctl.manifest import SUPPORTED_KINDS
     assert set(INSTALL_ORDER) == set(SUPPORTED_KINDS)
+
+
+def test_ontology_component_materializes_entities(tmp_path):
+    """The ontology kind (inc11) installs each domain entity TYPE with its
+    attributes + typed relationships via ensure_ontology_entity."""
+    (tmp_path / "pack.yaml").write_text(textwrap.dedent("""
+        pack_manifest: 1
+        name: onto-test
+        version: 1.0.0
+        publisher: { id: pub-o, name: O }
+        description: "ontology install"
+        components:
+          ontology:
+            - { file: "ontology.yaml", identity: "onto" }
+    """))
+    (tmp_path / "ontology.yaml").write_text(textwrap.dedent("""
+        - entity_key: vendor
+          name: Vendor
+          description: "a supplier the org pays"
+          attributes:
+            - { name: vendor_id, data_type: string }
+            - { name: tin_verified, data_type: boolean }
+          relationships:
+            - { name: invoices, target: invoice, cardinality: has_many }
+        - entity_key: invoice
+          name: Invoice
+          description: "a bill from a vendor"
+          attributes:
+            - { name: amount, data_type: number }
+    """))
+    manifest = load_manifest(tmp_path)
+    client = RecordingClient()
+    result = install(manifest, client, ledger_dir=tmp_path / "ledgers")
+    assert result.ok
+    # both entity types materialized, with attribute/relationship counts intact
+    assert ("ontology", "vendor", "Vendor", 2, 1) in client.calls
+    assert ("ontology", "invoice", "Invoice", 1, 0) in client.calls
+    assert any(a["kind"] == "ontology" and a["action"] == "create"
+               and a["detail"] == "vendor" for a in client.actions)
