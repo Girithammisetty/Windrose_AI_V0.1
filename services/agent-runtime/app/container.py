@@ -359,7 +359,9 @@ def build_container(
         experiment_reader=experiment_reader, dataset_reader=dataset_reader,
         pipeline_reader=pipeline_reader, pipeline_writer=pipeline_writer,
         semantic_reader=semantic_reader,
-        catalog_reader=catalog_reader, settings=settings, transcripts=transcripts)
+        catalog_reader=catalog_reader, settings=settings, transcripts=transcripts,
+        kill_registry=kill_registry,
+        kill_poll_interval_s=settings.kill_poll_interval_s)
 
     from app.adapters.trainer import build_trainer
 

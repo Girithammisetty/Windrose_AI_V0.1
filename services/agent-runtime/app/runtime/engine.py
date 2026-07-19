@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from app.constants import TOPIC_AGENT_RUN
 from app.domain.entities import Run
+from app.domain.errors import AgentKilled
 from app.domain.urn import run_urn
 from app.events.envelope import make_envelope
 from app.graphs import GRAPH_RUNNERS, RUNNERS, GraphDeps
@@ -21,8 +22,13 @@ class RunEngine:
                  settings, evidence_reader=None, ingestion_reader=None,
                  experiment_reader=None,
                  dataset_reader=None, pipeline_reader=None, pipeline_writer=None,
-                 semantic_reader=None, catalog_reader=None, transcripts=None) -> None:
+                 semantic_reader=None, catalog_reader=None, transcripts=None,
+                 kill_registry=None, kill_poll_interval_s: float = 0.1) -> None:
         self._store = store
+        # Mid-execution kill switch (P1): when set, a run in flight is cancelled
+        # within ~kill_poll_interval_s of the switch being flagged. None → off.
+        self._kill_registry = kill_registry
+        self._kill_poll_interval_s = kill_poll_interval_s
         self._proposals = proposals
         self._bus = bus
         self._rt = realtime
@@ -155,9 +161,29 @@ class RunEngine:
         await self._store.update_run(run)
         await self.emit_run(run, "agent_run.started")
 
-        outcome = await self.run_graph(run, inputs, obo_token=obo_token,
-                                       prompt_params=prompt_params,
-                                       guardrail_policy=guardrail_policy)
+        graph_coro = self.run_graph(run, inputs, obo_token=obo_token,
+                                    prompt_params=prompt_params,
+                                    guardrail_policy=guardrail_policy)
+        if self._kill_registry is not None:
+            # Terminate the run mid-flight if the agent is killed while running
+            # (not just refuse the next one) — cancels the in-flight ai-gateway call.
+            from app.runtime.killrace import run_with_killswitch
+
+            async def _killed() -> bool:
+                return await self._kill_registry.is_killed(
+                    agent_key=run.agent_key, version=run.agent_version,
+                    tenant_id=run.tenant_id)
+            try:
+                outcome = await run_with_killswitch(
+                    graph_coro, is_killed=_killed,
+                    poll_interval=self._kill_poll_interval_s)
+            except AgentKilled:
+                run.status = "killed"
+                await self._store.update_run(run)
+                await self.emit_run(run, "agent_run.killed")
+                raise
+        else:
+            outcome = await graph_coro
         run.usage = outcome.usage or {}
         run.final_text = outcome.final_text
         summary: dict = {"final_text": outcome.final_text, "usage": run.usage,

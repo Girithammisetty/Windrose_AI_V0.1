@@ -93,6 +93,9 @@ class Settings(BaseSettings):
     # eval-service (P1 publish gate): verifies an agent version's eval-gate result
     # genuinely PASSED before the version can be published.
     eval_service_url: str = "http://localhost:8310"
+    # Mid-execution kill switch (P1): how often a running agent polls the kill
+    # registry so it can be terminated in-flight, not just refused at start.
+    kill_poll_interval_s: float = 0.1
 
     # rbac-service (resolve the CALLER's roles/capabilities so the copilot can
     # ground its persona/tone in the invoking user's role — GET /me/capabilities
