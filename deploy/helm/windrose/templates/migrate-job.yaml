@@ -50,6 +50,12 @@ spec:
                 name: windrose-config
             - secretRef:
                 name: {{ $root.Values.secrets.name }}
+          {{- /* Same per-service env as the Deployment so the migration job
+                 resolves the right MIGRATE DSN (admin role) for this service. */}}
+          {{- with $svc.env }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           resources:
             {{- toYaml (default $root.Values._resourceTiers.small $svc.resources) | nindent 12 }}
           securityContext:

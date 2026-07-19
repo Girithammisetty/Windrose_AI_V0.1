@@ -42,6 +42,14 @@ spec:
                 name: windrose-config
             - secretRef:
                 name: {{ $root.Values.secrets.name }}
+          {{- /* Per-service env: maps the exact var names THIS service reads
+                 (Go = unprefixed DATABASE_URL/REDIS_ADDR/KAFKA_BROKERS; Python =
+                 <PREFIX>_ names) to the shared/per-service secret + config keys.
+                 env wins over envFrom, so each service gets its own DB DSN. */}}
+          {{- with $svc.env }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           startupProbe:
             httpGet:
               path: {{ include "windrose.readyPath" (dict "svc" $svc) }}

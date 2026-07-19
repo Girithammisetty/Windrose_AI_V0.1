@@ -118,10 +118,15 @@ externalSecrets:
   remoteKeyPrefix: windrose/prod
   # Keys to pull from the store into windrose-secrets. Mirrors deploy/CONFIG.md.
   keys:
+    # Postgres endpoint components (admin/DDL role) — informational; the chart no
+    # longer composes DSNs. Per-service FULL DSNs are provided below instead.
     - POSTGRES_HOST
     - POSTGRES_PORT
     - POSTGRES_ADMIN_USER
     - POSTGRES_ADMIN_PASSWORD
+    # Redis — BOTH forms: REDIS_ADDR (bare host:port, Go services) and REDIS_URL
+    # (redis[s]:// URL, Python services). See deploy/CONFIG.md.
+    - REDIS_ADDR
     - REDIS_URL
     - KAFKA_BOOTSTRAP
     - KAFKA_SASL_USERNAME
@@ -143,8 +148,57 @@ externalSecrets:
     - SMTP_PASSWORD
     - OPENAI_API_KEY
     - ANTHROPIC_API_KEY
+    # ClickHouse (audit-service): reads CLICKHOUSE_ADDR/USER/PASSWORD (host:port,
+    # not a URL). CLICKHOUSE_URL kept for any URL-shaped consumer.
     - CLICKHOUSE_URL
+    - CLICKHOUSE_ADDR
+    - CLICKHOUSE_USER
     - CLICKHOUSE_PASSWORD
+    # --- Per-service Postgres DSNs (one runtime NOBYPASSRLS app-role DSN +
+    # one admin/DDL migrate DSN per database). The chart injects each into ONLY
+    # the service(s) that own it via services[].env, so every service gets a
+    # distinct DB + role. <DBKEY>: 20 distinct databases (tool-registry and
+    # mcp-gateway share TOOL_PLANE; pack-service is not deployed by this chart).
+    - IDENTITY_DATABASE_URL
+    - IDENTITY_MIGRATE_URL
+    - RBAC_DATABASE_URL
+    - RBAC_MIGRATE_URL
+    - CASE_DATABASE_URL
+    - CASE_MIGRATE_URL
+    - CHART_DATABASE_URL
+    - CHART_MIGRATE_URL
+    - QUERY_DATABASE_URL
+    - QUERY_MIGRATE_URL
+    - TOOL_PLANE_DATABASE_URL
+    - TOOL_PLANE_MIGRATE_URL
+    - USAGE_DATABASE_URL
+    - USAGE_MIGRATE_URL
+    - AUDIT_DATABASE_URL
+    - AUDIT_MIGRATE_URL
+    - NOTIFICATION_DATABASE_URL
+    - NOTIFICATION_MIGRATE_URL
+    - REALTIME_HUB_DATABASE_URL
+    - REALTIME_HUB_MIGRATE_URL
+    - INGESTION_DATABASE_URL
+    - INGESTION_MIGRATE_URL
+    - DATASET_DATABASE_URL
+    - DATASET_MIGRATE_URL
+    - AGENT_RUNTIME_DATABASE_URL
+    - AGENT_RUNTIME_MIGRATE_URL
+    - MEMORY_DATABASE_URL
+    - MEMORY_MIGRATE_URL
+    - AI_GATEWAY_DATABASE_URL
+    - AI_GATEWAY_MIGRATE_URL
+    - PIPELINE_DATABASE_URL
+    - PIPELINE_MIGRATE_URL
+    - EXPERIMENT_DATABASE_URL
+    - EXPERIMENT_MIGRATE_URL
+    - INFERENCE_DATABASE_URL
+    - INFERENCE_MIGRATE_URL
+    - SEMANTIC_DATABASE_URL
+    - SEMANTIC_MIGRATE_URL
+    - EVAL_DATABASE_URL
+    - EVAL_MIGRATE_URL
 
 # --- ServiceAccount ------------------------------------------------------------
 # Workload-identity annotations are cloud-specific (IRSA / GKE WI / AAD) — set in
@@ -253,6 +307,15 @@ _resourceTiers:
 #   health (readiness) default /readyz; liveness default /healthz
 #   dockerfile-derived image name == service name (CI pushes <registry>/<name>)
 services:
+  # --- Per-service env: maps the EXACT var name THIS service reads (Table A) to
+  # a key in windrose-secrets (secretKeyRef) or windrose-config (configMapKeyRef).
+  # `env` overrides `envFrom`, so each service gets its own DSN/Redis/Kafka even
+  # though the ConfigMap+Secret are shared. Go services read unprefixed
+  # DATABASE_URL/REDIS_ADDR/KAFKA_BROKERS; Python read <PREFIX>_*; ingestion is
+  # the one unprefixed Python service. OPA_URL/RBAC_URL/ICEBERG_*/KEYCLOAK_*/
+  # VAULT_* that a service reads UNPREFIXED already arrive via envFrom, so they
+  # get no entry here. (secret/config names are literal — keep in sync with
+  # secrets.name=windrose-secrets and the windrose-config ConfigMap.)
   - name: identity-service
     language: go
     port: 8301
@@ -260,6 +323,17 @@ services:
     ingress: internal
     replicas: 2
     resources: *res-medium
+    # Reads: DATABASE_URL, MIGRATE_DATABASE_URL, REDIS_ADDR, KAFKA_BROKERS.
+    # OPA_URL/RBAC_URL/KEYCLOAK_URL/KEYCLOAK_ADMIN_* arrive via envFrom.
+    env:
+      - name: DATABASE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: IDENTITY_DATABASE_URL } }
+      - name: MIGRATE_DATABASE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: IDENTITY_MIGRATE_URL } }
+      - name: REDIS_ADDR
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: REDIS_ADDR } }
+      - name: KAFKA_BROKERS
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: KAFKA_BOOTSTRAP } }
 
   - name: rbac-service
     language: go
@@ -268,6 +342,16 @@ services:
     ingress: internal
     replicas: 2
     resources: *res-medium
+    # Reads: DATABASE_URL, MIGRATE_DATABASE_URL, REDIS_ADDR, KAFKA_BROKERS.
+    env:
+      - name: DATABASE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: RBAC_DATABASE_URL } }
+      - name: MIGRATE_DATABASE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: RBAC_MIGRATE_URL } }
+      - name: REDIS_ADDR
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: REDIS_ADDR } }
+      - name: KAFKA_BROKERS
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: KAFKA_BOOTSTRAP } }
 
   - name: ingestion-service
     language: python
@@ -276,6 +360,21 @@ services:
     ingress: internal
     replicas: 1
     resources: *res-large
+    # UNPREFIXED Python service. Reads: DATABASE_URL, INGESTION_MIGRATE_URL,
+    # REDIS_URL, KAFKA_BOOTSTRAP_SERVERS, S3_ENDPOINT_URL. OPA_URL/RBAC_URL/
+    # VAULT_ADDR/VAULT_TOKEN/ICEBERG_CATALOG_URI arrive UNPREFIXED via envFrom.
+    # (S3 access/secret keys are NOT read from env by this service.)
+    env:
+      - name: DATABASE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: INGESTION_DATABASE_URL } }
+      - name: INGESTION_MIGRATE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: INGESTION_MIGRATE_URL } }
+      - name: REDIS_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: REDIS_URL } }
+      - name: KAFKA_BOOTSTRAP_SERVERS
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: KAFKA_BOOTSTRAP } }
+      - name: S3_ENDPOINT_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: OBJECTSTORE_ENDPOINT } }
 
   - name: dataset-service
     language: python
@@ -284,6 +383,32 @@ services:
     ingress: internal
     replicas: 1
     resources: *res-large
+    # Prefix DST_. Reads DB/migrate/redis/kafka/opa/rbac/s3(+region)/iceberg.
+    env:
+      - name: DST_DATABASE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: DATASET_DATABASE_URL } }
+      - name: DST_MIGRATE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: DATASET_MIGRATE_URL } }
+      - name: DST_REDIS_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: REDIS_URL } }
+      - name: DST_KAFKA_BOOTSTRAP_SERVERS
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: KAFKA_BOOTSTRAP } }
+      - name: DST_OPA_URL
+        valueFrom: { configMapKeyRef: { name: windrose-config, key: OPA_URL } }
+      - name: DST_RBAC_URL
+        valueFrom: { configMapKeyRef: { name: windrose-config, key: RBAC_URL } }
+      - name: DST_S3_ENDPOINT_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: OBJECTSTORE_ENDPOINT } }
+      - name: DST_S3_ACCESS_KEY
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: OBJECTSTORE_ACCESS_KEY } }
+      - name: DST_S3_SECRET_KEY
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: OBJECTSTORE_SECRET_KEY } }
+      - name: DST_S3_REGION
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: OBJECTSTORE_REGION } }
+      - name: DST_ICEBERG_CATALOG_URI
+        valueFrom: { configMapKeyRef: { name: windrose-config, key: ICEBERG_CATALOG_URI } }
+      - name: DST_ICEBERG_WAREHOUSE
+        valueFrom: { configMapKeyRef: { name: windrose-config, key: ICEBERG_WAREHOUSE } }
 
   - name: realtime-hub
     language: go
@@ -292,6 +417,16 @@ services:
     ingress: internal
     replicas: 2
     resources: *res-medium
+    # Reads: DATABASE_URL, MIGRATE_DATABASE_URL, REDIS_ADDR, KAFKA_BROKERS.
+    env:
+      - name: DATABASE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: REALTIME_HUB_DATABASE_URL } }
+      - name: MIGRATE_DATABASE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: REALTIME_HUB_MIGRATE_URL } }
+      - name: REDIS_ADDR
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: REDIS_ADDR } }
+      - name: KAFKA_BROKERS
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: KAFKA_BOOTSTRAP } }
 
   - name: agent-runtime
     language: python
@@ -300,6 +435,23 @@ services:
     ingress: internal
     replicas: 1
     resources: *res-large
+    # Prefix AR_. Reads AR_DATABASE_URL, AR_ADMIN_DATABASE_URL (privileged DDL),
+    # AR_MIGRATE_URL, AR_REDIS_URL, AR_KAFKA_BOOTSTRAP_SERVERS, AR_OPA_URL.
+    # NOTE: agent-runtime has NO rbac_url field — no AR_RBAC_URL entry.
+    # ADMIN + MIGRATE both point at the privileged (migrate) DSN.
+    env:
+      - name: AR_DATABASE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: AGENT_RUNTIME_DATABASE_URL } }
+      - name: AR_ADMIN_DATABASE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: AGENT_RUNTIME_MIGRATE_URL } }
+      - name: AR_MIGRATE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: AGENT_RUNTIME_MIGRATE_URL } }
+      - name: AR_REDIS_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: REDIS_URL } }
+      - name: AR_KAFKA_BOOTSTRAP_SERVERS
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: KAFKA_BOOTSTRAP } }
+      - name: AR_OPA_URL
+        valueFrom: { configMapKeyRef: { name: windrose-config, key: OPA_URL } }
 
   - name: memory-service
     language: python
@@ -308,6 +460,23 @@ services:
     ingress: internal
     replicas: 1
     resources: *res-medium
+    # Prefix MEM_. Reads MEM_DATABASE_URL, MEM_ADMIN_DATABASE_URL, MEM_MIGRATE_URL,
+    # MEM_REDIS_URL, MEM_KAFKA_BOOTSTRAP_SERVERS, MEM_OPA_URL, MEM_RBAC_URL.
+    env:
+      - name: MEM_DATABASE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: MEMORY_DATABASE_URL } }
+      - name: MEM_ADMIN_DATABASE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: MEMORY_MIGRATE_URL } }
+      - name: MEM_MIGRATE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: MEMORY_MIGRATE_URL } }
+      - name: MEM_REDIS_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: REDIS_URL } }
+      - name: MEM_KAFKA_BOOTSTRAP_SERVERS
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: KAFKA_BOOTSTRAP } }
+      - name: MEM_OPA_URL
+        valueFrom: { configMapKeyRef: { name: windrose-config, key: OPA_URL } }
+      - name: MEM_RBAC_URL
+        valueFrom: { configMapKeyRef: { name: windrose-config, key: RBAC_URL } }
 
   - name: case-service
     language: go
@@ -316,6 +485,23 @@ services:
     ingress: internal
     replicas: 2
     resources: *res-medium
+    # Reads DATABASE_URL, MIGRATE_DATABASE_URL, REDIS_ADDR, KAFKA_BROKERS,
+    # MINIO_ENDPOINT/MINIO_ACCESS_KEY/MINIO_SECRET_KEY.
+    env:
+      - name: DATABASE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: CASE_DATABASE_URL } }
+      - name: MIGRATE_DATABASE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: CASE_MIGRATE_URL } }
+      - name: REDIS_ADDR
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: REDIS_ADDR } }
+      - name: KAFKA_BROKERS
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: KAFKA_BOOTSTRAP } }
+      - name: MINIO_ENDPOINT
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: OBJECTSTORE_ENDPOINT } }
+      - name: MINIO_ACCESS_KEY
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: OBJECTSTORE_ACCESS_KEY } }
+      - name: MINIO_SECRET_KEY
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: OBJECTSTORE_SECRET_KEY } }
 
   - name: tool-registry
     language: go
@@ -324,6 +510,17 @@ services:
     ingress: internal
     replicas: 1
     resources: *res-small
+    # tool-plane cmd/registry. DBKEY=TOOL_PLANE (shared with mcp-gateway).
+    # Reads DATABASE_URL, MIGRATE_DATABASE_URL, REDIS_ADDR, KAFKA_BROKERS.
+    env:
+      - name: DATABASE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: TOOL_PLANE_DATABASE_URL } }
+      - name: MIGRATE_DATABASE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: TOOL_PLANE_MIGRATE_URL } }
+      - name: REDIS_ADDR
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: REDIS_ADDR } }
+      - name: KAFKA_BROKERS
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: KAFKA_BOOTSTRAP } }
 
   - name: mcp-gateway
     language: go
@@ -332,6 +529,17 @@ services:
     ingress: internal
     replicas: 2
     resources: *res-medium
+    # tool-plane cmd/gateway. DBKEY=TOOL_PLANE (shared with tool-registry).
+    # Reads DATABASE_URL, MIGRATE_DATABASE_URL, REDIS_ADDR, KAFKA_BROKERS.
+    env:
+      - name: DATABASE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: TOOL_PLANE_DATABASE_URL } }
+      - name: MIGRATE_DATABASE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: TOOL_PLANE_MIGRATE_URL } }
+      - name: REDIS_ADDR
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: REDIS_ADDR } }
+      - name: KAFKA_BROKERS
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: KAFKA_BOOTSTRAP } }
 
   - name: ai-gateway
     language: python
@@ -340,6 +548,27 @@ services:
     ingress: internal
     replicas: 2
     resources: *res-large
+    # Prefix AIG_. Reads AIG_DATABASE_URL, AIG_MIGRATE_URL, AIG_REDIS_URL,
+    # AIG_KAFKA_BOOTSTRAP_SERVERS, AIG_OPA_URL, AIG_RBAC_URL. Provider API keys
+    # are per-deployment (own store), NOT read from process env — none mapped.
+    # AIG_OLLAMA_BASE_URL points ai-gateway's OpenAI-compatible client at the
+    # in-cluster Ollama; the base MUST include /v1 (provider appends
+    # /chat/completions). The shared OLLAMA_BASE_URL has no /v1, so set explicitly.
+    env:
+      - name: AIG_OLLAMA_BASE_URL
+        value: http://ollama:11434/v1
+      - name: AIG_DATABASE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: AI_GATEWAY_DATABASE_URL } }
+      - name: AIG_MIGRATE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: AI_GATEWAY_MIGRATE_URL } }
+      - name: AIG_REDIS_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: REDIS_URL } }
+      - name: AIG_KAFKA_BOOTSTRAP_SERVERS
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: KAFKA_BOOTSTRAP } }
+      - name: AIG_OPA_URL
+        valueFrom: { configMapKeyRef: { name: windrose-config, key: OPA_URL } }
+      - name: AIG_RBAC_URL
+        valueFrom: { configMapKeyRef: { name: windrose-config, key: RBAC_URL } }
 
   - name: pipeline-orchestrator
     language: python
@@ -348,6 +577,28 @@ services:
     ingress: internal
     replicas: 1
     resources: *res-large
+    # Prefix PPL_. Reads DB/migrate/redis/kafka/opa/rbac/s3(+region).
+    env:
+      - name: PPL_DATABASE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: PIPELINE_DATABASE_URL } }
+      - name: PPL_MIGRATE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: PIPELINE_MIGRATE_URL } }
+      - name: PPL_REDIS_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: REDIS_URL } }
+      - name: PPL_KAFKA_BOOTSTRAP_SERVERS
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: KAFKA_BOOTSTRAP } }
+      - name: PPL_OPA_URL
+        valueFrom: { configMapKeyRef: { name: windrose-config, key: OPA_URL } }
+      - name: PPL_RBAC_URL
+        valueFrom: { configMapKeyRef: { name: windrose-config, key: RBAC_URL } }
+      - name: PPL_S3_ENDPOINT_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: OBJECTSTORE_ENDPOINT } }
+      - name: PPL_S3_ACCESS_KEY
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: OBJECTSTORE_ACCESS_KEY } }
+      - name: PPL_S3_SECRET_KEY
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: OBJECTSTORE_SECRET_KEY } }
+      - name: PPL_S3_REGION
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: OBJECTSTORE_REGION } }
 
   - name: experiment-service
     language: python
@@ -356,6 +607,28 @@ services:
     ingress: internal
     replicas: 1
     resources: *res-medium
+    # Prefix EXP_. Reads DB/migrate/redis/kafka/opa/rbac/s3(+region).
+    env:
+      - name: EXP_DATABASE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: EXPERIMENT_DATABASE_URL } }
+      - name: EXP_MIGRATE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: EXPERIMENT_MIGRATE_URL } }
+      - name: EXP_REDIS_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: REDIS_URL } }
+      - name: EXP_KAFKA_BOOTSTRAP_SERVERS
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: KAFKA_BOOTSTRAP } }
+      - name: EXP_OPA_URL
+        valueFrom: { configMapKeyRef: { name: windrose-config, key: OPA_URL } }
+      - name: EXP_RBAC_URL
+        valueFrom: { configMapKeyRef: { name: windrose-config, key: RBAC_URL } }
+      - name: EXP_S3_ENDPOINT_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: OBJECTSTORE_ENDPOINT } }
+      - name: EXP_S3_ACCESS_KEY
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: OBJECTSTORE_ACCESS_KEY } }
+      - name: EXP_S3_SECRET_KEY
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: OBJECTSTORE_SECRET_KEY } }
+      - name: EXP_S3_REGION
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: OBJECTSTORE_REGION } }
 
   - name: inference-service
     language: python
@@ -364,6 +637,28 @@ services:
     ingress: internal
     replicas: 2
     resources: *res-large
+    # Prefix INF_. Reads DB/migrate/redis/kafka/opa/rbac/s3(+region).
+    env:
+      - name: INF_DATABASE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: INFERENCE_DATABASE_URL } }
+      - name: INF_MIGRATE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: INFERENCE_MIGRATE_URL } }
+      - name: INF_REDIS_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: REDIS_URL } }
+      - name: INF_KAFKA_BOOTSTRAP_SERVERS
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: KAFKA_BOOTSTRAP } }
+      - name: INF_OPA_URL
+        valueFrom: { configMapKeyRef: { name: windrose-config, key: OPA_URL } }
+      - name: INF_RBAC_URL
+        valueFrom: { configMapKeyRef: { name: windrose-config, key: RBAC_URL } }
+      - name: INF_S3_ENDPOINT_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: OBJECTSTORE_ENDPOINT } }
+      - name: INF_S3_ACCESS_KEY
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: OBJECTSTORE_ACCESS_KEY } }
+      - name: INF_S3_SECRET_KEY
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: OBJECTSTORE_SECRET_KEY } }
+      - name: INF_S3_REGION
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: OBJECTSTORE_REGION } }
 
   - name: query-service
     language: go
@@ -372,6 +667,23 @@ services:
     ingress: internal
     replicas: 2
     resources: *res-medium
+    # Reads DATABASE_URL, MIGRATE_DATABASE_URL, REDIS_ADDR, KAFKA_BROKERS,
+    # S3_ENDPOINT, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY.
+    env:
+      - name: DATABASE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: QUERY_DATABASE_URL } }
+      - name: MIGRATE_DATABASE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: QUERY_MIGRATE_URL } }
+      - name: REDIS_ADDR
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: REDIS_ADDR } }
+      - name: KAFKA_BROKERS
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: KAFKA_BOOTSTRAP } }
+      - name: S3_ENDPOINT
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: OBJECTSTORE_ENDPOINT } }
+      - name: AWS_ACCESS_KEY_ID
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: OBJECTSTORE_ACCESS_KEY } }
+      - name: AWS_SECRET_ACCESS_KEY
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: OBJECTSTORE_SECRET_KEY } }
 
   - name: semantic-service
     language: python
@@ -380,6 +692,20 @@ services:
     ingress: internal
     replicas: 1
     resources: *res-medium
+    # Prefix SEM_. Reads DB/migrate/redis/kafka/opa/rbac.
+    env:
+      - name: SEM_DATABASE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: SEMANTIC_DATABASE_URL } }
+      - name: SEM_MIGRATE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: SEMANTIC_MIGRATE_URL } }
+      - name: SEM_REDIS_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: REDIS_URL } }
+      - name: SEM_KAFKA_BOOTSTRAP_SERVERS
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: KAFKA_BOOTSTRAP } }
+      - name: SEM_OPA_URL
+        valueFrom: { configMapKeyRef: { name: windrose-config, key: OPA_URL } }
+      - name: SEM_RBAC_URL
+        valueFrom: { configMapKeyRef: { name: windrose-config, key: RBAC_URL } }
 
   - name: chart-service
     language: go
@@ -388,6 +714,17 @@ services:
     ingress: internal
     replicas: 1
     resources: *res-small
+    # Reads DATABASE_URL, MIGRATE_DATABASE_URL, REDIS_ADDR, KAFKA_BROKERS.
+    # (Exports to local FS EXPORT_ROOT — no object store.)
+    env:
+      - name: DATABASE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: CHART_DATABASE_URL } }
+      - name: MIGRATE_DATABASE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: CHART_MIGRATE_URL } }
+      - name: REDIS_ADDR
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: REDIS_ADDR } }
+      - name: KAFKA_BROKERS
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: KAFKA_BOOTSTRAP } }
 
   - name: usage-service
     language: go
@@ -396,6 +733,17 @@ services:
     ingress: internal
     replicas: 1
     resources: *res-small
+    # Reads DATABASE_URL, MIGRATE_DATABASE_URL, REDIS_ADDR, KAFKA_BROKERS.
+    # (Does NOT read ClickHouse — only audit-service does.)
+    env:
+      - name: DATABASE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: USAGE_DATABASE_URL } }
+      - name: MIGRATE_DATABASE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: USAGE_MIGRATE_URL } }
+      - name: REDIS_ADDR
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: REDIS_ADDR } }
+      - name: KAFKA_BROKERS
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: KAFKA_BOOTSTRAP } }
 
   - name: audit-service
     language: go
@@ -404,6 +752,29 @@ services:
     ingress: internal
     replicas: 1
     resources: *res-small
+    # Reads DATABASE_URL, ADMIN_DATABASE_URL (its migrations DSN), REDIS_ADDR,
+    # KAFKA_BROKERS, MINIO_*, CLICKHOUSE_ADDR/USER/PASSWORD.
+    env:
+      - name: DATABASE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: AUDIT_DATABASE_URL } }
+      - name: ADMIN_DATABASE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: AUDIT_MIGRATE_URL } }
+      - name: REDIS_ADDR
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: REDIS_ADDR } }
+      - name: KAFKA_BROKERS
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: KAFKA_BOOTSTRAP } }
+      - name: MINIO_ENDPOINT
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: OBJECTSTORE_ENDPOINT } }
+      - name: MINIO_ACCESS_KEY
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: OBJECTSTORE_ACCESS_KEY } }
+      - name: MINIO_SECRET_KEY
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: OBJECTSTORE_SECRET_KEY } }
+      - name: CLICKHOUSE_ADDR
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: CLICKHOUSE_ADDR } }
+      - name: CLICKHOUSE_USER
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: CLICKHOUSE_USER } }
+      - name: CLICKHOUSE_PASSWORD
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: CLICKHOUSE_PASSWORD } }
 
   - name: notification-service
     language: go
@@ -412,6 +783,17 @@ services:
     ingress: internal
     replicas: 1
     resources: *res-small
+    # Reads DATABASE_URL, MIGRATE_DATABASE_URL, REDIS_ADDR, KAFKA_BROKERS.
+    # (SMTP_*/SENDGRID_API_KEY etc. arrive via envFrom shared secret.)
+    env:
+      - name: DATABASE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: NOTIFICATION_DATABASE_URL } }
+      - name: MIGRATE_DATABASE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: NOTIFICATION_MIGRATE_URL } }
+      - name: REDIS_ADDR
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: REDIS_ADDR } }
+      - name: KAFKA_BROKERS
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: KAFKA_BOOTSTRAP } }
 
   - name: eval-service
     language: python
@@ -420,6 +802,21 @@ services:
     ingress: internal
     replicas: 1
     resources: *res-medium
+    # Prefix EVAL_. Reads DB/migrate/redis/kafka/opa/rbac. (var name == secret key
+    # for DATABASE/MIGRATE since PREFIX and DBKEY are both EVAL.)
+    env:
+      - name: EVAL_DATABASE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: EVAL_DATABASE_URL } }
+      - name: EVAL_MIGRATE_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: EVAL_MIGRATE_URL } }
+      - name: EVAL_REDIS_URL
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: REDIS_URL } }
+      - name: EVAL_KAFKA_BOOTSTRAP_SERVERS
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: KAFKA_BOOTSTRAP } }
+      - name: EVAL_OPA_URL
+        valueFrom: { configMapKeyRef: { name: windrose-config, key: OPA_URL } }
+      - name: EVAL_RBAC_URL
+        valueFrom: { configMapKeyRef: { name: windrose-config, key: RBAC_URL } }
 
   - name: bff-graphql
     language: node
