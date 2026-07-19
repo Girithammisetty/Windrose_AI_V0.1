@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter, Body, Request
 
 from app.api.auth import is_operator, principal_of
@@ -20,6 +22,7 @@ from app.graphs.base import graph_digest
 from app.signing import build_card, sign_card
 
 router = APIRouter(prefix="/api/v1/registry")
+logger = logging.getLogger("agent-runtime.registry")
 
 
 def _require_operator(principal):
@@ -152,12 +155,25 @@ async def publish_version(request: Request, agent_key: str, version: int,
     v = await c.store.get_agent_version(agent_key, version)
     if v is None:
         raise NotFound("version not found")
-    # Publish gate (ART-FR-060, AC-8): a passing eval gate result is required
-    # unless an operator force is supplied with a reason.
-    if not v.eval_gate_result_id and not body.get("force"):
-        raise EvalGateFailed("no passing eval-gate result attached to this version")
-    if body.get("force") and not body.get("reason"):
-        raise EvalGateFailed("force publish requires a reason")
+    # Publish gate (ART-FR-060, AC-8; P1 hardening): the attached eval-gate result
+    # must GENUINELY have passed in eval-service — a null/placeholder/failed gate id
+    # can no longer authorize a publish. An operator may still force publish with an
+    # explicit reason (audited via a WARN + emitted event), the sole escape hatch.
+    if body.get("force"):
+        if not body.get("reason"):
+            raise EvalGateFailed("force publish requires a reason")
+        logger.warning(
+            "agent version published via FORCE — eval gate BYPASSED: agent=%s v=%s "
+            "by=%s reason=%s", agent_key, version, getattr(principal, "sub", "?"),
+            body.get("reason"))
+    else:
+        token = request.headers.get("authorization", "").removeprefix("Bearer ").strip()
+        verdict = await c.eval_gate.verify(v.eval_gate_result_id or "", auth_token=token)
+        if not verdict.passed:
+            raise EvalGateFailed(
+                "publish requires an eval-gate result that eval-service confirms passed "
+                f"(gate={v.eval_gate_result_id!r} found={verdict.found} passed={verdict.passed}); "
+                "run the eval suite for this version or force with a reason")
     d = await c.store.get_agent_definition(agent_key)
     card = build_card(agent_key=agent_key, version=version, display_name=d.display_name,
                       description=d.description, write_mode=d.default_write_mode,

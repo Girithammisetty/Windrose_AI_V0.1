@@ -299,6 +299,26 @@ class FakeEvidenceReader:
         return list(self._docs)
 
 
+class FakeEvalGate:
+    """Eval-gate verifier double. ``passing`` = the set of gate ids that count as a
+    genuine pass; ``None`` (default) means any non-empty id passes (bootstrap/dev).
+    Set ``passing=set()`` to reject everything (simulate no real passing gate)."""
+
+    def __init__(self, passing: set[str] | None = None) -> None:
+        self.passing = passing
+        self.calls: list[str] = []
+
+    async def verify(self, gate_run_id: str, *, auth_token: str):
+        from app.adapters.eval_gate import VerifyResult
+        self.calls.append(gate_run_id)
+        if not gate_run_id:
+            return VerifyResult(found=False, passed=False)
+        if self.passing is None:
+            return VerifyResult(found=True, passed=True)
+        ok = gate_run_id in self.passing
+        return VerifyResult(found=ok, passed=ok)
+
+
 class NoopRealtime:
     def __init__(self) -> None:
         self.events: list[dict] = []

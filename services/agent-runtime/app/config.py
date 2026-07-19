@@ -90,6 +90,9 @@ class Settings(BaseSettings):
 
     # case-service (read a claim case to triage; plain REST at :8308).
     case_service_url: str = "http://localhost:8308"
+    # eval-service (P1 publish gate): verifies an agent version's eval-gate result
+    # genuinely PASSED before the version can be published.
+    eval_service_url: str = "http://localhost:8310"
 
     # rbac-service (resolve the CALLER's roles/capabilities so the copilot can
     # ground its persona/tone in the invoking user's role — GET /me/capabilities

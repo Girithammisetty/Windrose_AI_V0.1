@@ -50,6 +50,7 @@ class Container:
     transcripts: Any = None
     session_proj: Any = None
     trainer: Any = None
+    eval_gate: Any = None
     extras: dict = field(default_factory=dict)
 
 
@@ -76,6 +77,7 @@ def build_container(
     authz=None,
     kill_registry=None,
     session_proj=None,
+    eval_gate=None,
 ) -> Container:
     settings = settings or Settings()
     real = settings.use_real_adapters
@@ -239,6 +241,17 @@ def build_container(
             from app.adapters.fakes import FakeEvidenceReader
             evidence_reader = FakeEvidenceReader()
 
+    # eval-gate verifier (P1): confirms an agent version's attached eval-gate
+    # result genuinely PASSED in eval-service before publish. Fake in unit mode
+    # returns a configurable verdict (default: any non-empty gate id passes).
+    if eval_gate is None:
+        if real:
+            from app.adapters.eval_gate import EvalGateVerifier
+            eval_gate = EvalGateVerifier(settings.eval_service_url)
+        else:
+            from app.adapters.fakes import FakeEvalGate
+            eval_gate = FakeEvalGate()
+
     # ingestion-service reader (onboarding grounding: connector catalog + schema
     # preview)
     if ingestion_reader is None:
@@ -363,6 +376,7 @@ def build_container(
         proposal_service=proposal_service, run_engine=run_engine,
         transcripts=transcripts, session_proj=session_proj,
         trainer=build_trainer(settings.slm_trainer_backend),
+        eval_gate=eval_gate,
         extras={"mode": mode, "engines": engines,
                 # exposed for the outbox relay (app.main lifespan)
                 "session_factory": session_factory})
