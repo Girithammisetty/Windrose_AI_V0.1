@@ -83,7 +83,7 @@ class GatewayService:
                  admission: AdmissionController, router: Router,
                  breaker: CircuitBreaker, provider: ProviderClient,
                  prices: PriceTable, tracer: Tracer, metrics, usage_recorder: UsageRecorder,
-                 anomaly=None, sleeper=None):
+                 anomaly=None, sleeper=None, spend_guard=None):
         self.uow_factory = uow_factory
         self.settings = settings
         self.clock = clock
@@ -101,6 +101,8 @@ class GatewayService:
         self.usage_recorder = usage_recorder
         self.anomaly = anomaly
         self.sleeper = sleeper or _default_sleeper
+        # Spend kill-switch (P2): instant operator freeze, checked before any spend.
+        self.spend_guard = spend_guard
 
     # ================================================================== chat
 
@@ -113,6 +115,14 @@ class GatewayService:
         stream = bool(body.get("stream"))
         stream_acquired = False
         try:
+            # Spend kill-switch (P2): reject instantly if a platform/tenant freeze is
+            # active — before admission or any provider spend.
+            if self.spend_guard is not None:
+                try:
+                    await self.spend_guard.check(ctx.tenant_id)
+                except AppError:
+                    span.set_attribute("windrose.rejected_stage", "spend_freeze")
+                    raise
             messages = self._validate_chat_body(ctx, body, span)
             prompt_tokens_est = sum(
                 estimate_tokens(m["content"]) for m in messages
@@ -488,6 +498,12 @@ class GatewayService:
         span.set_attribute("windrose.price_version", self.prices.version)
         started = self.clock.now()
         try:
+            if self.spend_guard is not None:
+                try:
+                    await self.spend_guard.check(ctx.tenant_id)
+                except AppError:
+                    span.set_attribute("windrose.rejected_stage", "spend_freeze")
+                    raise
             inputs = body.get("input")
             if isinstance(inputs, str):
                 inputs = [inputs]

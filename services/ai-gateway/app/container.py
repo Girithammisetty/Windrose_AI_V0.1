@@ -74,6 +74,7 @@ class Container:
     authz: Any
     memory_state: MemoryState | None = None
     outbox_dispatcher: Any = None
+    spend_guard: Any = None
     extras: dict = field(default_factory=dict)
 
     async def emit_event(self, tenant_id: str, event_type: str, payload: dict) -> None:
@@ -205,12 +206,20 @@ def build_container(
     reconciler = UsageReconciler(usage_recorder, settings, emit_event)
     anomaly = SpendAnomalyDetector(clock, settings, emit_event)
 
+    # Spend kill-switch (P2): Redis-backed freeze store on the hot path (instant,
+    # checked every request) with an in-memory double for unit/dev.
+    from app.adapters.freeze import InMemoryFreezeStore, RedisFreezeStore
+    from app.domain.freeze import SpendGuard
+    freeze_store = RedisFreezeStore(redis) if redis is not None else InMemoryFreezeStore()
+    spend_guard = SpendGuard(freeze_store)
+
     gateway = GatewayService(
         uow_factory=uow_factory, settings=settings, clock=clock,
         ladders=ladder_service, budgets=budget_engine, guardrails=guardrails,
         cache=cache, admission=admission, router=router, breaker=breaker,
         provider=provider_client, prices=prices, tracer=tracer, metrics=metrics,
         usage_recorder=usage_recorder, anomaly=anomaly, sleeper=sleeper,
+        spend_guard=spend_guard,
     )
     provider_admin = ProviderAdminService(uow_factory, settings, clock)
     prober = HealthProber(uow_factory, settings, provider_client, health)
@@ -238,6 +247,7 @@ def build_container(
         token_verifier=TokenVerifier(settings),
         authz=authz or _default_authz(settings, redis),
         memory_state=memory_state, outbox_dispatcher=outbox_dispatcher,
+        spend_guard=spend_guard,
     )
     container_holder["c"] = container
     return container

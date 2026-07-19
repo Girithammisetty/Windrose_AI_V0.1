@@ -29,6 +29,14 @@ class LadderCap(AppError):
     status, code = 403, "LADDER_CAP"
 
 
+class SpendFrozen(AppError):
+    """Operator spend kill-switch (freeze) is active for this scope — an instant,
+    out-of-band halt of all AI spend, distinct from the rolling budget windows.
+    402 Payment Required (billing/spend gate)."""
+
+    status, code = 402, "SPEND_FROZEN"
+
+
 class NotFound(AppError):
     status, code = 404, "NOT_FOUND"
 

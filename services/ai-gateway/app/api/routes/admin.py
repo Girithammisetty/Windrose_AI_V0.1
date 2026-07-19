@@ -199,6 +199,61 @@ async def _budget_owner_tenant(container, principal: Principal, scope_type: str)
     return principal.tenant_id
 
 
+# ------------------------------------------------------------- spend kill-switch
+class SpendFreezeCreate(BaseModel):
+    scope: str = Field(..., pattern="^(platform|tenant)$")
+    tenant_id: str | None = None
+    reason: str = Field(..., min_length=1)
+
+
+def _freeze_dict(f) -> dict:
+    return {"scope": f.scope, "reason": f.reason,
+            "frozen_by": f.set_by, "frozen_at": f.set_at}
+
+
+async def _freeze_scope(request: Request, principal, scope: str, tenant_id: str | None) -> str:
+    """Resolve + authorize the scope: platform freeze OR freezing a tenant other
+    than your own requires the platform operator."""
+    from app.domain.freeze import PLATFORM, tenant_scope
+    if scope == "platform":
+        if not await request.app.state.authz.allow(principal, "ai.platform.admin", None):
+            raise PermissionDenied("platform spend freeze requires the platform operator")
+        return PLATFORM
+    tid = tenant_id or principal.tenant_id
+    if tid != principal.tenant_id and not await request.app.state.authz.allow(
+            principal, "ai.platform.admin", None):
+        raise PermissionDenied("freezing another tenant requires the platform operator")
+    return tenant_scope(tid)
+
+
+@router.get("/spend-freezes")
+async def list_spend_freezes(request: Request):
+    await require("ai.budget.read")(request)
+    guard = request.app.state.container.spend_guard
+    return {"data": [_freeze_dict(f) for f in await guard.list()]}
+
+
+@router.post("/spend-freezes", status_code=201)
+async def create_spend_freeze(request: Request, body: SpendFreezeCreate):
+    principal = await require("ai.budget.write")(request)
+    container = request.app.state.container
+    scope = await _freeze_scope(request, principal, body.scope, body.tenant_id)
+    fz = await container.spend_guard.freeze(
+        scope, reason=body.reason, by=getattr(principal, "sub", "operator"),
+        at=container.clock.now().isoformat())
+    return {"data": _freeze_dict(fz)}
+
+
+@router.delete("/spend-freezes")
+async def clear_spend_freeze(request: Request, scope: str = Query(...),
+                             tenant_id: str | None = Query(None)):
+    principal = await require("ai.budget.write")(request)
+    container = request.app.state.container
+    resolved = await _freeze_scope(request, principal, scope, tenant_id)
+    cleared = await container.spend_guard.clear(resolved)
+    return {"data": {"scope": resolved, "cleared": cleared}}
+
+
 @router.get("/budgets")
 async def list_budgets(request: Request, limit: int = Query(50, le=200),
                        cursor: str | None = None,
