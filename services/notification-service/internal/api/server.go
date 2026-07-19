@@ -4,9 +4,9 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/windrose-ai/go-common/authjwt"
+	"github.com/windrose-ai/go-common/metricsx"
 	"github.com/windrose-ai/notification-service/internal/authz"
 	"github.com/windrose-ai/notification-service/internal/channels/email"
 	"github.com/windrose-ai/notification-service/internal/channels/webhook"
@@ -40,7 +40,10 @@ type Server struct {
 // Router builds the chi router (base path /api/v1, MASTER-FR-020).
 func (s *Server) Router() http.Handler {
 	r := chi.NewRouter()
-	r.Use(TraceMiddleware, RecoverMiddleware)
+	// RED metrics (MASTER-FR-050): real /metrics + per-request rate/errors/
+	// duration via the shared middleware, replacing the bare runtime-only stub.
+	metrics := metricsx.New("notification-service")
+	r.Use(TraceMiddleware, RecoverMiddleware, metrics.Middleware(chiRoutePattern))
 
 	// Health + metrics (MASTER-FR-051), unauthenticated.
 	r.Get("/healthz", func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusOK) })
@@ -57,7 +60,7 @@ func (s *Server) Router() http.Handler {
 		}
 		w.WriteHeader(http.StatusOK)
 	})
-	r.Handle("/metrics", promhttp.Handler())
+	r.Handle("/metrics", metrics.Handler())
 
 	// Provider status callbacks are authenticated by the provider's own signed
 	// payload (allowlisted per provider, BR-13), not by a Windrose JWT.
@@ -117,6 +120,17 @@ func (s *Server) Router() http.Handler {
 		r.With(s.RequireAction(authz.ActionSuppressionDelete)).Delete("/admin/suppressions", s.handleClearSuppression)
 	})
 	return r
+}
+
+// chiRoutePattern resolves the matched chi route template for a bounded metrics
+// route label (evaluated after routing), falling back to "other".
+func chiRoutePattern(r *http.Request) string {
+	if rc := chi.RouteContext(r.Context()); rc != nil {
+		if p := rc.RoutePattern(); p != "" {
+			return p
+		}
+	}
+	return "other"
 }
 
 func writeErrUnauth(w http.ResponseWriter, r *http.Request) {

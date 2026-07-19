@@ -7,8 +7,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 
+	"github.com/windrose-ai/go-common/metricsx"
 	"github.com/windrose-ai/usage-service/internal/authz"
 	"github.com/windrose-ai/usage-service/internal/domain"
 	"github.com/windrose-ai/usage-service/internal/events"
@@ -70,12 +70,16 @@ func (s *Server) GuardedActions() []string { return s.guarded }
 // Router builds the chi router with the full middleware stack and routes.
 func (s *Server) Router() http.Handler {
 	r := chi.NewRouter()
+	// RED metrics (MASTER-FR-050): real /metrics + per-request rate/errors/
+	// duration via the shared middleware, replacing the bare runtime-only stub.
+	metrics := metricsx.New("usage-service")
 	r.Use(TraceMiddleware)
 	r.Use(RecoverMiddleware)
+	r.Use(metrics.Middleware(chiRoutePattern))
 
 	r.Get("/healthz", func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusOK); _, _ = w.Write([]byte("ok")) })
 	r.Get("/readyz", s.handleReady)
-	r.Handle("/metrics", promhttp.Handler())
+	r.Handle("/metrics", metrics.Handler())
 
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Use(AuthMiddleware(s.Verifier))
@@ -106,6 +110,17 @@ func (s *Server) Router() http.Handler {
 	})
 
 	return r
+}
+
+// chiRoutePattern resolves the matched chi route template for a bounded metrics
+// route label (evaluated after routing), falling back to "other".
+func chiRoutePattern(r *http.Request) string {
+	if rc := chi.RouteContext(r.Context()); rc != nil {
+		if p := rc.RoutePattern(); p != "" {
+			return p
+		}
+	}
+	return "other"
 }
 
 func (s *Server) handleReady(w http.ResponseWriter, r *http.Request) {

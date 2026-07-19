@@ -8,10 +8,9 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/windrose-ai/go-common/authjwt"
+	"github.com/windrose-ai/go-common/metricsx"
 	"github.com/windrose-ai/go-common/redisx"
 
 	"github.com/windrose-ai/realtime-hub/internal/authz"
@@ -31,7 +30,11 @@ type Server struct {
 	Caps     *fanout.Caps
 	Auditor  events.Auditor
 	Metrics  *metrics.Metrics
-	Registry *prometheus.Registry
+	// Metricsx carries the shared HTTP RED middleware + /metrics registry (the
+	// hub's domain collectors are registered onto the same registry in main).
+	// May be nil (unit tests) — Router() then builds a local one so /metrics and
+	// per-request RED metrics still work.
+	Metricsx *metricsx.Registry
 	Log      *slog.Logger
 
 	// RegGate gates /readyz on action-catalog registration (RBC-FR-022 /
@@ -61,18 +64,24 @@ func (s *Server) Router() http.Handler {
 	if s.MaxTopicsPerConn <= 0 {
 		s.MaxTopicsPerConn = 20
 	}
+	// RED metrics (MASTER-FR-050): real /metrics + per-request rate/errors/
+	// duration via the shared middleware. In production Metricsx is injected (and
+	// carries the hub's domain collectors too); in unit tests it is nil, so build
+	// a local registry rather than degrade to a runtime-only stub.
+	metricsReg := s.Metricsx
+	if metricsReg == nil {
+		metricsReg = metricsx.New("realtime-hub")
+	}
+
 	r := chi.NewRouter()
 	r.Use(traceMiddleware)
 	r.Use(s.corsMiddleware)
+	r.Use(metricsReg.Middleware(chiRoutePattern))
 
 	// Health & metrics (MASTER-FR-051).
 	r.Get("/healthz", s.handleHealthz)
 	r.Get("/readyz", s.handleReadyz)
-	if s.Registry != nil {
-		r.Handle("/metrics", promhttp.HandlerFor(s.Registry, promhttp.HandlerOpts{}))
-	} else {
-		r.Handle("/metrics", promhttp.Handler())
-	}
+	r.Handle("/metrics", metricsReg.Handler())
 
 	r.Route("/api/v1", func(r chi.Router) {
 		// Connect endpoints authenticate inline (ticket or bearer) because SSE
@@ -97,6 +106,17 @@ func (s *Server) Router() http.Handler {
 	})
 
 	return r
+}
+
+// chiRoutePattern resolves the matched chi route template for a bounded metrics
+// route label (evaluated after routing), falling back to "other".
+func chiRoutePattern(r *http.Request) string {
+	if rc := chi.RouteContext(r.Context()); rc != nil {
+		if p := rc.RoutePattern(); p != "" {
+			return p
+		}
+	}
+	return "other"
 }
 
 // InternalRouter is the producer-facing surface (RTH-FR-021), served on a

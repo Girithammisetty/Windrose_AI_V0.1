@@ -14,6 +14,7 @@ import (
 	"github.com/windrose-ai/audit-service/internal/pgstore"
 	"github.com/windrose-ai/audit-service/internal/worm"
 	"github.com/windrose-ai/go-common/metricsx"
+	"github.com/windrose-ai/go-common/redisx"
 )
 
 // chiRoutePattern resolves the matched chi route template for a bounded metrics
@@ -36,6 +37,7 @@ type Redriver interface {
 type Server struct {
 	CH         *chstore.Store
 	PG         *pgstore.Store
+	Redis      *redisx.Client
 	WORM       *worm.Client
 	Compliance *compliance.Builder
 	Redriver   Redriver
@@ -86,6 +88,13 @@ func (s *Server) handleReady(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := s.PG.Ping(ctx); err != nil {
 		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"status": "postgres_down"})
+		return
+	}
+	// Redis is on the audit hash-chain's critical write path (single-writer
+	// sequencing lock + head/seq counters). A Redis-down pod cannot durably
+	// extend the chain, so fail readiness and pull it from rotation.
+	if err := s.Redis.Ping(ctx); err != nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"status": "redis_down"})
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"status": "ok"})

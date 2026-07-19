@@ -190,6 +190,7 @@ func main() {
 	srv := &api.Server{
 		CH:          ch,
 		PG:          pg,
+		Redis:       redis,
 		WORM:        wormClient,
 		Compliance:  &compliance.Builder{CH: ch, WORM: wormClient},
 		Redriver:    consumer,

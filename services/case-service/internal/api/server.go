@@ -5,14 +5,25 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 
+	"github.com/windrose-ai/go-common/metricsx"
 	"github.com/windrose-ai/go-common/redisx"
 
 	"github.com/windrose-ai/case-service/internal/authz"
 	"github.com/windrose-ai/case-service/internal/search"
 	"github.com/windrose-ai/case-service/internal/store"
 )
+
+// chiRoutePattern resolves the matched chi route template for a bounded metrics
+// route label (evaluated after routing), falling back to "other".
+func chiRoutePattern(r *http.Request) string {
+	if rc := chi.RouteContext(r.Context()); rc != nil {
+		if p := rc.RoutePattern(); p != "" {
+			return p
+		}
+	}
+	return "other"
+}
 
 // Server wires the HTTP layer (BRD 08 §5).
 type Server struct {
@@ -32,7 +43,9 @@ type Server struct {
 // Router builds the chi router (base path /api/v1, MASTER-FR-020).
 func (s *Server) Router() http.Handler {
 	r := chi.NewRouter()
-	r.Use(TraceMiddleware, RecoverMiddleware)
+	// RED metrics (MASTER-FR-050): real /metrics + per-request rate/errors/duration.
+	metrics := metricsx.New("case-service")
+	r.Use(TraceMiddleware, RecoverMiddleware, metrics.Middleware(chiRoutePattern))
 
 	// Health (MASTER-FR-051): liveness has no deps.
 	r.Get("/healthz", func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusOK) })
@@ -43,7 +56,7 @@ func (s *Server) Router() http.Handler {
 		}
 		w.WriteHeader(http.StatusOK)
 	})
-	r.Handle("/metrics", promhttp.Handler())
+	r.Handle("/metrics", metrics.Handler())
 
 	// Backend MCP facade the tool-plane federates to (BRD 13 / GAP-2). Not under
 	// the JWT-authed /api/v1 group: the peer is the mesh-injected SPIFFE identity

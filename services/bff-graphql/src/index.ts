@@ -47,6 +47,22 @@ function headerVal(v: string | string[] | undefined): string | undefined {
 }
 
 export async function main(): Promise<http.Server> {
+  // TODO(observability): env-gated OpenTelemetry tracing — DEFERRED.
+  // The Go/Python services trace via go-common/otelx + py-common/otelx, both
+  // gated on WINDROSE_OTEL_ENABLED / OTEL_EXPORTER_OTLP_ENDPOINT (clean no-op
+  // when unset, never crash on an unreachable collector). Mirroring that here
+  // would tie the UI→backend boundary into distributed traces: bootstrap a
+  // NodeSDK BEFORE this line (it must patch http before the module graph loads,
+  // so it belongs in a `--require`d preload, not inline), auto-instrument the
+  // node:http server + outbound fetch to the domain services, propagate the
+  // incoming `traceparent` (already read in buildContext), and export OTLP to
+  // OTEL_EXPORTER_OTLP_ENDPOINT only when WINDROSE_OTEL_ENABLED is truthy — a
+  // no-op otherwise, with the exporter configured to fail silently so a down
+  // collector never destabilizes the BFF.
+  // NOT wired: this needs new deps not in package.json (@opentelemetry/sdk-node,
+  // instrumentation-http, instrumentation-graphql, exporter-trace-otlp-grpc/http)
+  // plus a preload entrypoint. Adding them half-way risks the request hot path,
+  // so tracing is intentionally left out until those deps + a preload land.
   const cfg = loadConfig();
   const manifest = loadManifest(); // hash->document artifact (empty by default)
   const jwks = makeJwks(cfg);

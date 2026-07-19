@@ -5,8 +5,8 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 
+	"github.com/windrose-ai/go-common/metricsx"
 	"github.com/windrose-ai/query-service/internal/authz"
 	"github.com/windrose-ai/query-service/internal/exec"
 	"github.com/windrose-ai/query-service/internal/results"
@@ -35,7 +35,10 @@ type Server struct {
 // Router builds the chi router (base path /api/v1, MASTER-FR-020).
 func (s *Server) Router() http.Handler {
 	r := chi.NewRouter()
-	r.Use(TraceMiddleware, RecoverMiddleware)
+	// RED metrics (MASTER-FR-050): real /metrics + per-request rate/errors/
+	// duration via the shared middleware, replacing the bare runtime-only stub.
+	metrics := metricsx.New("query-service")
+	r.Use(TraceMiddleware, RecoverMiddleware, metrics.Middleware(chiRoutePattern))
 
 	// Health endpoints (MASTER-FR-051): liveness has no deps.
 	r.Get("/healthz", func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusOK) })
@@ -58,7 +61,7 @@ func (s *Server) Router() http.Handler {
 		}
 		w.WriteHeader(http.StatusOK)
 	})
-	r.Handle("/metrics", promhttp.Handler())
+	r.Handle("/metrics", metrics.Handler())
 
 	// Signed download links are pre-authenticated by signature (QRY-FR-062).
 	r.Get("/api/v1/downloads/{token}", s.handleDownload)
@@ -100,4 +103,15 @@ func (s *Server) Router() http.Handler {
 		r.With(s.RequireAction(authz.ActionLimitsUpdate)).Put("/limits", s.handlePutLimits)
 	})
 	return r
+}
+
+// chiRoutePattern resolves the matched chi route template for a bounded metrics
+// route label (evaluated after routing), falling back to "other".
+func chiRoutePattern(r *http.Request) string {
+	if rc := chi.RouteContext(r.Context()); rc != nil {
+		if p := rc.RoutePattern(); p != "" {
+			return p
+		}
+	}
+	return "other"
 }

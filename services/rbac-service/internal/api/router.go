@@ -5,9 +5,9 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/redis/go-redis/v9"
 
+	"github.com/windrose-ai/go-common/metricsx"
 	"github.com/windrose-ai/rbac-service/internal/authz"
 	"github.com/windrose-ai/rbac-service/internal/projection"
 	"github.com/windrose-ai/rbac-service/internal/store"
@@ -26,7 +26,10 @@ type Server struct {
 // Router wires all routes (base path /api/v1, MASTER-FR-020).
 func (s *Server) Router() http.Handler {
 	r := chi.NewRouter()
-	r.Use(TraceMiddleware, RecoverMiddleware)
+	// RED metrics (MASTER-FR-050): real /metrics + per-request rate/errors/
+	// duration via the shared middleware, replacing the bare runtime-only stub.
+	metrics := metricsx.New("rbac-service")
+	r.Use(TraceMiddleware, RecoverMiddleware, metrics.Middleware(chiRoutePattern))
 
 	// Health & metrics (MASTER-FR-051) — unauthenticated.
 	r.Get("/healthz", func(w http.ResponseWriter, _ *http.Request) {
@@ -34,7 +37,7 @@ func (s *Server) Router() http.Handler {
 		_, _ = w.Write([]byte("ok"))
 	})
 	r.Get("/readyz", s.handleReadyz)
-	r.Handle("/metrics", promhttp.Handler())
+	r.Handle("/metrics", metrics.Handler())
 
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Use(AuthMiddleware(s.Verifier), s.IdempotencyMiddleware)
@@ -102,6 +105,17 @@ func (s *Server) Router() http.Handler {
 		})
 	})
 	return r
+}
+
+// chiRoutePattern resolves the matched chi route template for a bounded metrics
+// route label (evaluated after routing), falling back to "other".
+func chiRoutePattern(r *http.Request) string {
+	if rc := chi.RouteContext(r.Context()); rc != nil {
+		if p := rc.RoutePattern(); p != "" {
+			return p
+		}
+	}
+	return "other"
 }
 
 func (s *Server) handleReadyz(w http.ResponseWriter, r *http.Request) {

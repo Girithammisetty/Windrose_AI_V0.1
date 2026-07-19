@@ -17,9 +17,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/windrose-ai/go-common/authjwt"
+	"github.com/windrose-ai/go-common/metricsx"
 	"github.com/windrose-ai/go-common/otelx"
 	"github.com/windrose-ai/go-common/redisx"
 
@@ -134,10 +134,11 @@ func main() {
 	}
 	router := topics.NewRouter(disabled)
 
-	// Metrics registry (MASTER-FR-051).
-	reg := prometheus.NewRegistry()
-	reg.MustRegister(prometheus.NewGoCollector())
-	m := metrics.New(reg)
+	// Metrics registry (MASTER-FR-050/051): the shared metricsx registry carries
+	// HTTP RED metrics + Go/process collectors; the hub's domain collectors
+	// register onto the SAME registry so /metrics exposes both.
+	httpMetrics := metricsx.New("realtime-hub")
+	m := metrics.New(httpMetrics.Registerer())
 
 	// Leader lease for Kafka replay writes + republish (RTH-FR-042).
 	lease := fanout.NewLease(rdb, "kafka-fanout", podID)
@@ -232,7 +233,7 @@ func main() {
 
 	srv := &api.Server{
 		Hub: hub, Authz: az, Verifier: verifier, Redis: rc, Store: st,
-		Caps: caps, Auditor: auditor, Metrics: m, Registry: reg, Log: log,
+		Caps: caps, Auditor: auditor, Metrics: m, Metricsx: httpMetrics, Log: log,
 		RegGate: regGate, AllowedOrigins: allowedOrigins(),
 	}
 
