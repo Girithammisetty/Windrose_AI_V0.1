@@ -4625,3 +4625,38 @@ export function useAgentRunsList(vars: { agentKey?: string } = {}) {
       ),
   });
 }
+
+// ---- inc11: domain ontology (governed entity-TYPE registry) -----------------
+export function useOntologyEntities(workspaceId?: string) {
+  return useQuery({
+    queryKey: qk.ontologyEntities(workspaceId ?? ""),
+    queryFn: () =>
+      graphqlRequest<ops.OntologyEntitiesResult>(ops.ONTOLOGY_ENTITIES, { workspaceId }).then(
+        (r) => r.ontologyEntities,
+      ),
+  });
+}
+
+export function useCreateOntologyEntity() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (input: {
+      workspaceId: string;
+      entityKey: string;
+      name: string;
+      description?: string;
+      attributes?: { name: string; dataType?: string }[];
+      relationships?: { name: string; target: string; cardinality?: string }[];
+    }) => graphqlRequest<ops.CreateOntologyEntityResult>(ops.CREATE_ONTOLOGY_ENTITY, { input }),
+    onSuccess: () => client.invalidateQueries({ queryKey: ["data", "ontologyEntities"] }),
+  });
+}
+
+export function useDeleteOntologyEntity() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (v: { entityKey: string; workspaceId: string }) =>
+      graphqlRequest<ops.DeleteOntologyEntityResult>(ops.DELETE_ONTOLOGY_ENTITY, v),
+    onSuccess: () => client.invalidateQueries({ queryKey: ["data", "ontologyEntities"] }),
+  });
+}

@@ -4028,6 +4028,10 @@ export const typeDefs = gql`
     """Prior entity-resolution runs for a dataset, newest first (dataset-service
     GET /datasets/{id}/resolution-runs). Needs dataset.entity.read."""
     resolutionRuns(datasetId: ID!, limit: Int = 50): [ResolutionRun!]!
+    """The domain ontology — governed entity TYPES with attributes + typed
+    relationships (dataset-service GET /ontology/entities). Omit workspaceId to
+    list the whole tenant. Needs dataset.ontology.read."""
+    ontologyEntities(workspaceId: ID): [OntologyEntity!]!
     """One resolution run with its resolved clusters + member lineage (AC-4;
     GET /resolution-runs/{id}). Needs dataset.entity.read."""
     resolutionRun(id: ID!): ResolutionRunDetail
@@ -4104,8 +4108,34 @@ export const typeDefs = gql`
 
   # ---- BRD 56: entity resolution (steward surface) --------------------------
 
-  """A persisted entity-resolution run header (link layer — the source of
-   record is never mutated, ER-FR-050)."""
+  "One attribute of a domain entity type (a named, typed field)."
+  type OntologyAttribute { name: String! dataType: String }
+  "A typed relationship from one entity type to another (e.g. Vendor has_many Invoice)."
+  type OntologyRelationship { name: String! target: String! cardinality: String }
+  """A governed domain ontology entity TYPE: a named type with attributes and
+  typed relationships to other types. Distinct from dataset-derived semantic
+  entities and from entity RESOLUTION (which resolves instances of these types)."""
+  type OntologyEntity {
+    id: ID!
+    entityKey: ID!
+    workspaceId: ID!
+    name: String!
+    description: String!
+    attributes: [OntologyAttribute!]!
+    relationships: [OntologyRelationship!]!
+    createdAt: String
+  }
+  input OntologyAttributeInput { name: String! dataType: String }
+  input OntologyRelationshipInput { name: String! target: String! cardinality: String }
+  input CreateOntologyEntityInput {
+    workspaceId: ID!
+    entityKey: ID!
+    name: String!
+    description: String
+    attributes: [OntologyAttributeInput!]
+    relationships: [OntologyRelationshipInput!]
+  }
+
   type ResolutionRun {
     runId: ID!
     datasetId: ID!
@@ -4284,6 +4314,12 @@ export const typeDefs = gql`
   type PackCompleteResult { id: ID! status: String! dashboards: [PackLedgerRow!]! }
 
   type Mutation {
+    """Register a domain ontology entity type (idempotent by entityKey within the
+    workspace). Needs dataset.ontology.create."""
+    createOntologyEntity(input: CreateOntologyEntityInput!): OntologyEntity!
+    "Remove a domain ontology entity type. Needs dataset.ontology.delete."
+    deleteOntologyEntity(entityKey: ID!, workspaceId: ID!): Boolean!
+
     """
     Invite a user (identity-service POST /users/invite). Creates the user in the
     "invited" state. This depends on Keycloak: if the (currently untested-against-

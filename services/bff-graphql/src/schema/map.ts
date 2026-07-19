@@ -4,7 +4,7 @@ import type {
   DatasetDTO, ProfileDTO, LineageDTO, DatasetVersionDTO, ProfileColumnDTO,
   DatasetConsumersDTO, SimilarDatasetDTO, ReprofileDTO,
   ResolveEntitiesDTO, ResolutionRunDTO, ResolutionRunDetailDTO, MergeCandidateDTO,
-  MaterializeResolvedDTO,
+  MaterializeResolvedDTO, OntologyEntityDTO,
 } from "../clients/dataset.js";
 import type {
   SavedQueryDTO, ExecutionDTO, ResultsDTO, SavedQueryVersionDTO, QueryStatDTO,
@@ -2205,6 +2205,29 @@ export function mapBatchEvaluate(d: BatchEvaluateDTO) {
 // ---- BRD 56: entity resolution (steward surface) ----------------------------
 
 /** A persisted resolution run header. */
+export function mapOntologyEntity(d: OntologyEntityDTO) {
+  return {
+    __typename: "OntologyEntity" as const,
+    id: d.id,
+    entityKey: d.entity_key,
+    workspaceId: d.workspace_id,
+    name: d.name,
+    description: d.description ?? "",
+    attributes: (d.attributes ?? []).map((a) => ({
+      __typename: "OntologyAttribute" as const,
+      name: a.name,
+      dataType: a.data_type ?? null,
+    })),
+    relationships: (d.relationships ?? []).map((r) => ({
+      __typename: "OntologyRelationship" as const,
+      name: r.name,
+      target: r.target,
+      cardinality: r.cardinality ?? null,
+    })),
+    createdAt: d.created_at ?? null,
+  };
+}
+
 export function mapResolutionRun(d: ResolutionRunDTO | ResolutionRunDetailDTO) {
   return {
     __typename: "ResolutionRun" as const,

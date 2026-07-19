@@ -24,6 +24,7 @@ export const qk = {
   resolutionRuns: (datasetId: string) => ["data", "resolutionRuns", datasetId] as const,
   resolutionRun: (id: string) => ["data", "resolutionRun", id] as const,
   mergeCandidates: (runId: string) => ["data", "mergeCandidates", runId] as const,
+  ontologyEntities: (workspaceId: string) => ["data", "ontologyEntities", workspaceId] as const,
   packs: () => ["packs", "catalog"] as const,
   pack: (name: string) => ["packs", "pack", name] as const,
   packInstalls: (workspaceId: string) => ["packs", "installs", workspaceId] as const,

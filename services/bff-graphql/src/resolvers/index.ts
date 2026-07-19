@@ -50,7 +50,7 @@ import {
   mapAgentDefinition, mapAgentVersionInfo, mapTenantAgentConfig, mapAgentRunListItem,
   mapDecisionModel, mapBatchEvaluate,
   mapResolutionRun, mapResolutionRunDetail, mapResolveEntities, mapMergeCandidate,
-  mapEntityMergeProposal, mapMaterializeResolved,
+  mapEntityMergeProposal, mapMaterializeResolved, mapOntologyEntity,
   mapPack, mapPackInstall, mapPackInstallPlan, mapPackUninstall, mapPackComplete,
 } from "../schema/map.js";
 
@@ -1608,6 +1608,12 @@ export const resolvers = {
     mergeCandidates: (_p: unknown, a: { runId: string; status?: string }, ctx: GraphQLContext) =>
       ctx.clients.dataset.mergeCandidates(a.runId, a.status).then((rows) => rows.map(mapMergeCandidate)),
 
+    // ---- inc11: domain ontology (governed entity-TYPE registry) -------------
+    ontologyEntities: (_p: unknown, a: { workspaceId?: string }, ctx: GraphQLContext) =>
+      ctx.clients.dataset
+        .ontologyEntities(a.workspaceId ?? undefined)
+        .then((rows) => rows.map(mapOntologyEntity)),
+
     // ---- BRD 23: capability packs -------------------------------------------
     packs: (_p: unknown, _a: unknown, ctx: GraphQLContext) =>
       ctx.clients.pack.packs().then((rows) => rows.map(mapPack)),
@@ -1623,6 +1629,35 @@ export const resolvers = {
   },
 
   Mutation: {
+    // ---- inc11: domain ontology writes --------------------------------------
+    createOntologyEntity: async (
+      _p: unknown,
+      a: {
+        input: {
+          workspaceId: string; entityKey: string; name: string; description?: string;
+          attributes?: { name: string; dataType?: string }[];
+          relationships?: { name: string; target: string; cardinality?: string }[];
+        };
+      },
+      ctx: GraphQLContext,
+    ) => {
+      const e = await ctx.clients.dataset.createOntologyEntity({
+        workspace_id: a.input.workspaceId,
+        entity_key: a.input.entityKey,
+        name: a.input.name,
+        description: a.input.description,
+        attributes: (a.input.attributes ?? []).map((x) => ({ name: x.name, data_type: x.dataType })),
+        relationships: (a.input.relationships ?? []).map((x) => ({
+          name: x.name, target: x.target, cardinality: x.cardinality,
+        })),
+      });
+      return mapOntologyEntity(e);
+    },
+
+    deleteOntologyEntity: (
+      _p: unknown, a: { entityKey: string; workspaceId: string }, ctx: GraphQLContext,
+    ) => ctx.clients.dataset.deleteOntologyEntity(a.entityKey, a.workspaceId),
+
     // ---- admin: identity invite + rbac workspace/group writes ----------------
     inviteUser: async (
       _p: unknown,

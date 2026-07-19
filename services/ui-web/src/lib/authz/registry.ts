@@ -9,7 +9,7 @@
  * enforce every action. Fail-safe: a capability the client cannot confirm HIDES
  * the feature (absent capability → not shown).
  */
-import { Database, FlaskConical, BarChart3, Briefcase, Shield, Bot, Inbox, Home, LineChart, Plug, Workflow, Terminal, DownloadCloud, Bell, TableProperties, Fingerprint, HelpCircle } from "lucide-react";
+import { Database, FlaskConical, BarChart3, Briefcase, Shield, Bot, Inbox, Home, LineChart, Plug, Workflow, Terminal, DownloadCloud, Bell, TableProperties, Fingerprint, Network, HelpCircle } from "lucide-react";
 import type { MessageKey } from "@/lib/i18n/messages";
 
 /** The tenant-admin role short-circuits every action check (rbac BR-7). */
@@ -134,6 +134,7 @@ export const NAV_ITEMS: NavItem[] = [
   { key: "data", href: "/data", icon: Database, label: "nav.datasets", gate: cap("dataset.dataset.list"), group: "data" },
   { key: "semanticModels", href: "/data/semantic-models", icon: LineChart, label: "nav.semanticModels", gate: cap("semantic.model.list"), group: "data" },
   { key: "entityResolution", href: "/data/entity-resolution", icon: Fingerprint, label: "nav.entityResolution", gate: cap("dataset.entity.read"), group: "data" },
+  { key: "ontology", href: "/data/ontology", icon: Network, label: "nav.ontology", gate: cap("dataset.ontology.read"), group: "data" },
   { key: "queries", href: "/data/queries", icon: Terminal, label: "nav.queries", gate: cap("query.query.read"), group: "data" },
 
   // ── Machine Learning ── (Pipelines train the models experiments/eval track)
@@ -204,6 +205,7 @@ const ROUTE_RULES: RouteRule[] = [
   { prefix: "/data/semantic-models", gate: cap("semantic.model.list") },
   // Entity resolution (BRD 56) also sits under /data but needs the ER read cap.
   { prefix: "/data/entity-resolution", gate: cap("dataset.entity.read") },
+  { prefix: "/data/ontology", gate: cap("dataset.ontology.read") },
   { prefix: "/data", gate: cap("dataset.dataset.list") },
   // Capability packs (BRD 23): browse/install verticals.
   { prefix: "/packs", gate: cap("pack.pack.read") },

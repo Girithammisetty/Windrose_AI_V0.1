@@ -2,6 +2,27 @@
 import { ServiceClient } from "./base.js";
 import { unwrap, type Page } from "./types.js";
 
+/** A domain ontology entity TYPE and its shape (dataset-service inc11 registry). */
+export interface OntologyAttributeDTO {
+  name: string;
+  data_type?: string;
+}
+export interface OntologyRelationshipDTO {
+  name: string;
+  target: string;
+  cardinality?: string;
+}
+export interface OntologyEntityDTO {
+  id: string;
+  entity_key: string;
+  workspace_id: string;
+  name: string;
+  description: string;
+  attributes: OntologyAttributeDTO[];
+  relationships: OntologyRelationshipDTO[];
+  created_at?: string | null;
+}
+
 export interface DatasetDTO {
   id: string;
   workspace_id?: string;
@@ -456,5 +477,43 @@ export class DatasetClient {
       { idempotencyKey },
     );
     return unwrap<ReprofileDTO>(r);
+  }
+
+  // ---- domain ontology: governed entity-TYPE registry (inc11) ---------------
+
+  /** GET /ontology/entities — the workspace's entity types (needs
+   * dataset.ontology.read). */
+  async ontologyEntities(workspaceId?: string): Promise<OntologyEntityDTO[]> {
+    const r = await this.http.get<{ data: OntologyEntityDTO[] }>(
+      "/api/v1/ontology/entities",
+      { query: workspaceId ? { "filter[workspace_id]": workspaceId } : undefined },
+    );
+    return r.data ?? [];
+  }
+
+  /** POST /ontology/entities — register one entity type (idempotent by
+   * entity_key within the workspace; needs dataset.ontology.create). */
+  async createOntologyEntity(body: {
+    workspace_id: string;
+    entity_key: string;
+    name: string;
+    description?: string;
+    attributes?: OntologyAttributeDTO[];
+    relationships?: OntologyRelationshipDTO[];
+  }): Promise<OntologyEntityDTO> {
+    const r = await this.http.post<{ data: OntologyEntityDTO } | OntologyEntityDTO>(
+      "/api/v1/ontology/entities",
+      { body },
+    );
+    return unwrap<OntologyEntityDTO>(r);
+  }
+
+  /** DELETE /ontology/entities/{key} (204; needs dataset.ontology.delete). */
+  async deleteOntologyEntity(entityKey: string, workspaceId: string): Promise<boolean> {
+    await this.http.delete<void>(
+      `/api/v1/ontology/entities/${encodeURIComponent(entityKey)}`,
+      { query: { "filter[workspace_id]": workspaceId } },
+    );
+    return true;
   }
 }

@@ -4480,3 +4480,60 @@ export const AGENT_RUNS = /* GraphQL */ `
 export interface AgentRunsResult {
   agentRuns: Connection<AgentRunListItem>;
 }
+
+// ---- inc11: domain ontology (governed entity-TYPE registry) -----------------
+export interface OntologyAttribute {
+  name: string;
+  dataType: string | null;
+}
+export interface OntologyRelationship {
+  name: string;
+  target: string;
+  cardinality: string | null;
+}
+export interface OntologyEntity {
+  id: string;
+  entityKey: string;
+  workspaceId: string;
+  name: string;
+  description: string;
+  createdAt: string | null;
+  attributes: OntologyAttribute[];
+  relationships: OntologyRelationship[];
+}
+export interface OntologyEntitiesResult {
+  ontologyEntities: OntologyEntity[];
+}
+export interface CreateOntologyEntityResult {
+  createOntologyEntity: { id: string; entityKey: string; name: string };
+}
+export interface DeleteOntologyEntityResult {
+  deleteOntologyEntity: boolean;
+}
+
+export const ONTOLOGY_ENTITIES = /* GraphQL */ `
+  query OntologyEntities($workspaceId: ID) {
+    ontologyEntities(workspaceId: $workspaceId) {
+      id
+      entityKey
+      workspaceId
+      name
+      description
+      createdAt
+      attributes { name dataType }
+      relationships { name target cardinality }
+    }
+  }
+`;
+
+export const CREATE_ONTOLOGY_ENTITY = /* GraphQL */ `
+  mutation CreateOntologyEntity($input: CreateOntologyEntityInput!) {
+    createOntologyEntity(input: $input) { id entityKey name }
+  }
+`;
+
+export const DELETE_ONTOLOGY_ENTITY = /* GraphQL */ `
+  mutation DeleteOntologyEntity($entityKey: ID!, $workspaceId: ID!) {
+    deleteOntologyEntity(entityKey: $entityKey, workspaceId: $workspaceId)
+  }
+`;
