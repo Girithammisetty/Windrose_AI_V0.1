@@ -131,8 +131,10 @@ const server = http.createServer(async (req, res) => {
     const connId = randomUUID();
     res.write(`event: control\ndata: {"type":"connected","conn_id":"${connId}"}\n\n`);
 
-    // For a chat subscription, stream assistant tokens then an action + done.
-    const chatTopic = topics.find((t) => String(t).startsWith("chat:"));
+    // For a chat/agent-run subscription, stream assistant tokens then an action +
+    // done. The copilot subscribes to `agent_run:<run_id>` (agent-runtime); the
+    // legacy chat surface uses `chat:<thread>`. Both carry the same token frames.
+    const chatTopic = topics.find((t) => String(t).startsWith("chat:") || String(t).startsWith("agent_run:"));
     if (chatTopic) {
       const tokens = ["The ", "fraud ", "score ", "for ", "this ", "claim ", "is ", "high. ", "I recommend ", "assigning ", "it ", "to ", "the ", "fraud ", "desk."];
       let i = 0;
@@ -161,12 +163,49 @@ const server = http.createServer(async (req, res) => {
     const threadId = body.thread_id || randomUUID();
     return send(res, 200, { thread_id: threadId, run_id: "run-1", topics: [`chat:${threadId}`] });
   }
+  // agent-runtime's OpenAI-shaped copilot surface (src/app/api/copilot/message):
+  // returns the run + the realtime-hub topic (x-windrose-stream-topic header) the
+  // browser subscribes to; tokens then stream on that agent_run:<id> topic above.
+  const agentChatM = p.match(/^\/api\/v1\/agents\/([^/]+)\/chat\/completions$/);
+  if (req.method === "POST" && agentChatM) {
+    await readBody(req);
+    const runId = "run-1";
+    res.setHeader("x-windrose-stream-topic", `agent_run:${runId}`);
+    return send(res, 200, { data: { run_id: runId, session_id: "sess-1" } });
+  }
+
+  // ---- rbac-service ----
+  // The Viewer's own roles/capabilities (bff rbac.meCapabilities). "*" makes the
+  // viewer admin (registry.toCapabilitySet), so every capability-gated page in the
+  // journey (cases, copilot, inbox) is reachable — this stand-in grants full
+  // access rather than modelling per-persona rbac, which the contract suite is
+  // not testing.
+  if (p === "/api/v1/me/capabilities") {
+    return send(res, 200, {
+      user_id: "user-1", tenant_id: "t-acme", roles: ["Admin"],
+      capabilities: ["*"], admin: true, workspace_name: "Claims",
+    });
+  }
 
   // ---- identity-service ----
   if (p === "/api/v1/users") {
     const ids = q.get("filter[id]");
     const list = ids ? ids.split(",").map((id) => users[id]).filter(Boolean) : Object.values(users);
     return send(res, 200, page(list));
+  }
+  // Member-safe batch profile hydration (bff userById loader → Case.assignee /
+  // CaseComment.author / CaseActivity.actor). MUST precede the /users/:id regex
+  // below, else "profiles" is captured as an id and 404s, failing every list/
+  // detail that resolves an assignee.
+  if (p === "/api/v1/users/profiles") {
+    const ids = q.get("filter[id]");
+    const list = ids ? ids.split(",").map((id) => users[id]).filter(Boolean) : Object.values(users);
+    return send(res, 200, page(list.map((u) => ({ id: u.id, email: u.email, full_name: u.full_name }))));
+  }
+  // Member-safe assignable directory (bff assignableUsers → assign dialogs /
+  // BulkAssignBar). Same ordering constraint as /users/profiles.
+  if (p === "/api/v1/users/assignable") {
+    return send(res, 200, page(Object.values(users).map((u) => ({ id: u.id, email: u.email, full_name: u.full_name }))));
   }
   const userM = p.match(/^\/api\/v1\/users\/(.+)$/);
   if (userM) return users[userM[1]] ? send(res, 200, users[userM[1]]) : send(res, 404, { error: { code: "NOT_FOUND", message: "no user", trace_id: "t" } });
@@ -188,6 +227,14 @@ const server = http.createServer(async (req, res) => {
     const list = ids ? ids.split(",").map((id) => cases[id]).filter(Boolean) : Object.values(cases);
     return send(res, 200, page(list));
   }
+  // Merged event+comment feed for the case detail page. MUST precede the
+  // /cases/:id catch-all, else "case-1/timeline" is captured as an id → 404.
+  const timelineM = p.match(/^\/api\/v1\/cases\/(.+)\/timeline$/);
+  if (timelineM) return send(res, 200, page([]));
+  // Case evidence/attachments list (case detail page fetches eagerly). Same
+  // ordering constraint as timeline — must precede the /cases/:id catch-all.
+  const evidenceM = p.match(/^\/api\/v1\/cases\/(.+)\/evidence$/);
+  if (evidenceM) return send(res, 200, page([]));
   const caseM = p.match(/^\/api\/v1\/cases\/(.+)$/);
   if (caseM) {
     if (req.method === "PATCH") {
@@ -197,6 +244,16 @@ const server = http.createServer(async (req, res) => {
     }
     return cases[caseM[1]] ? send(res, 200, cases[caseM[1]]) : send(res, 404, { error: { code: "NOT_FOUND", message: "no case", trace_id: "t" } });
   }
+  // Case dispositions (resolve dialog) + outgoing connections (sync-to-SoR bar):
+  // both fetched eagerly by the case detail page. Empty/minimal is enough — the
+  // journey doesn't resolve or sync.
+  if (p === "/api/v1/dispositions") {
+    return send(res, 200, page([
+      { id: "d-1", urn: `wr:${TENANT}:case:disposition/d-1`, workspace_id: "ws-claims", code: "fraud_confirmed",
+        label: "Fraud confirmed", category: "true_positive", requires_note: true, active: true, created_at: null, updated_at: null },
+    ]));
+  }
+  if (p === "/api/v1/connections") return send(res, 200, page([]));
 
   // ---- agent-runtime ----
   if (p === "/api/v1/proposals") {

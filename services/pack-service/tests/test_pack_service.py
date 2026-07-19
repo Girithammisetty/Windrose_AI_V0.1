@@ -292,3 +292,74 @@ def test_diff_plan_ignores_tombstoned_rows(tmp_path):
     # neither the tombstoned field nor the (never-installed) label is live → both add.
     assert {d["name"] for d in diff["added"]} == {"lc_alpha", "lc.demo.title"}
     assert diff["removed"] == []
+
+
+# ---- inc15: drift detection ------------------------------------------------
+
+class _DriftResp:
+    def __init__(self, payload, code=200):
+        self._p, self.status_code = payload, code
+
+    def json(self):
+        return self._p
+
+
+class _DriftClient:
+    """Fake client: returns the given case-fields list for the case-fields GET,
+    empty for every other existence probe."""
+    workspace_id = "ws-1"
+    endpoints = types.SimpleNamespace(
+        case="c", rbac="r", query="q", agent="a", semantic="s", chart="ch",
+        dataset="d", ingestion="i", memory="m", pipeline="p", identity="id")
+
+    def __init__(self, fields):
+        self._fields = fields
+
+    def author_token(self):
+        return "tok"
+
+    def _req(self, method, url, tok, **kw):
+        if "/case-fields" in url:
+            return _DriftResp({"data": self._fields})
+        return _DriftResp({"data": []})
+
+
+def test_detect_drift_in_sync_modified_missing_unverified(tmp_path):
+    src = tmp_path / "pack"
+    _write_case_field_pack(src, "1.0.0", ["lc_alpha", "lc_bravo", "lc_charlie"], "V1")
+    manifest = _load(src)
+
+    # live: alpha matches, bravo's field_meta was hand-edited, charlie was deleted.
+    live_fields = [
+        {"name": "lc_alpha", "data_type": "string", "purpose": "both", "field_meta": {}},
+        {"name": "lc_bravo", "data_type": "string", "purpose": "both", "field_meta": {"label": "EDITED"}},
+    ]
+    client = _DriftClient(live_fields)
+    ledger = [
+        {"kind": "case_fields", "identity": "lc_alpha", "tombstoned": False, "target_id": "a", "origin": "o"},
+        {"kind": "case_fields", "identity": "lc_bravo", "tombstoned": False, "target_id": "b", "origin": "o"},
+        {"kind": "case_fields", "identity": "lc_charlie", "tombstoned": False, "target_id": "c", "origin": "o"},
+        {"kind": "pipelines", "identity": "some_pipe", "tombstoned": False, "target_id": "p", "origin": "o"},
+        {"kind": "case_fields", "identity": "lc_ghost", "tombstoned": True, "target_id": "g", "origin": "o"},
+    ]
+    rows = installer.detect_drift(client, ledger, manifest)
+    by = {r["identity"]: r for r in rows}
+
+    assert len(rows) == 4  # the tombstoned row is skipped (owned by a successor)
+    assert by["lc_alpha"]["status"] == "in_sync" and by["lc_alpha"]["contentChecked"]
+    assert by["lc_bravo"]["status"] == "modified" and "field_meta" in by["lc_bravo"]["detail"]
+    assert by["lc_charlie"]["status"] == "missing"
+    assert by["some_pipe"]["status"] == "unverified" and not by["some_pipe"]["contentChecked"]
+
+
+def test_detect_drift_without_snapshot_is_presence_only():
+    # no manifest (a pre-inc14 install) → content kinds fall back to presence.
+    client = _DriftClient([{"name": "lc_alpha", "data_type": "string", "purpose": "both", "field_meta": {}}])
+    ledger = [
+        {"kind": "case_fields", "identity": "lc_alpha", "tombstoned": False, "target_id": "a", "origin": "o"},
+        {"kind": "case_fields", "identity": "lc_gone", "tombstoned": False, "target_id": "z", "origin": "o"},
+    ]
+    rows = installer.detect_drift(client, ledger, None)
+    by = {r["identity"]: r for r in rows}
+    assert by["lc_alpha"]["status"] == "in_sync" and not by["lc_alpha"]["contentChecked"]  # presence only
+    assert by["lc_gone"]["status"] == "missing"

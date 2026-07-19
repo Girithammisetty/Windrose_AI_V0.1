@@ -54,6 +54,10 @@ export default async function globalSetup() {
       JWT_ISSUER: "windrose-dev",
       PORT: "4100",
       IDENTITY_URL: "http://localhost:4600",
+      // The Viewer's roles/capabilities come from rbac GET /me/capabilities; without
+      // this the client falls back to its :8302 default (not running here), the
+      // lookup fails, and every page renders capsDegraded "no access".
+      RBAC_URL: "http://localhost:4600",
       DATASET_URL: "http://localhost:4600",
       CASE_URL: "http://localhost:4600",
       CHART_URL: "http://localhost:4600",

@@ -327,7 +327,10 @@ func TestDecide_SystemRoleMatrix(t *testing.T) {
 	// Model Builder + Case Manager author dashboards (no-code chart editor),
 	// so both bind chart.dashboard.create in the seed matrix.
 	expect := map[string][]bool{
-		domain.RoleUseCaseAdmin:    {true, true, false, true, false, false},
+		// Use case Admin gained ingestion.connection.create/delete in the seed
+		// (pack-service inc12 write_adapters: pack installs materialize governed
+		// outgoing connections), so probe[2] (ingestion.connection.create) is allow.
+		domain.RoleUseCaseAdmin:    {true, true, true, true, false, false},
 		domain.RoleDataUser:        {false, true, true, false, false, false},
 		domain.RoleModelBuilder:    {false, false, false, true, true, false},
 		domain.RoleDataIntegration: {false, false, true, false, false, false},

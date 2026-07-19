@@ -22,10 +22,17 @@ const pubJwk = { ...(publicKey.export({ format: "jwk" }) as object), kid, alg: "
 export default defineConfig({
   testDir: "./tests-e2e",
   testMatch: /.*\.spec\.ts/,
-  timeout: 60_000,
+  // Headroom for Next.js dev on-demand compilation: the FIRST test to hit a
+  // route pays a cold compile of that route + its chunks (the home shell is
+  // heavy), which can exceed 60s on a loaded CI runner. Subsequent tests hit
+  // warm routes and are fast.
+  timeout: 120_000,
   expect: { timeout: 15_000 },
   fullyParallel: false,
   workers: 1,
+  // A cold-compile timeout on the first test is a dev-server timing artifact, not
+  // a product failure — retry so the warmed retry passes. Local runs don't retry.
+  retries: process.env.CI ? 2 : 0,
   reporter: [["list"]],
   globalSetup: "./tests-e2e/global-setup.ts",
   globalTeardown: "./tests-e2e/global-teardown.ts",

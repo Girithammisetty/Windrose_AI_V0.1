@@ -28,7 +28,8 @@ async def test_create_list_get_entity(client):
     assert d["entity_key"] == "vendor"
     assert d["relationships"][0]["target"] == "invoice"  # relationships round-trip
 
-    lr = await client.get(f"/api/v1/ontology/entities?filter[workspace_id]={WORKSPACE}", headers=auth())
+    lr = await client.get(
+        f"/api/v1/ontology/entities?filter[workspace_id]={WORKSPACE}", headers=auth())
     assert any(e["entity_key"] == "vendor" for e in lr.json()["data"])
 
     gr = await client.get(
@@ -41,7 +42,8 @@ async def test_create_is_idempotent(client):
     await client.post("/api/v1/ontology/entities", json=_body(), headers=auth())
     r2 = await client.post("/api/v1/ontology/entities", json=_body(name="changed"), headers=auth())
     assert r2.status_code == 201  # returns existing, not a duplicate
-    lr = await client.get(f"/api/v1/ontology/entities?filter[workspace_id]={WORKSPACE}", headers=auth())
+    lr = await client.get(
+        f"/api/v1/ontology/entities?filter[workspace_id]={WORKSPACE}", headers=auth())
     assert len([e for e in lr.json()["data"] if e["entity_key"] == "vendor"]) == 1
 
 

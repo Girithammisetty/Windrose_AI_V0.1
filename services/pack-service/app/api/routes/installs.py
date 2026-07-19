@@ -151,6 +151,53 @@ async def get_install(
     return {"data": view}
 
 
+@router.get("/installs/{install_id}/drift")
+async def install_drift(
+    request: Request, install_id: str,
+    principal: Principal = Depends(require("pack.install.read")),
+):
+    """Detect DRIFT (PKG-FR-031): compare each object this install materialized to
+    Core's current state and report it as in_sync / modified / missing / unverified.
+    The pack's intended spec is re-derived from the install's stored bundle
+    snapshot; a superseded install's objects are owned by its successor (all
+    tombstoned) so drift is reported empty with a hint to check the head."""
+    import tempfile  # noqa: PLC0415
+
+    db, settings = request.app.state.db, request.app.state.settings
+    async with db.tenant_tx(principal.tenant_id) as conn:
+        row = await repo.get_install(conn, install_id)
+        if row is None:
+            raise NotFound(f"install {install_id} not found")
+        ledger = [_ledger_view(m) for m in await repo.get_ledger(conn, install_id)]
+
+    client = installer.build_client(settings, principal.tenant_id, str(row["workspace_id"]), get_bearer(request))
+    snapshot = repo.jloads(row.get("manifest_snapshot")) or {}
+
+    def _drift(manifest):
+        return installer.detect_drift(client, ledger, manifest)
+
+    if snapshot.get("files"):
+        with tempfile.TemporaryDirectory(prefix="pack-drift-") as tmp:
+            rows = await asyncio.to_thread(_drift, installer.rehydrate_bundle(snapshot, tmp))
+    else:
+        rows = await asyncio.to_thread(_drift, None)  # pre-snapshot install: presence-only
+
+    summary = {
+        "objects": len(rows),
+        "in_sync": sum(1 for d in rows if d["status"] == "in_sync"),
+        "modified": sum(1 for d in rows if d["status"] == "modified"),
+        "missing": sum(1 for d in rows if d["status"] == "missing"),
+        "unverified": sum(1 for d in rows if d["status"] == "unverified"),
+        "content_checked": sum(1 for d in rows if d["contentChecked"]),
+    }
+    drifted = summary["modified"] + summary["missing"]
+    return {"data": {"id": install_id, "pack": row["pack_name"], "version": row["pack_version"],
+                     "workspaceId": str(row["workspace_id"]),
+                     "superseded": bool(row.get("superseded_by")),
+                     "drifted": drifted, "inSync": drifted == 0,
+                     "summary": summary, "objects": rows}}
+
+
 @router.post("/installs/{install_id}/uninstall")
 async def uninstall(
     request: Request, install_id: str,
