@@ -130,6 +130,14 @@ boot() { # name logfile  -- then env+cmd via remaining args (run in service dir 
 source ./boot_services.sh   # defines start_<svc> functions using the env above
 source ./seed.sh            # defines seed_* functions (cells, signing key, rbac, tools, agent, ai-gw)
 
+# Stabilization: enforce the no-fake guard for every Go service that honors
+# REQUIRE_REAL_ADAPTERS (identity, rbac, case, tool-plane, realtime-hub, query).
+# boot() inherits this exported env, and each service is given its real deps
+# above — so the guard stays green. If any of them ever silently falls back to an
+# in-memory/no-op adapter here, it refuses to boot and fails the e2e run, which
+# is the intended enforcement. (Services with no fake fallback ignore it.)
+export REQUIRE_REAL_ADAPTERS=true
+
 boot_all
 run_driver
 E2E_RC=$?
