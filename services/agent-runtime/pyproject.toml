@@ -25,6 +25,14 @@ dependencies = [
     "windrose-common",
 ]
 
+[project.optional-dependencies]
+# SLM distillation on serverless GPU (AR_SLM_TRAINER_BACKEND=modal). Kept OPTIONAL
+# so a CPU-only / non-Modal deploy stays lean: without it the modal backend fails
+# honestly with GpuTrainerNotConfigured rather than importing a missing SDK. The
+# heavy ML stack (torch/peft/trl) is NOT here — it lives in the Modal image
+# (app/adapters/slm_modal_app.py) and only ever installs on the GPU worker.
+slm-modal = ["modal>=0.64"]
+
 [tool.uv.sources]
 windrose-common = { path = "../../libs/py-common", editable = true }
 

@@ -11,6 +11,7 @@ wired — a submitted job then lands in ``failed`` with reason
 from __future__ import annotations
 
 import json
+import logging
 
 from app.domain import archetypes
 from app.domain.entities import (
@@ -22,6 +23,8 @@ from app.domain.entities import (
 )
 from app.domain.errors import Conflict, NotFound, ValidationFailed
 from app.domain.ports import GpuTrainer, GpuTrainerNotConfigured, TrainingSpec
+
+logger = logging.getLogger(__name__)
 
 
 class TrainingJobService:
@@ -67,6 +70,18 @@ class TrainingJobService:
         except GpuTrainerNotConfigured as e:
             job.status = "failed"
             job.error = {"reason": "gpu_trainer_not_configured", "detail": str(e)}
+            job.finished_at = now()
+            await self._store.update_training_job(job)
+            return job
+        except Exception as e:  # noqa: BLE001 - a real GPU/training failure
+            # Reachable only with a REAL backend wired (modal/sagemaker/k8s-job):
+            # OOM, an unavailable base model, a remote executor error. Without
+            # this the job row would stay `running` forever and the API would
+            # 500. Record the failure honestly (never a fabricated adapter) and
+            # log it — the job row is the durable signal, the log the immediate one.
+            logger.exception("slm training failed (job_id=%s tenant=%s)", job.job_id, tenant_id)
+            job.status = "failed"
+            job.error = {"reason": "training_failed", "detail": f"{type(e).__name__}: {e}"}
             job.finished_at = now()
             await self._store.update_training_job(job)
             return job

@@ -51,12 +51,23 @@ class FakeGpuTrainer:
 
 
 def build_trainer(backend: str | None) -> GpuTrainer:
-    """Select the trainer by backend name. Only "fake" is runnable without a
-    GPU; every real backend (e.g. "modal", "sagemaker", "k8s-job") is a
-    GPU-gated follow-up and, until implemented, resolves to the honest
-    unconfigured trainer."""
+    """Select the trainer by backend name.
+
+    "modal" runs the REAL QLoRA distillation on a serverless GPU (see
+    adapters/modal_trainer.py + slm_modal_app.py). It is returned unconditionally
+    rather than probed here, because the Rule-2 contract is to ACCEPT the job at
+    the control plane and fail honestly at EXECUTION: a missing SDK, absent
+    credentials or an undeployed function surfaces as GpuTrainerNotConfigured
+    from train(), so the job lands in `failed` with a reason naming the exact
+    missing wiring. "fake" is the deterministic in-process trainer for tests;
+    other real backends ("sagemaker", "k8s-job") remain follow-ups.
+    """
     if backend == "fake":
         return FakeGpuTrainer()
+    if backend == "modal":
+        from app.adapters.modal_trainer import ModalGpuTrainer
+
+        return ModalGpuTrainer()
     if backend:
         return UnconfiguredGpuTrainer(
             f"SLM_TRAINER_BACKEND={backend!r} is not implemented on this build "
