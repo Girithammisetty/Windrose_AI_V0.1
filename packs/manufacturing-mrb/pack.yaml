@@ -79,10 +79,3 @@ deferred:
       contract and customer credentials; every such write stays
       proposal-mode with human approval — no autonomous material release,
       hold, or supplier action, ever.
-  - kind: ontology
-    reason: >-
-      Ontology registration (Nonconformance, Lot, Part, Characteristic,
-      Supplier, Program, Disposition, MRBReview, Concession, SCAR,
-      Containment, Escape, CertificateOfConformance) awaits pack-service;
-      entity semantics are carried today by the mrb_core semantic model and
-      dataset schemas.

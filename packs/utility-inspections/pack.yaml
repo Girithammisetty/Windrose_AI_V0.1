@@ -73,10 +73,3 @@ deferred:
       contract and customer credentials; every such write stays
       proposal-mode with human approval — no autonomous work-order creation,
       deferral, or crew dispatch, ever.
-  - kind: ontology
-    reason: >-
-      Ontology registration (Asset, Circuit, District, Finding, Detection,
-      WorkOrder, Deferral, RiskZone, InspectionCycle, LeakGrade,
-      VegetationSpan, PSPSEvent) awaits pack-service; entity semantics are
-      carried today by the inspections_core semantic model and dataset
-      schemas.

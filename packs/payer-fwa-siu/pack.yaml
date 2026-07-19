@@ -46,12 +46,6 @@ components:
   pipelines:
     - { file: "pipelines/templates.yaml", identity: "pipelines" }
 deferred:
-  - kind: ontology
-    reason: >-
-      FWA-FR-010 ontology registration (Provider, Member, Claim, SIUCase,
-      Evidence, Sanction, NPDBRecord, LawEnforcementReferral, Recovery)
-      awaits pack-service; entity semantics are carried today by the
-      fwa_claims / siu_operations semantic models and the dataset schemas.
   - kind: agent_recipes
     reason: >-
       FWA-FR-030..070 bespoke recipes (FWA Scorer, Provider Outlier

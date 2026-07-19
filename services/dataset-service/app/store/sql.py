@@ -22,6 +22,7 @@ from app.domain.entities import (
     EntityResolutionConfig,
     EntityResolutionRun,
     LineageEdge,
+    OntologyEntity,
     Profile,
     ResolvedEntity,
     ResolvedEntityMember,
@@ -33,6 +34,7 @@ from app.store.orm import (
     IdempotencyKeyRow,
     LineageEdgeRow,
     MergeCandidateRow,
+    OntologyEntityRow,
     OutboxRow,
     ProcessedEventRow,
     ProfileRow,
@@ -629,6 +631,7 @@ class SqlUnitOfWork:
         self.outbox = SqlOutboxRepo(self._session, self.tenant_id)
         self.idempotency = SqlIdempotencyRepo(self._session, self.tenant_id)
         self.entity_resolution = SqlEntityResolutionRepo(self._session, self.tenant_id)
+        self.ontology = SqlOntologyRepo(self._session, self.tenant_id)
         return self
 
     async def __aexit__(self, exc_type, exc, tb) -> None:
@@ -723,3 +726,53 @@ class OutboxDispatcher:
                 )
             await session.commit()
             return len(rows)
+
+
+def _ontology(row: OntologyEntityRow) -> OntologyEntity:
+    return OntologyEntity(
+        id=row.id, tenant_id=row.tenant_id, workspace_id=row.workspace_id,
+        entity_key=row.entity_key, name=row.name, description=row.description or "",
+        attributes=row.attributes or [], relationships=row.relationships or [],
+        created_by=row.created_by, created_at=row.created_at, updated_at=row.updated_at)
+
+
+class SqlOntologyRepo:
+    """Governed domain ontology (inc11): entity types + relationships. RLS scopes
+    every read/write to the UoW's tenant via app.tenant_id."""
+
+    def __init__(self, session: AsyncSession, tenant_id: str):
+        self.s = session
+        self.tenant_id = tenant_id
+
+    async def get(self, workspace_id: str, entity_key: str) -> OntologyEntity | None:
+        row = (await self.s.execute(select(OntologyEntityRow).where(
+            OntologyEntityRow.workspace_id == workspace_id,
+            OntologyEntityRow.entity_key == entity_key,
+        ))).scalar_one_or_none()
+        return _ontology(row) if row else None
+
+    async def list(self, workspace_id: str | None) -> list[OntologyEntity]:
+        q = select(OntologyEntityRow)
+        if workspace_id:
+            q = q.where(OntologyEntityRow.workspace_id == workspace_id)
+        q = q.order_by(OntologyEntityRow.entity_key)
+        return [_ontology(r) for r in (await self.s.execute(q)).scalars().all()]
+
+    async def add(self, e: OntologyEntity) -> None:
+        self.s.add(OntologyEntityRow(
+            id=e.id, tenant_id=e.tenant_id, workspace_id=e.workspace_id,
+            entity_key=e.entity_key, name=e.name, description=e.description,
+            attributes=e.attributes, relationships=e.relationships,
+            created_by=e.created_by, created_at=e.created_at, updated_at=e.updated_at))
+        await self.s.flush()
+
+    async def delete(self, workspace_id: str, entity_key: str) -> bool:
+        row = (await self.s.execute(select(OntologyEntityRow).where(
+            OntologyEntityRow.workspace_id == workspace_id,
+            OntologyEntityRow.entity_key == entity_key,
+        ))).scalar_one_or_none()
+        if not row:
+            return False
+        await self.s.delete(row)
+        await self.s.flush()
+        return True

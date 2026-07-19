@@ -42,13 +42,6 @@ components:
   pipelines:
     - { file: "pipelines/templates.yaml", identity: "pipelines" }
 deferred:
-  - kind: ontology
-    reason: >-
-      PAC-FR-010 ontology (Patient, Referral, Episode, OASISAssessment,
-      MDSAssessment, PDGMClassification, PDPMClassification, TherapyEncounter,
-      MedicationRecord, HospiceElection, HospiceCertification, LCDPolicy,
-      RehospitalizationRisk) awaits pack-service ontology registration; entity
-      semantics are carried today by the semantic models and dataset schemas.
   - kind: agent_recipes
     reason: >-
       PAC-FR-030..080 bespoke LangGraph recipes (OASIS Copilot, PDGM Optimizer,

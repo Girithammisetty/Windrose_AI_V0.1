@@ -73,10 +73,3 @@ deferred:
       only behind pack-service's materialization contract and customer
       credentials; every such write stays proposal-mode with human approval
       — no autonomous takedown, suspension, or payout hold, ever.
-  - kind: ontology
-    reason: >-
-      Ontology registration (Seller, Listing, Brand, RightsHolder, Claim,
-      TestBuy, KYBVerification, LinkedAccountCluster, EnforcementAction,
-      ReinstatementPlan, DeadlineClock) awaits pack-service; entity
-      semantics are carried today by the seller_vetting_core semantic model
-      and dataset schemas.

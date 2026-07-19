@@ -10,7 +10,14 @@ from fastapi import FastAPI
 
 from app.api.errors import TraceMiddleware, install_error_handlers
 from app.api.middleware import AuthMiddleware
-from app.api.routes import datasets, entity_resolution, health, internal, lineage
+from app.api.routes import (
+    datasets,
+    entity_resolution,
+    health,
+    internal,
+    lineage,
+    ontology,
+)
 from app.config import Settings
 from app.container import Container, build_container
 
@@ -142,6 +149,7 @@ def create_app(container: Container | None = None) -> FastAPI:
     app.include_router(datasets.router)
     app.include_router(lineage.router)
     app.include_router(entity_resolution.router)
+    app.include_router(ontology.router)
     app.include_router(internal.router)
 
     # The in-process profiler reports through the real callback endpoint.

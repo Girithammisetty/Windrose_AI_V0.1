@@ -19,6 +19,7 @@ from app.domain.entities import (
     EntityResolutionConfig,
     EntityResolutionRun,
     LineageEdge,
+    OntologyEntity,
     Profile,
     ResolvedEntity,
     ResolvedEntityMember,
@@ -44,6 +45,8 @@ class MemoryState:
         self.resolved_entities: list[ResolvedEntity] = []
         self.resolved_members: list[ResolvedEntityMember] = []
         self.merge_candidates: dict[str, EntityMergeCandidate] = {}
+        # inc11: (workspace_id, entity_key) -> ontology entity type
+        self.ontology: dict[tuple[str, str], OntologyEntity] = {}
 
     def events_of_type(self, event_type: str) -> list[dict]:
         return [e for _, e in self.outbox if e["event_type"] == event_type]
@@ -434,6 +437,7 @@ class MemoryUnitOfWork:
         self.outbox = MemoryOutboxRepo(state, self._staged_outbox)
         self.idempotency = MemoryIdempotencyRepo(state, tenant_id)
         self.entity_resolution = MemoryEntityResolutionRepo(state, tenant_id)
+        self.ontology = MemoryOntologyRepo(state, tenant_id)
         self._state = state
 
     async def __aenter__(self):
@@ -456,3 +460,26 @@ def memory_uow_factory(state: MemoryState):
         return MemoryUnitOfWork(state, tenant_id)
 
     return factory
+
+
+class MemoryOntologyRepo:
+    """In-memory mirror of SqlOntologyRepo (inc11) for the unit/dev tier."""
+
+    def __init__(self, state: MemoryState, tenant_id: str):
+        self.st = state
+        self.t = tenant_id
+
+    async def get(self, workspace_id, entity_key):
+        e = self.st.ontology.get((workspace_id, entity_key))
+        return _copy(e) if e and e.tenant_id == self.t else None
+
+    async def list(self, workspace_id):
+        out = [_copy(e) for e in self.st.ontology.values()
+               if e.tenant_id == self.t and (not workspace_id or e.workspace_id == workspace_id)]
+        return sorted(out, key=lambda e: e.entity_key)
+
+    async def add(self, e: OntologyEntity):
+        self.st.ontology[(e.workspace_id, e.entity_key)] = _copy(e)
+
+    async def delete(self, workspace_id, entity_key):
+        return self.st.ontology.pop((workspace_id, entity_key), None) is not None

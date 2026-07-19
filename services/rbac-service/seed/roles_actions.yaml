@@ -140,6 +140,12 @@ roles:
       - dataset.entity.execute
       - dataset.entity.read
       - dataset.entity.merge
+      # inc11: the use-case admin declares the vertical's domain ontology
+      # (entity types + relationships); a pack install materializes it.
+      - dataset.ontology.read
+      - dataset.ontology.list
+      - dataset.ontology.create
+      - dataset.ontology.delete
       # BRD 23: browse the pack catalog + install/uninstall a vertical pack.
       - pack.pack.read
       - pack.install.read

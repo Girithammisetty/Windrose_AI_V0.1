@@ -226,3 +226,22 @@ class MergeCandidateRow(Base):
     decided_by: Mapped[str | None] = mapped_column(Text)
     decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class OntologyEntityRow(Base):
+    __tablename__ = "ontology_entities"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "workspace_id", "entity_key"),
+    )
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(UUID(as_uuid=False), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(UUID(as_uuid=False), nullable=False)
+    entity_key: Mapped[str] = mapped_column(Text, nullable=False)
+    name: Mapped[str] = mapped_column(Text, nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    attributes: Mapped[list] = mapped_column(JSONB, nullable=False, default=list)
+    relationships: Mapped[list] = mapped_column(JSONB, nullable=False, default=list)
+    created_by: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

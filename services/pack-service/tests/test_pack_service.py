@@ -48,9 +48,11 @@ def test_inc1_kinds_and_reversibility_contract():
     # inc3 adds case_fields (case-service custom-field catalog) here.
     assert set(installer.INC1_KINDS) == {"dispositions", "case_fields", "case_schemas",
                                          "display_labels", "guardrails", "agent_configs",
-                                         "eval_sets", "model_archetypes", "roles", "decision_models"}
+                                         "eval_sets", "model_archetypes", "ontology",
+                                         "roles", "decision_models"}
     assert "model_archetypes" in installer.REVERSIBLE_KINDS  # DELETE /archetypes/{key}
     assert "case_schemas" in installer.REVERSIBLE_KINDS  # DELETE /case-schemas/{key}
+    assert "ontology" in installer.REVERSIBLE_KINDS  # DELETE /ontology/entities/{key}
     assert "saved_queries" not in installer.INC1_KINDS  # needs its datasets first
     # Roles/case_fields carry a real Core delete verb → reversible; dispositions/
     # decision tables do not (tombstoned honestly on uninstall).
@@ -191,3 +193,8 @@ def test_plan_materializes_case_fields(tmp_path):
     assert schema_ops and all(o["action"] == "create" for o in schema_ops)
     assert {"banking_change_verification", "duplicate_review",
             "shell_vendor_investigation"} <= {o["name"] for o in schema_ops}
+    # ontology (inc11) — governed entity-type registry, materializable (new
+    # dataset-service ontology surface).
+    onto_ops = [o for o in ops if o["kind"] == "ontology"]
+    assert onto_ops and all(o["action"] == "create" for o in onto_ops)
+    assert {"vendor", "invoice", "payment_run", "exception"} <= {o["name"] for o in onto_ops}

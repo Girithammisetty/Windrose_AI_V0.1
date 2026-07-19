@@ -102,6 +102,7 @@ var canonicalSpecs = []resourceSpec{
 	{"dataset", "profile", []string{VerbRead, VerbExecute}, true, "profiling"},
 	{"dataset", "lineage", []string{VerbRead}, true, "lineage graph"},
 	{"dataset", "entity", []string{VerbExecute, VerbRead, VerbMerge}, true, "entity resolution"},
+	{"dataset", "ontology", []string{VerbRead, VerbList, VerbCreate, VerbDelete}, true, "domain ontology (entity types, inc11)"},
 	// query
 	{"query", "query", []string{VerbRead, VerbList, VerbCreate, VerbUpdate, VerbDelete, VerbExecute, VerbShare}, true, "saved queries"},
 	{"query", "execution", []string{VerbRead, VerbList, VerbExecute, VerbExport}, true, "query executions"},

@@ -70,10 +70,3 @@ deferred:
       and customer gateway credentials; every such write stays proposal-mode
       with Safety Officer approval — no autonomous regulatory submission,
       ever.
-  - kind: ontology
-    reason: >-
-      Ontology registration (Case/ICSR, AdverseEvent, Product,
-      ActiveSubstance, Reporter, Patient, RegulatoryClock, ExpeditedReport,
-      PeriodicReport, Signal, RSIVersion) awaits pack-service; entity
-      semantics are carried today by the pv_core semantic model and dataset
-      schemas.

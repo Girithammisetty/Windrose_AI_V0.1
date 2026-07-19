@@ -76,10 +76,3 @@ deferred:
       pack-service's materialization contract and customer credentials;
       every such write stays proposal-mode with human approval — no
       autonomous filing, refund, or block-list mutation, ever.
-  - kind: ontology
-    reason: >-
-      Ontology registration (Merchant, Customer, Order, Payment, Chargeback,
-      ReasonCode, Representment, PreArbitration, EvidencePackage,
-      PreDisputeAlert, BlockListEntry, MonitoringProgramStatus) awaits
-      pack-service; entity semantics are carried today by the
-      representment_core semantic model and dataset schemas.

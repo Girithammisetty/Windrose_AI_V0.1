@@ -506,6 +506,41 @@ class PlatformClient:
                       self.author_token())
         return r.status_code in (200, 204)
 
+    # ---- domain ontology (dataset-service entity-type registry, inc11) ------
+    def ensure_ontology_entity(self, identity: str, entity_key: str, name: str,
+                               attributes: list | None = None,
+                               relationships: list | None = None,
+                               description: str = "") -> str | None:
+        """Register one governed ONTOLOGY entity type (a named domain type with
+        attributes + typed relationships to other types). Idempotent by
+        entity_key within the workspace. Requires dataset.ontology.create.
+        Returns the entity_key (its stable id for reversal), or None on failure."""
+        tok = self.author_token()
+        base = f"{self.endpoints.dataset}/api/v1/ontology/entities"
+        g = self._req("GET", f"{base}?filter[workspace_id]={self.workspace_id}", tok)
+        if g.status_code == 200:
+            for e in g.json().get("data", []):
+                if e.get("entity_key") == entity_key:
+                    self._record("ontology", identity, "noop", None, entity_key)
+                    return entity_key
+        r = self._req("POST", base, tok, headers=JSON,
+                      json={"workspace_id": self.workspace_id, "entity_key": entity_key,
+                            "name": name, "description": description,
+                            "attributes": attributes or [], "relationships": relationships or []})
+        if r.status_code in (200, 201):
+            self._record("ontology", identity, "create", None, entity_key)
+            return entity_key
+        self._record("ontology", identity, "failed", None,
+                     f"{entity_key}: {r.status_code} {r.text[:150]}")
+        return None
+
+    def delete_ontology_entity(self, entity_key: str) -> bool:
+        r = self._req("DELETE",
+                      f"{self.endpoints.dataset}/api/v1/ontology/entities/{entity_key}"
+                      f"?filter[workspace_id]={self.workspace_id}",
+                      self.author_token())
+        return r.status_code in (200, 204)
+
     # ---- display labels (identity-service per-tenant label registry) --------
     def ensure_label(self, identity: str, key: str, value: str) -> str | None:
         """Set one per-tenant UI label override (BRD 23 inc3), e.g.

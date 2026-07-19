@@ -75,10 +75,3 @@ deferred:
       pack-service's materialization contract and customer credentials;
       every such write stays proposal-mode with human approval — no
       autonomous notice, report release, or file change, ever.
-  - kind: ontology
-    reason: >-
-      Ontology registration (Applicant, ScreeningOrder, Package,
-      ScreeningCheck, Hit, SourceRecord, Court, Employer, Position,
-      AdverseActionNotice, ResponseWindow, Dispute, Reinvestigation) awaits
-      pack-service; entity semantics are carried today by the
-      screening_core semantic model and dataset schemas.

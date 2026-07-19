@@ -33,6 +33,11 @@ MANIFEST: list[str] = [
     # below-auto merge (four-eyes proposal execution federates to the facade).
     "dataset.entity.read",
     "dataset.entity.merge",
+    # inc11: governed domain ontology (entity-type registry) a pack declares.
+    "dataset.ontology.read",
+    "dataset.ontology.list",
+    "dataset.ontology.create",
+    "dataset.ontology.delete",
 ]
 
 

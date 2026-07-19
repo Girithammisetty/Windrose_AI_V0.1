@@ -16,6 +16,7 @@ from app.domain.ports import ProfileJobSpec
 from app.domain.services import (
     DatasetService,
     LineageService,
+    OntologyService,
     ProfileService,
     RetentionService,
     ServiceDeps,
@@ -79,6 +80,7 @@ class Container:
     profile_service: ProfileService
     lineage_service: LineageService
     retention_service: RetentionService
+    ontology_service: OntologyService
     ingestion_handler: IngestionEventHandler
     mcp: McpFacade
     memory_state: MemoryState | None = None
@@ -166,6 +168,7 @@ def build_container(
     version_service = VersionService(deps)
     profile_service = ProfileService(deps)
     lineage_service = LineageService(deps)
+    ontology_service = OntologyService(deps)
     retention_service = RetentionService(deps)
 
     reporter = HttpCallbackReporter()
@@ -209,6 +212,7 @@ def build_container(
         profile_service=profile_service,
         lineage_service=lineage_service,
         retention_service=retention_service,
+        ontology_service=ontology_service,
         ingestion_handler=ingestion_handler,
         mcp=mcp,
         memory_state=memory_state,

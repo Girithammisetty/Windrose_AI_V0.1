@@ -61,7 +61,3 @@ deferred:
       INS-FR-061 SoR write adapters (Facets PA decision, Guidewire notes, EDI
       responses) execute only behind pack-service's materialization contract
       and customer credentials; all platform-side writes remain proposal-mode.
-  - kind: ontology
-    reason: >-
-      INS-FR-010 ontology registration awaits pack-service; entity semantics
-      are carried today by the semantic models and dataset schemas.

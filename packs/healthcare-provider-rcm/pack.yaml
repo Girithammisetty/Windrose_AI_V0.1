@@ -44,13 +44,6 @@ components:
   pipelines:
     - { file: "pipelines/templates.yaml", identity: "pipelines" }
 deferred:
-  - kind: ontology
-    reason: >-
-      RCM-FR-010 ontology (Patient, Encounter, Charge, Claim, Denial,
-      Remittance 835, Appeal, PayerContract, PatientAccount, ClinicalDocument,
-      CodeAssignment, PayerPolicy — with phi:true field tags) awaits
-      pack-service ontology registration; entity semantics are carried today
-      by the semantic models and dataset schemas.
   - kind: agent_recipes
     reason: >-
       RCM-FR-030..080 bespoke LangGraph recipes (coding_copilot,

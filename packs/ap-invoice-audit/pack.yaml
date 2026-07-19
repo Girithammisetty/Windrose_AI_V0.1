@@ -59,6 +59,8 @@ components:
     - { file: "evals/triage_gold.yaml", identity: "triage_gold" }
   model_archetypes:
     - { file: "models/archetypes.yaml", identity: "scoring_archetypes" }
+  ontology:
+    - { file: "ontology/entities.yaml", identity: "ap_ontology" }
 deferred:
   - kind: agent_recipes
     reason: >-
@@ -86,10 +88,3 @@ deferred:
       customer credentials; every such write stays proposal-mode with
       human approval — no autonomous payment movement or vendor-master
       change, ever.
-  - kind: ontology
-    reason: >-
-      Ontology registration (Vendor, VendorBankAccount, PurchaseOrder,
-      GoodsReceipt, Invoice, InvoiceLine, PaymentRun, Exception,
-      CreditMemo, ApprovalThreshold, RecoveryClaim) awaits pack-service;
-      entity semantics are carried today by the ap_audit_core semantic
-      model and dataset schemas.

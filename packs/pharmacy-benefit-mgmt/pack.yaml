@@ -45,13 +45,6 @@ components:
   pipelines:
     - { file: "pipelines/templates.yaml", identity: "pipelines" }
 deferred:
-  - kind: ontology
-    reason: >-
-      RX-FR-010 ontology registration (Member, Prescriber, Pharmacy, Drug,
-      Prescription, PriorAuthRequest, Formulary, MTMEligibility, CMR, MAP,
-      AdherenceRecord, DrugInteraction) awaits pack-service; entity semantics
-      are carried today by the pbm_core / pbm_pa semantic models and the
-      dataset schemas.
   - kind: agent_recipes
     reason: >-
       RX-FR-030..070 bespoke LangGraph recipes (Rx PA Copilot, Formulary

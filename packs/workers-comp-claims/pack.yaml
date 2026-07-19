@@ -75,10 +75,3 @@ deferred:
       materialization contract and customer credentials; every such write
       stays proposal-mode with human approval — no autonomous benefit
       decision, payment, or state filing, ever.
-  - kind: ontology
-    reason: >-
-      Ontology registration (Claim, Claimant, Employer, Policy, BodyPart,
-      InjuryCause, MedicalBill, Provider, ReserveChange, RTWPlan,
-      SIUReferral, IME, ImpairmentRating, Jurisdiction, DeadlineClock,
-      BenefitPayment) awaits pack-service; entity semantics are carried
-      today by the wc_claims_core semantic model and dataset schemas.

@@ -217,3 +217,27 @@ class EntityMergeCandidate:
     decided_by: str | None
     decided_at: datetime | None
     created_at: datetime
+
+
+@dataclass(slots=True)
+class OntologyEntity:
+    """A governed domain ONTOLOGY entity type (inc11): a named type the vertical
+    operates on (Vendor, Invoice, PaymentRun, ...) with its attributes and typed
+    RELATIONSHIPS to other types. The type-level domain model — distinct from the
+    dataset-derived semantic entities (flat, no relationships) and from entity
+    RESOLUTION (which resolves instances of these types)."""
+
+    id: str
+    tenant_id: str
+    workspace_id: str
+    entity_key: str
+    name: str
+    description: str = ""
+    # attributes: [{name, data_type, description?}]
+    attributes: list = field(default_factory=list)
+    # relationships: [{name, target, cardinality}] e.g. {name: invoices, target:
+    # invoice, cardinality: has_many}
+    relationships: list = field(default_factory=list)
+    created_by: str = "unknown"
+    created_at: datetime | None = None
+    updated_at: datetime | None = None

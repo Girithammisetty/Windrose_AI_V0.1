@@ -76,10 +76,3 @@ deferred:
       credentials; every such write stays proposal-mode with human
       approval — no autonomous holds, releases, filings, or disclosures,
       ever.
-  - kind: ontology
-    reason: >-
-      Ontology registration (Shipment, EntryLine, HsCode, OriginClaim,
-      TradingPartner, ScreeningAlert, WatchListEntry, LicenseDetermination,
-      DutyExposure, PriorDisclosure, DeadlineClock) awaits pack-service;
-      entity semantics are carried today by the trade_core semantic model
-      and dataset schemas.

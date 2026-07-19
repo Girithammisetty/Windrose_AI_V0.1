@@ -50,12 +50,13 @@ SUPPORTED_KINDS = (
     "eval_sets",          # eval-service golden dataset + cases (inc8)
     "model_archetypes",   # experiment-service governed model blueprints (inc9)
     "case_schemas",       # case-service typed case types (inc10)
+    "ontology",           # dataset-service domain entity-type registry (inc11)
 )
 
 # Deferred kinds we RECOGNIZE (from BRD 23/24..31) so packs can declare them
 # for the future pack-service without packctl pretending to install them.
 KNOWN_DEFERRED_KINDS = (
-    "ontology", "agent_recipes",
+    "agent_recipes",
     "connection_templates",
     "write_adapters",
 )

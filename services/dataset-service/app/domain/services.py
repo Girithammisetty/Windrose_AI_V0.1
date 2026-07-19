@@ -24,6 +24,7 @@ from app.domain.entities import (
     Lifecycle,
     LineageEdge,
     MergeCandidateStatus,
+    OntologyEntity,
     Profile,
     ProfileErrorCategory,
     ProfileStatus,
@@ -1560,3 +1561,56 @@ class RetentionService(_Base):
         for key in (profile.object_key_json, profile.object_key_html):
             if key:
                 await self.deps.object_store.delete(key)
+
+
+# ---------------------------------------------------------------------------
+# Domain ontology (inc11): governed entity-type registry a pack declares
+# ---------------------------------------------------------------------------
+
+
+class OntologyService(_Base):
+    """A governed catalog of the vertical's entity TYPES + typed relationships —
+    the type-level domain model, distinct from dataset-derived semantic entities
+    and from entity RESOLUTION (which resolves instances of these types)."""
+
+    async def create(self, ctx: CallCtx, workspace_id: str, payload: dict) -> OntologyEntity:
+        key = str(payload.get("entity_key") or "").strip()
+        name = str(payload.get("name") or "").strip()
+        if not key or not name:
+            raise ValidationFailed("entity_key and name are required")
+        now = self.clock.now()
+        async with self.uow(ctx.tenant_id) as uow:
+            existing = await uow.ontology.get(workspace_id, key)
+            if existing:
+                return existing  # idempotent by (workspace, entity_key)
+            e = OntologyEntity(
+                id=str(uuid7()), tenant_id=ctx.tenant_id, workspace_id=workspace_id,
+                entity_key=key, name=name, description=str(payload.get("description") or ""),
+                attributes=list(payload.get("attributes") or []),
+                relationships=list(payload.get("relationships") or []),
+                created_by=ctx.actor.get("id", "unknown"), created_at=now, updated_at=now)
+            await uow.ontology.add(e)
+            await self._emit(uow, ctx, "dataset.ontology.created",
+                             f"wr:{ctx.tenant_id}:dataset:ontology/{key}",
+                             {"entity_key": key, "workspace_id": workspace_id})
+            return e
+
+    async def list(self, ctx: CallCtx, workspace_id: str | None) -> list[OntologyEntity]:
+        async with self.uow(ctx.tenant_id) as uow:
+            return await uow.ontology.list(workspace_id)
+
+    async def get(self, ctx: CallCtx, workspace_id: str, entity_key: str) -> OntologyEntity:
+        async with self.uow(ctx.tenant_id) as uow:
+            e = await uow.ontology.get(workspace_id, entity_key)
+        if not e:
+            raise NotFound(f"ontology entity {entity_key!r} not found")
+        return e
+
+    async def delete(self, ctx: CallCtx, workspace_id: str, entity_key: str) -> bool:
+        async with self.uow(ctx.tenant_id) as uow:
+            ok = await uow.ontology.delete(workspace_id, entity_key)
+            if ok:
+                await self._emit(uow, ctx, "dataset.ontology.deleted",
+                                 f"wr:{ctx.tenant_id}:dataset:ontology/{entity_key}",
+                                 {"entity_key": entity_key, "workspace_id": workspace_id})
+        return ok

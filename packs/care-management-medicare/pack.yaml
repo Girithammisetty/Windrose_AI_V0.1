@@ -47,14 +47,6 @@ components:
   pipelines:
     - { file: "pipelines/templates.yaml", identity: "pipelines" }
 deferred:
-  - kind: ontology
-    reason: >-
-      CMM-FR-010/011 ontology registration (Patient, Provider, Encounter,
-      ChronicCondition, BehavioralHealthDx, Discharge, Consent, CarePlan,
-      CareCoordinationActivity, DeviceReading, BillingCandidate,
-      RACAuditPackage, with phi:true field tagging) awaits pack-service;
-      entity semantics are carried today by the two semantic models and the
-      seed dataset schemas.
   - kind: agent_recipes
     reason: >-
       CMM-FR-030..101 bespoke recipes (enrollment_scanner, care_scribe,
