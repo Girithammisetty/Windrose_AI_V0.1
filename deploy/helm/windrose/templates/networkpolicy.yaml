@@ -1,0 +1,52 @@
+{{- /*
+  Network isolation for services that host an internal MCP backend facade
+  (POST /internal/v1/mcp/invoke), which authorizes its caller by a mesh-injected
+  `X-Spiffe-Id` header. One default-deny NetworkPolicy per facade service: ingress
+  to the service port is restricted to in-cluster windrose peers (+ any
+  operator-supplied namespaces, e.g. monitoring for /metrics on the same port).
+
+  REQUIRES mTLS (service mesh) for the `X-Spiffe-Id` header to be trustworthy —
+  this policy is the MINIMUM L4 isolation, not a substitute for mesh identity.
+  See values.yaml `networkPolicies` + `config.CASE_FACADE_ALLOWED_SPIFFE`.
+*/}}
+{{- if .Values.networkPolicies.enabled }}
+{{- $root := . -}}
+{{- $facades := .Values.networkPolicies.facades }}
+{{- range $svc := .Values.services }}
+{{- if has $svc.name $facades }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ $svc.name }}-facade-isolation
+  labels:
+    {{- include "windrose.labels" $root | nindent 4 }}
+    {{- include "windrose.selectorLabels" (dict "svc" $svc "root" $root) | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "windrose.selectorLabels" (dict "svc" $svc "root" $root) | nindent 6 }}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        # In-cluster windrose peers (same part-of label, same namespace). Blocks
+        # external and cross-workload pods; the SPIFFE allowlist + mTLS gate the
+        # facade path itself. Narrow this to specific caller apps
+        # (app.kubernetes.io/name: mcp-gateway, agent-runtime, bff-graphql) if the
+        # facade port carried nothing else — but /metrics + the normal API share
+        # it, so keep in-cluster peers reachable.
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/part-of: windrose
+        {{- range $ns := $root.Values.networkPolicies.extraNamespaceSelectors }}
+        - namespaceSelector:
+            matchLabels:
+              {{- toYaml $ns | nindent 14 }}
+        {{- end }}
+      ports:
+        - protocol: TCP
+          port: {{ $svc.port }}
+{{- end }}
+{{- end }}
+{{- end }}

@@ -40,22 +40,31 @@ type facadeReq struct {
 // blindly trusts the gateway.
 func (s *Server) handleToolFacade(w http.ResponseWriter, r *http.Request) {
 	// Mesh peer identity (MASTER-FR-014). In prod this rides mTLS; the gateway
-	// forwards the intended peer identity in X-Spiffe-Id.
+	// forwards the intended peer identity in X-Spiffe-Id. This facade MUST sit
+	// behind a NetworkPolicy + mTLS: X-Spiffe-Id is trusted only as the
+	// mesh-injected peer identity, and the app-layer allowlist below is a
+	// defense-in-depth check on top of that mesh authentication — not a
+	// substitute for it.
+	//
+	// Fail closed: the allowlist MUST be configured. If CHART_FACADE_ALLOWED_SPIFFE
+	// is empty/unset we REFUSE every call (403) rather than accepting any
+	// non-empty X-Spiffe-Id — an unconfigured facade must never authorize a
+	// write. Accept only when X-Spiffe-Id appears in the non-empty allowlist.
 	spiffe := r.Header.Get("X-Spiffe-Id")
-	if allowed := os.Getenv("CHART_FACADE_ALLOWED_SPIFFE"); allowed != "" {
-		ok := false
-		for _, a := range strings.Split(allowed, ",") {
-			if strings.TrimSpace(a) == spiffe {
-				ok = true
-				break
-			}
+	allowed := os.Getenv("CHART_FACADE_ALLOWED_SPIFFE")
+	if allowed == "" {
+		facadeError(w, http.StatusForbidden, "facade is not configured with an allowed SPIFFE peer identity (CHART_FACADE_ALLOWED_SPIFFE)")
+		return
+	}
+	ok := false
+	for _, a := range strings.Split(allowed, ",") {
+		if a = strings.TrimSpace(a); a != "" && a == spiffe {
+			ok = true
+			break
 		}
-		if !ok {
-			facadeError(w, http.StatusForbidden, "facade requires an allowed SPIFFE peer identity")
-			return
-		}
-	} else if spiffe == "" {
-		facadeError(w, http.StatusForbidden, "facade requires a mesh peer identity (X-Spiffe-Id)")
+	}
+	if !ok {
+		facadeError(w, http.StatusForbidden, "facade requires an allowed SPIFFE peer identity")
 		return
 	}
 

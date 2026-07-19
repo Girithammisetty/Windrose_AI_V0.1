@@ -645,11 +645,21 @@ async def create_kill(request: Request, body: dict = Body(...)):
 
 @router.delete("/kill-switches/{kill_id}")
 async def delete_kill(request: Request, kill_id: str):
-    await principal_of(request)  # authN required (unkill)
+    principal = await principal_of(request)
     c = request.app.state.container
     ks = await c.store.get_kill_switch(kill_id)
     if ks is None:
         raise NotFound("kill switch not found")
+    # Lifting a kill RE-ENABLES a disabled/killed agent (a safety control), so it
+    # must be at least as privileged as SETTING one — same authz as create_kill:
+    # operator, or ai.agent.admin for a tenant-scoped kill on the caller's OWN
+    # tenant. Scope the lookup to the caller's tenant (get_kill_switch is a
+    # BYPASSRLS admin read) so a tenant admin cannot lift another tenant's kill.
+    tenant_scoped = ks.scope == "agent_version_tenant"
+    if not (is_operator(principal)
+            or (tenant_scoped and ks.tenant_id == principal.tenant_id
+                and await _has_agent_cap(request, principal, "ai.agent.admin"))):
+        raise PermissionDenied("operator (or ai.agent.admin for own-tenant scope) required")
     await c.store.deactivate_kill_switch(kill_id)
     await c.kill_registry.clear_kill(ks)
     return {"data": {"kill_id": kill_id, "active": False}}

@@ -135,6 +135,36 @@ async def test_self_approval_denied_by_default():
                                         actor_sub="u-77", action="approve")
 
 
+async def test_autonomous_proposal_requires_distinct_human_approver():
+    """Four-eyes on a FULLY-AUTONOMOUS proposal (no obo_user): the same-person
+    self-approval guard is a no-op (there is no obo_user to compare), so
+    _check_eligibility must still require an explicit distinct human approver —
+    a non-empty principal that is not the proposing agent's own identity — and a
+    genuine second party must be able to approve."""
+    from app.domain.errors import PermissionDenied
+
+    c = _container()
+    run = await _run(c, agent="ml-engineer")
+    prop, _ = await c.proposal_service.create_from_intent(
+        run=run, intent=_intent(), obo_user=None, auto_execute_policy={})
+    assert prop.obo_user is None and prop.agent_key == "ml-engineer"
+
+    # No approver principal at all -> denied (no verified second party).
+    with pytest.raises(PermissionDenied):
+        await c.proposal_service.decide(tenant_id=TENANT_A, proposal_id=prop.proposal_id,
+                                        actor_sub="", action="approve")
+    # The proposing agent's own identity cannot rubber-stamp its own proposal.
+    with pytest.raises(PermissionDenied):
+        await c.proposal_service.decide(tenant_id=TENANT_A, proposal_id=prop.proposal_id,
+                                        actor_sub="ml-engineer", action="approve")
+    # A distinct human approver succeeds and executes.
+    decided = await c.proposal_service.decide(
+        tenant_id=TENANT_A, proposal_id=prop.proposal_id, actor_sub="u-super",
+        action="approve")
+    assert decided.status == "approved"
+    assert len(c.tool_client.calls) == 1
+
+
 async def test_approver_eligibility_denied_by_authz(monkeypatch):
     """ART-FR-044 / AC-12: an approver lacking the underlying permission on an
     affected URN is denied (OPA _check_eligibility -> authz.allow-per-URN),

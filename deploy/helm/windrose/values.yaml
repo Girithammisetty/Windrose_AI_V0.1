@@ -41,6 +41,27 @@ config:
   WINDROSE_OTEL_ENABLED: "false"
   # OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector.observability.svc:4317
 
+  # --- Internal MCP backend facades (SPIFFE peer allowlist) ---------------------
+  # case-service and chart-service host in-cluster MCP backend facades
+  # (POST /internal/v1/mcp/invoke) that authorize the calling peer by the
+  # mesh-injected `X-Spiffe-Id` header. The facades FAIL CLOSED (403) when this is
+  # unset, so it MUST be configured for the governed agent write-back path (an
+  # approved proposal → mcp-gateway → facade) to work at all.
+  #
+  # Value = the CALLER identity the mcp-gateway forwards. The gateway federates
+  # every approved write-proposal to these facades under the SPIFFE id it
+  # registers for the backend (mcp_backends.spiffe_id — see deploy/e2e seeds,
+  # which use `spiffe://windrose/ns/tools/sa/mcp-gateway`). Comma-separated to
+  # allow more than one caller identity.
+  #
+  # SECURITY: the `X-Spiffe-Id` header is only trustworthy when pods speak mTLS
+  # (service mesh / SPIRE) so the mesh — not an arbitrary client — sets it, AND
+  # ingress to the facade pods is pinned to in-cluster peers. This chart ships
+  # that pinning as default-deny NetworkPolicies (see `networkPolicies` below);
+  # the allowlist here is the identity gate, the NetworkPolicy the L4 minimum.
+  CASE_FACADE_ALLOWED_SPIFFE: spiffe://windrose/ns/tools/sa/mcp-gateway
+  CHART_FACADE_ALLOWED_SPIFFE: spiffe://windrose/ns/tools/sa/mcp-gateway
+
   # In-cluster service DNS (name:port from deploy/services.yaml). Callers resolve
   # peers via these, never hard-coded hosts.
   IDENTITY_URL: http://identity-service:8301
@@ -159,6 +180,35 @@ observability:
     # Extra labels merged onto every ServiceMonitor, e.g. to match the label
     # selector your Prometheus Operator's `serviceMonitorSelector` expects:
     #   release: kube-prometheus-stack
+
+# --- Network isolation for the internal MCP backend facades --------------------
+# case-service and chart-service expose an in-cluster MCP facade
+# (POST /internal/v1/mcp/invoke) that trusts a mesh-injected `X-Spiffe-Id`
+# header (see `config.CASE_FACADE_ALLOWED_SPIFFE` / `CHART_FACADE_ALLOWED_SPIFFE`).
+# That header is only trustworthy when ingress to the facade pods is restricted
+# to verified in-cluster peers, so the chart ships one default-deny
+# NetworkPolicy per facade service: ingress to the service port is allowed ONLY
+# from other windrose pods (same `app.kubernetes.io/part-of: windrose` label) —
+# external and cross-workload traffic is denied.
+#
+# REQUIRES a service mesh (or equivalent) terminating mTLS between pods for the
+# `X-Spiffe-Id` header to be trustworthy; this NetworkPolicy is the MINIMUM L4
+# in-cluster isolation, NOT a substitute for mesh identity.
+#
+# Defaults ON for a production posture. Disable only on clusters where a mesh /
+# CNI policy layer already provides equivalent isolation.
+networkPolicies:
+  enabled: true
+  # Services fronting an internal MCP facade. Ingress to each is pinned to
+  # in-cluster windrose peers; everything else is denied.
+  facades:
+    - case-service
+    - chart-service
+  # Extra namespaceSelector matchLabels allowed to reach the facade pods on the
+  # service port — e.g. your Prometheus/monitoring namespace, since /metrics is
+  # served on the same port. Empty => only in-cluster windrose pods may connect.
+  extraNamespaceSelectors: []
+  #   - kubernetes.io/metadata.name: monitoring
 
 # --- Pod hardening defaults (per-service overridable) --------------------------
 podSecurityContext:

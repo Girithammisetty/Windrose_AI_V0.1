@@ -38,22 +38,26 @@ type facadeReq struct {
 // trusts the gateway.
 func (s *Server) handleToolFacade(w http.ResponseWriter, r *http.Request) {
 	// Mesh peer identity (MASTER-FR-014). In prod this rides mTLS; the gateway
-	// forwards the intended peer identity in X-Spiffe-Id.
+	// forwards the intended peer identity in X-Spiffe-Id. This facade trusts
+	// X-Spiffe-Id ONLY because it must sit behind a NetworkPolicy + mTLS (the
+	// header is set by the verified in-cluster peer, not by an arbitrary client)
+	// — so with no allowlist configured there is nothing to verify the header
+	// against and we MUST fail closed rather than accept any non-empty value.
 	spiffe := r.Header.Get("X-Spiffe-Id")
-	if allowed := os.Getenv("CASE_FACADE_ALLOWED_SPIFFE"); allowed != "" {
-		ok := false
-		for _, a := range strings.Split(allowed, ",") {
-			if strings.TrimSpace(a) == spiffe {
-				ok = true
-				break
-			}
+	allowed := os.Getenv("CASE_FACADE_ALLOWED_SPIFFE")
+	if allowed == "" {
+		facadeError(w, http.StatusForbidden, "facade disabled: CASE_FACADE_ALLOWED_SPIFFE is not configured")
+		return
+	}
+	ok := false
+	for _, a := range strings.Split(allowed, ",") {
+		if a = strings.TrimSpace(a); a != "" && a == spiffe {
+			ok = true
+			break
 		}
-		if !ok {
-			facadeError(w, http.StatusForbidden, "facade requires an allowed SPIFFE peer identity")
-			return
-		}
-	} else if spiffe == "" {
-		facadeError(w, http.StatusForbidden, "facade requires a mesh peer identity (X-Spiffe-Id)")
+	}
+	if !ok {
+		facadeError(w, http.StatusForbidden, "facade requires an allowed SPIFFE peer identity")
 		return
 	}
 

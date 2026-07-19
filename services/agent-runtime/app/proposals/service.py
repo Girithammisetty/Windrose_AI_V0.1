@@ -226,9 +226,25 @@ class ProposalService:
 
     async def _check_eligibility(self, prop: Proposal, actor_sub: str,
                                  self_approval_allowed: bool) -> None:
-        # Self-approval guard (ART-FR-044).
-        if prop.obo_user and actor_sub == prop.obo_user and not self_approval_allowed:
-            raise PermissionDenied("self-approval not permitted for this tenant")
+        # Four-eyes / distinct-approver invariant (ART-FR-044).
+        if prop.obo_user:
+            # On-behalf-of proposal: the trigger user may not approve their own
+            # request unless the tenant explicitly permits self-approval.
+            if actor_sub == prop.obo_user and not self_approval_allowed:
+                raise PermissionDenied("self-approval not permitted for this tenant")
+        else:
+            # Fully-autonomous proposal (no obo_user): the same-person guard above
+            # is a no-op, so require an EXPLICIT distinct human approver. Without
+            # this, an autonomous proposal has no verified second party even
+            # though ai.proposal.approve is still checked below. The approver must
+            # be a non-empty human principal that is not the proposing agent's own
+            # identity (the only proposer identity carried on the proposal).
+            if not actor_sub:
+                raise PermissionDenied(
+                    "autonomous proposal requires a distinct human approver")
+            if actor_sub == prop.agent_key:
+                raise PermissionDenied(
+                    "autonomous proposal cannot be approved by its proposing agent")
         # Approver must hold ai.proposal.approve on EVERY affected URN. This was
         # previously "proposal.apply" — not a canonical <service>.<resource>.<verb>
         # action (no such verb exists; the real rbac catalog registers
