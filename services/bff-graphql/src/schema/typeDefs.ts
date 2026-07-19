@@ -4032,6 +4032,10 @@ export const typeDefs = gql`
     relationships (dataset-service GET /ontology/entities). Omit workspaceId to
     list the whole tenant. Needs dataset.ontology.read."""
     ontologyEntities(workspaceId: ID): [OntologyEntity!]!
+    """The governed model archetypes — intended-model blueprints a vertical
+    declares (experiment-service GET /archetypes). Omit workspaceId to list the
+    whole tenant. Needs experiment.archetype.read."""
+    modelArchetypes(workspaceId: ID): [ModelArchetype!]!
     """One resolution run with its resolved clusters + member lineage (AC-4;
     GET /resolution-runs/{id}). Needs dataset.entity.read."""
     resolutionRun(id: ID!): ResolutionRunDetail
@@ -4134,6 +4138,34 @@ export const typeDefs = gql`
     description: String
     attributes: [OntologyAttributeInput!]
     relationships: [OntologyRelationshipInput!]
+  }
+
+  """A governed model ARCHETYPE (experiment-service inc9): the intended-model
+  blueprint a vertical declares — task type, target, expected metrics and
+  governance expectations — independent of any trained artifact. Capability
+  packs install these; the ml-engineer agent resolves + promotes models against
+  them. Distinct from registered MODELS (materialized from runs)."""
+  type ModelArchetype {
+    id: ID!
+    archetypeKey: ID!
+    workspaceId: ID!
+    name: String!
+    taskType: String!
+    target: String
+    description: String
+    expectedMetrics: JSON
+    governanceNotes: String
+    createdAt: String
+  }
+  input CreateModelArchetypeInput {
+    workspaceId: ID!
+    archetypeKey: ID!
+    name: String!
+    taskType: String!
+    target: String
+    description: String
+    expectedMetrics: JSON
+    governanceNotes: String
   }
 
   type ResolutionRun {
@@ -4319,6 +4351,11 @@ export const typeDefs = gql`
     createOntologyEntity(input: CreateOntologyEntityInput!): OntologyEntity!
     "Remove a domain ontology entity type. Needs dataset.ontology.delete."
     deleteOntologyEntity(entityKey: ID!, workspaceId: ID!): Boolean!
+    """Register a governed model archetype (idempotent by archetypeKey within the
+    workspace). Needs experiment.archetype.create."""
+    createModelArchetype(input: CreateModelArchetypeInput!): ModelArchetype!
+    "Remove a governed model archetype. Needs experiment.archetype.delete."
+    deleteModelArchetype(archetypeKey: ID!, workspaceId: ID!): Boolean!
 
     """
     Invite a user (identity-service POST /users/invite). Creates the user in the

@@ -2,7 +2,7 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FlaskConical, Plus, Boxes, LineChart, GitCompareArrows } from "lucide-react";
+import { FlaskConical, Plus, Boxes, LineChart, GitCompareArrows, Shapes } from "lucide-react";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { DataTable, type Column } from "@/components/primitives/DataTable";
 import { AsyncBoundary } from "@/components/primitives/AsyncBoundary";
@@ -16,6 +16,7 @@ import type { Experiment } from "@/lib/graphql/types";
 
 const SUB_SECTIONS = [
   { href: "/ml/models", title: "Models", icon: Boxes, gate: cap("experiment.model.read") },
+  { href: "/ml/archetypes", title: "Archetypes", icon: Shapes, gate: cap("experiment.archetype.read") },
   { href: "/ml/inference", title: "Inference jobs", icon: LineChart, gate: cap("inference.job.read") },
   { href: "/ml/eval", title: "Eval", icon: GitCompareArrows, gate: cap("eval.run.read") },
 ];

@@ -212,6 +212,8 @@ const ROUTE_RULES: RouteRule[] = [
   // Eval flywheel also sits under /ml but needs the eval capability, not the
   // experiment one — the longer prefix wins the longest-match resolution below.
   { prefix: "/ml/eval", gate: cap("eval.run.read") },
+  // Model-archetype editor (inc16) needs the archetype read cap, not the base one.
+  { prefix: "/ml/archetypes", gate: cap("experiment.archetype.read") },
   { prefix: "/ml", gate: cap("experiment.experiment.read") },
   { prefix: "/dashboards/reports", gate: cap("notification.report.read") },
   { prefix: "/dashboards", gate: cap("chart.dashboard.read") },

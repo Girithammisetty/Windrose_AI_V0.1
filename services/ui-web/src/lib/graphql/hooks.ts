@@ -4660,3 +4660,40 @@ export function useDeleteOntologyEntity() {
     onSuccess: () => client.invalidateQueries({ queryKey: ["data", "ontologyEntities"] }),
   });
 }
+
+// ---- inc16: model-archetype registry (governed blueprint editor) ------------
+export function useModelArchetypes(workspaceId?: string) {
+  return useQuery({
+    queryKey: qk.modelArchetypes(workspaceId ?? ""),
+    queryFn: () =>
+      graphqlRequest<ops.ModelArchetypesResult>(ops.MODEL_ARCHETYPES, { workspaceId }).then(
+        (r) => r.modelArchetypes,
+      ),
+  });
+}
+
+export function useCreateModelArchetype() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (input: {
+      workspaceId: string;
+      archetypeKey: string;
+      name: string;
+      taskType: string;
+      target?: string;
+      description?: string;
+      expectedMetrics?: Record<string, unknown>;
+      governanceNotes?: string;
+    }) => graphqlRequest<ops.CreateModelArchetypeResult>(ops.CREATE_MODEL_ARCHETYPE, { input }),
+    onSuccess: () => client.invalidateQueries({ queryKey: ["ml", "modelArchetypes"] }),
+  });
+}
+
+export function useDeleteModelArchetype() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (v: { archetypeKey: string; workspaceId: string }) =>
+      graphqlRequest<ops.DeleteModelArchetypeResult>(ops.DELETE_MODEL_ARCHETYPE, v),
+    onSuccess: () => client.invalidateQueries({ queryKey: ["ml", "modelArchetypes"] }),
+  });
+}

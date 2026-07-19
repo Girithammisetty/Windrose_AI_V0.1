@@ -4537,3 +4537,56 @@ export const DELETE_ONTOLOGY_ENTITY = /* GraphQL */ `
     deleteOntologyEntity(entityKey: $entityKey, workspaceId: $workspaceId)
   }
 `;
+
+// ---- inc16: model-archetype registry (governed blueprint editor) ------------
+
+export interface ModelArchetype {
+  id: string;
+  archetypeKey: string;
+  workspaceId: string;
+  name: string;
+  taskType: string;
+  target: string | null;
+  description: string | null;
+  expectedMetrics: Record<string, unknown> | null;
+  governanceNotes: string | null;
+  createdAt: string | null;
+}
+export interface ModelArchetypesResult {
+  modelArchetypes: ModelArchetype[];
+}
+export interface CreateModelArchetypeResult {
+  createModelArchetype: { id: string; archetypeKey: string; name: string };
+}
+export interface DeleteModelArchetypeResult {
+  deleteModelArchetype: boolean;
+}
+
+export const MODEL_ARCHETYPES = /* GraphQL */ `
+  query ModelArchetypes($workspaceId: ID) {
+    modelArchetypes(workspaceId: $workspaceId) {
+      id
+      archetypeKey
+      workspaceId
+      name
+      taskType
+      target
+      description
+      expectedMetrics
+      governanceNotes
+      createdAt
+    }
+  }
+`;
+
+export const CREATE_MODEL_ARCHETYPE = /* GraphQL */ `
+  mutation CreateModelArchetype($input: CreateModelArchetypeInput!) {
+    createModelArchetype(input: $input) { id archetypeKey name }
+  }
+`;
+
+export const DELETE_MODEL_ARCHETYPE = /* GraphQL */ `
+  mutation DeleteModelArchetype($archetypeKey: ID!, $workspaceId: ID!) {
+    deleteModelArchetype(archetypeKey: $archetypeKey, workspaceId: $workspaceId)
+  }
+`;

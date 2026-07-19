@@ -50,7 +50,7 @@ import {
   mapAgentDefinition, mapAgentVersionInfo, mapTenantAgentConfig, mapAgentRunListItem,
   mapDecisionModel, mapBatchEvaluate,
   mapResolutionRun, mapResolutionRunDetail, mapResolveEntities, mapMergeCandidate,
-  mapEntityMergeProposal, mapMaterializeResolved, mapOntologyEntity,
+  mapEntityMergeProposal, mapMaterializeResolved, mapOntologyEntity, mapModelArchetype,
   mapPack, mapPackInstall, mapPackInstallPlan, mapPackUninstall, mapPackComplete,
 } from "../schema/map.js";
 
@@ -1614,6 +1614,12 @@ export const resolvers = {
         .ontologyEntities(a.workspaceId ?? undefined)
         .then((rows) => rows.map(mapOntologyEntity)),
 
+    // ---- inc16: model-archetype registry (governed blueprint editor) --------
+    modelArchetypes: (_p: unknown, a: { workspaceId?: string }, ctx: GraphQLContext) =>
+      ctx.clients.experiment
+        .modelArchetypes(a.workspaceId ?? undefined)
+        .then((rows) => rows.map(mapModelArchetype)),
+
     // ---- BRD 23: capability packs -------------------------------------------
     packs: (_p: unknown, _a: unknown, ctx: GraphQLContext) =>
       ctx.clients.pack.packs().then((rows) => rows.map(mapPack)),
@@ -1657,6 +1663,35 @@ export const resolvers = {
     deleteOntologyEntity: (
       _p: unknown, a: { entityKey: string; workspaceId: string }, ctx: GraphQLContext,
     ) => ctx.clients.dataset.deleteOntologyEntity(a.entityKey, a.workspaceId),
+
+    // ---- inc16: model-archetype registry writes -----------------------------
+    createModelArchetype: async (
+      _p: unknown,
+      a: {
+        input: {
+          workspaceId: string; archetypeKey: string; name: string; taskType: string;
+          target?: string; description?: string;
+          expectedMetrics?: Record<string, unknown>; governanceNotes?: string;
+        };
+      },
+      ctx: GraphQLContext,
+    ) => {
+      const m = await ctx.clients.experiment.createModelArchetype({
+        workspace_id: a.input.workspaceId,
+        archetype_key: a.input.archetypeKey,
+        name: a.input.name,
+        task_type: a.input.taskType,
+        target: a.input.target,
+        description: a.input.description,
+        expected_metrics: a.input.expectedMetrics,
+        governance_notes: a.input.governanceNotes,
+      });
+      return mapModelArchetype(m);
+    },
+
+    deleteModelArchetype: (
+      _p: unknown, a: { archetypeKey: string; workspaceId: string }, ctx: GraphQLContext,
+    ) => ctx.clients.experiment.deleteModelArchetype(a.archetypeKey, a.workspaceId),
 
     // ---- admin: identity invite + rbac workspace/group writes ----------------
     inviteUser: async (

@@ -13,6 +13,22 @@ export interface ExperimentDTO {
   archived?: boolean;
 }
 
+/** A governed model ARCHETYPE — the intended-model blueprint a pack (or an
+ * admin) declares for a vertical, independent of any trained artifact
+ * (experiment-service inc9 registry). */
+export interface ModelArchetypeDTO {
+  id: string;
+  archetype_key: string;
+  workspace_id: string;
+  name: string;
+  task_type: string;
+  target?: string | null;
+  description?: string | null;
+  expected_metrics?: Record<string, unknown> | null;
+  governance_notes?: string | null;
+  created_at?: string | null;
+}
+
 export interface RunDTO {
   id: string;
   experiment_id?: string;
@@ -542,5 +558,44 @@ export class ExperimentClient {
       { body },
     );
     return unwrap<Record<string, unknown>>(r);
+  }
+
+  // ---- model archetypes: governed model-blueprint registry (inc9) -----------
+
+  /** GET /archetypes — the workspace's governed model blueprints. Omit the
+   * workspace to list the whole tenant. Needs experiment.archetype.read. */
+  async modelArchetypes(workspaceId?: string): Promise<ModelArchetypeDTO[]> {
+    const r = await this.http.get<{ data: ModelArchetypeDTO[] }>("/api/v1/archetypes", {
+      query: workspaceId ? { "filter[workspace_id]": workspaceId } : undefined,
+    });
+    return r.data ?? [];
+  }
+
+  /** POST /archetypes — register one blueprint (idempotent by archetype_key
+   * within the workspace; needs experiment.archetype.create). */
+  async createModelArchetype(body: {
+    workspace_id: string;
+    archetype_key: string;
+    name: string;
+    task_type: string;
+    target?: string;
+    description?: string;
+    expected_metrics?: Record<string, unknown>;
+    governance_notes?: string;
+  }): Promise<ModelArchetypeDTO> {
+    const r = await this.http.post<{ data: ModelArchetypeDTO } | ModelArchetypeDTO>(
+      "/api/v1/archetypes",
+      { body },
+    );
+    return unwrap<ModelArchetypeDTO>(r);
+  }
+
+  /** DELETE /archetypes/{key} (204; needs experiment.archetype.delete). */
+  async deleteModelArchetype(archetypeKey: string, workspaceId: string): Promise<boolean> {
+    await this.http.delete<void>(
+      `/api/v1/archetypes/${encodeURIComponent(archetypeKey)}`,
+      { query: { "filter[workspace_id]": workspaceId } },
+    );
+    return true;
   }
 }

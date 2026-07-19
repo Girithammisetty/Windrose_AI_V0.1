@@ -42,6 +42,8 @@ import type {
   ExperimentDTO, RunDTO, ModelDTO, MetricsDTO, RegistryModelDTO, ModelVersionDTO, PromotionDTO,
   // Tier 4b: ml ops (register/notes/artifacts).
   RegisterRunResultDTO, RunNoteDTO, RunArtifactDTO,
+  // inc16: governed model-archetype registry editor.
+  ModelArchetypeDTO,
 } from "../clients/experiment.js";
 import type {
   InferenceJobDTO,
@@ -2224,6 +2226,23 @@ export function mapOntologyEntity(d: OntologyEntityDTO) {
       target: r.target,
       cardinality: r.cardinality ?? null,
     })),
+    createdAt: d.created_at ?? null,
+  };
+}
+
+/** A governed model archetype (experiment-service inc9 registry). */
+export function mapModelArchetype(d: ModelArchetypeDTO) {
+  return {
+    __typename: "ModelArchetype" as const,
+    id: d.id,
+    archetypeKey: d.archetype_key,
+    workspaceId: d.workspace_id,
+    name: d.name,
+    taskType: d.task_type,
+    target: d.target ?? null,
+    description: d.description ?? null,
+    expectedMetrics: d.expected_metrics ?? null,
+    governanceNotes: d.governance_notes ?? null,
     createdAt: d.created_at ?? null,
   };
 }
