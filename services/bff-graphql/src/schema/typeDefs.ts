@@ -3533,6 +3533,11 @@ export const typeDefs = gql`
     """Service accounts (identity-service GET /service-accounts). Admin only."""
     serviceAccounts(first: Int = 50, after: String): ServiceAccountConnection!
 
+    """The caller's tenant UI label overrides as a list (identity-service GET
+    /tenants/self/labels). Member-visible read; editing needs identity.user.admin.
+    The same overrides Viewer.displayLabels exposes, in editor shape."""
+    tenantLabels: [LabelOverride!]!
+
     """The caller's tenant + settings (identity-service GET /tenants/{id}). Admin only."""
     tenant(id: ID!): Tenant
 
@@ -4406,6 +4411,12 @@ export const typeDefs = gql`
     setTenantIdp(input: SetTenantIdpInput!, idempotencyKey: String): TenantIdpConfig!
     """Turn off SSO for the caller's tenant (DELETE /tenants/self/idp)."""
     deleteTenantIdp: Boolean!
+    """Upsert one UI label override (identity PUT /tenants/self/labels merges it).
+    Returns the full merged override list. Needs identity.user.admin."""
+    setTenantLabel(key: String!, value: String!): [LabelOverride!]!
+    """Revert one UI label override to the base i18n string (DELETE
+    /tenants/self/labels/{key}). Needs identity.user.admin."""
+    deleteTenantLabel(key: ID!): Boolean!
 
     """Add a user to a group (rbac-service PUT /groups/{id}/members/{userId}). Idempotent. Admin only."""
     addGroupMember(groupId: ID!, userId: ID!, idempotencyKey: String): Boolean!

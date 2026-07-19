@@ -3433,6 +3433,32 @@ export function useDeleteTenantIdp() {
   });
 }
 
+// ---- inc18: tenant UI-label overrides editor (display_labels registry) ------
+export function useTenantLabels() {
+  return useQuery({
+    queryKey: qk.tenantLabels(),
+    queryFn: () => graphqlRequest<ops.TenantLabelsResult>(ops.TENANT_LABELS).then((r) => r.tenantLabels),
+  });
+}
+
+export function useSetTenantLabel() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (v: { key: string; value: string }) =>
+      graphqlRequest<ops.SetTenantLabelResult>(ops.SET_TENANT_LABEL, v).then((r) => r.setTenantLabel),
+    onSuccess: () => client.invalidateQueries({ queryKey: ["admin", "tenantLabels"] }),
+  });
+}
+
+export function useDeleteTenantLabel() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (v: { key: string }) =>
+      graphqlRequest<ops.DeleteTenantLabelResult>(ops.DELETE_TENANT_LABEL, v).then((r) => r.deleteTenantLabel),
+    onSuccess: () => client.invalidateQueries({ queryKey: ["admin", "tenantLabels"] }),
+  });
+}
+
 export function useAuditEvents(vars: AuditEventsFilter = {}) {
   return useInfiniteQuery({
     queryKey: qk.auditEvents(vars),

@@ -134,6 +134,7 @@ export const qk = {
   roles: () => ["admin", "roles"] as const,
   serviceAccounts: () => ["admin", "serviceAccounts"] as const,
   tenant: (id: string) => ["admin", "tenant", id] as const,
+  tenantLabels: () => ["admin", "tenantLabels"] as const,
   // Tier 4b: identity/rbac admin — effective access lookup per resource URN.
   contentGrants: (resourceUrn: string) => ["admin", "contentGrants", resourceUrn] as const,
   auditEvents: (filters: unknown) => ["admin", "auditEvents", filters] as const,

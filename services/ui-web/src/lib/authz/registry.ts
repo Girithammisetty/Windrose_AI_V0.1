@@ -652,6 +652,9 @@ export const FEATURE_GATES = {
   deleteCaseSchema: cap("case.schema.delete"),
   /** Replace the workspace SLA policy (case-service PUT /sla-policy). */
   manageSlaPolicy: cap("case.case.admin"),
+  /** Edit tenant-wide UI label overrides (identity PUT|DELETE /tenants/self/
+   * labels — a tenant-administration action, inc18). Read is member-visible. */
+  manageLabels: cap("identity.user.admin"),
 
   // ==========================================================================
   // Tier 4b: identity/rbac admin — user + service-account lifecycle, workspace

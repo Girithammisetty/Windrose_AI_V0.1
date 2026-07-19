@@ -6,8 +6,13 @@ import { StatusChip } from "@/components/primitives/StatusChip";
 import { ConfirmDialog } from "@/components/primitives/ConfirmDialog";
 import { Card, CardContent, CardHeader, CardTitle, Badge, Textarea, Label, Input } from "@/components/ui/primitives";
 import { Button } from "@/components/ui/button";
+import { Can } from "@/components/authz/Can";
+import { FEATURE_GATES } from "@/lib/authz/registry";
 import { useSession } from "@/lib/session/SessionContext";
-import { useTenant, useSetEmbedConfig, useTenantIdp, useSetTenantIdp, useDeleteTenantIdp } from "@/lib/graphql/hooks";
+import {
+  useTenant, useSetEmbedConfig, useTenantIdp, useSetTenantIdp, useDeleteTenantIdp,
+  useTenantLabels, useSetTenantLabel, useDeleteTenantLabel,
+} from "@/lib/graphql/hooks";
 import { GraphQLRequestError } from "@/lib/graphql/client";
 import { formatLocal } from "@/lib/utils";
 
@@ -85,6 +90,8 @@ export default function AdminTenantPage() {
               allowedOrigins={tenant.embedConfig?.allowedOrigins ?? []} updatedAt={tenant.embedConfig?.updatedAt ?? null} />
 
             <IdentityProviderCard />
+
+            <DisplayLabelsCard />
           </div>
         )}
       </AsyncBoundary>
@@ -273,6 +280,120 @@ function IdentityProviderCard() {
             </Button>
           )}
         </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+/**
+ * Tenant-wide UI label overrides (identity display_labels registry, inc3/inc18).
+ * The app overlays these onto its base i18n catalog so a vertical can rename the
+ * product vocabulary (e.g. the i18n key `nav.cases` -> "AP Exceptions"). Reading
+ * is member-visible; editing is a tenant-administration action
+ * (identity.user.admin, gated below). Capability packs seed these on install;
+ * this card lets a tenant admin curate them directly. Upsert (merge) + delete.
+ */
+function DisplayLabelsCard() {
+  const query = useTenantLabels();
+  const set = useSetTenantLabel();
+  const del = useDeleteTenantLabel();
+  const labels = query.data ?? [];
+
+  const [key, setKey] = useState("");
+  const [value, setValue] = useState("");
+  const [err, setErr] = useState<string | null>(null);
+
+  const mutationErr = (set.error ?? del.error) instanceof GraphQLRequestError
+    ? (set.error ?? del.error) as GraphQLRequestError : null;
+
+  const submit = () => {
+    setErr(null);
+    const k = key.trim();
+    const v = value.trim();
+    if (!k || !v || set.isPending) {
+      if (!k || !v) setErr("Both an i18n key and a display value are required.");
+      return;
+    }
+    set.mutate({ key: k, value: v }, {
+      onSuccess: () => { setKey(""); setValue(""); },
+      onError: () => {},
+    });
+  };
+
+  return (
+    <Card className="lg:col-span-2">
+      <CardHeader className="flex-row items-center justify-between">
+        <CardTitle className="text-sm">Display labels</CardTitle>
+        <Badge variant={labels.length ? "success" : "secondary"}>
+          {labels.length ? `${labels.length} override${labels.length === 1 ? "" : "s"}` : "none"}
+        </Badge>
+      </CardHeader>
+      <CardContent className="space-y-3 text-sm">
+        <p className="text-xs text-muted-foreground">
+          Rename the product vocabulary for this tenant — each row maps an i18n key to the string the
+          whole tenant sees (e.g. <code>nav.cases</code> → &quot;AP Exceptions&quot;). Capability packs seed
+          these; the base catalog is used for any key left unset.
+        </p>
+
+        <AsyncBoundary
+          isLoading={query.isLoading}
+          isError={query.isError}
+          error={query.error}
+          isEmpty={!query.isLoading && labels.length === 0}
+          emptyTitle="No label overrides"
+          emptyHint="The base vocabulary is in use. Add an override below."
+          onRetry={() => query.refetch()}
+        >
+          <ul className="divide-y rounded-md border">
+            {labels.map((l) => (
+              <li key={l.key} className="flex items-center justify-between gap-3 px-3 py-2">
+                <div className="min-w-0">
+                  <code className="text-xs text-muted-foreground">{l.key}</code>
+                  <p className="truncate font-medium">{l.value}</p>
+                </div>
+                <Can gate={FEATURE_GATES.manageLabels}>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    aria-label={`Delete override ${l.key}`}
+                    disabled={del.isPending}
+                    onClick={() => del.mutate({ key: l.key })}
+                  >
+                    Delete
+                  </Button>
+                </Can>
+              </li>
+            ))}
+          </ul>
+        </AsyncBoundary>
+
+        <Can
+          gate={FEATURE_GATES.manageLabels}
+          fallback={<p className="text-xs text-muted-foreground">Editing labels needs the tenant-admin capability.</p>}
+        >
+          <form
+            className="flex flex-wrap items-end gap-2 border-t pt-3"
+            onSubmit={(e) => { e.preventDefault(); submit(); }}
+          >
+            <div className="space-y-1">
+              <Label htmlFor="label-key">i18n key</Label>
+              <Input id="label-key" value={key} onChange={(e) => setKey(e.target.value)}
+                placeholder="nav.cases" className="w-48 font-mono" />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="label-value">Display value</Label>
+              <Input id="label-value" value={value} onChange={(e) => setValue(e.target.value)}
+                placeholder="AP Exceptions" className="w-48" />
+            </div>
+            <Button type="submit" size="sm" disabled={set.isPending}>
+              {set.isPending ? "Saving…" : "Set label"}
+            </Button>
+          </form>
+        </Can>
+
+        {(err || mutationErr) && (
+          <p role="alert" className="text-xs text-destructive">{err ?? mutationErr?.message}</p>
+        )}
       </CardContent>
     </Card>
   );

@@ -129,6 +129,22 @@ export class IdentityClient {
     return this.http.get<{ labels: Record<string, string> }>("/api/v1/tenants/self/labels");
   }
 
+  /** PUT /api/v1/tenants/self/labels — upsert (merge) one or more UI label
+   * overrides; returns the full merged {key: value} map (inc18 editor). Needs
+   * the identity.user.admin capability (tenant administration). */
+  setTenantLabels(labels: Record<string, string>): Promise<{ labels: Record<string, string> }> {
+    return this.http.put<{ labels: Record<string, string> }>("/api/v1/tenants/self/labels", {
+      body: { labels },
+    });
+  }
+
+  /** DELETE /api/v1/tenants/self/labels/{key} (204) — revert one override to the
+   * base i18n string. Needs identity.user.admin. */
+  async deleteTenantLabel(key: string): Promise<boolean> {
+    await this.http.delete<void>(`/api/v1/tenants/self/labels/${encodeURIComponent(key)}`);
+    return true;
+  }
+
   /** GET /api/v1/users/profiles?filter[id]=a,b,c — batch hydration for the
    * userById loader (Case.assignee, CaseComment.author, CaseActivity.actor).
    * Deliberately NOT GET /api/v1/users (identity.user.admin, the tenant

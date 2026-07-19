@@ -378,6 +378,12 @@ export const resolvers = {
       return toConnection(page, (d) => mapServiceAccount(ctx, d));
     },
 
+    // inc18: the tenant UI-label overrides in editor shape (member-readable).
+    tenantLabels: (_p: unknown, _a: unknown, ctx: GraphQLContext) =>
+      ctx.clients.identity
+        .tenantLabels()
+        .then((r) => Object.entries(r.labels ?? {}).map(([key, value]) => ({ key, value }))),
+
     tenant: (_p: unknown, a: { id: string }, ctx: GraphQLContext) =>
       nullOn404(ctx.clients.identity.tenant(a.id).then((d) => mapTenant(ctx, d))),
 
@@ -1751,6 +1757,15 @@ export const resolvers = {
       await ctx.clients.identity.deleteTenantIdp();
       return true;
     },
+
+    // inc18: tenant UI-label overrides editor (identity.user.admin).
+    setTenantLabel: (_p: unknown, a: { key: string; value: string }, ctx: GraphQLContext) =>
+      ctx.clients.identity
+        .setTenantLabels({ [a.key]: a.value })
+        .then((r) => Object.entries(r.labels ?? {}).map(([key, value]) => ({ key, value }))),
+
+    deleteTenantLabel: (_p: unknown, a: { key: string }, ctx: GraphQLContext) =>
+      ctx.clients.identity.deleteTenantLabel(a.key),
 
     addGroupMember: async (
       _p: unknown,

@@ -14,6 +14,7 @@ import type {
   Disposition,
   CaseField,
   CaseSchema,
+  LabelOverride,
   CaseSlaPolicy,
   Chart,
   ChartShapedData,
@@ -3006,6 +3007,24 @@ export const DELETE_TENANT_IDP = /* GraphQL */ `
   mutation DeleteTenantIdp { deleteTenantIdp }
 `;
 export interface DeleteTenantIdpResult { deleteTenantIdp: boolean }
+
+// ---- inc18: tenant UI-label overrides editor (display_labels registry) ------
+export const TENANT_LABELS = /* GraphQL */ `
+  query TenantLabels { tenantLabels { key value } }
+`;
+export interface TenantLabelsResult { tenantLabels: LabelOverride[] }
+
+export const SET_TENANT_LABEL = /* GraphQL */ `
+  mutation SetTenantLabel($key: String!, $value: String!) {
+    setTenantLabel(key: $key, value: $value) { key value }
+  }
+`;
+export interface SetTenantLabelResult { setTenantLabel: LabelOverride[] }
+
+export const DELETE_TENANT_LABEL = /* GraphQL */ `
+  mutation DeleteTenantLabel($key: ID!) { deleteTenantLabel(key: $key) }
+`;
+export interface DeleteTenantLabelResult { deleteTenantLabel: boolean }
 
 export const AUDIT_EVENTS = /* GraphQL */ `
   query AuditEvents(
