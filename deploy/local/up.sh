@@ -126,7 +126,10 @@ say "${BLD}PHASE 1${NC}  infra up + healthy"
 for i in $(seq 1 60); do psql_q -d postgres -tc 'select 1' >/dev/null 2>&1 && break; sleep 1; done
 psql_q -d postgres -tc 'select 1' >/dev/null 2>&1 || die "postgres not reachable after 60s"
 redis-cli -h localhost ping >/dev/null 2>&1 || warn "redis-cli missing (non-fatal)"
-curl -s -m3 "$OPENSEARCH_URL/_cluster/health" >/dev/null || die "opensearch not reachable"
+# OpenSearch is a JVM and boots slowly (30-60s+, worse on memory-constrained
+# Docker), while `docker compose up -d` returns immediately — so a single-shot
+# check races the boot and fatally fails `make up`. Retry like postgres does.
+wait_http "$OPENSEARCH_URL/_cluster/health" 90 || die "opensearch not reachable after 90s"
 curl -s -m5 "$MLFLOW_URL/health" >/dev/null 2>&1 || curl -s -m5 "$MLFLOW_URL/" >/dev/null 2>&1 || warn "mlflow not confirmed"
 nc -z localhost 7233 2>/dev/null && ok "temporal 7233 open" || warn "temporal 7233 not open (agent HITL degraded)"
 nc -z localhost 9010 2>/dev/null && ok "clickhouse 9010 open" || warn "clickhouse 9010 not open (audit degraded)"
