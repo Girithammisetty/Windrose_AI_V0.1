@@ -140,14 +140,21 @@ const STEPS = [
   ["It learns and improves", "Each decision becomes training data. Quality climbs, the routine gets automated, and your team is freed for the hard calls."],
 ];
 
-/* Solutions organized by industry — each is a real installable capability pack.
- * Grouped so a buyer sees their world (payer, bank, carrier, ops) and the exact
- * queues Windrose runs for them. */
+/* Solutions organized by industry — each use case is a real installable
+ * capability pack. Industry is the primary way a buyer navigates: pick your
+ * world (payer, bank, carrier, ops) and see the exact queues Windrose runs, the
+ * outcomes that move, and the packs that ship it. */
 const INDUSTRIES = [
   {
-    name: "Healthcare — Payers & Providers",
+    id: "healthcare",
+    name: "Healthcare",
+    who: "Payers, providers & pharmacy",
     icon: HeartPulse,
-    blurb: "Claims, care and revenue decisions, with the reasoning attached to every call.",
+    tag: "Claims, care and revenue decisions — the reasoning attached to every call.",
+    headline: "Adjudicate, appeal and recover — without leaving revenue or defensibility behind.",
+    blurb:
+      "From prior authorization to payment integrity, specialist agents do the reading and your clinicians and analysts make the call — with the evidence and the rules on the record.",
+    outcomes: ["Faster prior-auth turnaround", "Higher clean-claim rates", "Audit-ready determinations"],
     useCases: [
       ["Claims Adjudication & Appeals", "Resolve denials, appeals and prior authorizations faster."],
       ["Provider Revenue Cycle", "Lift clean-claim rates and recover the revenue you've earned."],
@@ -158,9 +165,15 @@ const INDUSTRIES = [
     ],
   },
   {
+    id: "banking",
     name: "Banking & Financial Services",
+    who: "Fraud, AML, disputes & lending",
     icon: Landmark,
-    blurb: "Monitor, adjudicate and file with a decision you can stand behind.",
+    tag: "Monitor, adjudicate and file with a decision you can stand behind.",
+    headline: "Reach the filing, the dispute call and the credit decision — and prove how you got there.",
+    blurb:
+      "Route alerts and cases to the right specialist, cut false positives, and reach determinations a regulator can follow — every step logged with the evidence it stood on.",
+    outcomes: ["Fewer false positives", "Consistent filing decisions", "Regulator-ready trails"],
     useCases: [
       ["Financial Crime & AML", "Monitor transactions, screen sanctions and reach defensible filing decisions."],
       ["Card Disputes & Chargebacks", "Adjudicate disputes and representment with the evidence attached."],
@@ -170,9 +183,15 @@ const INDUSTRIES = [
     ],
   },
   {
-    name: "Insurance — P&C & Specialty",
+    id: "insurance",
+    name: "Insurance",
+    who: "P&C, specialty & warranty",
     icon: Umbrella,
-    blurb: "Triage and resolve claims across lines with a consistent, auditable call.",
+    tag: "Triage and resolve claims across lines with a consistent, auditable call.",
+    headline: "Triage severity, catch leakage and settle — the same defensible way, every claim.",
+    blurb:
+      "Score severity on arrival, route each claim to the right desk, and settle with the coverage read and the reasoning captured — so outcomes hold up on review.",
+    outcomes: ["Less claims leakage", "Right-desk routing", "Consistent settlements"],
     useCases: [
       ["Auto & Trucking Claims", "Triage severity, spot leakage and route each claim to the right desk."],
       ["Workers' Compensation", "Manage claims and reserves with the reasoning captured end to end."],
@@ -181,9 +200,15 @@ const INDUSTRIES = [
     ],
   },
   {
+    id: "risk-ops",
     name: "Risk, Trust & Operations",
+    who: "Back-office adjudication queues",
     icon: Scale,
-    blurb: "The judgment-heavy back-office queues, standardized and sped up.",
+    tag: "The judgment-heavy back-office queues, standardized and sped up.",
+    headline: "Standardize the judgment calls buried in operations — and clear the backlog.",
+    blurb:
+      "Invoice audit, screening, appeals and notices are all the same shape: read the evidence, apply the policy, decide. Windrose runs each as a governed queue your team can trust.",
+    outcomes: ["Shorter backlogs", "Policy applied consistently", "Every call defensible"],
     useCases: [
       ["AP Invoice Audit", "Catch duplicate, non-compliant and over-billed invoices before they pay."],
       ["Background & Seller Vetting", "Adjudicate screening and marketplace-vetting cases against policy."],
@@ -393,9 +418,9 @@ export default function WelcomeContent() {
             <span className="text-lg font-bold tracking-tight">Windrose AI</span>
           </div>
           <nav className="hidden items-center gap-7 text-sm text-muted-foreground md:flex">
-            <a href="#capabilities" className="transition-colors hover:text-foreground">Capabilities</a>
+            <a href="#industries" className="transition-colors hover:text-foreground">Industries</a>
+            <a href="#capabilities" className="transition-colors hover:text-foreground">Platform</a>
             <a href="#how" className="transition-colors hover:text-foreground">How it works</a>
-            <a href="#solutions" className="transition-colors hover:text-foreground">Solutions</a>
             <a href="#faq" className="transition-colors hover:text-foreground">FAQ</a>
           </nav>
           <Button onClick={() => setDemoOpen(true)}>Request a demo</Button>
@@ -418,16 +443,17 @@ export default function WelcomeContent() {
               <span className="wr-grad bg-clip-text text-transparent">in command.</span>
             </h1>
             <p className="mt-6 max-w-xl text-pretty text-lg leading-relaxed text-muted-foreground">
-              Windrose AI puts a team of specialist agents to work on your highest-stakes
-              decisions — claims, authorizations, alerts, investigations. Agents draft, a copilot
-              assists, your people decide, and every correction trains the next model.
+              Windrose AI puts a team of specialist agents to work on your industry&apos;s
+              highest-stakes decisions — health claims, financial-crime alerts, insurance losses,
+              back-office adjudication. Agents draft, a copilot assists, your people decide, and
+              every correction trains the next model.
             </p>
             <div className="mt-9 flex flex-wrap items-center gap-3">
               <Button size="lg" onClick={() => setDemoOpen(true)}>
                 Request a demo <ArrowRight className="size-4" />
               </Button>
               <Button asChild size="lg" variant="outline">
-                <a href="#capabilities">See the capabilities</a>
+                <a href="#industries">Explore by industry</a>
               </Button>
             </div>
             <p className="mt-6 text-sm text-muted-foreground">
@@ -466,28 +492,72 @@ export default function WelcomeContent() {
         </div>
       </section>
 
-      {/* who it's for */}
-      <section className="border-b border-border/60 bg-card/50">
-        <div className="mx-auto max-w-5xl px-6 py-10">
-          <p className="text-center text-pretty text-base leading-relaxed text-muted-foreground">
-            Built for{" "}
-            <span className="font-medium text-foreground">regulated, decision-heavy operations</span>{" "}
-            — health payers and providers, pharmacy benefit managers, post-acute networks and
-            financial-crime teams. If your analysts make hundreds of judgment calls a day, and your
-            auditors ask how each one was made, Windrose AI was built for you.
+      {/* industries — the primary way in */}
+      <section id="industries" className="mx-auto max-w-6xl scroll-mt-20 px-6 py-20">
+        <Reveal>
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-primary">
+            <Sparkles className="size-3.5" />
+            Solutions by industry
+          </span>
+          <h2 className="mt-5 text-balance text-3xl font-bold tracking-tight md:text-4xl">
+            Built for the decisions your industry runs on
+          </h2>
+          <p className="mt-3 max-w-2xl text-muted-foreground">
+            Windrose ships as capability packs shaped for your operation — the data model, the metrics,
+            the work queues and the domain expertise already in place. Start where your backlog is.
           </p>
+        </Reveal>
+        <div className="mt-10 grid gap-5 sm:grid-cols-2">
+          {INDUSTRIES.map((ind, i) => {
+            const Icon = ind.icon;
+            return (
+              <Reveal key={ind.id} delay={(i % 2) * 80}>
+                <a
+                  href={`#ind-${ind.id}`}
+                  className="group flex h-full flex-col rounded-2xl border border-border/70 bg-card p-6 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
+                >
+                  <div className="flex items-start justify-between">
+                    <span className="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                      <Icon className="size-6" />
+                    </span>
+                    <ArrowRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
+                  </div>
+                  <h3 className="mt-4 text-lg font-bold tracking-tight">{ind.name}</h3>
+                  <div className="text-xs font-medium uppercase tracking-wide text-primary">{ind.who}</div>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{ind.tag}</p>
+                  <div className="mt-4 flex flex-wrap gap-1.5">
+                    {ind.useCases.slice(0, 3).map(([n]) => (
+                      <span key={n} className="rounded-full border border-border/70 bg-background px-2.5 py-0.5 text-[11px] text-muted-foreground">
+                        {n}
+                      </span>
+                    ))}
+                    {ind.useCases.length > 3 && (
+                      <span className="px-1 py-0.5 text-[11px] font-medium text-primary">
+                        +{ind.useCases.length - 3} more
+                      </span>
+                    )}
+                  </div>
+                </a>
+              </Reveal>
+            );
+          })}
         </div>
       </section>
 
       {/* capabilities showcase (interactive tabs) */}
       <section id="capabilities" className="mx-auto max-w-6xl scroll-mt-20 px-6 py-20">
         <Reveal>
-          <h2 className="text-balance text-3xl font-bold tracking-tight md:text-4xl">
-            One platform. A whole AI operation.
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-primary">
+            <Cpu className="size-3.5" />
+            One platform under every industry
+          </span>
+          <h2 className="mt-5 text-balance text-3xl font-bold tracking-tight md:text-4xl">
+            Every solution runs on the same AI operation.
           </h2>
           <p className="mt-3 max-w-2xl text-muted-foreground">
-            Not a single model bolted onto a workflow — a coordinated set of AI capabilities that
-            read, reason, decide and learn, with governance running through all of it.
+            The industry packs above aren&apos;t separate products — they&apos;re the same coordinated set
+            of AI capabilities that read, reason, decide and learn, with governance running through all
+            of it. Learn the platform once; reuse it in every queue.
           </p>
         </Reveal>
 
@@ -599,52 +669,81 @@ export default function WelcomeContent() {
         </div>
       </section>
 
-      {/* solutions */}
-      <section id="solutions" className="mx-auto max-w-6xl scroll-mt-20 px-6 py-20">
-        <Reveal>
-          <h2 className="text-3xl font-bold tracking-tight">Built for your industry, ready to run</h2>
-          <p className="mt-3 max-w-2xl text-muted-foreground">
-            Start from a solution shaped for your operation — the data model, the metrics, the work
-            queues and the domain expertise already in place — instead of a blank slate. Each is an
-            installable capability pack, organized by the industry and the decisions it runs.
-          </p>
-        </Reveal>
-        <div className="mt-10 grid gap-5 lg:grid-cols-2">
-          {INDUSTRIES.map((ind, i) => {
-            const Icon = ind.icon;
-            return (
-              <Reveal key={ind.name} delay={(i % 2) * 90}>
-                <div className="h-full rounded-2xl border border-border/70 bg-card p-6 transition-all hover:border-primary/40 hover:shadow-sm">
+      {/* per-industry spotlights */}
+      <div id="solutions">
+        {INDUSTRIES.map((ind, idx) => {
+          const Icon = ind.icon;
+          const alt = idx % 2 === 1;
+          return (
+            <section
+              key={ind.id}
+              id={`ind-${ind.id}`}
+              className={`scroll-mt-16 border-t border-border/60 ${alt ? "bg-card/50" : ""}`}
+            >
+              <div className="mx-auto grid max-w-6xl items-start gap-10 px-6 py-20 lg:grid-cols-2">
+                {/* narrative */}
+                <Reveal>
                   <div className="flex items-center gap-3">
-                    <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                      <Icon className="size-5" />
+                    <span className="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                      <Icon className="size-6" />
                     </span>
                     <div>
-                      <h3 className="text-base font-semibold">{ind.name}</h3>
-                      <p className="text-xs leading-relaxed text-muted-foreground">{ind.blurb}</p>
+                      <div className="text-xs font-semibold uppercase tracking-widest text-primary">{ind.who}</div>
+                      <div className="text-lg font-bold tracking-tight">{ind.name}</div>
                     </div>
                   </div>
-                  <ul className="mt-5 grid gap-3 border-t border-border/50 pt-4 sm:grid-cols-2">
-                    {ind.useCases.map(([name, body]) => (
-                      <li key={name} className="flex gap-2">
-                        <Check className="mt-0.5 size-4 shrink-0 text-primary" />
-                        <div>
-                          <div className="text-sm font-medium leading-snug">{name}</div>
-                          <div className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{body}</div>
-                        </div>
-                      </li>
+                  <h3 className="mt-6 text-balance text-2xl font-bold leading-tight tracking-tight md:text-3xl">
+                    {ind.headline}
+                  </h3>
+                  <p className="mt-4 max-w-xl text-pretty leading-relaxed text-muted-foreground">{ind.blurb}</p>
+                  <div className="mt-6 flex flex-wrap gap-2">
+                    {ind.outcomes.map((o) => (
+                      <span
+                        key={o}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-primary/5 px-3 py-1 text-xs font-medium text-foreground"
+                      >
+                        <Check className="size-3.5 text-primary" />
+                        {o}
+                      </span>
                     ))}
-                  </ul>
-                </div>
-              </Reveal>
-            );
-          })}
+                  </div>
+                  <Button variant="outline" className="mt-7" onClick={() => setDemoOpen(true)}>
+                    Request a demo <ArrowRight className="size-4" />
+                  </Button>
+                </Reveal>
+
+                {/* solutions that ship */}
+                <Reveal delay={90}>
+                  <div className="rounded-2xl border border-border/70 bg-card p-6 shadow-sm">
+                    <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                      Solutions that ship
+                    </div>
+                    <ul className="mt-4 space-y-4">
+                      {ind.useCases.map(([name, body]) => (
+                        <li key={name} className="flex gap-3">
+                          <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                            <Check className="size-3.5" />
+                          </span>
+                          <div>
+                            <div className="text-sm font-semibold leading-snug">{name}</div>
+                            <div className="mt-0.5 text-sm leading-relaxed text-muted-foreground">{body}</div>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </Reveal>
+              </div>
+            </section>
+          );
+        })}
+        <div className="border-t border-border/60">
+          <p className="mx-auto max-w-2xl px-6 py-12 text-center text-sm text-muted-foreground">
+            <span className="font-medium text-foreground">…and your operation next.</span> New solutions
+            install onto the same governed platform — your teams learn the tool once and reuse it everywhere.
+          </p>
         </div>
-        <p className="mx-auto mt-8 max-w-2xl text-center text-sm text-muted-foreground">
-          <span className="font-medium text-foreground">…and your operation next.</span> New solutions
-          install onto the same governed platform — your teams learn the tool once and reuse it everywhere.
-        </p>
-      </section>
+      </div>
 
       {/* trust */}
       <section className="border-t border-border/60 bg-card/50">
