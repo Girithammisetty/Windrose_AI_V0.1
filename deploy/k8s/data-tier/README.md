@@ -26,7 +26,9 @@ production** (move to a Secret + rotate).
 | Ollama (CPU LLM) | `ollama:11434` | StatefulSet | 20Gi |
 | Trino (large-query engine) | `trino:8080` | Deployment | — (catalog ConfigMap) |
 
-`+` two bootstrap Jobs (`minio-createbuckets`, `mlflow-createdb`) and the
+`+` three bootstrap Jobs (`minio-createbuckets`, `mlflow-createdb`, and
+`postgres-createdbs` — creates the per-service databases + the pgvector
+extension + the one login role no migration self-creates, `semantic`) and the
 `clickhouse-config` / `trino-catalog` ConfigMaps.
 
 > **Optional add-ons** live in `optional-vault-mailpit.yaml` (kept out of the

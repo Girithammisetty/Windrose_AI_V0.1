@@ -12,6 +12,7 @@ namespace: windrose
 resources:
   - namespace.yaml
   - core-postgres.yaml
+  - postgres-createdbs.yaml
   - cache-messaging.yaml
   - objectstore.yaml
   - search-audit.yaml

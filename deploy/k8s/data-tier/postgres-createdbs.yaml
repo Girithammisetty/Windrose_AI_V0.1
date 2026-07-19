@@ -1,0 +1,59 @@
+# Per-service database bootstrap. The shared Postgres (core-postgres.yaml) boots
+# with only the `windrose` database; every service connects to its OWN database
+# (identity, case_svc, ...) as a per-service NON-superuser NOBYPASSRLS login role.
+# This Job creates those databases so the services' migrations (which run as the
+# `windrose` superuser and self-create their app role + RLS) have a database to
+# migrate into — exactly what deploy/local/up.sh does for the local platform.
+#
+# Login roles: every service EXCEPT `semantic` self-creates its login role inside
+# its own migration. `semantic`'s migration only creates the NOLOGIN group role
+# `semantic_app`, so we create the `semantic` login role here (member of that
+# group) — otherwise semantic-service cannot authenticate.
+#
+# Idempotent: CREATE DATABASE is guarded by a pg_database check; role creation by
+# pg_roles checks. Safe to re-run. Runs before the app chart's migrations.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: postgres-createdbs
+  namespace: windrose
+spec:
+  backoffLimit: 20
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: createdbs
+          image: postgres:16-alpine
+          env:
+            - { name: PGPASSWORD, value: windrose_dev }
+          command:
+            - sh
+            - -c
+            - |
+              set -eu
+              until pg_isready -h postgres -U windrose; do echo "waiting for postgres..."; sleep 2; done
+              PSQL="psql -h postgres -U windrose -v ON_ERROR_STOP=1"
+              # 1) per-service databases (mirrors deploy/local/up.sh + audit)
+              for db in identity rbac tool_plane case_svc realtimehub dataset \
+                        ingestion ai_gateway agent_runtime memory pipeline \
+                        experiment inference query semantic eval chart usage \
+                        notification pack audit; do
+                $PSQL -d postgres -tc "SELECT 1 FROM pg_database WHERE datname='$db'" \
+                  | grep -q 1 || createdb -h postgres -U windrose "$db"
+                echo "db ready: $db"
+              done
+              # 2) pgvector extension where embeddings/vector columns are used
+              for db in tool_plane dataset ai_gateway agent_runtime memory semantic; do
+                $PSQL -d "$db" -c "CREATE EXTENSION IF NOT EXISTS vector"
+              done
+              # 3) semantic login role (the only service whose login role no
+              #    migration creates). Its migration adds the NOLOGIN group
+              #    `semantic_app` (idempotent) + grants; the login role inherits.
+              $PSQL -d postgres -c "DO \$\$ BEGIN \
+                IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname='semantic_app') THEN \
+                  CREATE ROLE semantic_app NOLOGIN; END IF; \
+                IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname='semantic') THEN \
+                  CREATE ROLE semantic LOGIN PASSWORD 'semantic' NOSUPERUSER NOBYPASSRLS IN ROLE semantic_app; END IF; \
+                END \$\$"
+              echo "postgres-createdbs: done"

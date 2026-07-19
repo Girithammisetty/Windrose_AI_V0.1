@@ -202,6 +202,10 @@ externalSecrets:
     - EVAL_MIGRATE_URL
     - PACK_DATABASE_URL
     - PACK_MIGRATE_URL
+    # memory + agent-runtime also open a windrose async admin pool (asyncpg scheme,
+    # distinct from the psycopg migrate DSN) for runtime CREATE SCHEMA.
+    - AGENT_RUNTIME_ADMIN_URL
+    - MEMORY_ADMIN_URL
 
 # --- ServiceAccount ------------------------------------------------------------
 # Workload-identity annotations are cloud-specific (IRSA / GKE WI / AAD) — set in
@@ -446,7 +450,7 @@ services:
       - name: AR_DATABASE_URL
         valueFrom: { secretKeyRef: { name: windrose-secrets, key: AGENT_RUNTIME_DATABASE_URL } }
       - name: AR_ADMIN_DATABASE_URL
-        valueFrom: { secretKeyRef: { name: windrose-secrets, key: AGENT_RUNTIME_MIGRATE_URL } }
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: AGENT_RUNTIME_ADMIN_URL } }
       - name: AR_MIGRATE_URL
         valueFrom: { secretKeyRef: { name: windrose-secrets, key: AGENT_RUNTIME_MIGRATE_URL } }
       - name: AR_REDIS_URL
@@ -469,7 +473,7 @@ services:
       - name: MEM_DATABASE_URL
         valueFrom: { secretKeyRef: { name: windrose-secrets, key: MEMORY_DATABASE_URL } }
       - name: MEM_ADMIN_DATABASE_URL
-        valueFrom: { secretKeyRef: { name: windrose-secrets, key: MEMORY_MIGRATE_URL } }
+        valueFrom: { secretKeyRef: { name: windrose-secrets, key: MEMORY_ADMIN_URL } }
       - name: MEM_MIGRATE_URL
         valueFrom: { secretKeyRef: { name: windrose-secrets, key: MEMORY_MIGRATE_URL } }
       - name: MEM_REDIS_URL
