@@ -314,6 +314,13 @@ jobs:
         run: |
           pnpm install --frozen-lockfile || pnpm install
           pnpm exec playwright install --with-deps chromium
+      - name: Install bff-graphql deps (booted by the e2e globalSetup)
+        # tests-e2e/global-setup.ts spawns the REAL bff-graphql via `pnpm start`
+        # (tsx src/index.ts). bff-graphql has its OWN lockfile (no workspace), so
+        # the ui-web install above does NOT install it — without this step the BFF
+        # can't boot, globalSetup's waitFor times out, and every e2e fails.
+        working-directory: services/bff-graphql
+        run: pnpm install --frozen-lockfile || pnpm install
       - name: Run contract e2e suite (pnpm e2e)
         working-directory: services/ui-web
         run: pnpm e2e
