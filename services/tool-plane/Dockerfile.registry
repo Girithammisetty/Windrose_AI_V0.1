@@ -2,9 +2,11 @@
 # static (MASTER-FR-072).
 FROM golang:1.26-bookworm AS build
 WORKDIR /src
-COPY go.mod go.sum ./
-RUN go mod download
-COPY . .
+COPY go.work.sum ./
+COPY libs/go-common ./libs/go-common
+COPY services/tool-plane ./services/tool-plane
+RUN go work init ./libs/go-common ./services/tool-plane
+WORKDIR /src/services/tool-plane
 RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/tool-registry ./cmd/registry
 
 FROM gcr.io/distroless/static-debian12:nonroot

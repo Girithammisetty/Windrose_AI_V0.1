@@ -3,9 +3,10 @@
 # resolves (docker build -f services/usage-service/Dockerfile .).
 FROM golang:1.26-bookworm AS build
 WORKDIR /src
-COPY go.work go.work.sum ./
+COPY go.work.sum ./
 COPY libs/go-common ./libs/go-common
 COPY services/usage-service ./services/usage-service
+RUN go work init ./libs/go-common ./services/usage-service
 WORKDIR /src/services/usage-service
 RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/usage-service ./cmd/server
 

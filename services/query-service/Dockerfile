@@ -2,9 +2,11 @@
 # (MASTER-FR-072).
 FROM golang:1.26-bookworm AS build
 WORKDIR /src
-COPY go.mod go.sum ./
-RUN go mod download
-COPY . .
+COPY go.work.sum ./
+COPY libs/go-common ./libs/go-common
+COPY services/query-service ./services/query-service
+RUN go work init ./libs/go-common ./services/query-service
+WORKDIR /src/services/query-service
 RUN CGO_ENABLED=1 go build -trimpath -ldflags="-s -w" -o /out/query-service ./cmd/server
 
 # distroless/base carries glibc (required by the cgo DuckDB driver);

@@ -5,7 +5,7 @@
 FROM node:20-slim AS deps
 WORKDIR /app
 RUN corepack enable
-COPY package.json pnpm-lock.yaml* ./
+COPY services/ui-web/package.json services/ui-web/pnpm-lock.yaml* ./
 RUN pnpm install --frozen-lockfile || pnpm install
 
 FROM node:20-slim AS build
@@ -13,7 +13,7 @@ WORKDIR /app
 RUN corepack enable
 ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+COPY services/ui-web/ ./
 # NEXT_PUBLIC_* are inlined at build; override in CI when the realtime host is known.
 ARG NEXT_PUBLIC_REALTIME_HUB_URL=""
 ENV NEXT_PUBLIC_REALTIME_HUB_URL=${NEXT_PUBLIC_REALTIME_HUB_URL}

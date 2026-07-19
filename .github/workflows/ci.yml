@@ -648,7 +648,7 @@ jobs:
       - name: Build & (conditionally) push ${{ matrix.name }}
         uses: docker/build-push-action@v6
         with:
-          context: ${{ matrix.path }}
+          context: .
           file: ${{ matrix.path }}/${{ matrix.dockerfile }}
           push: ${{ env.PUSH == 'true' }}
           tags: ${{ steps.img.outputs.ref }}:${{ env.IMAGE_TAG }}

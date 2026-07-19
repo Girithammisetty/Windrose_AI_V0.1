@@ -4,11 +4,13 @@
 
 FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS build
 WORKDIR /srv
-COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen --no-dev --no-install-project
-COPY app ./app
-COPY migrations ./migrations
-COPY alembic.ini ./
+COPY libs/py-common /libs/py-common
+COPY services/ingestion-service/pyproject.toml services/ingestion-service/uv.lock ./
+RUN sed -i 's#\.\./\.\./libs/py-common#/libs/py-common#' pyproject.toml uv.lock \
+    && uv sync --frozen --no-dev --no-install-project
+COPY services/ingestion-service/app ./app
+COPY services/ingestion-service/migrations ./migrations
+COPY services/ingestion-service/alembic.ini ./
 RUN uv sync --frozen --no-dev
 
 FROM python:3.12-slim-bookworm AS runtime

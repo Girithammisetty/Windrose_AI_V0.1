@@ -3,7 +3,7 @@
 FROM node:20-slim AS deps
 WORKDIR /app
 RUN corepack enable
-COPY package.json pnpm-lock.yaml* ./
+COPY services/bff-graphql/package.json services/bff-graphql/pnpm-lock.yaml* ./
 RUN pnpm install --frozen-lockfile || pnpm install
 
 FROM node:20-slim AS runtime
@@ -11,8 +11,8 @@ WORKDIR /app
 ENV NODE_ENV=production
 RUN corepack enable
 COPY --from=deps /app/node_modules ./node_modules
-COPY package.json tsconfig.json ./
-COPY src ./src
+COPY services/bff-graphql/package.json services/bff-graphql/tsconfig.json ./
+COPY services/bff-graphql/src ./src
 
 # Drop privileges.
 USER node

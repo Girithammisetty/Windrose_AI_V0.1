@@ -2,12 +2,14 @@
 FROM python:3.12-slim AS build
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 WORKDIR /srv
-COPY pyproject.toml uv.lock ./
-RUN uv export --no-dev --frozen --format requirements.txt -o requirements.txt \
+COPY libs/py-common /libs/py-common
+COPY services/pack-service/pyproject.toml services/pack-service/uv.lock ./
+RUN sed -i 's#\.\./\.\./libs/py-common#/libs/py-common#' pyproject.toml uv.lock \
+    && uv export --no-dev --frozen --format requirements.txt -o requirements.txt \
     && uv pip install --system --no-cache -r requirements.txt
-COPY app ./app
-COPY migrations ./migrations
-COPY alembic.ini ./
+COPY services/pack-service/app ./app
+COPY services/pack-service/migrations ./migrations
+COPY services/pack-service/alembic.ini ./
 
 # Runtime: distroless (MASTER-FR-072). packctl + the pack catalog are NOT baked
 # in — a real deployment mounts/pulls them from the signed OCI pack registry

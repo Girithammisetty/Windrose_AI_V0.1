@@ -1,9 +1,11 @@
 # Build
 FROM golang:1.26 AS build
 WORKDIR /src
-COPY go.mod go.sum ./
-RUN go mod download
-COPY . .
+COPY go.work.sum ./
+COPY libs/go-common ./libs/go-common
+COPY services/identity-service ./services/identity-service
+RUN go work init ./libs/go-common ./services/identity-service
+WORKDIR /src/services/identity-service
 RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/identity-service ./cmd/server
 
 # Run (distroless, non-root — MASTER-FR-072)
