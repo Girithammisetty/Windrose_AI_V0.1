@@ -634,13 +634,24 @@ jobs:
       #   if: ${{ env.PUSH == 'true' }}
       #   run: az acr login --name ${{ vars.ACR_NAME }}
 
+      # A container repository path MUST be lowercase (OCI/Docker rule), but
+      # `github.repository_owner` preserves the account's casing — so an owner
+      # like "Girithammisetty" yields ghcr.io/Girithammisetty/… , which
+      # build-push-action rejects with "repository name must be lowercase"
+      # BEFORE it builds (hence every service failing identically in seconds).
+      # Lowercase the repo path here; the tag (a commit SHA) is already lower.
+      - name: Compute lowercase image ref
+        id: img
+        run: |
+          echo "ref=$(echo '${{ env.REGISTRY }}/${{ matrix.name }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+
       - name: Build & (conditionally) push ${{ matrix.name }}
         uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.path }}
           file: ${{ matrix.path }}/${{ matrix.dockerfile }}
           push: ${{ env.PUSH == 'true' }}
-          tags: ${{ env.REGISTRY }}/${{ matrix.name }}:${{ env.IMAGE_TAG }}
+          tags: ${{ steps.img.outputs.ref }}:${{ env.IMAGE_TAG }}
           cache-from: type=gha,scope=${{ matrix.name }}
           cache-to: type=gha,mode=max,scope=${{ matrix.name }}
           provenance: false
