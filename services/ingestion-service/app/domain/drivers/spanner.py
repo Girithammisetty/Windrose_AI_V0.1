@@ -75,8 +75,14 @@ class SpannerClient:
             result = snapshot.execute_sql(
                 sql, params=params or None, param_types=self._param_types(specs) or None
             )
-            columns = [f.name for f in result.fields]
+            # StreamedResultSet.fields is only populated once the first result
+            # chunk has streamed in — reading it before iterating raises
+            # AttributeError ('_metadata' is None). Resolve column names lazily
+            # after the first row so an empty result set yields nothing cleanly.
+            columns: list[str] | None = None
             for row in result:
+                if columns is None:
+                    columns = [f.name for f in result.fields]
                 yield dict(zip(columns, row, strict=False))
 
     def probe(self) -> None:

@@ -60,8 +60,10 @@ test("login → case → copilot → inbox approve, with AI label + provenance",
 
   // --- Approval inbox: destructive excluded from bulk, then approve the benign one ---
   await page.goto("/inbox");
-  const assignCard = page.getByRole("listitem").filter({ hasText: "assign_case" });
-  const deleteCard = page.getByRole("listitem").filter({ hasText: "delete_case" });
+  // The card shows the humanized tool label (jargon cleanup: raw tool ids like
+  // "assign_case" are no longer surfaced as visible text).
+  const assignCard = page.getByRole("listitem").filter({ hasText: "Assign case" });
+  const deleteCard = page.getByRole("listitem").filter({ hasText: "Delete case" });
   await expect(assignCard).toBeVisible();
   await expect(deleteCard).toBeVisible();
 
@@ -91,7 +93,7 @@ test("login → case → copilot → inbox approve, with AI label + provenance",
 test("reject requires a reason (AC-6)", async ({ page }) => {
   await login(page);
   await page.goto("/inbox");
-  await page.getByRole("listitem").filter({ hasText: "assign_case" }).click();
+  await page.getByRole("listitem").filter({ hasText: "Assign case" }).click();
   const detail = page.locator('[data-proposal-detail="prop-assign"]');
   await detail.getByRole("button", { name: /^reject$/i }).click();
   const confirm = detail.getByRole("button", { name: /confirm reject/i });
