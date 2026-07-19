@@ -37,6 +37,59 @@ def _intent():
                           "blast_radius": 1})
 
 
+def _high_risk_intent(n_urns=1, side_effects="destructive"):
+    """A high-risk write: irreversible (destructive) or bulk (many URNs)."""
+    urns = [f"wr:{TENANT_A}:case:case/c-{i}" for i in range(n_urns)] or \
+        [f"wr:{TENANT_A}:case:case/c-0"]
+    return WriteIntent(
+        tool_id="case.apply_disposition", tool_version="1.0.0", tier="write-proposal",
+        side_effects=side_effects,
+        args={"case_id": "c-0", "severity": "high"},
+        rationale="looks routine",  # laundering attempt: benign prose on a risky write
+        affected_urns=urns,
+        predicted_effect={"summary": "a tiny harmless tweak", "blast_radius": 1})
+
+
+async def test_effect_is_server_derived_not_model_prose():
+    c = _container()
+    run = await _run(c)
+    prop, _ = await c.proposal_service.create_from_intent(
+        run=run, intent=_high_risk_intent(n_urns=3, side_effects="reversible"),
+        obo_user="u-77", auto_execute_policy={})
+    # Ground-truth effect overrides the model's "tiny harmless tweak"/blast_radius 1.
+    assert prop.predicted_effect["blast_radius"] == 3
+    assert "case.apply_disposition" in prop.predicted_effect["authoritative_summary"]
+    assert prop.predicted_effect["agent_summary"] == "a tiny harmless tweak"  # demoted
+    assert prop.predicted_effect["args_digest"]
+
+
+async def test_high_risk_never_self_approvable_even_if_tenant_allows():
+    c = _container()
+    run = await _run(c)
+    prop, _ = await c.proposal_service.create_from_intent(
+        run=run, intent=_high_risk_intent(side_effects="destructive"),
+        obo_user="u-77", auto_execute_policy={})
+    assert prop.predicted_effect["risk"] == "high"
+    # Tenant permits self-approval, but a high-risk write still demands a distinct party.
+    with pytest.raises(Exception) as ei:
+        await c.proposal_service.decide(
+            tenant_id=TENANT_A, proposal_id=prop.proposal_id, actor_sub="u-77",
+            action="approve", self_approval_allowed=True)
+    assert "distinct approver" in str(ei.value)
+
+
+async def test_high_risk_bulk_write_not_auto_executed_despite_policy():
+    c = _container()
+    run = await _run(c)
+    # Reversible but 25+ URNs → bulk → high risk → auto-execute overridden to manual.
+    policy = {"case-triage": {"write-proposal": {"reversible": "auto"}}}
+    prop, executed = await c.proposal_service.create_from_intent(
+        run=run, intent=_high_risk_intent(n_urns=25, side_effects="reversible"),
+        obo_user="u-77", auto_execute_policy=policy)
+    assert prop.predicted_effect["risk"] == "high"
+    assert executed is False and prop.status == "pending"
+
+
 async def test_create_proposal_pending_no_execution():
     c = _container()
     run = await _run(c)

@@ -40,6 +40,26 @@ describe("ProposalDetail (UI-FR-033)", () => {
     expect(screen.getByText(/destructive/i)).toBeInTheDocument();
   });
 
+  it("shows the server-verified effect + high-risk badge, and demotes the agent's prose", () => {
+    const highRisk: Proposal = {
+      ...proposal,
+      predictedEffect: {
+        authoritative_summary: "Runs case.apply_disposition (tier write-proposal, irreversible); affects 30 resources.",
+        summary: "a tiny harmless tweak",
+        agent_summary: "a tiny harmless tweak",
+        risk: "high",
+        reversibility: "irreversible",
+        blast_radius: 30,
+      },
+    };
+    renderWithProviders(<ProposalDetail proposal={highRisk} />);
+    // The approver sees the ground-truth summary, not the laundered prose.
+    expect(screen.getByText(/affects 30 resources/)).toBeInTheDocument();
+    expect(screen.getByText(/high-risk/i)).toBeInTheDocument();
+    // The model's benign description is still shown, but marked unverified.
+    expect(screen.getByText(/Agent’s description \(unverified\)/)).toBeInTheDocument();
+  });
+
   it("renders the evidence citations the recommendation is grounded in", () => {
     const withCitations: Proposal = {
       ...proposal,

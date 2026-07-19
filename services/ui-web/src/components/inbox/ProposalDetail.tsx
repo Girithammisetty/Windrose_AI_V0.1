@@ -134,14 +134,34 @@ export function ProposalDetail({ proposal }: { proposal: Proposal }) {
         )}
         {proposal.predictedEffect && (
           <section>
-            <h3 className="mb-1 text-xs font-semibold uppercase text-muted-foreground">Predicted effect</h3>
-            <p className="text-sm">{proposal.predictedEffect.summary}</p>
+            <div className="mb-1 flex items-center gap-2">
+              <h3 className="text-xs font-semibold uppercase text-muted-foreground">Predicted effect</h3>
+              {String(proposal.predictedEffect.risk) === "high" && (
+                <span className="rounded-full bg-destructive/15 px-2 py-0.5 text-xs font-medium text-destructive">
+                  high-risk · needs a distinct approver
+                </span>
+              )}
+            </div>
+            {/* Server-verified summary derived from the actual args (anti
+                "description-laundering") — falls back to the legacy summary. */}
+            <p className="text-sm">
+              {String(
+                proposal.predictedEffect.authoritative_summary ??
+                  proposal.predictedEffect.summary ??
+                  "",
+              )}
+            </p>
             {(proposal.predictedEffect.reversibility || proposal.predictedEffect.blast_radius != null) && (
               <p className="mt-0.5 text-xs text-muted-foreground">
-                {proposal.predictedEffect.reversibility}
+                {proposal.predictedEffect.reversibility as string}
                 {proposal.predictedEffect.reversibility && proposal.predictedEffect.blast_radius != null && " · "}
                 {proposal.predictedEffect.blast_radius != null &&
                   `blast radius ${proposal.predictedEffect.blast_radius}`}
+              </p>
+            )}
+            {proposal.predictedEffect.agent_summary != null && (
+              <p className="mt-1 text-xs italic text-muted-foreground">
+                Agent’s description (unverified): {String(proposal.predictedEffect.agent_summary)}
               </p>
             )}
           </section>

@@ -24,6 +24,7 @@ from app.domain.errors import (
     ProposalExpired,
     ValidationFailed,
 )
+from app.proposals.effect import derive_effect
 
 # Tool-tier ordering for the max-tier guardrail ceiling (BRD 53 PA-FR-030).
 _TIER_RANK = {"read": 0, "write-proposal": 1, "write-direct": 2, "admin": 3}
@@ -72,6 +73,16 @@ class ProposalService:
         # tenant custom agent's allow-list real. Fail closed BEFORE any proposal
         # row exists; defense-in-depth with tool-plane's tenant-enablement gate.
         await self._enforce_guardrail(run, intent)
+        # Anti "description-laundering" (P0 approval hardening): compute the
+        # approver-facing effect from GROUND TRUTH (tool/tier/side-effects/args/
+        # affected URNs) server-side, overriding any model-authored summary/blast.
+        # The model's prose is preserved as predicted_effect.agent_summary, clearly
+        # unverified. ``risk`` (from blast-radius + reversibility) then tiers the
+        # human-oversight requirement below.
+        effect = derive_effect(
+            tool_id=intent.tool_id, tier=intent.tier, side_effects=intent.side_effects,
+            args=intent.args, affected_urns=intent.affected_urns,
+            model_effect=intent.predicted_effect)
         pid = new_uuid()
         expires = now().timestamp() + self._settings.proposal_default_ttl_seconds
         from datetime import datetime
@@ -81,7 +92,7 @@ class ProposalService:
             obo_user=obo_user, tool_id=intent.tool_id, tool_version=intent.tool_version,
             tier=intent.tier, side_effects=intent.side_effects, args=intent.args,
             rationale=intent.rationale, affected_urns=intent.affected_urns,
-            predicted_effect=intent.predicted_effect,
+            predicted_effect=effect,
             expires_at=datetime.fromtimestamp(expires, tz=UTC), status="pending",
             workspace_id=intent.workspace_id or intent.args.get("workspace_id"))
         await self._store.create_proposal(prop)
@@ -95,6 +106,12 @@ class ProposalService:
 
         auto = policy_mod.is_auto_execute(
             auto_execute_policy, run.agent_key, intent.tier, intent.side_effects)
+        # Tiered approval (P0): a high-risk write (irreversible, or blast-radius at/
+        # above the bulk threshold, or write-direct/admin tier) is NEVER auto-executed
+        # regardless of tenant policy — the two most dangerous properties always
+        # demand a human. Defense-in-depth with policy.py's destructive/admin block.
+        if effect.get("risk") == "high":
+            auto = False
         if auto:
             decided = await self._store.decide_proposal(
                 tenant_id=run.tenant_id, proposal_id=pid, new_status="approved",
@@ -226,12 +243,18 @@ class ProposalService:
 
     async def _check_eligibility(self, prop: Proposal, actor_sub: str,
                                  self_approval_allowed: bool) -> None:
-        # Four-eyes / distinct-approver invariant (ART-FR-044).
+        # Four-eyes / distinct-approver invariant (ART-FR-044), tiered by risk (P0).
+        risk = (prop.predicted_effect or {}).get("risk", "low")
         if prop.obo_user:
             # On-behalf-of proposal: the trigger user may not approve their own
-            # request unless the tenant explicitly permits self-approval.
-            if actor_sub == prop.obo_user and not self_approval_allowed:
-                raise PermissionDenied("self-approval not permitted for this tenant")
+            # request unless the tenant explicitly permits self-approval — EXCEPT a
+            # high-risk write (irreversible / bulk / write-direct) always requires a
+            # genuine distinct second party, tenant self-approval policy notwithstanding.
+            allow_self = self_approval_allowed and risk != "high"
+            if actor_sub == prop.obo_user and not allow_self:
+                reason = ("high-risk proposals always require a distinct approver"
+                          if risk == "high" else "self-approval not permitted for this tenant")
+                raise PermissionDenied(reason)
         else:
             # Fully-autonomous proposal (no obo_user): the same-person guard above
             # is a no-op, so require an EXPLICIT distinct human approver. Without
