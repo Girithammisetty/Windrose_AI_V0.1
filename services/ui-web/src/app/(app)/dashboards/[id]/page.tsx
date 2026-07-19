@@ -100,7 +100,7 @@ export default function DashboardDetailPage({ params }: { params: Promise<{ id: 
                       </Button>
                     </Can>
                   )}
-                  <Can gate={FEATURE_GATES.createDashboard}>
+                  <Can gate={FEATURE_GATES.deleteDashboard}>
                     <Button variant="outline" onClick={() => setConfirmDeleteDash(true)}>
                       <Trash2 className="text-destructive" /> {t("dashboards.deleteDashboard")}
                     </Button>
@@ -194,7 +194,7 @@ export default function DashboardDetailPage({ params }: { params: Promise<{ id: 
                               </Button>
                             </Can>
                           )}
-                          <Can gate={FEATURE_GATES.createDashboard}>
+                          <Can gate={FEATURE_GATES.editChart}>
                             <Button
                               variant="ghost"
                               size="icon"
@@ -207,7 +207,7 @@ export default function DashboardDetailPage({ params }: { params: Promise<{ id: 
                               <Pencil />
                             </Button>
                           </Can>
-                          <Can gate={FEATURE_GATES.createDashboard}>
+                          <Can gate={FEATURE_GATES.deleteChart}>
                             <Button
                               variant="ghost"
                               size="icon"

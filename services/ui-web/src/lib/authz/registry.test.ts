@@ -30,9 +30,12 @@ const MANAGER = toCapabilitySet({
     "case.case.assign",
     "ai.proposal.read",
     "chart.dashboard.read",
-    // manager authors oversight dashboards + charts
-    "chart.dashboard.create",
-    "chart.chart.create",
+    // manager CONSUMES dashboards and may LIGHTLY EDIT existing charts, but does
+    // not author new ones or delete them (no *.create / *.delete), and is not a
+    // semantic-model browser (no semantic.model.list → no Semantic Models nav).
+    "chart.dashboard.update",
+    "chart.chart.update",
+    "semantic.model.read",
     "usage.report.read",
     // manager also subscribes dashboards to scheduled report digests (NOTIF-FR-060)
     "notification.report.read",
@@ -131,9 +134,10 @@ describe("role-based nav gating (four personas => four different apps)", () => {
 });
 
 describe("dashboard authoring feature gate (chart.dashboard.create)", () => {
-  it("manager + datascientist can create dashboards/charts; adjuster cannot", () => {
-    expect(allows(FEATURE_GATES.createDashboard, MANAGER)).toBe(true);
+  it("datascientist can create dashboards/charts; manager + adjuster cannot", () => {
     expect(allows(FEATURE_GATES.createDashboard, DATASCIENTIST)).toBe(true);
+    // manager is now a consumer + light editor: no create/delete authoring.
+    expect(allows(FEATURE_GATES.createDashboard, MANAGER)).toBe(false);
     // adjuster holds only chart.dashboard.read → sees the nav but not the create controls
     expect(allows(FEATURE_GATES.createDashboard, ADJUSTER)).toBe(false);
     expect(navKeys(ADJUSTER)).toContain("dashboards");
@@ -141,6 +145,16 @@ describe("dashboard authoring feature gate (chart.dashboard.create)", () => {
 
   it("the create gate resolves to the chart.dashboard.create capability", () => {
     expect(FEATURE_GATES.createDashboard).toEqual(cap("chart.dashboard.create"));
+  });
+
+  it("manager can lightly edit existing charts but not create or delete them", () => {
+    // Consumer + light editing: update yes; create / delete no.
+    expect(allows(FEATURE_GATES.editChart, MANAGER)).toBe(true);
+    expect(allows(FEATURE_GATES.createDashboard, MANAGER)).toBe(false);
+    expect(allows(FEATURE_GATES.deleteChart, MANAGER)).toBe(false);
+    expect(allows(FEATURE_GATES.deleteDashboard, MANAGER)).toBe(false);
+    // No semantic-model browsing → the "Semantic Models" nav item is hidden.
+    expect(navKeys(MANAGER)).not.toContain("semanticModels");
   });
 });
 

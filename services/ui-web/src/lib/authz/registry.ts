@@ -311,9 +311,16 @@ export const FEATURE_GATES = {
   archiveExperiment: cap("experiment.experiment.delete"),
   /** Restore an archived experiment (experiment-service PATCH /experiments/{id}/restore). */
   restoreExperiment: cap("experiment.experiment.update"),
-  /** Author dashboards + charts (create dashboard, add chart, delete). Manager +
-   * datascientist both hold chart.dashboard.create. */
+  /** Create a dashboard / add a chart (chart.dashboard.create). Distinct from
+   * editing or deleting so a "light editor" role can tweak without authoring. */
   createDashboard: cap("chart.dashboard.create"),
+  /** Edit an existing chart's config (chart.chart.update) — a consumer with
+   * light-editing rights holds this without create/delete. */
+  editChart: cap("chart.chart.update"),
+  /** Delete a chart from a dashboard (chart.chart.delete). */
+  deleteChart: cap("chart.chart.delete"),
+  /** Delete a whole dashboard (chart.dashboard.delete). */
+  deleteDashboard: cap("chart.dashboard.delete"),
   /** Create an ML experiment (experiment-service POST /experiments). Model Builder
    * holds experiment.experiment.create. */
   createExperiment: cap("experiment.experiment.create"),
