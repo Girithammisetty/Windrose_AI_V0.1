@@ -786,6 +786,135 @@ def run_upgrade(client, target_manifest, prior_ledger, origin_of):
     return new_ledger, pending, removed_outcomes, diff
 
 
+# ---- drift detection (PKG-FR-031: materialized object vs pack intent) -------
+#
+# After install, a tenant admin can edit or delete a pack-materialized object out
+# of band. Drift detection compares each LIVE object to what the pack SHIPPED
+# (the intended spec, parsed from the install's bundle snapshot) and reports it as
+# in_sync / modified / missing. Two tiers of reader:
+#   * CONTENT readers (case_fields, dispositions) fetch the live object and diff
+#     its canonical fields against the shipped spec -> in_sync | modified | missing.
+#   * PRESENCE (any kind _existing_names can list) confirms the object still
+#     exists -> in_sync (presence only) | missing.
+# Kinds with neither are reported `unverified` (honest — no reader yet).
+
+def _dispo_intended(entry: dict) -> dict:
+    return {"label": entry.get("label"), "category": entry.get("category"),
+            "requires_note": bool(entry.get("requires_note", False))}
+
+
+def _dispo_live(client) -> dict[str, dict]:
+    e, tok = client.endpoints, client.author_token()
+    r = client._req("GET", f"{e.case}/api/v1/dispositions?workspace_id={client.workspace_id}", tok)
+    out: dict[str, dict] = {}
+    if r.status_code == 200:
+        for d in r.json().get("data", []):
+            out[str(d.get("code"))] = {"label": d.get("label"), "category": d.get("category"),
+                                       "requires_note": bool(d.get("requires_note", False))}
+    return out
+
+
+# case-service encodes purpose as an int (0=create,1=update,2=both); the pack
+# ships the string form. Normalize both sides so an unedited field is in_sync.
+_PURPOSE = {0: "create", 1: "update", 2: "both", "0": "create", "1": "update", "2": "both"}
+
+
+def _purpose_norm(v) -> str:
+    return _PURPOSE.get(v, str(v))
+
+
+def _field_intended(entry: dict) -> dict:
+    return {"data_type": entry.get("data_type"), "purpose": _purpose_norm(entry.get("purpose", "both")),
+            "field_meta": entry.get("field_meta") or {}}
+
+
+def _field_live(client) -> dict[str, dict]:
+    e, tok = client.endpoints, client.author_token()
+    r = client._req("GET", f"{e.case}/api/v1/case-fields", tok)
+    out: dict[str, dict] = {}
+    if r.status_code == 200:
+        for f in r.json().get("data", []):
+            out[str(f.get("name"))] = {"data_type": f.get("data_type"),
+                                       "purpose": _purpose_norm(f.get("purpose")),
+                                       "field_meta": f.get("field_meta") or {}}
+    return out
+
+
+# kind -> (fetch live {identity: canon}, shipped-entry -> canon)
+DRIFT_CONTENT = {
+    "dispositions": (_dispo_live, _dispo_intended),
+    "case_fields": (_field_live, _field_intended),
+}
+
+
+def _canon(d: dict) -> str:
+    import json  # noqa: PLC0415
+    return json.dumps(d, sort_keys=True, default=str)
+
+
+def _named_entries(kind: str, doc) -> list[tuple[str, dict]]:
+    """(object-name, shipped-entry) pairs for a content kind — the entry is the
+    pack's intended spec for that object, keyed by the same name the ledger uses."""
+    if kind == "dispositions":
+        return [(d["code"], d) for d in doc]
+    if kind == "case_fields":
+        return [(f["name"], f) for f in doc]
+    return []
+
+
+def detect_drift(client, ledger: list[dict], manifest) -> list[dict]:
+    """Compare each non-tombstoned ledger object to Core's current state. Returns
+    one row per object: {kind, identity, status, contentChecked, detail}. `status`
+    is in_sync | modified | missing | unverified. `manifest` (rehydrated from the
+    install's bundle snapshot) supplies the intended spec for CONTENT kinds; when
+    it is None (a pre-snapshot install) content kinds fall back to presence."""
+    intended: dict[tuple[str, str], dict] = {}
+    if manifest is not None:
+        from packctl.manifest import load_component_file  # noqa: PLC0415
+        for comp in manifest.components:
+            if comp.kind in DRIFT_CONTENT:
+                for name, entry in _named_entries(comp.kind, load_component_file(manifest, comp)):
+                    intended[(comp.kind, name)] = entry
+
+    present = _existing_names(client)          # presence per kind (reused)
+    content_live: dict[str, dict] = {}         # per content-kind live objects (lazy)
+    rows: list[dict] = []
+    for r in ledger:
+        if r.get("tombstoned"):
+            continue
+        kind, name = r["kind"], r["identity"]
+        spec = intended.get((kind, name))
+        if kind in DRIFT_CONTENT and spec is not None:
+            if kind not in content_live:
+                content_live[kind] = DRIFT_CONTENT[kind][0](client)
+            live = content_live[kind]
+            if name not in live:
+                rows.append(_drift_row(r, "missing", True, "object deleted in Core"))
+                continue
+            want = DRIFT_CONTENT[kind][1](spec)
+            got = live[name]
+            if _canon(want) == _canon(got):
+                rows.append(_drift_row(r, "in_sync", True, ""))
+            else:
+                changed = sorted(k for k in want if _canon({k: want.get(k)}) != _canon({k: got.get(k)}))
+                rows.append(_drift_row(r, "modified", True,
+                                       f"changed: {', '.join(changed)}"))
+        elif kind in present:
+            if name in present[kind]:
+                rows.append(_drift_row(r, "in_sync", False, "present (content not compared)"))
+            else:
+                rows.append(_drift_row(r, "missing", True, "object deleted in Core"))
+        else:
+            rows.append(_drift_row(r, "unverified", False, "no drift reader for this kind yet"))
+    return rows
+
+
+def _drift_row(r: dict, status: str, content_checked: bool, detail: str) -> dict:
+    return {"kind": r["kind"], "identity": r["identity"], "target_id": r.get("target_id"),
+            "origin": r.get("origin"), "status": status,
+            "contentChecked": content_checked, "detail": detail}
+
+
 def _unbind_role_group(client, e, tok, *, role_name: str, role_id: str) -> None:
     """Unbind a pack role from its same-named permission group and drop the
     group, so the role becomes deletable (rbac 409s on a still-bound role)."""
