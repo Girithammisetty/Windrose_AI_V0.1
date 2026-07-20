@@ -44,6 +44,12 @@ class Settings(BaseSettings):
     use_real_adapters: bool = True
     store_mode: str | None = None  # "sql" (default when real) | "memory" (tests)
 
+    # Event-driven decisioning (real-time): consume domain events and fire GOVERNED
+    # autonomous agent runs. OFF by default — turning it on starts auto-triggering
+    # agents, so it stays an explicit per-deployment operator decision.
+    event_triggers_enabled: bool = False
+    event_trigger_topic: str = "case.events.v1"
+
     # Real-adapter endpoints (deploy/docker-compose.dev.yml defaults).
     kafka_bootstrap_servers: str = "localhost:9092"
     redis_url: str = "redis://localhost:6379/0"

@@ -117,6 +117,38 @@ async def _lifespan(app: FastAPI):
             c.extras["retrain_scheduler"] = False
             logger.exception("retrain scheduler FAILED to start")
 
+    # Event-driven decisioning: a domain event fires a GOVERNED autonomous agent
+    # run in seconds instead of waiting for a human or the next schedule tick.
+    # Every governance gate still applies downstream (toolset allow-list, risk
+    # tiering, Rule-of-Two, tenant auto-execute policy) — see event_triggers.py.
+    # Off unless explicitly enabled: turning it on starts auto-triggering agents.
+    if c.settings.use_real_adapters and c.settings.event_triggers_enabled:
+        try:
+            import redis.asyncio as aioredis
+            from windrose_common.kafka import KafkaConfig, KafkaConsumer, KafkaProducerClient
+            from windrose_common.redisx import RedisDedupStore
+
+            from app.runtime.event_triggers import EventTriggerDispatcher
+
+            kcfg = KafkaConfig(bootstrap_servers=c.settings.kafka_bootstrap_servers)
+            producer = KafkaProducerClient(kcfg)  # DLQ sink for poison messages
+            await producer.start()
+            c.extras["event_trigger_producer"] = producer
+            # Redis dedup is handle-then-mark, so a redelivered event can never
+            # fire a duplicate agent run once the first one's effects are durable.
+            dedup = RedisDedupStore(aioredis.from_url(c.settings.redis_url))
+            topic = c.settings.event_trigger_topic
+            consumer = KafkaConsumer(
+                topic, "agent-runtime.event-triggers",
+                EventTriggerDispatcher(c).handle, dedup, producer, cfg=kcfg)
+            await consumer.start()
+            tasks.append(asyncio.create_task(consumer.run()))
+            c.extras["event_triggers"] = True
+            logger.info("event triggers started (topic=%s)", topic)
+        except Exception:
+            c.extras["event_triggers"] = False
+            logger.exception("event triggers FAILED to start — no real-time decisioning")
+
     yield
 
     for t in tasks:
@@ -124,6 +156,9 @@ async def _lifespan(app: FastAPI):
     for t in tasks:
         with contextlib.suppress(Exception):
             await t
+    if c.extras.get("event_trigger_producer") is not None:
+        with contextlib.suppress(Exception):
+            await c.extras["event_trigger_producer"].stop()
     for engine in c.extras.get("engines", []):
         with contextlib.suppress(Exception):
             await engine.dispose()

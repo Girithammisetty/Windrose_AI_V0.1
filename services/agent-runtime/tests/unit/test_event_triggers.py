@@ -17,8 +17,13 @@ async def _container():
 
 
 def _event(**kw):
+    """The REAL master envelope (MASTER-FR-031): body under `payload`, subject
+    under top-level `resource_urn` — not a hand-rolled shape."""
     base = {"event_id": "evt-1", "event_type": "case.created", "tenant_id": TENANT_A,
-            "data": {"case_id": "c-91", "urn": f"wr:{TENANT_A}:case:case/c-91"}}
+            "actor": {"type": "user", "id": "u-1"}, "via_agent": None,
+            "resource_urn": f"wr:{TENANT_A}:case:case/c-91",
+            "occurred_at": "2026-07-19T00:00:00Z", "trace_id": "t-1",
+            "payload": {"case_id": "c-91"}}
     base.update(kw)
     return base
 
@@ -45,9 +50,18 @@ async def test_trigger_provenance_is_recorded_on_the_run_inputs():
     await EventTriggerDispatcher(c).handle(_event())
     assert fired, "run engine was never invoked"
     inputs = fired[0]
-    assert inputs["case_id"] == "c-91"                       # event payload carried
+    assert inputs["case_id"] == "c-91"                       # envelope `payload` carried
     assert inputs["trigger"]["event_type"] == "case.created"  # why it ran (auditable)
     assert inputs["trigger"]["event_id"] == "evt-1"
+    assert inputs["trigger"]["resource_urn"].endswith("case/c-91")
+
+
+async def test_accepts_the_data_alias_for_simplified_events():
+    """A hand-published event using `data` instead of `payload` still works."""
+    c = await _container()
+    evt = _event(payload=None, data={"case_id": "c-77"})
+    out = await EventTriggerDispatcher(c).handle(evt)
+    assert out.fired is True
 
 
 async def test_unmapped_event_type_does_not_fire():

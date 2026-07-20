@@ -61,7 +61,12 @@ class EventTriggerDispatcher:
             return TriggerOutcome(False, "malformed_envelope")
         tenant_id = envelope.get("tenant_id")
         event_type = envelope.get("event_type")
-        data = envelope.get("data") or {}
+        # Master envelope (MASTER-FR-031) carries the body under `payload` and the
+        # subject under top-level `resource_urn`; accept `data` as an alias so a
+        # hand-published/simplified event still works.
+        payload = envelope.get("payload")
+        if not isinstance(payload, dict):
+            payload = envelope.get("data") or {}
         if not tenant_id or not event_type:
             return TriggerOutcome(False, "malformed_envelope")
 
@@ -80,7 +85,8 @@ class EventTriggerDispatcher:
             # resolve_version() inside enforces the kill switch + published version.
             session = await orch.get_or_create_session(
                 tenant_id=tenant_id, user_id=None, agent_key=agent_key,
-                session_id=None, context_urn=data.get("urn"))
+                session_id=None,
+                context_urn=envelope.get("resource_urn") or payload.get("urn"))
         except AgentKilled:
             return TriggerOutcome(False, "agent_killed", agent_key)
         except NotFound:
@@ -89,8 +95,9 @@ class EventTriggerDispatcher:
         # Carry the event payload as inputs + explicit trigger provenance so the
         # run/proposal records WHY it ran (auditable evidence→action linkage).
         inputs = {
-            **data,
-            "trigger": {"event_type": event_type, "event_id": envelope.get("event_id")},
+            **payload,
+            "trigger": {"event_type": event_type, "event_id": envelope.get("event_id"),
+                        "resource_urn": envelope.get("resource_urn")},
         }
         run, _ = await orch.start_run(
             principal=None, agent_key=agent_key, inputs=inputs, session=session,
