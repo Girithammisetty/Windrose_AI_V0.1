@@ -27,7 +27,13 @@ from typing import Any
 from app.domain.errors import ErrorCategory, PermanentJobError
 from app.domain.tablewriter import RowBatch
 
-FILE_FORMATS: tuple[str, ...] = ("csv", "tsv", "json", "jsonl", "parquet", "avro", "xml")
+FILE_FORMATS: tuple[str, ...] = (
+    "csv", "tsv", "json", "jsonl", "parquet", "avro", "xml",
+    # Standards-native interop (BRD 57). Unlike the generic formats above, "x12"
+    # is a self-describing envelope: its delimiters come from the ISA header and
+    # its shape from the transaction set, so the grammar lives in domain/x12.py.
+    "x12",
+)
 MAX_SAMPLES = 20
 SAMPLE_VALUE_TRUNC = 256
 
@@ -448,6 +454,12 @@ def decode_stream(
         return _decode_avro(chunks, opts, stats)
     if opts.file_format == "xml":
         return _decode_xml(chunks, opts, stats)
+    if opts.file_format == "x12":
+        # Envelope errors are fatal rather than per-row tolerated: a broken ISA/GS/ST
+        # frame invalidates everything inside it, so error_row_limit does not apply.
+        from app.domain.x12 import decode_x12
+
+        return decode_x12(chunks, opts.batch_size, stats)
     raise PermanentJobError(
         ErrorCategory.DECODE_ERROR, f"unsupported file_format {opts.file_format!r}"
     )

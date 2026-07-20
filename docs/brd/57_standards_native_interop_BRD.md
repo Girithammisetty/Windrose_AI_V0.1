@@ -1,7 +1,7 @@
 # BRD 57 — Standards-Native Interop (EDI X12 · HL7/FHIR · ISO 20022 · ACORD)
 
 **Deliverable type:** Core capability (standards format/semantic layer over the existing ingestion transport + writeback spine)
-**Publisher:** Windrose · **Initial version:** 1.0.0 · **Status:** authored (DESIGNED; phased; not built)
+**Publisher:** Windrose · **Initial version:** 1.0.0 · **Status:** **inc-1 BUILT** (X12 decode spine: STD-FR-010/011 for 837, structural conformance, BR-2/BR-4; `app/domain/x12.py` + `x12` registered in the decoder registry). Remainder DESIGNED — see §8.
 **Closes:** the standards-interop gap — Core ships 20 transport drivers but only 5 generic decoders (csv/json/parquet/avro/xml), while BRD 26 (Provider RCM), BRD 27 (Payer FWA/SIU) and the underwriting-intake pack all specify EDI/FHIR/ACORD connectivity at the pack level.
 
 ---
@@ -208,3 +208,35 @@ Availity) and their companion guides; X12 licensing for the specification.
   not engineering.
 - **Real-time 270/271 eligibility at point-of-service** — v1 targets batch; the
   synchronous path is a latency-shaped follow-up.
+
+---
+
+## 8. Increment status
+
+**inc-1 — BUILT.** The X12 decode spine, in `services/ingestion-service`:
+`app/domain/x12.py` (envelope grammar, self-describing delimiters, streaming
+segment tokenizer, 837 claim-loop extraction, structural conformance) plus
+`"x12"` registered in the `decode.py` decoder registry. Delivers **STD-FR-010**,
+**STD-FR-011 (837)**, part of **STD-FR-041**, and **BR-2 / BR-4**. Covered by 17
+unit tests (**AC-1, AC-4, AC-8**), including a mutation check proving the
+delimiter handling is genuinely data-driven.
+
+Honest boundaries of inc-1:
+- One row per claim (2300). Field extraction is a defensible core set —
+  claim id/charge/POS, billing NPI, subscriber id, diagnoses, service-line count
+  — with the claim's **raw segments preserved** so nothing is lost to a partial
+  mapping. Full 837 element coverage is additive, not a redesign.
+- **BR-2's "zero derived rows" is delivered by the runner, not the decoder.**
+  Decoding streams, so claims parsed before a terminal envelope error are already
+  yielded; `table_writer.stage()` consumes the generator, so a raise means no
+  `StagedAppend` and no commit. The decoder's guarantee is that the error is
+  always raised, never swallowed. This is pinned by a named test.
+- Not yet exercised against a real trading-partner file — fixtures are
+  structurally exact but synthetic. First real payer file is where companion-
+  guide reality will bite.
+
+**inc-2 (next).** Outbound serialization through the writeback spine + four-eyes
+(**BR-1**, STD-FR-012), acknowledgements (STD-FR-014), 837→277CA→835 correlation
+(STD-FR-015), trading-partner registry (STD-FR-040), duplicate ISA rejection
+(STD-FR-043). **inc-3+**: 835/834/270/271/276/277 decode, then FHIR/HL7v2, then
+ISO 20022/ACORD.
