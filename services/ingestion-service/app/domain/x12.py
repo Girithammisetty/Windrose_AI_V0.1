@@ -50,11 +50,11 @@ ISA_LEN = 106
 #: Transaction sets this build decodes into rows. Each has its OWN row schema
 #: (a remittance is not a claim), so the envelope machinery is shared and the
 #: row building is dispatched to a per-transaction-set handler.
-SUPPORTED_TRANSACTION_SETS = ("837", "835", "271", "277")
+SUPPORTED_TRANSACTION_SETS = ("837", "835", "271", "277", "834")
 #: Recognised but not yet decoded — refused by name so the operator gets a real
 #: reason rather than an empty dataset (BR-2/AC-8). 270/276 are the outbound
 #: INQUIRY halves (we send them); the platform decodes the RESPONSES (271/277).
-KNOWN_TRANSACTION_SETS = ("834", "270", "276", "997", "999")
+KNOWN_TRANSACTION_SETS = ("270", "276", "997", "999")
 
 # --- hardening caps ---------------------------------------------------------
 # X12 is attacker-reachable (a partner drops a file on our SFTP), so the parser
@@ -138,6 +138,21 @@ CLAIM_STATUS_COLUMNS: list[str] = [
     "status_effective_date",  # STC02
     "total_charge",          # STC04
     "paid_amount",           # STC05
+    "loop_path",
+    "raw_segments",
+]
+
+#: 834 — one row per HD (health-coverage) line, with member + maintenance context.
+ENROLLMENT_COLUMNS: list[str] = [
+    *_ENVELOPE_COLUMNS,
+    "member_id",
+    "member_name",
+    "maintenance_type",       # INS03 (021=add, 024=cancel, 030=audit, …)
+    "maintenance_reason",     # INS04
+    "coverage_type",          # HD03 insurance line (HLT/DEN/VIS)
+    "plan_description",       # HD04
+    "benefit_begin",          # DTP*348
+    "benefit_end",            # DTP*349
     "loop_path",
     "raw_segments",
 ]
@@ -231,6 +246,17 @@ class _ClaimStatus:
     effective_date: str = ""
     total_charge: str = ""
     paid: str = ""
+    raw: list[str] = field(default_factory=list)
+
+
+@dataclass(slots=True)
+class _Coverage:
+    """One HD health-coverage line in flight (834)."""
+
+    coverage_type: str = ""   # HD03
+    plan: str = ""            # HD04
+    begin: str = ""          # DTP*348
+    end: str = ""            # DTP*349
     raw: list[str] = field(default_factory=list)
 
 
@@ -536,11 +562,71 @@ class _ClaimStatusHandler:
         self.stc = None
 
 
+class _EnrollmentHandler:
+    """834 — benefit enrollment/maintenance. One row per HD coverage line.
+
+    Member context (INS maintenance type/reason, member id from REF*0F, name from
+    NM1*IL) is captured per member; each HD emits a coverage row carrying it, with
+    DTP*348/349 benefit begin/end dates attached to the HD they follow.
+    """
+
+    columns = ENROLLMENT_COLUMNS
+
+    def __init__(self, env: _Envelope) -> None:
+        self.env = env
+        self.member_id = ""
+        self.member_name = ""
+        self.maint_type = ""
+        self.maint_reason = ""
+        self.hd: _Coverage | None = None
+
+    def feed(self, tag: str, elements: list[str], raw: str, d: Delimiters, out: list) -> None:
+        if self.hd is not None and len(self.hd.raw) < MAX_RAW_SEGMENTS_PER_CLAIM:
+            self.hd.raw.append(raw)
+        if tag == "INS":
+            self.flush(out)                       # close any open coverage of prior member
+            self.maint_type = _el(elements, 3).strip()
+            self.maint_reason = _el(elements, 4).strip()
+        elif tag == "REF" and _el(elements, 1).strip() in ("0F", "1L", "17"):
+            self.member_id = _el(elements, 2).strip()
+        elif tag == "NM1" and _el(elements, 1).strip() == "IL":
+            last, first = _el(elements, 3).strip(), _el(elements, 4).strip()
+            self.member_name = f"{last} {first}".strip()
+        elif tag == "HD":
+            self.flush(out)
+            self.hd = _Coverage(
+                coverage_type=_el(elements, 3).strip(),
+                plan=_el(elements, 4).strip(),
+                raw=[raw],
+            )
+        elif tag == "DTP" and self.hd is not None:
+            q = _el(elements, 1).strip()
+            date = _el(elements, 3).strip()
+            if q == "348":
+                self.hd.begin = date
+            elif q == "349":
+                self.hd.end = date
+
+    def flush(self, out: list) -> None:
+        h = self.hd
+        if h is None:
+            return
+        out.append([
+            *_env_prefix(self.env),
+            self.member_id, self.member_name, self.maint_type, self.maint_reason,
+            h.coverage_type, h.plan, h.begin, h.end,
+            "ISA/GS/ST(834)/2300",
+            "\n".join(h.raw[:MAX_RAW_SEGMENTS_PER_CLAIM]),
+        ])
+        self.hd = None
+
+
 _HANDLERS = {
     "837": _ClaimHandler,
     "835": _RemitHandler,
     "271": _EligibilityHandler,
     "277": _ClaimStatusHandler,
+    "834": _EnrollmentHandler,
 }
 
 

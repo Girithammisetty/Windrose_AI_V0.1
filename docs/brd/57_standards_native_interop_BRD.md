@@ -343,6 +343,14 @@ element (number, insured, LOB, dates, premium). A non-conforming root is refused
 by name (Rule 2). 7 tests. **This completes every standards family the BRD named:
 X12 (837/835/271/277 in + 837 out), FHIR, HL7v2, ISO 20022, ACORD.**
 
+**inc-3f — BUILT.** 834 enrollment/maintenance decode — the last transaction set
+on the enumerated list. `_EnrollmentHandler` emits one row per HD coverage line
+(member id from REF*0F, name from NM1*IL, INS maintenance type/reason, HD
+coverage type + plan, DTP*348/349 benefit begin/end). 5 tests; 997 is now the
+recognised-but-not-decoded example (834 was). **Full inbound X12 decode list
+done: 837, 835, 271, 277, 834 (270/276 correctly refused as outbound inquiries;
+997/999 acks are the transport-remainder).**
+
 Bug found + fixed in this pass (worth recording): the XML find helper used
 `_find(...) or parent`, but an ElementTree element with NO children is FALSY —
 so the fallback silently mis-scoped AND tripped a DeprecationWarning. Replaced

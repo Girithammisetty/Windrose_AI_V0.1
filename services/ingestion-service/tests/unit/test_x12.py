@@ -114,10 +114,10 @@ async def test_streams_across_tiny_chunk_boundaries():
 # ---- AC-8 / BR-2: refuse by name, never half-parse --------------------------
 
 async def test_unsupported_transaction_set_refused_by_name():
-    # 834 (enrollment) is recognised but not yet decoded by this build.
+    # 997 (functional acknowledgement) is recognised but not yet decoded.
     with pytest.raises(PermanentJobError) as e:
-        await _rows(build_837(st_id="834"))
-    assert "834" in str(e.value) and "recognised but not decoded" in str(e.value)
+        await _rows(build_837(st_id="997"))
+    assert "997" in str(e.value) and "recognised but not decoded" in str(e.value)
 
 
 async def test_unknown_transaction_set_refused():
