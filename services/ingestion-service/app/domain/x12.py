@@ -47,11 +47,13 @@ from app.domain.errors import ErrorCategory, PermanentJobError
 
 #: A conformant ISA is exactly 106 characters including its terminator.
 ISA_LEN = 106
-#: Transaction sets this build decodes into rows.
-SUPPORTED_TRANSACTION_SETS = ("837",)
+#: Transaction sets this build decodes into rows. Each has its OWN row schema
+#: (a remittance is not a claim), so the envelope machinery is shared and the
+#: row building is dispatched to a per-transaction-set handler.
+SUPPORTED_TRANSACTION_SETS = ("837", "835")
 #: Recognised but not yet decoded — refused by name so the operator gets a real
 #: reason rather than an empty dataset (BR-2/AC-8).
-KNOWN_TRANSACTION_SETS = ("835", "834", "270", "271", "276", "277", "997", "999")
+KNOWN_TRANSACTION_SETS = ("834", "270", "271", "276", "277", "997", "999")
 
 # --- hardening caps ---------------------------------------------------------
 # X12 is attacker-reachable (a partner drops a file on our SFTP), so the parser
@@ -61,13 +63,20 @@ MAX_ELEMENTS_PER_SEGMENT = 2_000
 MAX_SEGMENTS_PER_TRANSACTION = 5_000_000
 MAX_RAW_SEGMENTS_PER_CLAIM = 2_000  # bounds the lineage column per row
 
-COLUMNS: list[str] = [
+#: Envelope identity carried onto EVERY row regardless of transaction set, so a
+#: claim and its remittance can be correlated on control numbers + claim id.
+_ENVELOPE_COLUMNS = [
     "interchange_control_number",
     "group_control_number",
     "transaction_control_number",
     "transaction_set",
     "sender_id",
     "receiver_id",
+]
+
+#: 837 — one row per claim (2300 loop).
+CLAIM_COLUMNS: list[str] = [
+    *_ENVELOPE_COLUMNS,
     "claim_id",
     "total_charge",
     "place_of_service",
@@ -78,6 +87,31 @@ COLUMNS: list[str] = [
     "loop_path",
     "raw_segments",
 ]
+
+#: 835 — one row per claim PAYMENT (CLP loop). `claim_id` is deliberately the
+#: same column name as the 837's, because CLP01 echoes the submitter's CLM01:
+#: that is the join that turns "we billed" + "they paid" into an underpayment.
+REMIT_COLUMNS: list[str] = [
+    *_ENVELOPE_COLUMNS,
+    "payer_name",
+    "payee_name",
+    "check_or_eft_trace",
+    "total_paid",
+    "payment_method",
+    "payment_date",
+    "claim_id",
+    "claim_status_code",
+    "charged_amount",
+    "paid_amount",
+    "patient_responsibility",
+    "adjustments",
+    "service_line_count",
+    "loop_path",
+    "raw_segments",
+]
+
+#: Back-compat alias: the 837 schema was the original single schema.
+COLUMNS = CLAIM_COLUMNS
 
 
 def _fail(msg: str) -> PermanentJobError:
@@ -118,13 +152,27 @@ class _Envelope:
 
 @dataclass(slots=True)
 class _Claim:
-    """One 2300 loop in flight."""
+    """One 2300 loop in flight (837)."""
 
     claim_id: str = ""
     total_charge: str = ""
     place_of_service: str = ""
     diagnosis_codes: list[str] = field(default_factory=list)
     service_lines: int = 0
+    raw: list[str] = field(default_factory=list)
+
+
+@dataclass(slots=True)
+class _Remit:
+    """One 2100 claim-payment loop in flight (835)."""
+
+    claim_id: str = ""      # CLP01, echoes the submitter's CLM01
+    status: str = ""        # CLP02 claim status code
+    charged: str = ""       # CLP03 total submitted charge
+    paid: str = ""          # CLP04 amount paid
+    patient_resp: str = ""  # CLP05 patient responsibility
+    service_lines: int = 0
+    adjustments: list[str] = field(default_factory=list)
     raw: list[str] = field(default_factory=list)
 
 
@@ -181,41 +229,160 @@ def _el(elements: list[str], i: int) -> str:
     return elements[i] if i < len(elements) else ""
 
 
+def _env_prefix(env: _Envelope) -> list[Any]:
+    """The six envelope-identity columns shared by every transaction set."""
+    return [env.isa13, env.gs06, env.st02, env.st01, env.isa06, env.isa08]
+
+
+class _ClaimHandler:
+    """837 — accumulates one 2300 loop and emits one row per claim."""
+
+    columns = CLAIM_COLUMNS
+
+    def __init__(self, env: _Envelope) -> None:
+        self.env = env
+        self.claim: _Claim | None = None
+        self.billing_npi = ""
+        self.subscriber_id = ""
+
+    def feed(self, tag: str, elements: list[str], raw: str, d: Delimiters, out: list) -> None:
+        if self.claim is not None and len(self.claim.raw) < MAX_RAW_SEGMENTS_PER_CLAIM:
+            self.claim.raw.append(raw)
+        if tag == "CLM":
+            self.flush(out)
+            self.claim = _Claim(
+                claim_id=_el(elements, 1).strip(),
+                total_charge=_el(elements, 2).strip(),
+                place_of_service=_el(elements, 5).split(d.component)[0].strip(),
+                raw=[raw],
+            )
+        elif tag == "NM1":
+            q = _el(elements, 1).strip()
+            if q == "85":       # 2010AA billing provider
+                self.billing_npi = _el(elements, 9).strip()
+            elif q == "IL":     # 2010BA subscriber
+                self.subscriber_id = _el(elements, 9).strip()
+        elif tag == "HI" and self.claim is not None:
+            for comp in elements[1:]:
+                parts = comp.split(d.component)
+                if len(parts) >= 2 and parts[1].strip():
+                    self.claim.diagnosis_codes.append(parts[1].strip())
+        elif tag == "SV1" and self.claim is not None:
+            self.claim.service_lines += 1
+
+    def flush(self, out: list) -> None:
+        c = self.claim
+        if c is None:
+            return
+        out.append([
+            *_env_prefix(self.env),
+            c.claim_id, c.total_charge, c.place_of_service,
+            self.billing_npi, self.subscriber_id,
+            ",".join(c.diagnosis_codes), c.service_lines,
+            f"ISA/GS/ST({self.env.st01})/2300",
+            "\n".join(c.raw[:MAX_RAW_SEGMENTS_PER_CLAIM]),
+        ])
+        self.claim = None
+
+
+class _RemitHandler:
+    """835 — one row per claim payment (CLP loop).
+
+    Header context (payer/payee names, check/EFT trace, BPR payment) is captured
+    once and repeated on each payment row, so a remittance row is self-describing
+    without a second join. CLP01 echoes the submitter's claim id (CLM01), which
+    is the key that lets an 835 row meet its 837 row.
+    """
+
+    columns = REMIT_COLUMNS
+
+    def __init__(self, env: _Envelope) -> None:
+        self.env = env
+        self.payer = ""
+        self.payee = ""
+        self.trace = ""
+        self.total_paid = ""
+        self.pay_method = ""
+        self.pay_date = ""
+        self._nm1_ctx = ""
+        self.clp: _Remit | None = None
+
+    def feed(self, tag: str, elements: list[str], raw: str, d: Delimiters, out: list) -> None:
+        if self.clp is not None and len(self.clp.raw) < MAX_RAW_SEGMENTS_PER_CLAIM:
+            self.clp.raw.append(raw)
+        if tag == "BPR":            # financial-information / payment header
+            self.pay_method = _el(elements, 4).strip()
+            self.total_paid = _el(elements, 2).strip()
+            self.pay_date = _el(elements, 16).strip()
+        elif tag == "TRN":          # reassociation trace (check/EFT number)
+            self.trace = _el(elements, 2).strip()
+        elif tag == "N1":           # payer (PR) / payee (PE) identification
+            self._nm1_ctx = _el(elements, 1).strip()
+            name = _el(elements, 2).strip()
+            if self._nm1_ctx == "PR":
+                self.payer = name
+            elif self._nm1_ctx == "PE":
+                self.payee = name
+        elif tag == "CLP":          # 2100 claim payment loop
+            self.flush(out)
+            self.clp = _Remit(
+                claim_id=_el(elements, 1).strip(),
+                status=_el(elements, 2).strip(),
+                charged=_el(elements, 3).strip(),
+                paid=_el(elements, 4).strip(),
+                patient_resp=_el(elements, 5).strip(),
+                raw=[raw],
+            )
+        elif tag == "CAS" and self.clp is not None:   # claim-level adjustments
+            grp = _el(elements, 1).strip()
+            i = 2
+            while i + 1 < len(elements) + 1 and _el(elements, i):
+                code, amt = _el(elements, i).strip(), _el(elements, i + 1).strip()
+                if code and amt:
+                    self.clp.adjustments.append(f"{grp}:{code}:{amt}")
+                i += 3  # CAS repeats in (code, amount, quantity) triplets
+        elif tag == "SVC" and self.clp is not None:   # 2110 service payment line
+            self.clp.service_lines += 1
+
+    def flush(self, out: list) -> None:
+        r = self.clp
+        if r is None:
+            return
+        out.append([
+            *_env_prefix(self.env),
+            self.payer, self.payee, self.trace, self.total_paid,
+            self.pay_method, self.pay_date,
+            r.claim_id, r.status, r.charged, r.paid, r.patient_resp,
+            ";".join(r.adjustments), r.service_lines,
+            "ISA/GS/ST(835)/2100",
+            "\n".join(r.raw[:MAX_RAW_SEGMENTS_PER_CLAIM]),
+        ])
+        self.clp = None
+
+
+_HANDLERS = {"837": _ClaimHandler, "835": _RemitHandler}
+
+
 async def decode_x12(
     chunks: AsyncIterator[bytes], batch_size: int, stats: Any
 ) -> AsyncIterator[Any]:
-    """Decode an X12 interchange into one governed row per claim.
+    """Decode an X12 interchange into governed rows.
 
-    `stats` is the caller's DecodeStats (rows_ok is advanced per emitted row);
-    envelope problems are fatal rather than per-row tolerated, because a broken
-    envelope invalidates everything inside it.
+    This function owns ONLY the envelope (ISA/GS/ST..SE/GE/IEA + control-number
+    conformance); the shape of each row is delegated to a per-transaction-set
+    handler, so adding 834/276/… is a new handler, not a rewrite. `stats.rows_ok`
+    advances per emitted row; envelope problems are fatal rather than per-row
+    tolerated, because a broken envelope invalidates everything inside it.
     """
     from app.domain.tablewriter import RowBatch  # local: avoid an import cycle
 
     env = _Envelope()
-    claim: _Claim | None = None
-    billing_npi = ""
-    subscriber_id = ""
+    handler: Any | None = None
     rows: list[list[Any]] = []
+    last_columns: list[str] = CLAIM_COLUMNS  # remembered so a post-SE flush knows the schema
     seen_iea = False
     segment_count = 0
     st_open = False
-
-    def flush_claim() -> None:
-        nonlocal claim
-        if claim is None:
-            return
-        row = [
-            env.isa13, env.gs06, env.st02, env.st01, env.isa06, env.isa08,
-            claim.claim_id, claim.total_charge, claim.place_of_service,
-            billing_npi, subscriber_id,
-            ",".join(claim.diagnosis_codes), claim.service_lines,
-            f"ISA/GS/ST({env.st01})/2300",
-            "\n".join(claim.raw[:MAX_RAW_SEGMENTS_PER_CLAIM]),
-        ]
-        rows.append(row)
-        stats.rows_ok += 1
-        claim = None
 
     async for elements, raw, delims in _segments(chunks):
         tag = elements[0].strip()
@@ -229,11 +396,6 @@ async def decode_x12(
         # well-formed SE (a corruption an ST02/SE02 match alone would miss).
         if st_open:
             env.st_segment_count += 1
-        if claim is not None and len(claim.raw) < MAX_RAW_SEGMENTS_PER_CLAIM:
-            # Bound the ACCUMULATION, not just the emitted slice: a hostile file
-            # with one CLM followed by millions of segments would otherwise grow
-            # this list unbounded before the row is ever flushed.
-            claim.raw.append(raw)
 
         if tag == "ISA":
             env.isa06 = _el(elements, 6).strip()
@@ -252,8 +414,12 @@ async def decode_x12(
             env.st01, env.st02 = st01, _el(elements, 2).strip()
             env.st_segment_count = 1
             st_open = True
+            handler = _HANDLERS[st01](env)
+            last_columns = handler.columns
         elif tag == "SE":
-            flush_claim()
+            if handler is not None:
+                handler.flush(rows)   # close the final in-flight loop of this ST
+            handler = None
             se02 = _el(elements, 2).strip()
             if se02 != env.st02:
                 raise _fail(
@@ -276,36 +442,21 @@ async def decode_x12(
             if iea02 != env.isa13:
                 raise _fail(f"X12 control mismatch: IEA02 {iea02!r} != ISA13 {env.isa13!r}")
             seen_iea = True
-        elif tag == "CLM":
-            flush_claim()
-            claim = _Claim(
-                claim_id=_el(elements, 1).strip(),
-                total_charge=_el(elements, 2).strip(),
-                place_of_service=_el(elements, 5).split(delims.component)[0].strip(),
-                raw=[raw],
-            )
-        elif tag == "NM1":
-            qualifier = _el(elements, 1).strip()
-            if qualifier == "85":       # 2010AA billing provider
-                billing_npi = _el(elements, 9).strip()
-            elif qualifier == "IL":     # 2010BA subscriber
-                subscriber_id = _el(elements, 9).strip()
-        elif tag == "HI" and claim is not None:
-            for comp in elements[1:]:
-                parts = comp.split(delims.component)
-                if len(parts) >= 2 and parts[1].strip():
-                    claim.diagnosis_codes.append(parts[1].strip())
-        elif tag == "SV1" and claim is not None:
-            claim.service_lines += 1
+        elif handler is not None:
+            handler.feed(tag, elements, raw, delims, rows)
 
+        # Rows in `rows` are already-completed loops (the in-flight one lives in
+        # the handler), so a batch boundary never splits a claim. A single
+        # interchange is one transaction-set type, so one schema per batch holds.
         if len(rows) >= batch_size:
-            yield RowBatch(columns=list(COLUMNS), rows=rows)
+            stats.rows_ok += len(rows)
+            yield RowBatch(columns=list(last_columns), rows=rows)
             rows = []
 
-    flush_claim()
     if st_open:
         raise _fail("malformed X12: transaction set (ST) never closed by an SE segment")
     if not seen_iea:
         raise _fail("malformed X12: interchange truncated (no IEA terminator)")
     if rows:
-        yield RowBatch(columns=list(COLUMNS), rows=rows)
+        stats.rows_ok += len(rows)
+        yield RowBatch(columns=list(last_columns), rows=rows)

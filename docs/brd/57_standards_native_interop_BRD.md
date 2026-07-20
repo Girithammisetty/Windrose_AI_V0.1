@@ -285,7 +285,25 @@ matches and delivery **refuses** rather than putting bytes on the wire that no
 human approved. Pinned by `test_tampering_after_approval_refuses_to_transmit`.
 The non-X12 JSON path is untouched (its 6 existing tests still pass).
 
-**inc-2c (next).** Bind additional transports (SFTP file drop is the common
+**inc-3a — BUILT.** 835 remittance decode + the 837↔835 correlation
+(STD-FR-011 for 835, **STD-FR-015**). `x12.py` was refactored so the envelope
+machinery (ISA/GS/ST..IEA + all control-number conformance) is shared and
+row-building is dispatched to a per-transaction-set **handler** (`_ClaimHandler`
+for 837, `_RemitHandler` for 835) — adding a transaction set is now a new
+handler, not a rewrite. The 47 existing 837/serializer tests were the regression
+net and all still pass. 835 yields one row per CLP claim-payment loop with
+payer/payee, check/EFT trace, BPR payment, charged/paid/patient-responsibility
+and claim-level CAS adjustments; the raw CLP segments are preserved for lineage.
+The key column is `claim_id` (CLP01 echoes the submitter's CLM01) — deliberately
+the SAME column name as the 837's, so `test_837_and_835_correlate_on_claim_id`
+proves the join that turns "we billed" + "they paid" into an underpayment (what
+BRD 26's detector proposes on). 7 new tests.
+
+Fixture note worth recording: my first 835 fixture put the payment date at BPR15,
+but BPR16 is the effective-entry date per 005010 — the handler was right, the
+fixture was one element short. Fixed the fixture, not the parser.
+
+**inc-3b/2c (next).** Bind additional transports (SFTP file drop is the common
 clearinghouse pattern; today only the `http_api` connector carries X12), then
 acknowledgements (STD-FR-014),
 837→277CA→835 correlation (STD-FR-015), trading-partner registry (STD-FR-040)
