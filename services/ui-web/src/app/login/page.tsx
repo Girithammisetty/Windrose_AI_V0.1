@@ -77,65 +77,76 @@ function LoginForm() {
           <CardDescription>{t("app.tagline")}</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={submit} className="space-y-4">
-            <div className="space-y-1">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                autoComplete="username"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
+          {OIDC_ENABLED ? (
+            // A real IdP is configured for this deployment: show ONLY the
+            // password-backed SSO flow. Do not also offer the password-less
+            // dev quick-login next to it — a buyer evaluating security
+            // should never see an unauthenticated-looking form on the
+            // production login screen.
+            <div className="space-y-4">
+              {error && (
+                <p role="alert" className="text-sm text-destructive">
+                  {error}
+                </p>
+              )}
+              <Button
+                type="button"
+                className="w-full"
+                onClick={() => {
+                  window.location.href = "/api/auth/oidc/start";
+                }}
+              >
+                Sign in with SSO
+              </Button>
             </div>
-            <div className="flex flex-wrap gap-1.5">
-              {DEMO_PERSONAS.map((p) => (
-                <button
-                  key={p.email}
-                  type="button"
-                  onClick={() => setEmail(p.email)}
-                  aria-pressed={email === p.email}
-                  className="rounded-full border px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent aria-pressed:border-primary aria-pressed:bg-primary/10 aria-pressed:text-primary"
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
-            {error && (
-              <p role="alert" className="text-sm text-destructive">
-                {error}
+          ) : (
+            <form onSubmit={submit} className="space-y-4">
+              <p className="rounded-md border border-dashed px-3 py-2 text-xs text-muted-foreground">
+                Local development login — no SSO provider configured for this
+                deployment.
               </p>
-            )}
-            <Button type="submit" className="w-full" disabled={pending}>
-              {pending ? t("state.loading") : t("action.signIn")}
-            </Button>
-            {OIDC_ENABLED && (
-              <>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <span className="h-px flex-1 bg-border" />
-                  or
-                  <span className="h-px flex-1 bg-border" />
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => {
-                    window.location.href = "/api/auth/oidc/start";
-                  }}
-                >
-                  Sign in with SSO
-                </Button>
-              </>
-            )}
+              <div className="space-y-1">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  autoComplete="username"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {DEMO_PERSONAS.map((p) => (
+                  <button
+                    key={p.email}
+                    type="button"
+                    onClick={() => setEmail(p.email)}
+                    aria-pressed={email === p.email}
+                    className="rounded-full border px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent aria-pressed:border-primary aria-pressed:bg-primary/10 aria-pressed:text-primary"
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+              {error && (
+                <p role="alert" className="text-sm text-destructive">
+                  {error}
+                </p>
+              )}
+              <Button type="submit" className="w-full" disabled={pending}>
+                {pending ? t("state.loading") : t("action.signIn")}
+              </Button>
+            </form>
+          )}
+          <div className="mt-4">
             <p className="text-center text-xs text-muted-foreground">
               New here?{" "}
               <Link href="/welcome" className="underline underline-offset-2 hover:text-foreground">
                 See what Windrose AI does
               </Link>
             </p>
-          </form>
+          </div>
         </CardContent>
       </Card>
     </main>

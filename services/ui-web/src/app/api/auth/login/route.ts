@@ -26,7 +26,11 @@ const DEV_SCOPES = [
 ];
 
 export async function POST(req: NextRequest) {
-  if ((process.env.AUTH_MODE ?? "dev") !== "dev") {
+  // Fail CLOSED: dev login requires an explicit AUTH_MODE=dev opt-in, and can
+  // never run in a production build regardless of AUTH_MODE — a deployment
+  // that forgets to set AUTH_MODE must not silently expose a password-less
+  // login (this previously defaulted to "dev" when the env var was unset).
+  if (process.env.AUTH_MODE !== "dev" || process.env.NODE_ENV === "production") {
     return NextResponse.json(
       { error: "Dev login disabled; use OIDC." },
       { status: 403 },
