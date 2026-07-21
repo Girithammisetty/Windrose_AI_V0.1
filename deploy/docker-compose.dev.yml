@@ -96,7 +96,7 @@ services:
     entrypoint: >
       /bin/sh -c "
       mc alias set local http://minio:9000 windrose windrose_dev &&
-      mc mb -p local/windrose-datasets local/windrose-warehouse local/windrose-profiles local/windrose-uploads local/windrose-ml &&
+      mc mb -p local/windrose-datasets local/windrose-warehouse local/windrose-profiles local/windrose-uploads local/windrose-ml local/windrose-pipelines &&
       echo 'buckets ready'"
 
   # --- Real Iceberg REST catalog (backed by MinIO) ---
