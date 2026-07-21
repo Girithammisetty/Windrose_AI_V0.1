@@ -284,6 +284,15 @@ if [ "$PLATFORM_ONLY" = 0 ]; then
     || warn "reconcile reported errors (see $LOG_DIR/reconcile.log)"
 fi
 
+# Rebuild the OpenSearch case projection from Postgres for every tenant. Runs on
+# EVERY boot (even --platform-only): OpenSearch is recreated across restarts and
+# the search consumer won't backfill historical cases, so without this the Cases
+# page 503s "search projection unavailable". With zero cases it just (re)creates
+# an empty index so search returns an empty list instead of an error.
+say "reconciling case search projections (self-heal after restart)"
+( cd "$LOCAL_DIR" && ./reconcile_cases.sh ) 2>&1 | tee "$LOG_DIR/reconcile_cases.log" \
+  || warn "case reconcile reported errors (see $LOG_DIR/reconcile_cases.log)"
+
 # ============================================================ banner
 # accurate native-service RSS (includes uvicorn workers / next-server children,
 # which are not in the tracked-pid list)

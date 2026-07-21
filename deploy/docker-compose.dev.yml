@@ -206,6 +206,10 @@ services:
     ulimits:
       memlock: { soft: -1, hard: -1 }
       nofile: { soft: 65536, hard: 65536 }
+    # Persist the search projection like the other stateful stores (pgdata etc.).
+    # Without this, a container recreate wiped the cases-<tenant> indices while
+    # Postgres kept the cases -> "search projection unavailable" on the Cases page.
+    volumes: [opensearchdata:/usr/share/opensearch/data]
     ports: ["9200:9200"]
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health || exit 1"]
@@ -263,3 +267,4 @@ volumes:
   miniodata: {}
   icebergdata: {}
   redpandadata: {}
+  opensearchdata: {}
