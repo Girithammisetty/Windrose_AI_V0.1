@@ -156,6 +156,69 @@ export class PackClient {
     );
     return r.data;
   }
+
+  /** Detect DRIFT (PKG-FR-031): compare what this install materialized against
+   * Core's current state (in_sync | modified | missing | unverified). Read-only. */
+  async drift(id: string): Promise<DriftResultDTO> {
+    const r = await this.http.get<{ data: DriftResultDTO }>(
+      `/api/v1/installs/${encodeURIComponent(id)}/drift`,
+      { timeoutMs: PLAN_TIMEOUT },
+    );
+    return r.data;
+  }
+
+  /** Upgrade a live install to the pack's current on-disk version (PKG-FR-003).
+   * dryRun returns only the diff (no side effects). */
+  async upgrade(id: string, dryRun: boolean, idempotencyKey?: string): Promise<TransitionResultDTO> {
+    const r = await this.http.post<{ data: TransitionResultDTO }>(
+      `/api/v1/installs/${encodeURIComponent(id)}/upgrade`,
+      { body: { dry_run: dryRun }, idempotencyKey, timeoutMs: INSTALL_TIMEOUT },
+    );
+    return r.data;
+  }
+
+  /** Roll a live install back to a prior version (PKG-FR-026). Defaults to the
+   * install this one superseded; toInstallId targets a specific prior. */
+  async rollback(
+    id: string, dryRun: boolean, toInstallId?: string, idempotencyKey?: string,
+  ): Promise<TransitionResultDTO> {
+    const r = await this.http.post<{ data: TransitionResultDTO }>(
+      `/api/v1/installs/${encodeURIComponent(id)}/rollback`,
+      { body: { dry_run: dryRun, to_install_id: toInstallId }, idempotencyKey, timeoutMs: INSTALL_TIMEOUT },
+    );
+    return r.data;
+  }
+}
+
+/** GET /installs/{id}/drift result. `objects` rows are passed through as JSON
+ * (their shape is owned by pack-service's drift detector). */
+export interface DriftResultDTO {
+  id: string;
+  pack: string;
+  version: string;
+  workspaceId: string;
+  superseded: boolean;
+  drifted: number;
+  inSync: boolean;
+  summary: Record<string, number>;
+  objects: Record<string, unknown>[];
+}
+
+/** upgrade/rollback result — covers BOTH the dry-run (diff-only) and executed
+ * (new superseding install) response shapes; the mapper normalizes them. */
+export interface TransitionResultDTO {
+  id?: string;            // new install id (execute)
+  install?: string;       // prior install id (dry-run)
+  pack: string;
+  operation: string;      // "upgrade" | "rollback"
+  status?: string;        // execute only
+  supersedes?: string;
+  fromVersion?: string;   // dry-run top-level
+  toVersion?: string;     // dry-run top-level
+  version?: string;       // execute: the new version
+  dry_run?: boolean;
+  summary?: Record<string, unknown>;
+  diff: { added?: unknown[]; removed?: unknown[]; retained?: unknown[] };
 }
 
 export interface CompleteResultDTO {

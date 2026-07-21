@@ -53,6 +53,7 @@ import {
   mapResolutionRun, mapResolutionRunDetail, mapResolveEntities, mapMergeCandidate,
   mapEntityMergeProposal, mapMaterializeResolved, mapOntologyEntity, mapModelArchetype,
   mapPack, mapPackInstall, mapPackInstallPlan, mapPackUninstall, mapPackComplete,
+  mapPackDrift, mapPackTransition,
 } from "../schema/map.js";
 
 /** GraphQL ChartSourceInput (camel) -> chart-service source body (snake). */
@@ -1651,6 +1652,9 @@ export const resolvers = {
 
     packInstall: (_p: unknown, a: { id: string }, ctx: GraphQLContext) =>
       nullOn404(ctx.clients.pack.installDetail(a.id).then(mapPackInstall)),
+
+    packDrift: (_p: unknown, a: { installId: string }, ctx: GraphQLContext) =>
+      nullOn404(ctx.clients.pack.drift(a.installId).then(mapPackDrift)),
   },
 
   Mutation: {
@@ -4661,6 +4665,20 @@ export const resolvers = {
     completePackInstall: async (
       _p: unknown, a: { installId: string; idempotencyKey?: string }, ctx: GraphQLContext,
     ) => mapPackComplete(await ctx.clients.pack.complete(a.installId, a.idempotencyKey)),
+
+    upgradePack: async (
+      _p: unknown,
+      a: { installId: string; dryRun?: boolean; idempotencyKey?: string },
+      ctx: GraphQLContext,
+    ) => mapPackTransition(
+      await ctx.clients.pack.upgrade(a.installId, a.dryRun ?? false, a.idempotencyKey)),
+
+    rollbackPack: async (
+      _p: unknown,
+      a: { installId: string; toInstallId?: string; dryRun?: boolean; idempotencyKey?: string },
+      ctx: GraphQLContext,
+    ) => mapPackTransition(
+      await ctx.clients.pack.rollback(a.installId, a.dryRun ?? false, a.toInstallId, a.idempotencyKey)),
   },
 
   // ------------------------------------------------------------ field resolvers

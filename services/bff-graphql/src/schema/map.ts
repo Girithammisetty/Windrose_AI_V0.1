@@ -32,6 +32,7 @@ import type {
 import type {
   PackSummaryDTO, PackDetailDTO, PlanOpDTO, LedgerRowDTO, InstallDTO,
   InstallPlanDTO, InstallResultDTO, UninstallResultDTO, CompleteResultDTO,
+  DriftResultDTO, TransitionResultDTO,
 } from "../clients/pack.js";
 import type {
   ToolKillSwitchDTO,
@@ -2436,6 +2437,46 @@ export function mapPackComplete(d: CompleteResultDTO) {
     __typename: "PackCompleteResult" as const,
     id: d.id, status: d.status,
     dashboards: (d.dashboards ?? []).map(mapPackLedgerRow),
+  };
+}
+
+export function mapPackDrift(d: DriftResultDTO) {
+  return {
+    __typename: "PackDrift" as const,
+    id: d.id,
+    pack: d.pack,
+    version: d.version,
+    workspaceId: d.workspaceId,
+    superseded: d.superseded,
+    drifted: d.drifted,
+    inSync: d.inSync,
+    summary: d.summary ?? {},
+    objects: d.objects ?? [],
+  };
+}
+
+/** Normalizes BOTH upgrade/rollback shapes (dry-run diff-only + executed new
+ * install) into one PackTransition; diff counts come from the diff arrays. */
+export function mapPackTransition(d: TransitionResultDTO) {
+  const diff = d.diff ?? {};
+  const summary = (d.summary ?? {}) as Record<string, unknown>;
+  return {
+    __typename: "PackTransition" as const,
+    id: d.id ?? null,
+    pack: d.pack,
+    operation: d.operation,
+    dryRun: d.dry_run === true,
+    status: d.status ?? null,
+    supersedes: d.supersedes ?? null,
+    fromVersion: d.fromVersion ?? (summary.fromVersion as string | undefined) ?? null,
+    toVersion: d.toVersion ?? d.version ?? (summary.toVersion as string | undefined) ?? null,
+    summary: d.summary ?? {},
+    diff: {
+      __typename: "PackTransitionDiff" as const,
+      added: (diff.added ?? []).length,
+      removed: (diff.removed ?? []).length,
+      retained: (diff.retained ?? []).length,
+    },
   };
 }
 

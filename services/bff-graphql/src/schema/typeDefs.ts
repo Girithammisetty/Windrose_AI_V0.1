@@ -4084,6 +4084,9 @@ export const typeDefs = gql`
     packInstalls(workspaceId: String): [PackInstall!]!
     """One install with its materialization ledger (GET /installs/{id})."""
     packInstall(id: ID!): PackInstall
+    """Detect drift of an install vs Core's current state (GET /installs/{id}/drift).
+    Read-only. Needs pack.install.read."""
+    packDrift(installId: ID!): PackDrift
   }
 
   "One typed condition in a decision-table rule (BRD 54 DM-FR-010/051)."
@@ -4376,6 +4379,40 @@ export const typeDefs = gql`
   type PackUninstallResult { id: ID! status: String! reversed: Int! tombstoned: Int! }
   "Outcome of phase 2 (dashboards materialized after the semantic model is approved)."
   type PackCompleteResult { id: ID! status: String! dashboards: [PackLedgerRow!]! }
+  "Drift of one install vs Core's current state (PKG-FR-031)."
+  type PackDrift {
+    id: ID!
+    pack: String!
+    version: String!
+    workspaceId: String!
+    "True if this install was superseded by an upgrade/rollback (drift is reported on the head)."
+    superseded: Boolean!
+    "modified + missing objects."
+    drifted: Int!
+    inSync: Boolean!
+    "Counts by status: objects/in_sync/modified/missing/unverified/content_checked."
+    summary: JSON!
+    "Per-object drift rows (shape owned by pack-service)."
+    objects: [JSON!]!
+  }
+  "Change counts for an upgrade/rollback."
+  type PackTransitionDiff { added: Int! removed: Int! retained: Int! }
+  """Result of an upgrade or rollback. On dryRun, only the diff is populated; on
+   execute, id is the new superseding install and status is its state."""
+  type PackTransition {
+    "New superseding install id (execute); null on dryRun."
+    id: ID
+    pack: String!
+    operation: String!
+    fromVersion: String
+    toVersion: String
+    dryRun: Boolean!
+    "Install status after execute (installed | awaiting_approval | failed); null on dryRun."
+    status: String
+    supersedes: ID
+    summary: JSON
+    diff: PackTransitionDiff!
+  }
 
   type Mutation {
     """Register a domain ontology entity type (idempotent by entityKey within the
@@ -5400,5 +5437,13 @@ export const typeDefs = gql`
     its dashboards (POST /installs/{id}/complete). Errors if still awaiting
     approval. Needs pack.install.execute."""
     completePackInstall(installId: ID!, idempotencyKey: String): PackCompleteResult!
+    """Upgrade a live install to the pack's current on-disk version (POST
+    /installs/{id}/upgrade). dryRun returns only the diff (no side effects); a real
+    upgrade supersedes this install with a new one. Needs pack.install.execute."""
+    upgradePack(installId: ID!, dryRun: Boolean = false, idempotencyKey: String): PackTransition!
+    """Roll a live install back to a prior version (POST /installs/{id}/rollback).
+    Defaults to the version this one superseded; toInstallId targets a specific
+    prior install. dryRun returns only the diff. Needs pack.install.execute."""
+    rollbackPack(installId: ID!, toInstallId: ID, dryRun: Boolean = false, idempotencyKey: String): PackTransition!
   }
 `;
