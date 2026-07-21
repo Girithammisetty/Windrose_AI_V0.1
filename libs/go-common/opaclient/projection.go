@@ -147,14 +147,22 @@ func (l *ProjectionLoader) Load(ctx context.Context, in *Input) (Projection, err
 }
 
 // CheckWithRedis loads the projection from Redis then evaluates it against OPA
-// — the full request-path decision (MASTER-FR-012).
+// — the full request-path decision (MASTER-FR-012). When the projection came
+// back empty (a Redis miss — cold cache after a restart/failover/flush, not a
+// genuine "no grant") and a fallback is configured (EnableMissFallback,
+// RBC-FR-045), this re-checks against rbac-service's SQL ground truth instead
+// of returning the empty-projection deny — see withMissFallback.
 func (c *Client) CheckWithRedis(ctx context.Context, l *ProjectionLoader, in Input) (Decision, error) {
 	p, err := l.Load(ctx, &in)
 	if err != nil {
 		return Decision{}, err
 	}
 	in.Projection = p
-	return c.Check(ctx, in)
+	dec, err := c.Check(ctx, in)
+	if err != nil {
+		return dec, err
+	}
+	return c.withMissFallback(ctx, in, dec), nil
 }
 
 func key(f, tenant, user string) string { return fmt.Sprintf(f, tenant, user) }

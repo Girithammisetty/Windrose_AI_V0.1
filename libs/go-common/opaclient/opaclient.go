@@ -87,6 +87,10 @@ type Client struct {
 	// Path is the data document evaluated (default windrose/authz_input/result).
 	Path   string
 	client *http.Client
+	// fb is the optional Redis-miss fallback (RBC-FR-045), set via
+	// EnableMissFallback. Nil means "not configured" -- CheckWithRedis then
+	// behaves exactly as it always has (deny on a miss).
+	fb *fallback
 }
 
 // New builds a Client for baseURL (OPA sidecar).
