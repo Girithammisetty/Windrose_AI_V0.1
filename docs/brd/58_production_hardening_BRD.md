@@ -126,4 +126,12 @@ booting); `DB_REQUIRE_NONSUPERUSER=true` = **hard refuse** (set in prod Helm
 Live boot-refusal against a superuser DSN with the flag on = deferred to the WS3
 cloud bring-up (needs the app-role DSN).
 
+### B2 — upload total-size / part-count cap — DONE
+`ingestion-service` config `max_upload_bytes` (5 GiB) + `max_upload_parts` (10k);
+`enforce_upload_caps()` extracted as a pure function, called in `UploadService.complete()`
+BEFORE the memory-bound commit so an oversized upload fails fast (HTTP 400) instead
+of OOMing. 0 = unlimited.
+**Test:** `tests/unit/test_upload_caps.py` (5 cases: within/over-bytes/over-parts/
+unlimited/boundary) green; full ingestion unit suite **535 passed**; ruff clean.
+
 _See BRD 59 for feature expansion (5B)._

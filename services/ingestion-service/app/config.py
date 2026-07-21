@@ -69,6 +69,11 @@ class Settings:
     min_part_size: int = 8 * MIB
     max_part_size: int = 64 * MIB
     upload_ttl_hours: int = 24
+    # Total assembled-file caps (B2 / BRD 58): reject at complete() BEFORE the
+    # memory-bound Iceberg commit, so an oversized upload fails fast instead of
+    # OOMing the service. 0 = unlimited.
+    max_upload_bytes: int = 5 * 1024 * MIB  # 5 GiB
+    max_upload_parts: int = 10_000
 
     # Webhook mode (ING-FR-024)
     webhook_max_payload_bytes: int = 1 * MIB

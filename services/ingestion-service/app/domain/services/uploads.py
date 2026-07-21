@@ -35,6 +35,24 @@ from app.ids import uuid7
 from app.store.models import Ingestion, Upload, UploadPart
 
 
+def enforce_upload_caps(total_size: int, part_count: int, settings: Any) -> None:
+    """B2 (BRD 58): reject an assembled upload that exceeds the configured total
+    size / part-count caps, before it reaches the memory-bound Iceberg commit.
+    A cap of 0 means unlimited. Raises ValidationFailedError (HTTP 400)."""
+    max_parts = getattr(settings, "max_upload_parts", 0)
+    max_bytes = getattr(settings, "max_upload_bytes", 0)
+    if max_parts and part_count > max_parts:
+        raise ValidationFailedError(
+            f"upload has {part_count} parts, exceeding the limit of {max_parts}",
+            details=[{"field": "parts", "message": "too many parts"}],
+        )
+    if max_bytes and total_size > max_bytes:
+        raise ValidationFailedError(
+            f"upload total {total_size} bytes exceeds the {max_bytes}-byte limit",
+            details=[{"field": "size", "message": "file too large"}],
+        )
+
+
 def serialize_upload(upload: Upload, parts: list[UploadPart]) -> dict[str, Any]:
     return {
         "upload_id": upload.id,
@@ -340,6 +358,11 @@ class UploadService:
                 raise ConflictError("part manifest mismatch", details={"parts": mismatches})
 
             total_size = sum(p.size for p in parts)
+
+            # B2 (BRD 58): hard cap total size + part count BEFORE the memory-bound
+            # commit path, so an oversized upload fails fast instead of OOMing.
+            enforce_upload_caps(total_size, len(parts), self.c.settings)
+
             part_keys = [stored[n].storage_key for n in expected_ns]
 
         if body.sha256:  # streamed whole-file verification (ING-FR-043 step 1)
