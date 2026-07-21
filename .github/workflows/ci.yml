@@ -512,11 +512,24 @@ jobs:
         working-directory: deploy/local
         run: ./up.sh
 
+      # Post-up health gate: the freshly booted stack must be coherent BEFORE we
+      # run the e2e suite — every stateful store has its named volume and every
+      # tenant's derived projections (rbac in Redis, case index in OpenSearch) are
+      # present. Fails fast with a clear signal instead of a cryptic e2e failure.
+      - name: Health gate (make doctor)
+        run: make doctor
+
       - name: Run live-stack E2E suite (pnpm e2e:live)
         working-directory: services/ui-web
         env:
           CI: "true"
         run: pnpm e2e:live
+
+      # Restart-survival soak: prove the platform survives an infra restart with
+      # its data + projections intact. Runs AFTER the e2e suite so it never
+      # perturbs it; CI is the ideal clean env for this (fresh volumes).
+      - name: Restart-survival soak (make soak)
+        run: make soak
 
       - name: Tail service boot logs on failure
         if: failure()

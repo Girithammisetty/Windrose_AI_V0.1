@@ -1,6 +1,6 @@
 SERVICES := $(wildcard services/*)
 
-.PHONY: dev-up dev-down test test-unit lint e2e e2e-keep up up-platform down reset doctor \
+.PHONY: dev-up dev-down test test-unit lint e2e e2e-keep up up-platform down reset doctor soak \
         demo-list demo-load demo-clean demo-clean-all
 
 # Capstone: provision the WHOLE platform locally and open it in a browser for
@@ -38,6 +38,13 @@ reset:
 #   make doctor HEAL=1    # check, then rebuild any missing projections
 doctor:
 	HEAL=$(HEAL) deploy/local/doctor.sh
+
+# Restart-survival soak: with the stack up, prove it survives an infra restart
+# with data + projections intact (baseline doctor GREEN -> restart stateful
+# containers, volumes preserved -> doctor must STILL be GREEN). Catches any
+# ephemeral-store / lost-projection regression. Run `make up` first.
+soak:
+	deploy/local/soak.sh
 
 # ---- Demo pack control -----------------------------------------------------
 # Load ONE vertical pack (+ its demo data + per-role logins) into a throwaway
