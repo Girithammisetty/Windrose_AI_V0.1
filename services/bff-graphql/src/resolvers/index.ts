@@ -250,19 +250,27 @@ function viewerCaps(parent: ViewerParent, ctx: GraphQLContext): Promise<ViewerCa
         roles: c.roles, capabilities: c.capabilities, degraded: false,
         workspaceName: c.workspaceName,
       }))
-      .catch(() => ({ roles: [], capabilities: [], degraded: true, workspaceName: "" }));
+      .catch((e) => {
+        console.error("viewerCaps: rbac meCapabilities failed", e);
+        return { roles: [], capabilities: [], degraded: true, workspaceName: "" };
+      });
   }
   return parent._caps;
 }
 
 /** Fetch the caller's tenant name once per request (identity /tenants/self);
- * display-only — a failure yields nulls, never an error. */
+ * display-only — a failure yields nulls (UI falls back to the raw id), but the
+ * error is logged so a display-only degradation doesn't hide a real backend
+ * fault (e.g. a JWT the identity client can't call successfully). */
 function viewerTenant(parent: ViewerParent, ctx: GraphQLContext) {
   if (!parent._tenant) {
     parent._tenant = ctx.clients.identity
       .tenantSelf()
       .then((t) => ({ name: t.name ?? null, displayName: t.display_name ?? null }))
-      .catch(() => ({ name: null, displayName: null }));
+      .catch((e) => {
+        console.error("viewerTenant: identity tenantSelf failed", e);
+        return { name: null, displayName: null };
+      });
   }
   return parent._tenant;
 }
