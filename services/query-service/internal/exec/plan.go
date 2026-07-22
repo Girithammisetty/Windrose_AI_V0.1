@@ -228,14 +228,34 @@ func (b *Broker) buildPlan(ctx context.Context, req PlanRequest) (*Plan, error) 
 	plan := &Plan{Rewritten: rw, Classification: cls, ExecSQL: rw.SQL, Warnings: warnings, DatasetURNs: urns, Materializations: materializations}
 
 	// Agent hardening (QRY-FR-022): forced dry-run happens by construction —
-	// this same plan runs before any execution — plus LIMIT injection.
+	// this same plan runs before any execution.
 	if req.Op.Caller == domain.CallerAgent {
 		plan.DryRunForced = true
-		if !cls.HasOuterLimit {
-			limit := int64(domain.AgentInjectedLimit)
-			if req.Limit > 0 && req.Limit < limit {
-				limit = req.Limit
+	}
+
+	// B3 (BRD 58): honor the CALLER'S OWN requested LIMIT for every caller
+	// class, not just agents. chart-service already sends one on every
+	// /sql/run call (its intended result-set size) via PlanRequest.Limit, but
+	// it was silently dropped for service/user callers -- a query matching
+	// millions of rows executed in full (bounded only by the much looser
+	// MaxResultRows/MaxResultBytes ceiling) to display a few thousand.
+	//
+	// Agents additionally get a MANDATORY ceiling (AgentInjectedLimit) even if
+	// they asked for none or for more -- defense in depth for the
+	// least-trusted caller class; this preserves TestBrokerAgentHardening's
+	// exact prior behavior. Non-agent callers with no requested limit are
+	// left exactly as before (unbounded here; still capped by
+	// MaxResultRows/MaxResultBytes elsewhere) -- this only closes the gap
+	// where a limit WAS requested and got ignored.
+	if !cls.HasOuterLimit {
+		limit := req.Limit
+		if req.Op.Caller == domain.CallerAgent {
+			ceiling := int64(domain.AgentInjectedLimit)
+			if limit <= 0 || limit > ceiling {
+				limit = ceiling
 			}
+		}
+		if limit > 0 {
 			plan.ExecSQL = sqlsafe.WrapWithLimit(rw.SQL, limit)
 			plan.LimitInjected = true
 		}

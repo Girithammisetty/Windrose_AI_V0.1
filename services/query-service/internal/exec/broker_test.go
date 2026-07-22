@@ -270,6 +270,58 @@ func TestBrokerAgentHardening(t *testing.T) {
 	assert.NotContains(t, f.duck.LastSQL(), "_wr_agent_guard")
 }
 
+// B3 (BRD 58): a non-agent caller's own requested LIMIT must be honored too --
+// chart-service sends `limit` on every /sql/run call (its intended result-set
+// size), but it was silently ignored unless Op.Caller == CallerAgent, so a
+// query matching millions of rows executed in full to display a few thousand.
+func TestBrokerServiceCallerLimitHonored(t *testing.T) {
+	f := newFixture(t)
+
+	// CallerService (chart-service's own class), requesting 5000 rows.
+	serviceOp := f.op
+	serviceOp.Caller = domain.CallerService
+	req := f.runReq("SELECT region FROM {{dataset('Orders')}}")
+	req.Op = serviceOp
+	req.Limit = 5000
+	e, err := f.broker.Run(context.Background(), req)
+	require.NoError(t, err)
+	final := f.waitTerminal(t, e.ID)
+	require.Equal(t, domain.StatusSucceeded, final.Status)
+	assert.Contains(t, f.duck.LastSQL(), "LIMIT 5000",
+		"a service caller's own requested LIMIT must reach ExecSQL, not just agents'")
+
+	// Same for CallerUser (an interactive user's ad-hoc query).
+	req2 := f.runReq("SELECT region FROM {{dataset('Orders')}}")
+	req2.Op = f.op // f.op is already CallerUser
+	req2.Limit = 42
+	e2, err := f.broker.Run(context.Background(), req2)
+	require.NoError(t, err)
+	f.waitTerminal(t, e2.ID)
+	assert.Contains(t, f.duck.LastSQL(), "LIMIT 42")
+
+	// No Limit requested by a non-agent caller -> unchanged: NOT force-capped
+	// at AgentInjectedLimit (that ceiling is agent-only defense in depth); the
+	// MaxResultRows/MaxResultBytes backstop still bounds it elsewhere.
+	req3 := f.runReq("SELECT region FROM {{dataset('Orders')}}")
+	req3.Op = serviceOp
+	e3, err := f.broker.Run(context.Background(), req3)
+	require.NoError(t, err)
+	f.waitTerminal(t, e3.ID)
+	assert.NotContains(t, f.duck.LastSQL(), "LIMIT 10000",
+		"a non-agent caller with no requested limit must not get the agent ceiling")
+
+	// An existing outer LIMIT is not double-wrapped for a service caller either.
+	req4 := f.runReq("SELECT region FROM {{dataset('Orders')}} LIMIT 7")
+	req4.Op = serviceOp
+	req4.Limit = 5000
+	e4, err := f.broker.Run(context.Background(), req4)
+	require.NoError(t, err)
+	f.waitTerminal(t, e4.ID)
+	sql := f.duck.LastSQL()
+	assert.Contains(t, sql, "LIMIT 7")
+	assert.NotContains(t, sql, "LIMIT 5000")
+}
+
 // AC-8: runtime ceiling kill → status ceiling_exceeded + event emitted.
 func TestBrokerRuntimeCeilingKill(t *testing.T) {
 	f := newFixture(t)

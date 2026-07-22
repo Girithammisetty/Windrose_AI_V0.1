@@ -191,4 +191,35 @@ shape, not yet applied. rbac-service's `outbox` table is Go (already covered,
 (does the GUC actually work against a real RLS-enforced Postgres, not just unit
 fakes) is pending the next full-stack boot.
 
+### B3 — wrap ExecSQL with the caller's LIMIT for all callers — DONE
+
+**Root cause confirmed, not assumed:** `query-service/internal/exec/plan.go`'s
+LIMIT-injection block only fired `if req.Op.Caller == domain.CallerAgent`.
+Checked the actual caller — `chart-service/internal/resolve/clients.go:226,231`
+already sends `"limit": limit` on **every** `/sql/run` call, and
+`handlers_sql.go:55` already threads it into `PlanRequest.Limit` — the intended
+result-set size was captured all the way to the plan and then silently
+discarded for non-agent callers. A chart matching millions of rows executed in
+full (bounded only by the much looser `MaxResultRows=5M`/`MaxResultBytes=1GB`)
+to display a few thousand.
+
+**Fix:** split the block — `DryRunForced` stays agent-only (an unrelated
+governance property); LIMIT injection now applies whenever `req.Limit > 0`
+**for any caller class**, with agents additionally getting a mandatory
+`AgentInjectedLimit` ceiling even with no/looser requested limit (defense in
+depth for the least-trusted caller — exact prior agent behavior preserved,
+verified byte-for-byte against the existing `TestBrokerAgentHardening`). A
+non-agent caller that requests no limit is left exactly as before (still
+bounded by `MaxResultRows`/`MaxResultBytes` elsewhere) — this closes only the
+gap where a limit **was** requested and got ignored.
+
+**Test — TDD, bug reproduced before the fix:** added
+`TestBrokerServiceCallerLimitHonored` to the existing `broker_test.go` fixture;
+ran it against the unfixed code first and confirmed it **fails** exactly as
+predicted (`"...orders_v3\"" does not contain "LIMIT 5000"`), then applied the
+fix and confirmed it passes, alongside the pre-existing
+`TestBrokerAgentHardening` (unchanged, still green) — proves the agent path
+wasn't touched. Full `query-service` suite (incl. integration): all packages
+`ok`, 0 fails. `go vet`/`gofmt` clean.
+
 _See BRD 59 for feature expansion (5B)._
