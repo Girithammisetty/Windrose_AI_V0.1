@@ -11,6 +11,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
@@ -19,6 +20,7 @@ import (
 	"github.com/datacern-ai/audit-service/internal/chstore"
 	"github.com/datacern-ai/audit-service/internal/domain"
 	"github.com/datacern-ai/audit-service/internal/meta"
+	"github.com/datacern-ai/audit-service/internal/metrics"
 	"github.com/datacern-ai/audit-service/internal/pgstore"
 	"github.com/datacern-ai/audit-service/internal/worm"
 )
@@ -36,11 +38,11 @@ type Exporter struct {
 
 // ManifestFile describes one exported object (AUD-FR-021).
 type ManifestFile struct {
-	Name           string `json:"name"`
-	SHA256         string `json:"sha256"`
-	Rows           int    `json:"rows"`
-	OccurredAtMin  string `json:"occurred_at_min"`
-	OccurredAtMax  string `json:"occurred_at_max"`
+	Name          string `json:"name"`
+	SHA256        string `json:"sha256"`
+	Rows          int    `json:"rows"`
+	OccurredAtMin string `json:"occurred_at_min"`
+	OccurredAtMax string `json:"occurred_at_max"`
 }
 
 // Manifest is the sealed manifest document (AUD-FR-021).
@@ -190,7 +192,7 @@ func buildParquet(rows []domain.Record) ([]byte, error) {
 			ResourceURN: r.ResourceURN, Action: r.Action,
 			OccurredAt: r.OccurredAt.UTC().Format(time.RFC3339Nano),
 			IngestedAt: r.IngestedAt.UTC().Format(time.RFC3339Nano),
-			TraceID: r.TraceID, PayloadDigest: r.PayloadDigest, PayloadJSON: r.PayloadJSON,
+			TraceID:    r.TraceID, PayloadDigest: r.PayloadDigest, PayloadJSON: r.PayloadJSON,
 			PayloadRef: r.PayloadRef, BodyWithheld: r.PayloadJSON == "",
 			ChainSeq: int64(r.ChainSeq), ChainHash: r.ChainHash,
 		})
@@ -220,6 +222,17 @@ type Scheduler struct {
 	Exporter *Exporter
 	PG       *pgstore.Store
 	Interval time.Duration
+	// Log defaults to slog.Default() when nil.
+	Log *slog.Logger
+	// Metrics is optional; when nil, seal-age/reconcile observability is skipped.
+	Metrics *metrics.Metrics
+}
+
+func (s *Scheduler) log() *slog.Logger {
+	if s.Log != nil {
+		return s.Log
+	}
+	return slog.Default()
 }
 
 // Run periodically exports unsealed prior days until ctx is cancelled.
@@ -229,24 +242,105 @@ func (s *Scheduler) Run(ctx context.Context) {
 	}
 	t := time.NewTicker(s.Interval)
 	defer t.Stop()
-	s.runOnce(ctx)
+	s.ReconcileAndExport(ctx)
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-t.C:
-			s.runOnce(ctx)
+			s.ReconcileAndExport(ctx)
 		}
 	}
 }
 
-func (s *Scheduler) runOnce(ctx context.Context) {
+// ReconcileAndExport is one pass of the seal scheduler (exported so it can be
+// driven directly and deterministically by tests, rather than only via Run's
+// ticker loop). Two things feed the export candidate list:
+//
+//  1. Postgres's own chain_heads checkpoints with sealed_at IS NULL -- the
+//     common case, and the ONLY input before BRD 58 SEC-2.
+//  2. A ClickHouse cross-check: chain.Manager.Append writes chain_heads
+//     best-effort on ingest (never blocking or retrying), so a transient
+//     Postgres failure leaves a day with real, durable ClickHouse events but
+//     NO chain_heads row at all -- permanently invisible to (1) alone. Any
+//     such day found here has its checkpoint recreated from ClickHouse's own
+//     tip (self-healing chain_heads, not just a one-off patch) before being
+//     queued for export.
+func (s *Scheduler) ReconcileAndExport(ctx context.Context) {
 	today := time.Now().UTC().Format("2006-01-02")
 	days, err := s.PG.ListUnsealedDays(ctx, today)
 	if err != nil {
-		return
+		s.log().Warn("seal reconcile: list unsealed days failed", "err", err)
 	}
+
+	seen := make(map[string]bool, len(days))
+	oldest := today
 	for _, d := range days {
-		_, _ = s.Exporter.ExportDay(ctx, d.TenantID, d.ChainDate)
+		seen[d.TenantID.String()+"|"+d.ChainDate] = true
+		if d.ChainDate < oldest {
+			oldest = d.ChainDate
+		}
+	}
+
+	if s.Exporter != nil && s.Exporter.CH != nil {
+		chDays, err := s.Exporter.CH.DistinctPriorDays(ctx, today)
+		if err != nil {
+			s.log().Warn("seal reconcile: clickhouse distinct-days scan failed", "err", err)
+		}
+		for _, cd := range chDays {
+			key := cd.TenantID.String() + "|" + cd.ChainDate
+			if seen[key] {
+				continue
+			}
+			ch, err := s.PG.GetChainHead(ctx, cd.TenantID, cd.ChainDate)
+			if err != nil {
+				s.log().Warn("seal reconcile: chain-head read failed",
+					"tenant_id", cd.TenantID, "date", cd.ChainDate, "err", err)
+				continue
+			}
+			if ch != nil && ch.SealedAt != nil {
+				continue // already sealed; nothing to do
+			}
+			if ch == nil {
+				// The checkpoint was never durably recorded at all -- recreate
+				// it from ClickHouse's own tip so it's visible to future ticks
+				// too, not just recovered as a one-off here.
+				seq, hash, ok, err := s.Exporter.CH.ChainTip(ctx, cd.TenantID, cd.ChainDate)
+				if err != nil || !ok {
+					s.log().Warn("seal reconcile: chain tip lookup failed",
+						"tenant_id", cd.TenantID, "date", cd.ChainDate, "err", err)
+					continue
+				}
+				if err := s.PG.UpsertChainHead(ctx, cd.TenantID, cd.ChainDate, hash, seq); err != nil {
+					s.log().Warn("seal reconcile: chain-head recovery upsert failed",
+						"tenant_id", cd.TenantID, "date", cd.ChainDate, "err", err)
+					continue
+				}
+				s.log().Warn("seal reconcile: recovered a chain_heads checkpoint missing entirely from Postgres",
+					"tenant_id", cd.TenantID, "date", cd.ChainDate)
+				if s.Metrics != nil {
+					s.Metrics.ReconciledDays.Inc()
+				}
+			}
+			seen[key] = true
+			if cd.ChainDate < oldest {
+				oldest = cd.ChainDate
+			}
+			days = append(days, pgstore.ChainHead{TenantID: cd.TenantID, ChainDate: cd.ChainDate})
+		}
+	}
+
+	if s.Metrics != nil {
+		if len(days) == 0 {
+			s.Metrics.SealAgeSeconds.Set(0)
+		} else if t, err := time.Parse("2006-01-02", oldest); err == nil {
+			s.Metrics.SealAgeSeconds.Set(time.Since(t).Seconds())
+		}
+	}
+
+	for _, d := range days {
+		if _, err := s.Exporter.ExportDay(ctx, d.TenantID, d.ChainDate); err != nil {
+			s.log().Warn("seal reconcile: export day failed", "tenant_id", d.TenantID, "date", d.ChainDate, "err", err)
+		}
 	}
 }

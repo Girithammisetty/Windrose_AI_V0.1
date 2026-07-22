@@ -19,6 +19,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/datacern-ai/audit-service/internal/api"
 	"github.com/datacern-ai/audit-service/internal/authz"
@@ -29,6 +30,7 @@ import (
 	"github.com/datacern-ai/audit-service/internal/export"
 	"github.com/datacern-ai/audit-service/internal/ingest"
 	"github.com/datacern-ai/audit-service/internal/meta"
+	"github.com/datacern-ai/audit-service/internal/metrics"
 	"github.com/datacern-ai/audit-service/internal/pgstore"
 	"github.com/datacern-ai/audit-service/internal/register"
 	"github.com/datacern-ai/audit-service/internal/siemexport"
@@ -189,7 +191,8 @@ func main() {
 	}
 
 	// --- Chain + ingest processor + real Kafka consumer ---
-	chainMgr := chain.New(redis, pg, ch)
+	auditMetrics := metrics.New(prometheus.DefaultRegisterer)
+	chainMgr := chain.New(redis, pg, ch).WithMetrics(auditMetrics)
 	proc := &ingest.Processor{CH: ch, Chain: chainMgr, Meta: metaEmitter, CleanAllow: nil, Export: siemExporter}
 	sub, err := domain.NewSubscription(os.Getenv("SUBSCRIPTION_PATTERN"))
 	if err != nil {
@@ -206,7 +209,7 @@ func main() {
 
 	// --- WORM export scheduler ---
 	exporter := &export.Exporter{CH: ch, PG: pg, WORM: wormClient, Meta: metaEmitter}
-	scheduler := &export.Scheduler{Exporter: exporter, PG: pg, Interval: time.Hour}
+	scheduler := &export.Scheduler{Exporter: exporter, PG: pg, Interval: time.Hour, Metrics: auditMetrics}
 	go scheduler.Run(ctx)
 
 	// --- Authz (OPA sidecar + Redis projection) + JWKS verifier ---

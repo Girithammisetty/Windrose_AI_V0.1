@@ -332,6 +332,39 @@ func (s *Store) CountForDay(ctx context.Context, tenant uuid.UUID, chainDate str
 	return n, nil
 }
 
+// TenantDate is a platform-wide (tenant_id, chain_date) pair.
+type TenantDate struct {
+	TenantID  uuid.UUID
+	ChainDate string
+}
+
+// DistinctPriorDays returns every (tenant_id, chain_date) pair with at least
+// one stored event and chain_date < before, across ALL tenants -- the
+// ClickHouse-anchored ground truth for which days actually have events to
+// export (BRD 58 SEC-2). Postgres's chain_heads checkpoint is written
+// best-effort on ingest (chain.Manager.Append); if that write ever fails, the
+// day never appears there at all and stays permanently invisible to
+// PG.ListUnsealedDays, even though the events are safely durable here. The
+// seal reconciler cross-checks against this to catch exactly that case.
+func (s *Store) DistinctPriorDays(ctx context.Context, before string) ([]TenantDate, error) {
+	q := fmt.Sprintf(`SELECT DISTINCT tenant_id, toString(chain_date) FROM %s
+	  WHERE chain_date < ? ORDER BY chain_date ASC`, s.table)
+	rows, err := s.conn.Query(ctx, q, before)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []TenantDate
+	for rows.Next() {
+		var td TenantDate
+		if err := rows.Scan(&td.TenantID, &td.ChainDate); err != nil {
+			return nil, err
+		}
+		out = append(out, td)
+	}
+	return out, rows.Err()
+}
+
 // RawSelect runs a tenant-scoped SELECT with a caller-built WHERE clause and
 // deterministic ordering (compliance packs, AUD-FR-060/061). The caller is
 // responsible for injecting the tenant predicate into where.

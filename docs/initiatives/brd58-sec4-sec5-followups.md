@@ -1,6 +1,6 @@
-# BRD 58 WS1 — SEC-3 (headers + CORS), SEC-4 (RLS NULLIF re-remediation), SEC-5 (residual injection edges)
+# BRD 58 WS1 — SEC-2 (audit→WORM reconcile), SEC-3 (headers + CORS), SEC-4 (RLS NULLIF re-remediation), SEC-5 (residual injection edges)
 
-**Status:** done — 2026-07-22 (SEC-2 remains open, tracked directly in BRD 58 WS1)
+**Status:** done — 2026-07-22. All four gaps closed; WS1 (security fast-follows) is now complete.
 **Related:** [58_production_hardening_BRD.md](../brd/58_production_hardening_BRD.md) WS1 · [rbac-dlq-envelope-tenant-id](rbac-dlq-envelope-tenant-id.md)
 
 Filed as a standalone initiative doc rather than appended directly to
@@ -20,6 +20,22 @@ framing). SEC-4 and SEC-5 are two of the four remaining WS1 gaps (SEC-2 and
 SEC-3 are tracked separately, still open).
 
 ### 1b. Technical (audited before any fix, via a dedicated research pass)
+
+**SEC-2:** audit-service's topic subscription is dynamic regex-matched
+(`internal/domain/topics.go`), auto-discovering new topics without a deploy.
+The seal scheduler (`internal/export/export.go`'s `Scheduler`) runs hourly,
+but its ONLY input is `PG.ListUnsealedDays` -- Postgres `chain_heads` rows
+with `sealed_at IS NULL`. `chain_heads` itself is written **best-effort** on
+every ingested event (`internal/chain/chain.go`'s `Manager.Append`, line
+~152: `if err := m.pg.UpsertChainHead(...); err != nil { _ = err }` --
+correct for the live chain sequence, which is ClickHouse-anchored and must
+never block on a transient Postgres blip, but it means a day whose
+checkpoint write fails is not just "unsealed," it's **invisible** to the
+scheduler entirely, forever -- exactly the shape of the incident BRD 58
+describes (147 `case.events.v1` events lost while the consumer looked
+healthy). `Scheduler.Run` does call its reconcile pass once immediately on
+boot, but that pass only ever reads `chain_heads` -- it has no way to
+discover a day that was never recorded there at all.
 
 **SEC-3:** `ui-web/src/middleware.ts` only sets any security header on the
 `/embed/*` branch (a per-tenant `Content-Security-Policy: frame-ancestors`);
@@ -69,6 +85,23 @@ is the complete list — no other migration adds a policy referencing it.
 
 ## 2. Design
 
+- **SEC-2:** rather than switching topic subscription to a static list (the
+  BRD's literal wording) -- the dynamic regex discovery is a deliberate,
+  documented AC-13 feature, not the bug -- close the actual root cause: the
+  scheduler cross-checks against ClickHouse's own ground truth. New
+  `chstore.DistinctPriorDays(before)` returns every `(tenant_id, chain_date)`
+  pair with at least one durable event, across all tenants, platform-wide.
+  `Scheduler`'s reconcile pass (renamed from private `runOnce` to exported
+  `ReconcileAndExport`, callable directly and deterministically by tests, not
+  only via `Run`'s ticker) unions this against `ListUnsealedDays`; for any day
+  found only in ClickHouse, it first re-derives the checkpoint from
+  `chstore.ChainTip` and writes it via `PG.UpsertChainHead` -- **self-healing**
+  `chain_heads` itself, not just patching over the symptom for one run -- then
+  queues the day for export like any other unsealed day. A day already sealed
+  is left alone (checked via `GetChainHead`'s `SealedAt`). Two new Prometheus
+  metrics (`audit_seal_age_seconds`, `audit_chain_head_upsert_failures_total`,
+  `audit_seal_reconciled_days_total`) turn "silently invisible" into "visible
+  and alertable" -- the exact seam a `PrometheusRule` (BRD 58 WS2) would watch.
 - **SEC-3 (ui-web):** static headers via `next.config.mjs`'s `headers()`
   (applies to every response Next.js serves, unlike middleware's matcher) --
   `X-Content-Type-Options`, `Strict-Transport-Security`, and for every route
@@ -121,6 +154,50 @@ is the complete list — no other migration adds a policy referencing it.
 ---
 
 ## 3. Implementation & Test
+
+**SEC-2** — `internal/chstore/chstore.go` (+`DistinctPriorDays`, +`TenantDate`
+type), `internal/chain/chain.go` (+`Manager.WithMetrics`, swallowed error now
+counted), `internal/export/export.go` (`Scheduler` gains `Log`/`Metrics`
+fields; `runOnce` renamed to exported `ReconcileAndExport` with the
+ClickHouse-cross-check logic described above), new
+`internal/metrics/metrics.go` (mirrors `usage-service`'s package shape),
+`cmd/server/main.go` (wires `metrics.New(prometheus.DefaultRegisterer)` into
+both the chain manager and the scheduler). `go mod tidy` promoted
+`prometheus/client_golang` and `redis/go-redis/v9` (an already-direct import
+in `chain.go` for `redis.NewScript`, previously mismarked `// indirect`) to
+direct requires -- a pure bookkeeping fix, no version changes.
+
+**Test -- TDD, the exact incident shape reproduced first:** new
+`test/integration/seal_reconcile_test.go`, run against the real local
+Postgres/ClickHouse/Redis/MinIO stack (added to a package with pre-existing
+files a parallel session was concurrently editing, so this is a NEW file, not
+a change to any file that session owns). `TestSealReconcile_
+RecoversDayMissingFromChainHeads` seeds one real ClickHouse row for a
+3-days-ago `(tenant, date)` directly (bypassing `chain.Manager` entirely, the
+same way the real bug leaves ClickHouse durable but Postgres's checkpoint
+absent) with NO corresponding `chain_heads` row -- confirms directly that
+`PG.ListUnsealedDays` does NOT surface this day (reproducing the bug's exact
+symptom: invisible, not just unsealed), then runs `Scheduler.
+ReconcileAndExport` once and confirms the checkpoint now exists (recovered
+head hash matches what ClickHouse's own tip computed), the day is sealed, and
+a real 1-row manifest landed in WORM. `TestSealReconcile_
+IdempotentOnAlreadySealedDay` proves a second reconcile pass over an
+already-sealed day is a no-op (manifest stays at revision 1, no duplicate
+export). Both pass. Full `go build`/`go vet`/`gofmt -l` clean. Full unit
+suite (`go test ./...`): all packages `ok`, 0 fails. Full Docker-backed
+integration suite (`-tags integration`, all 22 tests including the 2 new
+ones and the previously-flaky `TestAC05_ChainTamperEvidence`, which now
+passes): all green when run in reasonable batches. **One real, pre-existing
+environment issue surfaced, not caused by this change:** running the entire
+~22-test suite back-to-back in one process intermittently fails
+`TestAC11b_ConcurrentAppendSingleWriter` (and once, an unrelated
+`acceptance2_test.go` case) with a ClickHouse `Memory limit (total) exceeded`
+error (1.5 GiB container cap) -- confirmed this is resource contention, not a
+logic regression, by re-running the same failing tests in isolation and in
+smaller batches, where they pass every time; the shared dev-stack ClickHouse
+container has been up for 11+ hours across this session's very large volume
+of test runs. Flagged honestly (mirrors the existing `TestAC05` flake
+precedent in this same log), not silently worked around.
 
 **SEC-3** — `services/ui-web/next.config.mjs` (+`headers()`),
 `services/bff-graphql/src/config.ts` (+`corsAllowedOrigins`),
@@ -197,5 +274,5 @@ negative case proving the PERSON floor is deliberately narrow: a bare
 capitalized name with no honorific is *not* caught). Full suites:
 `agent-runtime` 289 passed, `ai-gateway` 153 passed, 0 fails either.
 
-**Deferred, explicitly:** SEC-2 (audit→WORM delivery reconcile) remains open —
-tracked directly in BRD 58 WS1, not duplicated here.
+**All four WS1 security fast-follows (SEC-2 through SEC-5) are now closed.**
+SEC-1 was already done before this initiative began -- see BRD 58's own log.

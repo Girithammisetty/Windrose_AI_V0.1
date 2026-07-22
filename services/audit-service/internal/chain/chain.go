@@ -29,6 +29,7 @@ import (
 	"github.com/redis/go-redis/v9"
 
 	"github.com/datacern-ai/audit-service/internal/domain"
+	"github.com/datacern-ai/audit-service/internal/metrics"
 	"github.com/datacern-ai/audit-service/internal/pgstore"
 	"github.com/datacern-ai/go-common/redisx"
 )
@@ -41,10 +42,11 @@ type ChainTipper interface {
 
 // Manager appends events to the chain.
 type Manager struct {
-	redis *redisx.Client
-	pg    *pgstore.Store
-	tip   ChainTipper
-	now   func() time.Time
+	redis   *redisx.Client
+	pg      *pgstore.Store
+	tip     ChainTipper
+	now     func() time.Time
+	metrics *metrics.Metrics
 
 	lockTTL time.Duration
 	keyTTL  time.Duration
@@ -58,6 +60,15 @@ func New(r *redisx.Client, pg *pgstore.Store, tip ChainTipper) *Manager {
 		lockTTL: 15 * time.Second,
 		keyTTL:  8 * 24 * time.Hour,
 	}
+}
+
+// WithMetrics attaches the shared metrics bundle (BRD 58 SEC-2) so a failed
+// chain_heads checkpoint write -- otherwise silently swallowed -- is at least
+// counted. Optional: a nil metrics bundle (the zero-value Manager) leaves the
+// counter untouched, matching prior behavior exactly.
+func (m *Manager) WithMetrics(mx *metrics.Metrics) *Manager {
+	m.metrics = mx
+	return m
 }
 
 // Link is the chain position assigned to an event.
@@ -150,8 +161,14 @@ func (m *Manager) Append(ctx context.Context, tenant, eventID uuid.UUID, payload
 	// it is NOT authoritative for the sequence, so a transient PG error must not
 	// fail ingest or advance the seq on retry.
 	if err := m.pg.UpsertChainHead(ctx, tenant, date, hash, uint64(seq)); err != nil {
-		// swallowed: recovery reseeds from the ClickHouse tip, not from PG.
-		_ = err
+		// Not fatal: the live chain sequence reseeds from the ClickHouse tip,
+		// not from this checkpoint. But this exact failure is what makes a day
+		// invisible to the seal scheduler's ListUnsealedDays (BRD 58 SEC-2) --
+		// counted so it's observable, and self-healed later by the export
+		// scheduler's ClickHouse reconcile pass rather than lost forever.
+		if m.metrics != nil {
+			m.metrics.ChainHeadUpsertFailures.Inc()
+		}
 	}
 	return link, nil
 }
