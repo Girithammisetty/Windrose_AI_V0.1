@@ -21,6 +21,10 @@ type ConsumerStore interface {
 	RemoveUserProjection(ctx context.Context, tenant uuid.UUID, userID string) error
 	GrantOwnerAdminFromEvent(ctx context.Context, tenant uuid.UUID, userID, actorID, traceID string) error
 	AssignUserToGroupsFromEvent(ctx context.Context, tenant uuid.UUID, userID string, groups []string, actorID, traceID string) error
+	// Case-assignment implicit editor grants (the obo-grant source tool-plane's
+	// write gate intersects against): assignee gains, previous assignee loses.
+	UpsertAssignmentGrantFromEvent(ctx context.Context, tenant uuid.UUID, workspaceID uuid.UUID, resourceURN, assigneeID, traceID string) ([]string, error)
+	RemoveAssignmentGrantFromEvent(ctx context.Context, tenant uuid.UUID, resourceURN, assigneeID, traceID string) ([]string, error)
 }
 
 // Handler processes inbound events (BRD §6 Consumes):
@@ -100,6 +104,34 @@ func (h *Handler) HandleEvent(ctx context.Context, env Envelope) error {
 			return nil
 		}
 		return h.Store.RemoveUserProjection(ctx, env.TenantID, user)
+	case "case.assigned":
+		// The assignee holds an implicit editor grant on the case while
+		// assigned — the per-resource grant tool-plane's write gate requires
+		// before an approved proposal may execute against the case.
+		assignee, _ := env.Payload["assignee"].(string)
+		wsRaw, _ := env.Payload["workspace_id"].(string)
+		if assignee == "" || wsRaw == "" || env.ResourceURN == "" {
+			if h.Log != nil {
+				h.Log.Warn("case.assigned missing assignee/workspace_id/resource_urn — no grant materialized",
+					"tenant", env.TenantID, "event_id", env.EventID)
+			}
+			return nil
+		}
+		wsID, err := uuid.Parse(wsRaw)
+		if err != nil {
+			return fmt.Errorf("event %s: bad workspace_id %q", env.EventID, wsRaw)
+		}
+		_, err = h.Store.UpsertAssignmentGrantFromEvent(ctx, env.TenantID, wsID, env.ResourceURN, assignee, env.TraceID)
+		return err
+	case "case.unassigned":
+		if env.ResourceURN == "" {
+			return nil
+		}
+		// assignee (the removed user) narrows the revoke; absent -> revoke
+		// every implicit editor grant on the case.
+		assignee, _ := env.Payload["assignee"].(string)
+		_, err := h.Store.RemoveAssignmentGrantFromEvent(ctx, env.TenantID, env.ResourceURN, assignee, env.TraceID)
+		return err
 	}
 	// Cross-service *.created -> implicit creator grant (RBC-FR-032).
 	if strings.HasSuffix(env.EventType, ".created") && env.ResourceURN != "" {

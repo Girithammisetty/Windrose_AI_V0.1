@@ -254,16 +254,24 @@ func (s *PG) DecideBYO(ctx context.Context, id uuid.UUID, status, decidedBy, mes
 
 // ---- Invocation log + audit (TPL-FR-037) ------------------------------------
 
+// nullIfEmpty maps "" to SQL NULL for nullable text columns.
+func nullIfEmpty(s string) any {
+	if s == "" {
+		return nil
+	}
+	return s
+}
+
 // RecordInvocation writes the digest-level invocation row AND the
 // ai.tool_invoked.v1 outbox event atomically (RLS: tenant session). Every
 // enforcement attempt (allow/deny/error) goes through here (audit completeness).
 func (s *PG) RecordInvocation(ctx context.Context, log *domain.InvocationLog, env events.Envelope) error {
 	return s.withTenant(ctx, log.TenantID, func(tx pgx.Tx) error {
 		if _, err := tx.Exec(ctx, `
-			INSERT INTO invocation_log (id, tenant_id, agent_id, agent_version, obo_sub, tool_id, tool_version, tier, decision, error_code, args_digest, urns, latency_ms, trace_id)
-			VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+			INSERT INTO invocation_log (id, tenant_id, agent_id, agent_version, obo_sub, tool_id, tool_version, tier, decision, error_code, deny_reason, args_digest, urns, latency_ms, trace_id)
+			VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
 			log.ID, log.TenantID, log.AgentID, log.AgentVersion, log.OboSub, log.ToolID, log.ToolVersion,
-			log.Tier, log.Decision, log.ErrorCode, log.ArgsDigest, log.URNs, log.LatencyMS, log.TraceID); err != nil {
+			log.Tier, log.Decision, log.ErrorCode, nullIfEmpty(log.DenyReason), log.ArgsDigest, log.URNs, log.LatencyMS, log.TraceID); err != nil {
 			return err
 		}
 		return insertOutboxTx(ctx, tx, []events.Envelope{env})

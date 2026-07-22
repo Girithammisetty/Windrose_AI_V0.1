@@ -142,6 +142,97 @@ func (s *Store) CreateImplicitOwnerGrant(ctx context.Context, op Op, workspaceID
 	return err
 }
 
+// UpsertAssignmentGrant materializes the case-assignment implicit EDITOR grant
+// (the missing link that made every approved case.apply_disposition execution
+// fail tool-plane's obo-grant gate): the assignee of a work item holds an
+// implicit editor grant on its URN for as long as they are assigned. In one
+// transaction it revokes any OTHER user's implicit editor grant on the same
+// resource (reassignment revokes the previous assignee) and upserts the new
+// assignee's. Explicit human shares (implicit=false) and the creator's
+// implicit OWNER grant (RBC-FR-032) are never touched. Returns every user
+// whose projection changed so the caller can mark them dirty. Idempotent.
+func (s *Store) UpsertAssignmentGrant(ctx context.Context, op Op, workspaceID uuid.UUID, resourceURN, assigneeID string) ([]string, error) {
+	if _, err := domain.ParseURN(resourceURN); err != nil {
+		return nil, &ValidationError{Code: CodeValidationFailed, Message: err.Error()}
+	}
+	affected := []string{assigneeID}
+	err := s.WithTenant(ctx, op.Tenant, func(tx pgx.Tx) error {
+		rows, err := tx.Query(ctx, `
+			DELETE FROM content_grants
+			WHERE resource_urn = $1 AND implicit AND subject_type = 'user'
+			  AND level = 'editor' AND subject_user_id <> $2
+			RETURNING subject_user_id`, resourceURN, assigneeID)
+		if err != nil {
+			return err
+		}
+		for rows.Next() {
+			var u string
+			if err := rows.Scan(&u); err != nil {
+				rows.Close()
+				return err
+			}
+			affected = append(affected, u)
+		}
+		rows.Close()
+		if err := rows.Err(); err != nil {
+			return err
+		}
+		if _, err := tx.Exec(ctx, `
+			INSERT INTO content_grants (id, tenant_id, workspace_id, resource_urn, subject_type, subject_user_id, level, implicit)
+			VALUES ($1,$2,$3,$4,'user',$5,'editor',true)
+			ON CONFLICT (workspace_id, resource_urn, subject_type, COALESCE(subject_group_id::text, subject_user_id))
+			DO UPDATE SET level = 'editor', implicit = true, updated_at = now()`,
+			NewID(), op.Tenant, workspaceID, resourceURN, assigneeID); err != nil {
+			return err
+		}
+		if err := markDirtyUsers(ctx, tx, op.Tenant, affected, "grant.assignment"); err != nil {
+			return err
+		}
+		return op.emit(ctx, tx, events.EvGrantCreated, resourceURN, map[string]any{
+			"workspace_id": workspaceID.String(), "subject_type": "user",
+			"subject_id": assigneeID, "level": "editor", "implicit": true,
+		})
+	})
+	return affected, err
+}
+
+// RemoveAssignmentGrant revokes the implicit editor assignment grant(s) on a
+// resource when a case is unassigned. assigneeID narrows to one user; empty
+// removes every implicit editor user grant on the URN. Returns affected users.
+func (s *Store) RemoveAssignmentGrant(ctx context.Context, op Op, resourceURN, assigneeID string) ([]string, error) {
+	var affected []string
+	err := s.WithTenant(ctx, op.Tenant, func(tx pgx.Tx) error {
+		q := `DELETE FROM content_grants
+			WHERE resource_urn = $1 AND implicit AND subject_type = 'user' AND level = 'editor'`
+		args := []any{resourceURN}
+		if assigneeID != "" {
+			q += ` AND subject_user_id = $2`
+			args = append(args, assigneeID)
+		}
+		rows, err := tx.Query(ctx, q+` RETURNING subject_user_id`, args...)
+		if err != nil {
+			return err
+		}
+		for rows.Next() {
+			var u string
+			if err := rows.Scan(&u); err != nil {
+				rows.Close()
+				return err
+			}
+			affected = append(affected, u)
+		}
+		rows.Close()
+		if err := rows.Err(); err != nil {
+			return err
+		}
+		if len(affected) == 0 {
+			return nil
+		}
+		return markDirtyUsers(ctx, tx, op.Tenant, affected, "grant.assignment.removed")
+	})
+	return affected, err
+}
+
 // DeleteGrant enforces last-owner protection (RBC-FR-015): removing the last
 // owner-level grantee of a resource is rejected 409 LAST_ADMIN unless a
 // super-admin override with a reason is supplied (audited).

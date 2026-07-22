@@ -49,7 +49,7 @@ start_rbac() {
     MIGRATE_DATABASE_URL="${PG_BASE}/rbac?sslmode=disable" \
     LISTEN_ADDR=":${PORT_RBAC}" \
     REDIS_ADDR="$REDIS_ADDR" KAFKA_BROKERS="$KAFKA_BROKERS" SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" \
-    CONSUME_TOPICS="identity.events.v1" \
+    CONSUME_TOPICS="identity.events.v1,case.events.v1" \
     AUTH_JWKS_URL="${IDENTITY_URL}/.well-known/jwks.json" AUTH_ISSUER="$WR_ISS" AUTH_AUDIENCE="$WR_AUD" \
     "$BIN_DIR/rbac-e2e"
   wait_ready rbac "$RBAC_URL" || die "rbac not ready"

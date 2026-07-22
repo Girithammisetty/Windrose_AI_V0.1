@@ -46,13 +46,21 @@ func (p *Pipeline) audit(ctx context.Context, req Request, oc Outcome) {
 	if oc.Code != "" {
 		payload["error_code"] = oc.Code
 	}
+	// Persist WHY a non-allow decision happened (rego deny reason, violated
+	// constraint, backend rejection message) — error_code alone made denials
+	// undiagnosable from the audit trail.
+	denyReason := ""
+	if oc.Decision != events.DecisionAllowed && oc.Message != "" {
+		denyReason = oc.Message
+		payload["deny_reason"] = oc.Message
+	}
 
 	env := events.NewEnvelope(events.TopicToolInvoked, events.EvToolInvoked, req.Tenant, actor, via, resourceURN, req.TraceID, payload)
 
 	log := &domain.InvocationLog{
 		ID: domain.NewID(), TenantID: req.Tenant, AgentID: req.AgentID, AgentVersion: req.AgentVersion,
 		OboSub: req.OboSub, ToolID: req.ToolID, ToolVersion: oc.Version, Tier: oc.Tier,
-		Decision: oc.Decision, ErrorCode: oc.Code, ArgsDigest: digest, URNs: urns,
+		Decision: oc.Decision, ErrorCode: oc.Code, DenyReason: denyReason, ArgsDigest: digest, URNs: urns,
 		LatencyMS: oc.LatencyMS, TraceID: req.TraceID,
 	}
 	if err := p.Audit.RecordInvocation(ctx, log, env); err != nil {

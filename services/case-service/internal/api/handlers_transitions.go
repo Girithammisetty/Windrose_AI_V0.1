@@ -42,7 +42,9 @@ func (s *Server) handleAssign(w http.ResponseWriter, r *http.Request) {
 		}}
 		return store.Mutation{
 			Activities: []domain.Activity{mkActivity(op, events.EvAssigned, nil, map[string]any{"assignee": assignee.String(), "status": c.Status.String()})},
-			Events:     []events.Envelope{events.NewEnvelope(events.EvAssigned, op, urn, map[string]any{"case_number": c.CaseNumber, "assignee": assignee.String(), "due_date": c.DueDate})},
+			// workspace_id + assignee drive rbac's implicit editor grant for
+			// the assignee (the obo-grant tool-plane's write gate requires).
+			Events:     []events.Envelope{events.NewEnvelope(events.EvAssigned, op, urn, map[string]any{"case_number": c.CaseNumber, "assignee": assignee.String(), "due_date": c.DueDate, "workspace_id": c.WorkspaceID.String()})},
 			Timers:     timers,
 		}, nil
 	})
@@ -55,13 +57,19 @@ func (s *Server) handleUnassign(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	c, err := s.Store.MutateCase(r.Context(), op, id, ifMatchVersion(r), func(c *domain.Case) (store.Mutation, error) {
+		// Capture the outgoing assignee BEFORE Unassign clears it — rbac
+		// revokes exactly that user's implicit editor grant on the case.
+		prevAssignee := ""
+		if c.AssignedToID != nil {
+			prevAssignee = c.AssignedToID.String()
+		}
 		if err := c.Unassign(); err != nil {
 			return store.Mutation{}, err
 		}
 		urn := events.CaseURN(op.Tenant, c.ID)
 		return store.Mutation{
 			Activities: []domain.Activity{mkActivity(op, events.EvUnassigned, nil, map[string]any{"status": c.Status.String(), "reason": domain.ReasonManual})},
-			Events:     []events.Envelope{events.NewEnvelope(events.EvUnassigned, op, urn, map[string]any{"case_number": c.CaseNumber, "reason": domain.ReasonManual})},
+			Events:     []events.Envelope{events.NewEnvelope(events.EvUnassigned, op, urn, map[string]any{"case_number": c.CaseNumber, "reason": domain.ReasonManual, "assignee": prevAssignee, "workspace_id": c.WorkspaceID.String()})},
 			Timers:     store.TimerPlan{Cancel: true},
 		}, nil
 	})

@@ -111,6 +111,8 @@ type fakeConsumerStore struct {
 	dropped        []string
 	ownerGrants    []string
 	groupAssigns   []string
+	assignGrants   []string
+	assignRevokes  []string
 	failGrant      error
 	failOwnerGrant error
 }
@@ -151,6 +153,16 @@ func (f *fakeConsumerStore) AssignUserToGroupsFromEvent(_ context.Context, _ uui
 	return nil
 }
 
+func (f *fakeConsumerStore) UpsertAssignmentGrantFromEvent(_ context.Context, _ uuid.UUID, ws uuid.UUID, urn, assignee, _ string) ([]string, error) {
+	f.assignGrants = append(f.assignGrants, urn+"|"+assignee+"|"+ws.String())
+	return []string{assignee}, nil
+}
+
+func (f *fakeConsumerStore) RemoveAssignmentGrantFromEvent(_ context.Context, _ uuid.UUID, urn, assignee, _ string) ([]string, error) {
+	f.assignRevokes = append(f.assignRevokes, urn+"|"+assignee)
+	return []string{assignee}, nil
+}
+
 func TestHandler_TenantProvisionedSeeds(t *testing.T) {
 	fs := &fakeConsumerStore{}
 	h := &Handler{Store: fs}
@@ -178,6 +190,36 @@ func TestHandler_ResourceCreatedImplicitGrant(t *testing.T) {
 		"wr:t:ingestion:connection/c-1", "", nil)
 	require.NoError(t, h.HandleEvent(context.Background(), env2))
 	assert.Len(t, fs.grants, 1)
+}
+
+// case.assigned -> implicit editor grant for the assignee; case.unassigned ->
+// revoke. This is the per-resource obo-grant tool-plane's write gate requires
+// before an approved proposal may execute against a case (the case-grant
+// execution gap).
+func TestHandler_CaseAssignmentGrants(t *testing.T) {
+	fs := &fakeConsumerStore{}
+	h := &Handler{Store: fs}
+	tenant := uuid.New()
+	ws := uuid.New()
+	urn := "wr:t:case:case/c-1"
+
+	env := NewEnvelope("case.assigned", tenant, Actor{Type: "user", ID: "manager-1"},
+		urn, "", map[string]any{"assignee": "adjuster-7", "workspace_id": ws.String()})
+	require.NoError(t, h.HandleEvent(context.Background(), env))
+	require.Len(t, fs.assignGrants, 1)
+	assert.Equal(t, urn+"|adjuster-7|"+ws.String(), fs.assignGrants[0])
+
+	// Missing assignee/workspace: skipped (warned), never an error loop.
+	bad := NewEnvelope("case.assigned", tenant, Actor{Type: "user", ID: "manager-1"},
+		urn, "", map[string]any{"assignee": "adjuster-7"})
+	require.NoError(t, h.HandleEvent(context.Background(), bad))
+	assert.Len(t, fs.assignGrants, 1)
+
+	un := NewEnvelope("case.unassigned", tenant, Actor{Type: "user", ID: "manager-1"},
+		urn, "", map[string]any{"assignee": "adjuster-7", "workspace_id": ws.String()})
+	require.NoError(t, h.HandleEvent(context.Background(), un))
+	require.Len(t, fs.assignRevokes, 1)
+	assert.Equal(t, urn+"|adjuster-7", fs.assignRevokes[0])
 }
 
 // BR-7: the tenant-provisioning owner bootstrap. identity-service's

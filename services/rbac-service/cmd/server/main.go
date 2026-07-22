@@ -196,9 +196,11 @@ func run() error {
 	// them past a retention window so the table doesn't grow unboundedly.
 	go gcoutbox.NewPruner(pool, "outbox", "app.worker", "on").Run(ctx)
 
-	// Inbound consumers (identity + *.created for implicit grants).
+	// Inbound consumers (identity + case events: *.created implicit creator
+	// grants and case.assigned/unassigned implicit editor grants — the
+	// per-resource obo-grants tool-plane's write gate intersects against).
 	if brokers != "false" {
-		topics := strings.Split(env("CONSUME_TOPICS", "identity.events.v1"), ",")
+		topics := strings.Split(env("CONSUME_TOPICS", "identity.events.v1,case.events.v1"), ",")
 		handler := &events.Handler{Store: &store.ConsumerAdapter{S: st, DropProjection: writer.DropUser}, Log: slog.Default()}
 		consumer := events.NewKafkaConsumer(strings.Split(brokers, ","), "rbac-service", topics, handler, rdb, pub)
 		go consumer.Run(ctx)

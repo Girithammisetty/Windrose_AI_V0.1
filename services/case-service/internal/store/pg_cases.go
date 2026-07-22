@@ -146,6 +146,9 @@ func (s *PG) CreateCases(ctx context.Context, op domain.Op, cases []*domain.Case
 			env := events.NewEnvelope(events.EvCreated, op, urn, map[string]any{
 				"case_number": c.CaseNumber, "status": c.Status.String(), "severity": c.Severity,
 				"dataset_urn": c.DatasetURN, "row_pk": c.RowPK, "dedup_key": derefStr(c.DedupKey),
+				// workspace_id activates rbac's implicit creator grant on
+				// *.created (RBC-FR-032) — without it the consumer no-ops.
+				"workspace_id": c.WorkspaceID.String(),
 			})
 			if err := insertOutboxTx(ctx, tx, []events.Envelope{env}); err != nil {
 				return err

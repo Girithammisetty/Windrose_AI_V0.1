@@ -39,6 +39,22 @@ func (a *ConsumerAdapter) MarkDirty(ctx context.Context, tenant uuid.UUID, users
 	return a.S.MarkDirty(ctx, tenant, users, reason)
 }
 
+func (a *ConsumerAdapter) UpsertAssignmentGrantFromEvent(ctx context.Context, tenant uuid.UUID, workspaceID uuid.UUID, resourceURN, assigneeID, traceID string) ([]string, error) {
+	return a.S.UpsertAssignmentGrant(ctx, Op{
+		Tenant:  tenant,
+		Actor:   events.Actor{Type: "service", ID: "case-service"},
+		TraceID: traceID,
+	}, workspaceID, resourceURN, assigneeID)
+}
+
+func (a *ConsumerAdapter) RemoveAssignmentGrantFromEvent(ctx context.Context, tenant uuid.UUID, resourceURN, assigneeID, traceID string) ([]string, error) {
+	return a.S.RemoveAssignmentGrant(ctx, Op{
+		Tenant:  tenant,
+		Actor:   events.Actor{Type: "service", ID: "case-service"},
+		TraceID: traceID,
+	}, resourceURN, assigneeID)
+}
+
 func (a *ConsumerAdapter) GrantOwnerAdminFromEvent(ctx context.Context, tenant uuid.UUID, userID, actorID, traceID string) error {
 	_, err := a.S.GrantOwnerAdmin(ctx, Op{
 		Tenant:  tenant,

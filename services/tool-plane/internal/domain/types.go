@@ -221,6 +221,10 @@ type InvocationLog struct {
 	Tier       string    `json:"tier"`
 	Decision   string    `json:"decision"`
 	ErrorCode  string    `json:"error_code,omitempty"`
+	// DenyReason is the human/machine reason behind a non-allow decision
+	// (rego deny reason, violated constraint, or a backend facade's rejection
+	// message). Empty on allowed invocations.
+	DenyReason string    `json:"deny_reason,omitempty"`
 	ArgsDigest string    `json:"args_digest"`
 	URNs       []string  `json:"urns"`
 	LatencyMS  int       `json:"latency_ms"`
