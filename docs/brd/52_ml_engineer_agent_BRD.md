@@ -1,7 +1,7 @@
 # BRD 52 — Autonomous ML-Engineer Agent (train → evaluate → propose)
 
 **Deliverable type:** Core capability (agent-runtime + tool-plane + registrations) · **Publisher:** Datacern
-**Initial version:** 1.0.0 · **Status:** authored, build in progress
+**Initial version:** 1.0.0 · **Status:** authored; Phases 1–3 BUILT + live-verified
 **Relationship to other BRDs:** extends BRD 14 (agent-runtime) and BRD 13 (tool-plane); consumes BRD 09 (pipeline-orchestrator), BRD 10 (experiment-service), BRD 16 (eval-service), BRD 04 (dataset-service). NOT a pack — packs may configure this agent via TenantAgentConfig like any other fixed agent (BRD 23 invariant: packs never mint agents).
 
 ---
@@ -167,6 +167,47 @@ Core-neutral mechanism packs already use for triage/analytics.
 - **AC-7** Unsuitable-dataset run ends in an honest failure report (US-7).
 - **AC-8** All work is Core: zero pack changes; packs can enable/configure the agent via
   TenantAgentConfig only.
+
+## 6a. Phase 1 — what shipped (train → evaluate → propose)
+BUILT + live-verified. The 9th fixed agent `ml-engineer` (`app/graphs/ml_engineer.py`):
+inspects a governed dataset's real schema, plans ≤3 candidate algorithms, launches real
+training pipeline runs via a two-step launch (`PipelineWriter`: create template →
+submit run — the instantiate route alone does not launch), polls, ranks on metrics read
+back from experiment-service (never LLM-generated), and emits one `experiment.model.promote`
+proposal. New experiment-service facade route `POST /internal/v1/mcp/invoke`
+(`model_promote`) + mcp-gateway SPIFFE allowlist entry. Tool registrations
+(`pipeline.template.create_from_algorithm`, `experiment.model.promote`) seeded via
+`deploy/e2e/lib/seed.py::register_ml_lifecycle_tools`. Tests: agent-runtime
+`test_ml_engineer_graph.py` (proposes with evidence; honest-fail on bad target / no writer
+/ no registry match), experiment-service `test_mcp_invoke.py` (SPIFFE gate, OBO caller-gate
+403, pending-promotion + four-eyes approve, 404/422). Live-verified in wr-disputes: the
+agent trained a real xgboost model (accuracy 0.96, f1_weighted 0.94) on the cd-disputes
+disposition target, read real metrics, and correctly took the honest-failure path (no
+registry match) instead of fabricating a result (BR-5).
+
+## 6b. Phase 2 — what shipped (agent-initiated ingestion from existing connections)
+BUILT + unit-verified. `app/graphs/ml_engineer.py` gained an `ingest` node + conditional
+entry point: given `inputs.refresh_from_connection`, the agent lists the tenant's
+EXISTING connections (read-only), validates the requested connection id, and emits an
+`ingestion.create` write-proposal (four-eyes) — it never creates a connection or handles a
+credential; an unknown/absent connection fails closed with no proposal
+(`ingest_refused`). `IngestionServiceClient.list_connections` added as the reader; the
+`ingestion.create` tool added to the ml-engineer catalog toolset. Along the way, fixed a
+platform-wide gap: published `agent_versions` rows are DB-immutable, so a fixed agent's
+toolset change was previously silently ignored forever — the catalog seed now diffs the
+code toolset against the latest published version and publishes a new version (v2) on
+drift, never mutates a published row. Tests: 3 new agent-runtime unit tests (ingest from
+existing connection, refuse unknown connection fail-closed, no-directive still trains);
+229 agent-runtime unit tests green. Live-proven: ml-engineer published v2
+(promote + ingestion.create) with v1 left untouched and the seed healthy.
+
+## 6c. Phase 3 — what shipped (scheduled drift-driven retrain loop)
+BUILT. `app/runtime/retrain_scheduler.py` + migration `0016_retrain_watches.py` close the
+loop into the SLM/retrain roadmap referenced in §8: a tenant-configured watch triggers a
+governed ml-engineer run when a drift signal fires, routing through the same tiered
+tool/proposal machinery as Phases 1–2 (no new autonomy surface). Tests:
+`test_retrain_scheduler.py`, plus roster coverage in `test_governance_graph.py` /
+`test_meta_router_graph.py` / `test_agent_roster_real_llm.py`.
 
 ## 7. Dependencies
 

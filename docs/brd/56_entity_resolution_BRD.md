@@ -1,7 +1,7 @@
 # BRD 56 — Entity Resolution (Data-Unification for Decisions)
 
 **Deliverable type:** Core capability (new entity-resolution component + dataset/semantic integration)
-**Publisher:** Datacern · **Initial version:** 1.0.0 · **Status:** authored (DESIGNED; sequenced LAST; build-vs-buy open)
+**Publisher:** Datacern · **Initial version:** 1.0.0 · **Status:** authored; increments 1–3 + steward UI BUILT + live-verified (build-vs-buy resolved: first-party engine)
 **Closes:** the data-unification / entity-resolution gap. See `docs/design/di-completeness-roadmap.md`.
 
 ---
@@ -76,12 +76,56 @@ Decision Author (DA), Tenant Admin (TA).
 - **BR-5** Config is versioned; re-resolution under a new config is explicit and
   auditable.
 
-## 5. Acceptance criteria (for the eventual build)
-- **AC-1** Configured resolution over a person record set produces clusters with confidence + lineage.
-- **AC-2** A resolved-entity attribute is readable as a governed column by a decision model / pack.
-- **AC-3** An ambiguous match is proposed for steward four-eyes review, not auto-merged.
-- **AC-4** Cluster lineage reconstructs which records merged, on what evidence.
-- **AC-5** Tenant isolation + audit; no SoR mutation.
+## 5. Acceptance criteria
+- **AC-1** Configured resolution over a person record set produces clusters with confidence + lineage. **(inc1, live-verified)**
+- **AC-2** A resolved-entity attribute is readable as a governed column by a decision model / pack. **(inc3: materialized as a governed dataset via `materialize-resolved`; direct consumption by a decision model or pack not separately verified)**
+- **AC-3** An ambiguous match is proposed for steward four-eyes review, not auto-merged. **(inc2 + Phase 2 UI, live-verified)**
+- **AC-4** Cluster lineage reconstructs which records merged, on what evidence. **(inc1–3, live-verified)**
+- **AC-5** Tenant isolation + audit; no SoR mutation. **(live-verified — link layer only, RLS-enforced)**
+
+## 5a. Increment 1 — what shipped (the matching engine + ephemeral resolve)
+BUILT + live-verified. First-party resolver (build, not buy), hosted in dataset-service
+(owns rows/schema/RLS). `app/domain/entity_resolution.py`: two-stage per the BRD —
+(1) deterministic composite keys (records sharing an exact key merge; a partial/missing
+key never merges), then (2) probabilistic scoring — weighted attribute similarity
+(dependency-free Dice-bigram `string_similarity`) within blocking-field buckets;
+≥auto-merge-threshold auto-merges, between review/auto becomes a HUMAN-review merge
+candidate (four-eyes, never silently merged), below review stays separate. Union-find
+clustering; stable `resolved_entity_id` = smallest member pk (reproducible for audit).
+Governed API: `POST /api/v1/datasets/{id}/entity-resolution`, gated on new action
+`dataset.entity.execute` (added to rbac's closed verb set + the dataset resource group).
+9 engine unit tests (`test_entity_resolution_engine.py`). Live: resolved a real
+auto-claims dataset (14 records → 12 entities; one deterministic cluster merged 3 claims
+sharing a policy number, confidence 1.0) through the governed RLS API.
+
+## 5b. Increment 2 — what shipped (persistence)
+BUILT. inc1's resolve was ephemeral (compute and discard); migration
+`0003_entity_resolution.py` persists the capability so decisions can run on resolved
+entities: `resolution_configs` (ER-FR-001, tenant-scoped versioned match rules),
+`resolution_runs` (ER-FR-010/040, one execution under a config version),
+`resolved_entities` (stable clusters), `resolved_entity_members` (ER-FR-040 lineage — which
+record, on what evidence), `merge_candidates` (ER-FR-030 below-auto probable merges for
+four-eyes). Every table RLS-enforced (ENABLE + FORCE RLS + tenant_isolation policy).
+Tests: `test_entity_resolution_persistence.py`.
+
+## 5c. Increment 3 + steward UI — what shipped (materialize + review surface, live-verified 2026-07-18)
+BUILT + live-verified end-to-end (real UI → BFF → dataset-service/agent-runtime, no
+mocks). `build_golden_records` (`entity_resolution.py`) + route
+`POST /resolution-runs/{run_id}/materialize` roll up resolved clusters into a governed
+dataset (`resolved_entity_id`, `member_count`, `confidence`, `method`, + aggregated
+columns). Merge-candidate decisions route through the proposal spine via new agent-runtime
+endpoint `POST /api/v1/entity-merges` (ER-FR-030 full). **BFF** (`bff-graphql`):
+`resolveEntities`/`resolutionRuns`/`resolutionRun`/`mergeCandidates`/
+`materializeResolvedEntities` queries/mutations + `proposeEntityMerge`; 5 resolver tests
+(`entity-resolution.test.ts`, 200 lines). **ui-web:** `/data/entity-resolution` — dataset
+picker + run-config form, 3 tabs (Review merges / Resolved entities / Materialize); 5 page
+tests (`entity-resolution.test.tsx`, 152 lines). Live-verified in a real tenant (auto-claims
+dataset, 14→12 records): ran a config → four-eyes-proposed a merge as one user → approved
+as a distinct user (self-approval blocked) → browsed the resolved cluster with lineage →
+materialized 12 golden rows into a governed dataset. **Deferred:** a formal resolution
+runbook for re-resolution under a changed config version (ER-FR-050 mechanics beyond what's
+exercised); direct decision-model/pack consumption of the materialized dataset (AC-2) not
+separately verified.
 
 ## 6. Dependencies
 dataset-service + semantic-service (resolved-entity view), agent-runtime
