@@ -221,6 +221,69 @@ func (s *PG) AllCaseIDs(ctx context.Context, tenant uuid.UUID) ([]uuid.UUID, err
 	return out, err
 }
 
+// CasesPage returns up to limit live cases ordered by (created_at, id),
+// starting strictly after the given keyset cursor -- the batched-read half of
+// the B5 reindex fix (scalability audit). Backed by cases_tenant_created_idx
+// (tenant_id, created_at, id) so a multi-million-case tenant is paged with a
+// single indexed query per page instead of one GetCase round trip per case.
+// The zero-value cursor (time.Time{}, uuid.Nil) starts from the beginning.
+func (s *PG) CasesPage(ctx context.Context, tenant uuid.UUID, afterCreatedAt time.Time, afterID uuid.UUID, limit int) ([]*domain.Case, error) {
+	var out []*domain.Case
+	err := s.withTenant(ctx, tenant, func(tx pgx.Tx) error {
+		rows, err := tx.Query(ctx, `
+			SELECT `+caseCols+` FROM cases
+			WHERE deleted_at IS NULL AND (created_at, id) > ($1, $2)
+			ORDER BY created_at, id
+			LIMIT $3`, afterCreatedAt, afterID, limit)
+		if err != nil {
+			return err
+		}
+		defer rows.Close()
+		for rows.Next() {
+			c, err := scanCase(rows)
+			if err != nil {
+				return err
+			}
+			out = append(out, c)
+		}
+		return rows.Err()
+	})
+	return out, err
+}
+
+// CaseCommentTextBatch returns each case's concatenated comment body (the
+// same text CaseCommentText produces for one case) for a whole batch of ids
+// in a single round trip -- the other half of the B5 reindex fix: the old
+// path issued one comment query per case on top of one case read per case.
+// A case with no comments is simply absent from the returned map.
+func (s *PG) CaseCommentTextBatch(ctx context.Context, tenant uuid.UUID, caseIDs []uuid.UUID) (map[uuid.UUID]string, error) {
+	out := map[uuid.UUID]string{}
+	if len(caseIDs) == 0 {
+		return out, nil
+	}
+	err := s.withTenant(ctx, tenant, func(tx pgx.Tx) error {
+		rows, err := tx.Query(ctx, `
+			SELECT case_id, string_agg(body || E'\n', '' ORDER BY created_at)
+			FROM case_comments
+			WHERE case_id = ANY($1) AND deleted_at IS NULL
+			GROUP BY case_id`, caseIDs)
+		if err != nil {
+			return err
+		}
+		defer rows.Close()
+		for rows.Next() {
+			var id uuid.UUID
+			var text string
+			if err := rows.Scan(&id, &text); err != nil {
+				return err
+			}
+			out[id] = text
+		}
+		return rows.Err()
+	})
+	return out, err
+}
+
 // PolicyForCase resolves the SLA policy governing a case (its workspace's
 // policy, or the default). Used by the sweep worker at fire time.
 func (s *PG) PolicyForCase(ctx context.Context, tenant, caseID uuid.UUID) (domain.SLAPolicy, error) {

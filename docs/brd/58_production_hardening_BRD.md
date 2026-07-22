@@ -95,8 +95,9 @@ Full analysis in [scalability-audit](../initiatives/scalability-audit.md). Prior
 
 ### Implement / Test
 - [x] **B2** upload size/row cap · [x] **B7** `processed_events` retention + index
-  · [x] **B6** outbox reaper · [x] **B3** LIMIT-all-callers · [x] **B1** streaming commit — see log below.
-- [ ] B5 bulk reindex · [ ] B9/B10 (=WS3).
+  · [x] **B6** outbox reaper · [x] **B3** LIMIT-all-callers · [x] **B1** streaming commit
+  · [x] **B5** bulk reindex + `(tenant_id,created_at)` index — see log below.
+- [ ] B9/B10 (=WS3).
 
 ---
 
@@ -285,5 +286,71 @@ warehouse=..., s3_endpoint=..., ...)` — `IcebergTableWriter`/`_CatalogHolder`
 only ever accepted `cfg`/`catalog`, so this call already raised `TypeError` at
 construction before this change too (a pre-existing bug, not introduced here,
 and not touched by this fix — flagged separately).
+
+### B5 — bulk `_bulk` reindex + batched reads + `(tenant_id,created_at)` index — DONE
+
+**Root cause confirmed, not assumed:** `case-service/internal/search/projector.go`'s
+`Reindex` called `store.AllCaseIDs` (unbounded `SELECT id`), then for every id
+did a separate `GetCase` + `CaseCommentText` round trip (2N Postgres queries),
+accumulated every resulting `Doc` into one slice (O(N) heap), then wrote it to
+OpenSearch with one `IndexDocInto` **PUT per doc** (no `_bulk`). This is the
+handler behind `/admin/reindex` (CASE-FR-043), which the stability doctor's
+self-heal calls when the search projection needs a full rebuild — so the same
+O(N)-in-RAM + 2N-round-trip + per-doc-PUT pattern that breaks at scale also
+OOMs the self-heal path. There was also no index supporting the tenant-scoped
+`ORDER BY created_at` the old `AllCaseIDs` query relied on (RLS pushes
+`tenant_id = current_setting(...)` into the plan as a real equality predicate,
+confirmed by reading `000002_rls.up.sql`'s policy — so a `(tenant_id,
+created_at)` index is genuinely usable by the planner here, not moot under RLS).
+
+**Fix, three parts, each closing one part of the bottleneck:**
+1. **Migration `000007_cases_created_at_idx`** — partial index
+   `(tenant_id, created_at, id) WHERE deleted_at IS NULL` on `cases`, matching
+   the exact predicate the reindex read (and any future keyset scan) uses.
+2. **Batched, paginated Postgres reads** — new `store.PG.CasesPage(tenant,
+   afterCreatedAt, afterID, limit)` (keyset pagination on the new index,
+   `id` as tiebreaker so ties on `created_at` still page correctly) replaces
+   `AllCaseIDs` + N×`GetCase`; new `store.PG.CaseCommentTextBatch(tenant,
+   caseIDs)` does the whole page's comment lookup in one round trip via
+   `string_agg(... GROUP BY case_id)`, replacing N×`CaseCommentText`.
+3. **OpenSearch `_bulk`** — `search.Client.BulkIndexInto(idx, docs)` sends a
+   whole page as one NDJSON `_bulk` request instead of one PUT per doc, still
+   honoring external versioning by `case_version` (a 409 anywhere in the
+   response is discarded per-item, exactly like the old single-doc path; any
+   other per-item failure surfaces as an error). `Client.Reindex` (single
+   whole-slice call) is replaced by `CreateReindexGeneration` +
+   `BulkIndexInto` (called once per page) + `SwapReindexAlias`, so
+   `Projector.Reindex` now streams page-by-page instead of building the whole
+   rebuilt index in memory first.
+
+Peak memory during reindex is now O(`reindexPageSize`=500 cases) instead of
+O(tenant's total case count), and Postgres/OpenSearch round trips drop from
+`~2N+N` to `~3×(N/500)`. `GetCase`/`CaseCommentText`/`AllCaseIDs` are
+untouched (still used by the single-case incremental projection path,
+`ProjectCase`, which never had an N+1 problem).
+
+**Test — TDD, bug reproduced before the fix:** added
+`TestReindexBulkPagesLargeTenant` to a new
+`case-service/test/integration/reindex_bulk_test.go`, seeding 1247 real cases
+(deliberately > 2×500 + a partial page) directly through `store.PG.CreateCases`
+against a real ephemeral Postgres 16 (testcontainers, with `000007` applied)
+and a real OpenSearch cluster. Stashed the three source files (kept the new
+test + migration) and confirmed the build **fails to compile**
+(`h.pg.CasesPage undefined`, `h.pg.CaseCommentTextBatch undefined`) — proving
+the test genuinely exercises the new methods, not a coincidental pass.
+Restored the fix and confirmed: `CasesPage` keyset-paginates every one of the
+1247 cases exactly once with no repeats or gaps; `CaseCommentTextBatch`
+returns an empty map (not an error) for comment-less cases; the real
+`POST /api/v1/admin/reindex` HTTP path (spanning 3 projector pages via
+multiple `_bulk` requests) reports `reindexed: 1247`; and the tenant's real
+OpenSearch alias holds exactly 1247 docs afterward. Full `case-service` suite
+(unit + the Docker-backed integration tier, `CASE_IT=1 go test ./...`,
+including the parallel in-flight trigger-handler tests and the existing burst/
+acceptance suites): all packages `ok`, 0 fails. `go vet`/`gofmt` clean (no new
+formatting debt — the only `gofmt -l` hits in this package are pre-existing
+struct-alignment drift in `opensearch.go`'s `Doc` type, untouched by this
+change). OpenSearch had to be started for this dev stack (it wasn't running;
+confirmed with the user before booting it — a stopped datastore container
+only, no application service touched).
 
 _See BRD 59 for feature expansion (5B)._

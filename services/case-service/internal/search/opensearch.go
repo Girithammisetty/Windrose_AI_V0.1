@@ -257,27 +257,96 @@ func (c *Client) Refresh(ctx context.Context, tenant uuid.UUID) error {
 	return nil
 }
 
-// Reindex rebuilds a tenant's index into a fresh generation and atomically
-// swaps the alias (CASE-FR-043). docs is the full current projection.
-func (c *Client) Reindex(ctx context.Context, tenant uuid.UUID, docs []Doc) error {
+// CreateReindexGeneration starts a full-tenant reindex (CASE-FR-043): creates
+// a fresh physical index generation to receive the rebuilt projection. The
+// caller bulk-writes pages of docs into the returned index via BulkIndexInto,
+// then calls SwapReindexAlias once every page has landed.
+func (c *Client) CreateReindexGeneration(ctx context.Context, tenant uuid.UUID) (string, error) {
 	gen := "v" + fmt.Sprint(time.Now().UnixNano())
 	idx := physicalIndex(tenant, gen)
 	if err := c.createIndex(ctx, idx); err != nil {
-		return err
+		return "", err
 	}
-	for _, d := range docs {
-		if err := c.IndexDocInto(ctx, idx, d); err != nil {
-			return err
-		}
-	}
+	return idx, nil
+}
+
+// SwapReindexAlias atomically points the tenant alias at idx, removing it
+// from every other generation (CASE-FR-043).
+func (c *Client) SwapReindexAlias(ctx context.Context, tenant uuid.UUID, idx string) error {
 	alias := indexAlias(tenant)
-	// Atomic swap: remove alias from all indices, add to the new one.
 	action := map[string]any{"actions": []any{
 		map[string]any{"remove": map[string]any{"index": "cases-" + tenant.String() + "-*", "alias": alias}},
 		map[string]any{"add": map[string]any{"index": idx, "alias": alias,
 			"filter": map[string]any{"term": map[string]any{"tenant_id": tenant.String()}}}},
 	}}
 	return c.aliasAction(ctx, action)
+}
+
+// bulkResponse is the subset of the OpenSearch _bulk response BulkIndexInto
+// needs: whether ANY item failed, and each item's outcome.
+type bulkResponse struct {
+	Errors bool `json:"errors"`
+	Items  []struct {
+		Index struct {
+			ID     string          `json:"_id"`
+			Status int             `json:"status"`
+			Error  json.RawMessage `json:"error,omitempty"`
+		} `json:"index"`
+	} `json:"items"`
+}
+
+// BulkIndexInto upserts a page of docs into a specific physical index via one
+// OpenSearch _bulk request (B5, scalability audit) instead of one PUT per doc.
+// Each doc keeps external versioning by case_version: a 409 (a newer version
+// already indexed) is discarded per-item, exactly like IndexDocInto's single-
+// doc 409 handling; any other per-item failure surfaces as an error.
+func (c *Client) BulkIndexInto(ctx context.Context, idx string, docs []Doc) error {
+	if len(docs) == 0 {
+		return nil
+	}
+	var buf bytes.Buffer
+	for _, d := range docs {
+		action := map[string]any{"index": map[string]any{
+			"_index": idx, "_id": d.ID, "version": d.CaseVersion, "version_type": "external",
+		}}
+		ab, _ := json.Marshal(action)
+		buf.Write(ab)
+		buf.WriteByte('\n')
+		db, _ := json.Marshal(d)
+		buf.Write(db)
+		buf.WriteByte('\n')
+	}
+	req, _ := http.NewRequestWithContext(ctx, http.MethodPost, "/_bulk", bytes.NewReader(buf.Bytes()))
+	req.Header.Set("Content-Type", "application/x-ndjson")
+	resp, err := c.os.Perform(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	raw, err := io.ReadAll(io.LimitReader(resp.Body, 16<<20))
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode >= 300 {
+		return fmt.Errorf("bulk index into %s: status %d: %s", idx, resp.StatusCode, string(raw))
+	}
+	var parsed bulkResponse
+	if err := json.Unmarshal(raw, &parsed); err != nil {
+		return fmt.Errorf("bulk index into %s: decode response: %w", idx, err)
+	}
+	if !parsed.Errors {
+		return nil
+	}
+	for _, item := range parsed.Items {
+		if item.Index.Status == http.StatusConflict {
+			continue // newer version already present; discard stale write
+		}
+		if item.Index.Status >= 300 {
+			return fmt.Errorf("bulk index into %s: doc %s: status %d: %s",
+				idx, item.Index.ID, item.Index.Status, string(item.Index.Error))
+		}
+	}
+	return nil
 }
 
 func drain(resp *http.Response) {

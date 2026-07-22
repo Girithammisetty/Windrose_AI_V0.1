@@ -3,13 +3,19 @@ package search
 import (
 	"context"
 	"errors"
-	"log/slog"
+	"time"
 
 	"github.com/google/uuid"
 
 	"github.com/datacern-ai/case-service/internal/domain"
 	"github.com/datacern-ai/case-service/internal/store"
 )
+
+// reindexPageSize bounds how many cases are read from Postgres and bulk-sent
+// to OpenSearch per round trip during a full-tenant reindex (B5, scalability
+// audit): memory and request size stay O(reindexPageSize) regardless of how
+// many cases a tenant has.
+const reindexPageSize = 500
 
 // CaseReader is the slice of the store the projector needs (satisfied by
 // *store.PG). Kept as an interface so the projector has no hard store
@@ -18,6 +24,8 @@ type CaseReader interface {
 	GetCase(ctx context.Context, tenant, id uuid.UUID) (*domain.Case, error)
 	CaseCommentText(ctx context.Context, tenant, id uuid.UUID) (string, error)
 	AllCaseIDs(ctx context.Context, tenant uuid.UUID) ([]uuid.UUID, error)
+	CasesPage(ctx context.Context, tenant uuid.UUID, afterCreatedAt time.Time, afterID uuid.UUID, limit int) ([]*domain.Case, error)
+	CaseCommentTextBatch(ctx context.Context, tenant uuid.UUID, caseIDs []uuid.UUID) (map[uuid.UUID]string, error)
 }
 
 // Projector rebuilds the OpenSearch projection from the Postgres source of
@@ -49,26 +57,55 @@ func (p *Projector) ProjectCase(ctx context.Context, tenant, id uuid.UUID) error
 }
 
 // Reindex rebuilds a tenant's whole index from Postgres and swaps the alias
-// (CASE-FR-043, admin-only).
+// (CASE-FR-043, admin-only). Reads and bulk-writes one bounded page at a time
+// (B5, scalability audit) instead of loading every case id, then GETting and
+// PUTting them one at a time: a multi-million-case tenant no longer holds the
+// whole rebuilt index in memory, nor makes 2N Postgres round trips + N
+// OpenSearch PUTs.
 func (p *Projector) Reindex(ctx context.Context, tenant uuid.UUID) (int, error) {
-	ids, err := p.Store.AllCaseIDs(ctx, tenant)
+	idx, err := p.Search.CreateReindexGeneration(ctx, tenant)
 	if err != nil {
 		return 0, err
 	}
-	docs := make([]Doc, 0, len(ids))
-	for _, id := range ids {
-		c, err := p.Store.GetCase(ctx, tenant, id)
+	var (
+		afterCreatedAt time.Time
+		afterID        uuid.UUID
+		total          int
+	)
+	for {
+		cases, err := p.Store.CasesPage(ctx, tenant, afterCreatedAt, afterID, reindexPageSize)
 		if err != nil {
-			// Skip this case but do not silently drop it from the rebuilt index:
-			// a transient read failure means a stale/missing doc; leave a trail.
-			slog.Warn("reindex: skipping case that failed to read", "case_id", id, "err", err)
-			continue
+			return total, err
 		}
-		text, _ := p.Store.CaseCommentText(ctx, tenant, id)
-		docs = append(docs, DocFromCase(c, text))
+		if len(cases) == 0 {
+			break
+		}
+		ids := make([]uuid.UUID, len(cases))
+		for i, c := range cases {
+			ids[i] = c.ID
+		}
+		// Best-effort, matching the prior per-case behaviour: a comment-read
+		// failure leaves comment_text empty rather than failing the reindex.
+		texts, err := p.Store.CaseCommentTextBatch(ctx, tenant, ids)
+		if err != nil {
+			texts = map[uuid.UUID]string{}
+		}
+		docs := make([]Doc, len(cases))
+		for i, c := range cases {
+			docs[i] = DocFromCase(c, texts[c.ID])
+		}
+		if err := p.Search.BulkIndexInto(ctx, idx, docs); err != nil {
+			return total, err
+		}
+		total += len(docs)
+		last := cases[len(cases)-1]
+		afterCreatedAt, afterID = last.CreatedAt, last.ID
+		if len(cases) < reindexPageSize {
+			break
+		}
 	}
-	if err := p.Search.Reindex(ctx, tenant, docs); err != nil {
-		return 0, err
+	if err := p.Search.SwapReindexAlias(ctx, tenant, idx); err != nil {
+		return total, err
 	}
-	return len(docs), nil
+	return total, nil
 }
