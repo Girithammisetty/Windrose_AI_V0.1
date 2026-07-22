@@ -297,17 +297,17 @@ def seed_charts_demo(dataset_urn, dataset_name):
         warn("no claims dataset available; skipping chart demo")
         return {}
 
-    # Authorize the operator on semantic-service. REAL path first: the operator
-    # is a real Admin member (seed_platform.seed_persona_grants), so rbac's
-    # projector dual-writes truthful admin facts to authz:proj:*. Only if that
-    # path failed do we fall back to the harness's permissive seeding — loudly.
+    # Authorize the operator on semantic-service via the REAL path only: the
+    # operator is a real Admin member (seed_platform.seed_persona_grants), so
+    # rbac's projector dual-writes truthful admin facts to authz:proj:*. No
+    # fake fallback (no-fake rule) — if this fails, the chart demo fails
+    # visibly and the projector gets fixed.
     if not sp.verify_python_projection(sub=d.MANAGER, action="semantic.model.create",
                                         tries=10):
         warn("operator authz:proj keys NOT materialized by the rbac projector — "
-             "FALLING BACK to permissive harness seeding of semantic actions "
-             "(FAKED admin facts; the real grant->projection path is broken)")
-        for a in _SEMANTIC_ACTIONS:
-            d.seed_py_authz(a)
+             "the chart demo's semantic writes WILL FAIL until the "
+             "grants->projector->authz:proj path is fixed (check rbac logs). "
+             "No fake facts are seeded.")
     write_tok = c.user_token(d.MANAGER, TENANT, ["*"], workspace_id=d.WORKSPACE)
     # A DISTINCT subject is required to approve (four-eyes: the author cannot
     # approve their own version, SEM-FR-007).

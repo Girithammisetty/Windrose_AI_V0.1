@@ -103,18 +103,12 @@ def persona_scopes(role):
         return PERSONA_SCOPES + ["tenant.admin", "platform.admin", "super_admin", "operator", "ai.platform.admin"]
     return PERSONA_SCOPES
 
-# every action the UI's BFF fan-out can trigger on a Python-scheme service
-# (Python services authorize via the authz:proj single-key projection this
-# seeds; Go services use the perm:* projection materialized from rbac grants).
-PY_ACTIONS = [
-    "dataset.dataset.read", "dataset.profile.read", "dataset.dataset.list",
-    "experiment.experiment.read", "experiment.model.read", "experiment.experiment.list",
-    "agent.proposal.read", "agent.proposal.decide", "agent.proposal.list", "agent.run.create",
-    "eval.suite.read", "inference.job.read",
-    # semantic-service is a Python-scheme service: the chart editor reads models
-    # (semantic.model.read/list) and rendering compiles metrics (semantic.compile.execute).
-    "semantic.model.read", "semantic.model.list", "semantic.compile.execute",
-]
+# NOTE: the former PY_ACTIONS list + seed_python_scheme() permissive-fallback
+# (fake admin facts planted straight into authz:proj:*) are GONE — the no-fake
+# rule applies to the dev seed too. Python-scheme authorization comes ONLY from
+# rbac's projector dual-writing truthful, versioned authz:proj:* facts from the
+# same Postgres grants that feed perm:*. If that path breaks, personas fail
+# authorization VISIBLY and the projector gets fixed — nothing is papered over.
 
 
 # ---- per-persona authorization via rbac's REAL role/grant path -------------
@@ -158,26 +152,6 @@ REQUIRED_CAPS = {
 }
 
 
-def seed_python_scheme(user):
-    """FALLBACK ONLY (loudly logged): permissive Python single-key projection
-    (authz:proj:*) for one persona. The REAL path is: role grants (Postgres)
-    -> rbac's projection worker -> authz:proj:* keys with TRUTHFUL facts —
-    verified by verify_python_projection() after seed_persona_grants(). This
-    fake-admin seeding runs ONLY when that real path fails to materialize, so
-    a hands-on demo stays usable while the failure is investigated."""
-    for action in PY_ACTIONS:
-        for ws, scoped in (("", False), (WORKSPACE, True)):
-            facts = {
-                "action_known": True, "action_scoped": scoped, "autonomous_enabled": True,
-                "flags": {"found": True, "admin": True, "ws_admin": [WORKSPACE]},
-                "tenant_actions": {"found": True, "actions": [action]},
-                "workspace": {"assigned": True, "actions": [action], "archived": False},
-                "resource": {"found": True, "level": "owner", "archived": False},
-                "workspace_archived_tenant": False,
-            }
-            rds.set(f"authz:proj:{TENANT}:{user}:{action}:{ws}", json.dumps(facts))
-
-
 def retire_legacy_permissive_keys(sub):
     """Remove UN-VERSIONED authz:proj keys for a persona — the permissive
     admin facts an older seed wrote directly (rds.set, no "v" field). The
@@ -196,12 +170,15 @@ def retire_legacy_permissive_keys(sub):
     return removed
 
 
-def verify_python_projection(sub="user-datascientist", action="semantic.model.read",
+def verify_python_projection(sub, action="semantic.model.read",
                              tries=40, delay=0.5):
     """Poll for the REAL Python-scheme projection: rbac's worker dual-writes
     authz:proj:{tenant}:{sub}:{action}:{ws} from the same grants that feed
     perm:*. Returns the facts dict when materialized (truthful, versioned),
-    else None."""
+    else None. `sub` MUST be the caller's real subject id — a stale
+    "user-datascientist" literal default here polled a sub that no longer
+    exists (personas are identity-provisioned UUID accounts), timing out on
+    every boot and masking a perfectly healthy projector behind fake facts."""
     key = f"authz:proj:{TENANT}:{sub}:{action}:{WORKSPACE}"
     for _ in range(tries):
         raw = rds.get(key)
@@ -453,24 +430,26 @@ def ensure_platform_seeded():
     seed_persona_grants()
 
     # THE REAL PYTHON-SCHEME PATH: verify the projector dual-wrote authz:proj
-    # keys for a persona grant. Fall back to the legacy permissive seeding only
-    # if it did not — loudly, so a masked projector regression cannot hide.
+    # keys for a persona grant. There is NO fallback — if this fails the
+    # personas fail Python-service authorization visibly and the projector
+    # must be fixed (no-fake rule; fake facts previously masked a healthy
+    # projector for months behind a stale probe sub).
     say("verifying rbac's projector materialized the Python authz projection (authz:proj:*)")
-    facts = verify_python_projection()
+    ds_sub = PERSONAS["datascientist@demo.datacern"]["sub"]
+    facts = verify_python_projection(sub=ds_sub)
     if facts:
-        ok("REAL path live: authz:proj key for user-datascientist semantic.model.read "
-           f"(admin={((facts.get('flags') or {}).get('admin'))}, v={facts.get('v')}) "
-           "— skipping permissive fallback")
+        ok(f"REAL path live: authz:proj key for datascientist({ds_sub}) semantic.model.read "
+           f"(admin={((facts.get('flags') or {}).get('admin'))}, v={facts.get('v')})")
         stale = sum(retire_legacy_permissive_keys(p["sub"]) for p in PERSONAS.values())
         if stale:
             ok(f"retired {stale} legacy permissive (un-versioned) persona authz:proj key(s) "
                "so deny-by-default holds")
     else:
         warn("rbac projector did NOT materialize authz:proj keys within ~20s — "
-             "FALLING BACK to PERMISSIVE persona seeding (FAKED admin facts). "
-             "The real grants->projector->authz:proj path is broken; check rbac logs.")
-        for email, p in PERSONAS.items():
-            seed_python_scheme(p["sub"])
+             "Python-scheme authorization WILL FAIL for the personas until the "
+             "grants->projector->authz:proj path is fixed (check rbac logs; "
+             "POST /api/v1/admin/projection/rebuild or deploy/local/reconcile.sh). "
+             "No fake facts are seeded.")
 
     return {"tenant": TENANT, "workspace": WORKSPACE}
 
