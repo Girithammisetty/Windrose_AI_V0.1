@@ -10,12 +10,20 @@ processors:
 exporters:
   debug:
     verbosity: basic
+  # Real trace backend (BRD 58 WS2) — the "tempo" service in
+  # docker-compose.dev.yml, reached over the compose network by service name.
+  # No TLS to a local dev collector-to-backend hop (mirrors otelx.go's own
+  # Insecure-in-dev convention).
+  otlp/tempo:
+    endpoint: tempo:4317
+    tls:
+      insecure: true
 service:
   pipelines:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [debug]
+      exporters: [debug, otlp/tempo]
     metrics:
       receivers: [otlp]
       processors: [batch]

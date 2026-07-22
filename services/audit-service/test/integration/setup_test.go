@@ -128,7 +128,21 @@ func newHarness(t *testing.T) *harness {
 
 	chainMgr := chain.New(redis, pg, ch)
 	proc := &ingest.Processor{CH: ch, Chain: chainMgr, Meta: metaEmitter}
-	exporter := &export.Exporter{CH: ch, PG: pg, WORM: wm, Meta: metaEmitter}
+	// Meta is deliberately NOT wired here (export.go's `if e.Meta != nil` guard
+	// makes this safe): ExportDay's self-audit event publishes to the real,
+	// unnamespaced `audit.events.v1` topic (meta.Topic), which by design any
+	// audit-service consumer subscribes to (domain/topics.go) — including one
+	// left running from `deploy/e2e/boot_services.sh` against this SAME shared
+	// dev-stack Kafka/ClickHouse/Postgres. Such a co-resident consumer would
+	// append the self-audit event to this test's own (tenant, chain_date)
+	// chain moments after ExportDay seals it, racing the pre-tamper verify
+	// call in TestAC05/06 with a nondeterministic 9th event (EventsChecked
+	// flapping 8/9, manifest_match flapping on the read-order race between the
+	// Postgres chain_heads bump and the ClickHouse insert). No test here reads
+	// this signal back (waitForMeta only ever checks `audit.searched`), so
+	// omitting it costs no coverage while making the exact-count assertions
+	// hermetic against any other audit-service instance sharing this infra.
+	exporter := &export.Exporter{CH: ch, PG: pg, WORM: wm}
 
 	// Real OPA authz over the sidecar + Redis projection.
 	opaURL := env("OPA_URL", "http://localhost:8281")

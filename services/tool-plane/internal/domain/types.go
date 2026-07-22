@@ -60,7 +60,17 @@ const (
 
 // PlatformTenant is the reserved tenant that owns platform-scoped catalog rows
 // (BRD §4: "platform-scoped catalog rows use the reserved platform tenant").
-var PlatformTenant = uuid.MustParse("00000000-0000-0000-0000-000000000000")
+// Same value as ai-gateway's PLATFORM_TENANT_ID (BRD 12 §services/ai-gateway/app/config.py)
+// so "the reserved platform tenant" is one identity platform-wide, not a
+// per-service invention. Deliberately NOT uuid.Nil: every tool.events.v1
+// lifecycle event this tenant is stamped on rides libs/go-common/event.Envelope,
+// whose Validate (MASTER-FR-031/041, mirrored by audit-service's consumption-side
+// ValidateEnvelope) rejects a nil tenant_id — uuid.Nil here silently made every
+// platform-scoped lifecycle event (tool registered/published/deprecated/retired/
+// killed/unkilled/SLA-breached/quarantined) fail conformance and DLQ at
+// audit-service. See migrations/000004_platform_tenant_sentinel.up.sql for the
+// matching RLS-policy-literal + persisted-row migration.
+var PlatformTenant = uuid.MustParse("00000000-0000-7000-8000-000000000001")
 
 // DeclaredSLA is the tool's owner-declared service level (TPL-FR-001).
 type DeclaredSLA struct {

@@ -111,8 +111,8 @@ GraphQL schema-snapshot + event-envelope conformance as CI gates; a load/soak ta
 
 ### Implement / Test
 - [x] coverage thresholds · [x] schema-snapshot gate · [x] event-envelope conformance
-  (shared validator; per-service adoption beyond case-service/agent-runtime is a
-  follow-up) · [x] 1M-row load test harness — see log below.
+  (shared validator; adopted by all 19 emitting services) · [x] 1M-row load test
+  harness — see log below.
 
 ---
 
@@ -503,11 +503,42 @@ shared `validate_envelope` against its actual `make_envelope()` output instead
 of its old ad hoc field checks — proves the shared validator accepts a real
 service's real envelope, not just hand-built fixtures. case-service's own
 richer test is intentionally left untouched (it's a superset, not a
-duplicate). **Follow-up, not fabricated as done:** the other 7 Go
-outbox-owning services and 8 Python services with their own `envelope.py`
-copy don't yet call the shared validator in their own test suites — the
-library exists and is proven to work against one real service per language;
-rolling it out to the rest is additive, mechanical, per-service work.
+duplicate). **Rollout completed.** The remaining 7 Go outbox-owning services
+(chart-service, notification-service, query-service, rbac-service,
+usage-service, identity-service, tool-plane) and 8 Python services with their
+own `envelope.py` copy (ai-gateway, dataset-service, semantic-service,
+pipeline-orchestrator, memory-service, eval-service, inference-service,
+experiment-service) now each have a unit test that builds a real envelope the
+way the service actually constructs it and asserts it passes the shared
+validator, following the same pattern as agent-runtime's
+`test_envelope_matches_go_envelope_fields`. For the 4 Go services that carry
+their own local `Envelope` type (query-service, rbac-service, usage-service,
+tool-plane) the tests reuse each service's existing unexported `toMaster`
+converter rather than adding a new one; identity-service's test reuses its
+existing unexported `toEnvelope`. All 15 services' full test suites pass with
+the new tests included; no production envelope-construction code was changed
+as part of this rollout.
+
+**Two real conformance bugs surfaced by the new tests, not fixed here**
+(fixing them is a behavior change, out of scope for additive test coverage —
+tracked as follow-ups):
+- **rbac-service DLQ envelopes carry `tenant_id = uuid.Nil`.** `toDLQ`
+  (`internal/events/consumers.go`) builds its `consumer.poison` envelope with
+  a nil tenant, which fails `event.Validate`'s non-nil `tenant_id`
+  requirement — a dead-letter event that would itself be rejected by
+  consumption-side validation. **Fixed** — see
+  `docs/initiatives/rbac-dlq-envelope-tenant-id.md`: `toDLQ` now threads the
+  real `tenant_id` through when the source message decoded (the common case),
+  falling back to a new non-nil `PlatformTenant` sentinel only when no tenant
+  is recoverable at all (undecodable message). Locked in by two new
+  conformance tests in `envelope_conformance_test.go`.
+- **tool-plane's `domain.PlatformTenant` sentinel is `uuid.Nil`.** Every
+  platform-scoped `tool.events.v1` lifecycle event (tool registered,
+  version published, deprecated, retired, killed, unkilled, SLA-breached,
+  quarantined) is emitted with this tenant and fails `event.Validate` for the
+  same reason — confirmed directly against `gcevent.Validate(toMaster(env))`.
+  This is broader than the rbac-service case: it affects every platform-scoped
+  tool-catalog lifecycle event tool-plane emits today.
 
 **4. 1M-row volume/load soak (`make soak-volume`).** Targets the two WS4
 fixes that were specifically about unbounded memory/row-count: B5 (case-service
