@@ -94,8 +94,9 @@ Full analysis in [scalability-audit](../initiatives/scalability-audit.md). Prior
 5. **B5** bulk `_bulk` reindex + `(tenant_id,created_at)` index (also fixes the self-heal OOM).
 
 ### Implement / Test
-- [x] **B2** upload size/row cap · [x] **B7** `processed_events` retention + index — see log below.
-- [ ] B1 streaming commit · [ ] B6 outbox reaper · [ ] B3 LIMIT-all-callers · [ ] B5 bulk reindex · [ ] B9/B10 (=WS3).
+- [x] **B2** upload size/row cap · [x] **B7** `processed_events` retention + index
+  · [x] **B6** outbox reaper · [x] **B3** LIMIT-all-callers · [x] **B1** streaming commit — see log below.
+- [ ] B5 bulk reindex · [ ] B9/B10 (=WS3).
 
 ---
 
@@ -221,5 +222,68 @@ fix and confirmed it passes, alongside the pre-existing
 `TestBrokerAgentHardening` (unchanged, still green) — proves the agent path
 wasn't touched. Full `query-service` suite (incl. integration): all packages
 `ok`, 0 fails. `go vet`/`gofmt` clean.
+
+### B1 — stream the Iceberg commit instead of materializing the whole staged file — DONE
+
+**Root cause confirmed, not assumed:** `IcebergTableWriter.stage()`
+(`libs/py-common/datacern_common/iceberg.py`) already streams the decoded rows
+into a temp parquet file in bounded batches — that half was fine. `commit()`
+was the actual ceiling: `_arrow_string_table()` did `pq.read_table(path)`
+(whole file into one arrow Table) then `.cast(...)` (a second full copy), and
+`_commit_sync` cast the result a *third* time before handing it to
+`tbl.append()` — three full in-memory copies of the staged file before
+pyiceberg's own internal chunking (`bin_pack_arrow_table`) ever ran. With
+`max_running_per_tenant=5` concurrent ingestions, this is exactly the OOM
+ceiling the scalability audit flagged (stage streams fine, commit doesn't).
+
+Surveyed pyiceberg 0.9.1's write surface before choosing a fix:
+`Table.append()`/`Transaction.append()` hard-require a fully-materialized
+`pa.Table` (`isinstance` gate); `Table.add_files()` is genuinely zero-copy but
+needs the source files already at the table's own warehouse location —
+`stage()` writes to local `/tmp` on the ingestion-service pod, so wiring it up
+would mean relocating where `stage()` writes, a bigger change out of scope
+here; the private `_dataframe_to_data_files()` that `append()` delegates to
+also takes a materialized `pa.Table` as input in every path inspected.
+
+**Fix:** replaced the single whole-file read+cast+append with
+`_iter_string_chunks()`, which streams the staged parquet file via
+`pq.ParquetFile(path).iter_batches(batch_size=commit_chunk_rows)` and casts
+each bounded chunk to the Iceberg schema individually; `_commit_sync` now
+calls `tbl.append()` once per chunk instead of once for the whole file. Peak
+memory at commit is now O(`commit_chunk_rows` rows) instead of O(whole staged
+file), regardless of ingestion size. `IcebergTableWriter` takes a new
+`commit_chunk_rows: int = 50_000` constructor param (existing call sites are
+unaffected — it's an appended default kwarg). Tradeoff, explicitly accepted:
+a large ingestion now produces one Iceberg snapshot per chunk instead of
+exactly one; every chunk's `snapshot_properties` still carries the same
+`ingestion_id`, so `has_snapshot()`'s BR-9 double-append guard (any snapshot
+with a matching id) is unaffected — verified by test, not assumed. A 0-row
+staged file still produces exactly one snapshot (the ingestion_id marker),
+matching prior behavior — an empty `iter_batches()` would otherwise silently
+skip `append()` entirely and lose the double-append guard's marker.
+
+**Test — TDD, bug reproduced before the fix:** added
+`test_commit_streams_large_file_in_bounded_chunks` (asserts the exact number
+of Iceberg snapshots created for one commit matches `rows / chunk_rows`,
+proving genuine chunking rather than a disguised single read) and
+`test_commit_empty_ingestion_still_creates_ingestion_id_marker` to
+`libs/py-common/tests/test_iceberg.py`, both against the **live** Iceberg REST
+catalog + MinIO (already up locally, no restart needed). Stashed the source
+fix and ran both new tests first — both failed with
+`TypeError: unexpected keyword argument 'commit_chunk_rows'` (the constructor
+param didn't exist yet), proving the tests genuinely exercise the new code
+path; restored the fix and confirmed both pass. Full `libs/py-common` suite:
+36 passed, 0 fails. `dataset-service` suite (the read-side consumer of the
+same tables): 233 passed, 0 fails. `ingestion-service` suite (the actual
+writer caller, including its own live `test_iceberg_writer_appends_and_reads_back`
+integration test): 609 passed, 27 skipped (pre-existing infra-gated skips,
+unrelated), 0 fails.
+
+**Found in passing, out of scope for B1:** `ingestion-service/app/container.py`'s
+`_build_real()` constructs `IcebergTableWriter(settings.iceberg_catalog_uri,
+warehouse=..., s3_endpoint=..., ...)` — `IcebergTableWriter`/`_CatalogHolder`
+only ever accepted `cfg`/`catalog`, so this call already raised `TypeError` at
+construction before this change too (a pre-existing bug, not introduced here,
+and not touched by this fix — flagged separately).
 
 _See BRD 59 for feature expansion (5B)._

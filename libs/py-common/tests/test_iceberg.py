@@ -5,7 +5,12 @@ from __future__ import annotations
 
 import pytest
 
-from datacern_common.iceberg import IcebergRestCatalog, IcebergTableWriter, RowBatch
+from datacern_common.iceberg import (
+    IcebergRestCatalog,
+    IcebergTableWriter,
+    RowBatch,
+    _split_identifier,
+)
 
 pytestmark = pytest.mark.integration
 
@@ -16,6 +21,11 @@ async def _batches(rows_per_batch, n_batches, cols):
             columns=cols,
             rows=[[f"v{b}_{i}_{c}" for c in range(len(cols))] for i in range(rows_per_batch)],
         )
+
+
+async def _no_batches():
+    return
+    yield  # pragma: no cover - makes this an async generator
 
 
 async def test_stage_commit_snapshot_advances_and_reads_back(iceberg, unique):
@@ -52,5 +62,66 @@ async def test_stage_commit_snapshot_advances_and_reads_back(iceberg, unique):
         assert result2.snapshot_id != result1.snapshot_id
         df2 = await catalog.read_snapshot(table, result2.snapshot_id)
         assert len(df2) == 25  # cumulative append
+    finally:
+        await catalog.drop_table(table)
+
+
+async def test_commit_streams_large_file_in_bounded_chunks(iceberg, unique):
+    """B1: commit() must stream the staged file to Iceberg in bounded row
+    chunks instead of materializing the whole file in memory. A tiny
+    commit_chunk_rows forces multiple chunks for one commit -- proven here by
+    counting the resulting Iceberg snapshots directly (one per chunk), not by
+    inference: 12 rows / chunk_rows=3 must yield exactly 4 new snapshots."""
+    table = f"bronze.pyc{unique}.ds_big"
+    writer = IcebergTableWriter(commit_chunk_rows=3)
+    catalog = IcebergRestCatalog()
+    cols = ["id", "name"]
+
+    try:
+        staged = await writer.stage(
+            table, _batches(4, 3, cols), {"ingestion_id": "ing-big", "source": "upload"}
+        )
+        assert staged.rows == 12
+        result = await writer.commit(staged)
+        assert result.rows_appended == 12
+
+        # correctness survives chunking: all rows present under the final snapshot
+        df = await catalog.read_snapshot(table, result.snapshot_id)
+        assert len(df) == 12
+
+        # BR-9 guard still satisfied even though ingestion_id is stamped on
+        # every chunk's snapshot, not just one
+        assert await writer.has_snapshot(table, "ing-big") is True
+
+        # genuine streaming, not a fake pass-through: exactly 4 snapshots were
+        # created for this single commit (12 rows / chunk_rows=3)
+        ns, name = _split_identifier(table)
+        tbl = writer._cat().load_table((ns, name))
+        assert len(list(tbl.snapshots())) == 4
+    finally:
+        await catalog.drop_table(table)
+
+
+async def test_commit_empty_ingestion_still_creates_ingestion_id_marker(iceberg, unique):
+    """A 0-row staged file must still create exactly one snapshot carrying
+    ingestion_id, so has_snapshot()'s BR-9 double-append guard recognises the
+    (empty) ingestion as already processed on retry."""
+    table = f"bronze.pyc{unique}.ds_empty"
+    writer = IcebergTableWriter(commit_chunk_rows=3)
+    catalog = IcebergRestCatalog()
+    cols = ["id", "name"]
+
+    try:
+        staged = await writer.stage(
+            table, _no_batches(), {"ingestion_id": "ing-empty", "source": "upload", "columns": cols}
+        )
+        assert staged.rows == 0
+        result = await writer.commit(staged)
+        assert result.rows_appended == 0
+        assert await writer.has_snapshot(table, "ing-empty") is True
+
+        ns, name = _split_identifier(table)
+        tbl = writer._cat().load_table((ns, name))
+        assert len(list(tbl.snapshots())) == 1
     finally:
         await catalog.drop_table(table)

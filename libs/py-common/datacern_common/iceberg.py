@@ -26,7 +26,7 @@ import asyncio
 import tempfile
 import threading
 import uuid
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -104,11 +104,14 @@ def _string_schema(columns: list[str]):
     )
 
 
-def _arrow_string_table(columns: list[str], path: str) -> pa.Table:
-    """Read the staged parquet back as an all-string arrow table for append."""
-    table = pq.read_table(path)
-    # normalise to plain strings so the arrow schema matches the Iceberg schema
-    return table.cast(pa.schema([pa.field(c, pa.large_string()) for c in columns]))
+def _iter_string_chunks(columns: list[str], path: str, chunk_rows: int) -> Iterator[pa.Table]:
+    """Stream the staged parquet file back in bounded row chunks, each already
+    cast to the all-string schema for append -- commit must never hold the
+    whole staged file in memory at once (B1: a large ingestion was OOMing at
+    commit even though stage() itself streams and is bounded)."""
+    string_schema = pa.schema([pa.field(c, pa.large_string()) for c in columns])
+    for batch in pq.ParquetFile(path).iter_batches(batch_size=chunk_rows):
+        yield pa.Table.from_batches([batch]).cast(string_schema)
 
 
 # The pyiceberg RestCatalog wraps a single requests.Session that is NOT
@@ -133,6 +136,20 @@ class _CatalogHolder:
 
 class IcebergTableWriter(_CatalogHolder):
     """ingestion-service TableWriter port backed by a real Iceberg REST catalog."""
+
+    def __init__(
+        self,
+        cfg: IcebergConfig | None = None,
+        catalog=None,
+        commit_chunk_rows: int = 50_000,
+    ) -> None:
+        super().__init__(cfg, catalog)
+        # Bounds peak memory at commit time to ~one chunk's worth of rows
+        # regardless of staged file size (B1). Each chunk becomes its own
+        # Iceberg append/snapshot; has_snapshot()'s any-snapshot check and the
+        # BR-9 double-append guard are unaffected since every chunk of a given
+        # commit carries the same ingestion_id.
+        self.commit_chunk_rows = commit_chunk_rows
 
     async def stage(
         self, table: str, batches: AsyncIterator[RowBatch], summary: dict[str, Any]
@@ -197,14 +214,23 @@ class IcebergTableWriter(_CatalogHolder):
         except NoSuchTableError:
             tbl = catalog.create_table((namespace, name), schema=schema)
 
-        arrow = _arrow_string_table(staged.columns, staged.path)
         # cast to the table's on-disk arrow schema so field ids line up
-        arrow = arrow.cast(tbl.schema().as_arrow())
+        target_schema = tbl.schema().as_arrow()
         snapshot_props = {
             "ingestion_id": str(staged.summary.get("ingestion_id", "")),
             "source": str(staged.summary.get("source", "")),
         }
-        tbl.append(arrow, snapshot_properties=snapshot_props)
+        appended = False
+        for chunk in _iter_string_chunks(staged.columns, staged.path, self.commit_chunk_rows):
+            tbl.append(chunk.cast(target_schema), snapshot_properties=snapshot_props)
+            appended = True
+        if not appended:
+            # 0-row ingestion: still create exactly one snapshot carrying
+            # ingestion_id so has_snapshot() recognises this ingestion as done.
+            string_schema = pa.schema(
+                [pa.field(c, pa.large_string()) for c in staged.columns]
+            )
+            tbl.append(string_schema.empty_table().cast(target_schema), snapshot_properties=snapshot_props)
         tbl.refresh()
         snap = tbl.current_snapshot()
         Path(staged.path).unlink(missing_ok=True)
