@@ -1,0 +1,124 @@
+{{- /*
+Platform SLO alert bundle (BRD 58 WS2) -- encodes the exact thresholds in
+docs/design/observability-slos.md as PrometheusRule alerts. Same
+monitoring.coreos.com/v1 CRD group as templates/servicemonitor.yaml (that
+template's own header comment already documents the Prometheus Operator CRD
+requirement), gated the same way: renders nothing unless explicitly enabled,
+so a chart without the CRD installed is unaffected by default.
+
+Grouped by the Prometheus-assigned `job` label (from ServiceMonitor/Service
+discovery), not the app-level `service` const-label -- go-common/metricsx
+attaches a `service` label to every metric, but py-common's dependency-free
+RED renderer does not (a real, separately-tracked gap), so `job` is the one
+label every scraped target (Go or Python) is guaranteed to carry uniformly.
+*/}}
+{{- if .Values.observability.prometheusRule.enabled }}
+{{- $pr := .Values.observability.prometheusRule }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: datacern-slo-alerts
+  labels:
+    {{- include "datacern.labels" . | nindent 4 }}
+    {{- with $pr.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: datacern.red.availability
+      rules:
+        - alert: DatacernHighErrorRate
+          expr: |
+            sum by (job) (rate(http_requests_total{status=~"5.."}[5m]))
+            /
+            sum by (job) (rate(http_requests_total[5m]))
+            > 0.01
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "{{`{{ $labels.job }}`}} 5xx rate above 1% for 5m"
+            description: "SLO target: 99.5% availability (docs/design/observability-slos.md)."
+
+    - name: datacern.red.latency
+      rules:
+        # Default 1s p95 for every job except the LLM-calling routes below.
+        - alert: DatacernHighLatencyP95
+          expr: |
+            histogram_quantile(0.95, sum by (job, le) (
+              rate(http_request_duration_seconds_bucket{job!~"agent-runtime|ai-gateway"}[5m])
+            )) > 1
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "{{`{{ $labels.job }}`}} p95 latency above 1s for 5m"
+            description: "SLO target: p95 < 500ms, alert threshold 1s (docs/design/observability-slos.md)."
+        # agent-runtime/ai-gateway: an LLM round-trip dominates latency, not
+        # platform overhead -- documented exception, not a silently different
+        # bar (docs/design/observability-slos.md §1).
+        - alert: DatacernHighLatencyP95LLM
+          expr: |
+            histogram_quantile(0.95, sum by (job, le) (
+              rate(http_request_duration_seconds_bucket{job=~"agent-runtime|ai-gateway"}[5m])
+            )) > 8
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "{{`{{ $labels.job }}`}} p95 latency above 8s for 5m (LLM-calling route)"
+
+    - name: datacern.red.saturation
+      rules:
+        - alert: DatacernHighInFlightRequests
+          expr: sum by (job) (http_requests_in_flight) > 200
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "{{`{{ $labels.job }}`}} sustained > 200 in-flight requests"
+
+    - name: datacern.domain
+      rules:
+        - alert: DatacernAuditSealAgeTooHigh
+          expr: max(audit_seal_age_seconds) > 7200
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "audit-service: oldest unsealed WORM export day exceeds 2h"
+            description: "BRD 58 SEC-2 -- a day this old and still unsealed means the export reconciler is not keeping up or is stuck; check audit_seal_reconciled_days_total too."
+        - alert: DatacernAuditChainHeadUpsertFailures
+          expr: increase(audit_chain_head_upsert_failures_total[15m]) > 0
+          labels:
+            severity: warning
+          annotations:
+            summary: "audit-service: a chain_heads checkpoint write failed"
+            description: "Self-healed by the seal reconciler (BRD 58 SEC-2), but worth knowing Postgres write failures are occurring."
+        - alert: DatacernUsageIngestLagHigh
+          expr: |
+            histogram_quantile(0.95, sum by (le) (rate(usage_ingest_lag_seconds_bucket[10m]))) > 300
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "usage-service: p95 ingest lag above 300s"
+        - alert: DatacernUsageIngestDLQ
+          expr: increase(usage_ingest_dlq_total[15m]) > 0
+          labels:
+            severity: warning
+          annotations:
+            summary: "usage-service: events routed to the ingest DLQ"
+        - alert: DatacernNotificationWebhookCircuitOpened
+          expr: increase(notif_webhook_circuit_opened_total[15m]) > 0
+          labels:
+            severity: warning
+          annotations:
+            summary: "notification-service: a webhook endpoint's circuit breaker opened"
+        - alert: DatacernRealtimeHubDroppedEvents
+          expr: increase(rth_dropped_events_total[10m]) > 0
+          labels:
+            severity: warning
+          annotations:
+            summary: "realtime-hub: events dropped from a subscriber's fan-in buffer"
+{{- end }}

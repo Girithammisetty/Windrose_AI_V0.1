@@ -1,6 +1,6 @@
 # BRD 58 WS2 — Operational layer (observability you can actually operate)
 
-**Status:** in-progress — 2026-07-22
+**Status:** done — 2026-07-22
 **Related:** [58_production_hardening_BRD.md](../brd/58_production_hardening_BRD.md) WS2 · [observability-slos.md](../design/observability-slos.md)
 
 Filed as a standalone initiative doc rather than appended directly to
@@ -112,5 +112,45 @@ all 10 Go services consuming it still build; `docker compose config`
 validates the compose file; the collector's own startup log confirmed no
 config errors after the `otlp/tempo` exporter addition.
 
-### Grafana dashboards + PrometheusRule alert bundle — pending
-Next increment.
+### Grafana dashboards + PrometheusRule alert bundle — DONE
+
+New `deploy/helm/datacern/templates/prometheusrule.yaml` (10 alert rules
+across 4 groups — availability, latency, saturation, domain — encoding
+`observability-slos.md`'s exact thresholds 1:1) and `templates/
+grafana-dashboard.yaml` (a ConfigMap wrapping a real 7-panel Grafana
+dashboard JSON at `dashboards/datacern-red.json`, labeled
+`grafana_dashboard: "1"` for the kube-prometheus-stack Grafana sidecar's
+auto-discovery convention). Both follow `templates/servicemonitor.yaml`'s
+exact existing gating pattern: `monitoring.coreos.com/v1` CRD (no new
+operator dependency introduced), disabled by default
+(`observability.prometheusRule.enabled` / `.grafanaDashboard.enabled`, both
+`false`), rendering nothing when off.
+
+**Design decision, made explicit rather than silently assumed:** every alert
+groups by the Prometheus-assigned `job` label (from ServiceMonitor/Service
+discovery), not the app-level `service` const-label go-common/metricsx
+attaches to Go metrics — because py-common's dependency-free RED renderer
+does **not** emit a `service` label at all (confirmed by reading its
+`render()` method), which would have silently excluded every Python service
+from the RED alerts had they been written against `service`. `job` is the
+one label every scraped target carries uniformly regardless of language.
+
+**Test:** `helm lint` clean; `helm template` verified with all three flags
+enabled — confirmed exactly 1 `PrometheusRule` (4 groups, 10 rules, every
+rule's `expr` non-empty), 24 `ServiceMonitor`s, and 1 correctly-labeled
+dashboard `ConfigMap` (parsed the embedded JSON back out: 7 panels, correct
+title) render; confirmed all three render **nothing** with the flags at
+their `false` default. Re-ran both the enabled and default cases across all
+four cloud overlays (`values-aws/gcp/azure/hetzner.yaml`) — all render
+clean. Every PromQL expression manually reviewed for balanced parens/valid
+function calls/correct label-matcher syntax, and every metric name referenced
+cross-checked against the research pass's confirmed-real metric inventory (no
+invented metric names).
+
+**Honest verification ceiling, not silently skipped:** no `promtool` binary
+available in this environment, and this dev stack runs no Prometheus server
+at all (nothing to evaluate the rules against) — verification stops at
+`helm lint`/`helm template` validity + manual PromQL review, the same
+"no live cluster, verification-stops-at-render" ceiling this session's BRD 58
+WS3 Terraform work already established as the honest limit rather than
+fabricating a deeper check.

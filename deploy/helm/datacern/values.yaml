@@ -260,6 +260,25 @@ observability:
     # selector your Prometheus Operator's `serviceMonitorSelector` expects:
     #   release: kube-prometheus-stack
 
+  # SLO alert bundle (BRD 58 WS2) -- docs/design/observability-slos.md.
+  # Same CRD group/gating convention as serviceMonitor above.
+  prometheusRule:
+    enabled: false
+    labels: {}
+    # e.g. { release: kube-prometheus-stack } to match your Prometheus
+    # Operator's ruleSelector, same as serviceMonitor.labels above.
+
+  # Dashboards-as-code (BRD 58 WS2): a ConfigMap carrying a real Grafana
+  # dashboard JSON, labeled for the kube-prometheus-stack Grafana sidecar's
+  # auto-discovery (grafana_dashboard: "1" by default -- override
+  # sidecarLabel/sidecarLabelValue if your Grafana sidecar is configured
+  # differently). One parameterized dashboard (a `job` template variable
+  # switches between services) rather than one static dashboard per service.
+  grafanaDashboard:
+    enabled: false
+    sidecarLabel: grafana_dashboard
+    sidecarLabelValue: "1"
+
 # --- Network isolation for the internal MCP backend facades --------------------
 # case-service and chart-service expose an in-cluster MCP facade
 # (POST /internal/v1/mcp/invoke) that trusts a mesh-injected `X-Spiffe-Id`

@@ -1,0 +1,127 @@
+{
+  "title": "Datacern — RED + domain SLOs",
+  "uid": "datacern-red",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "timezone": "utc",
+  "time": { "from": "now-6h", "to": "now" },
+  "refresh": "30s",
+  "templating": {
+    "list": [
+      {
+        "name": "job",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "${datasource}" },
+        "query": "label_values(http_requests_total, job)",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "current": { "text": "All", "value": "$__all" }
+      },
+      {
+        "name": "datasource",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": {}
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Request rate (per job)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        {
+          "expr": "sum by (job) (rate(http_requests_total{job=~\"$job\"}[5m]))",
+          "legendFormat": "{{job}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "5xx error rate (per job)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "unit": "percentunit" }, "overrides": [] },
+      "targets": [
+        {
+          "expr": "sum by (job) (rate(http_requests_total{job=~\"$job\",status=~\"5..\"}[5m])) / sum by (job) (rate(http_requests_total{job=~\"$job\"}[5m]))",
+          "legendFormat": "{{job}}"
+        }
+      ],
+      "thresholds": {
+        "steps": [
+          { "color": "green", "value": null },
+          { "color": "red", "value": 0.01 }
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "title": "p95 latency (per job)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (job, le) (rate(http_request_duration_seconds_bucket{job=~\"$job\"}[5m])))",
+          "legendFormat": "{{job}}"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "In-flight requests (per job)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        {
+          "expr": "sum by (job) (http_requests_in_flight{job=~\"$job\"})",
+          "legendFormat": "{{job}}"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "audit-service: seal age (oldest unsealed day)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 16 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "targets": [{ "expr": "max(audit_seal_age_seconds)", "legendFormat": "seal age" }]
+    },
+    {
+      "id": 6,
+      "title": "usage-service: ingest lag p95",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 16 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(usage_ingest_lag_seconds_bucket[10m])))",
+          "legendFormat": "p95 lag"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "DLQ / dropped-event counters",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 16 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        { "expr": "sum(rate(usage_ingest_dlq_total[5m]))", "legendFormat": "usage DLQ" },
+        { "expr": "sum(rate(rth_dropped_events_total[5m]))", "legendFormat": "realtime-hub dropped" },
+        { "expr": "sum(rate(notif_webhook_circuit_opened_total[5m]))", "legendFormat": "webhook circuit-open" }
+      ]
+    }
+  ]
+}

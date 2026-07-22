@@ -1,0 +1,21 @@
+{{- /*
+Dashboards-as-code (BRD 58 WS2): a real Grafana dashboard JSON (RED metrics +
+the domain panels from docs/design/observability-slos.md), shipped as a
+ConfigMap labeled for the kube-prometheus-stack Grafana sidecar's
+auto-discovery convention (grafana_dashboard: "1" by default). Renders
+nothing unless explicitly enabled, same gating convention as
+serviceMonitor/prometheusRule above.
+*/}}
+{{- if .Values.observability.grafanaDashboard.enabled }}
+{{- $gd := .Values.observability.grafanaDashboard }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: datacern-grafana-dashboard
+  labels:
+    {{- include "datacern.labels" . | nindent 4 }}
+    {{ $gd.sidecarLabel }}: {{ $gd.sidecarLabelValue | quote }}
+data:
+  datacern-red.json: |-
+    {{- .Files.Get "dashboards/datacern-red.json" | nindent 4 }}
+{{- end }}
