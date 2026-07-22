@@ -78,6 +78,27 @@ func Transport(base http.RoundTripper) http.RoundTripper {
 	return otelhttp.NewTransport(base)
 }
 
+// buildResource merges the default (auto-detected) resource with the given
+// service name. Schemaless (no SchemaURL) rather than a versioned
+// semconv.SchemaURL for the custom attribute: resource.Default()'s builtin
+// detectors are pinned to whatever semconv version the SDK dependency bundles
+// internally, which can silently drift ahead of the semconv version this
+// package imports. A schema URL MISMATCH makes resource.Merge return
+// ErrSchemaURLConflict — a bug found live against a real Tempo backend (BRD 58
+// WS2): the old code silently fell back to resource.Default() alone on that
+// error, discarding serviceName entirely, so every trace from every service
+// reported service.name as "unknown_service:<binary-name>" instead of the
+// real name whenever tracing was enabled. A schemaless resource has an empty
+// SchemaURL, which Merge always accepts against either side without
+// conflict, making this resilient to future SDK semconv version bumps too.
+func buildResource(serviceName string) *resource.Resource {
+	res, err := resource.Merge(resource.Default(), resource.NewSchemaless(semconv.ServiceName(serviceName)))
+	if err != nil {
+		return resource.Default()
+	}
+	return res
+}
+
 // Init sets up the global tracer provider + propagators and returns a shutdown
 // func. The exporter dials lazily, so Init does not fail if the collector is
 // briefly unavailable at startup.
@@ -96,12 +117,7 @@ func Init(ctx context.Context, cfg Config) (func(context.Context) error, error) 
 	if err != nil {
 		return nil, err
 	}
-	res, err := resource.Merge(resource.Default(), resource.NewWithAttributes(
-		semconv.SchemaURL, semconv.ServiceName(cfg.ServiceName),
-	))
-	if err != nil {
-		res = resource.Default()
-	}
+	res := buildResource(cfg.ServiceName)
 	tp := sdktrace.NewTracerProvider(
 		sdktrace.WithBatcher(exp, sdktrace.WithBatchTimeout(2*time.Second)),
 		sdktrace.WithResource(res),
