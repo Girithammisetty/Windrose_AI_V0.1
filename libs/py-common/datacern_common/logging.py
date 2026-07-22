@@ -32,7 +32,7 @@ import logging
 import sys
 from datetime import UTC, datetime
 
-__all__ = ["JsonFormatter", "configure_json_logging"]
+__all__ = ["JsonFormatter", "TraceContextFilter", "configure_json_logging"]
 
 # Attributes every stdlib LogRecord carries that we don't want to re-emit
 # verbatim (already surfaced under friendlier names, or internal bookkeeping).
@@ -76,6 +76,27 @@ class JsonFormatter(logging.Formatter):
         return json.dumps(payload, default=str)
 
 
+class TraceContextFilter(logging.Filter):
+    """Injects trace_id/span_id from the CURRENT OTel span (if any) onto every
+    LogRecord (BRD 58 WS2). Unlike Go's slog (no ambient context — a ctx must
+    be threaded explicitly through *Context calls), OTel Python tracks the
+    active span via contextvars, so this correlates every log call site
+    automatically with zero call-site changes, as long as it runs inside an
+    active span (e.g. instrumented FastAPI request handling, or an explicit
+    ``datacern_common.otelx.span(...)`` block). A log emitted with no active
+    span is unaffected — no trace_id/span_id fields added, same as today.
+    """
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        from opentelemetry import trace
+
+        span_context = trace.get_current_span().get_span_context()
+        if span_context.is_valid:
+            record.trace_id = format(span_context.trace_id, "032x")
+            record.span_id = format(span_context.span_id, "016x")
+        return True
+
+
 def configure_json_logging(service_name: str, *, level: int = logging.INFO) -> None:
     """Install the JSON formatter on the root logger's stdout handler.
 
@@ -89,4 +110,5 @@ def configure_json_logging(service_name: str, *, level: int = logging.INFO) -> N
     root.setLevel(level)
     handler = logging.StreamHandler(stream=sys.stdout)
     handler.setFormatter(JsonFormatter(service_name))
+    handler.addFilter(TraceContextFilter())
     root.handlers = [handler]

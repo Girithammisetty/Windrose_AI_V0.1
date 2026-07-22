@@ -74,7 +74,7 @@ type stalenessHistogram struct{ h prometheus.Histogram }
 func (s stalenessHistogram) Observe(d time.Duration) { s.h.Observe(d.Seconds()) }
 
 func run() error {
-	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
+	slog.SetDefault(slog.New(otelx.WrapLogHandler(slog.NewJSONHandler(os.Stdout, nil))))
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
