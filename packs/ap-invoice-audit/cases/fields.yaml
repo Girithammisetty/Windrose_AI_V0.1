@@ -1,45 +1,55 @@
-# Typed case fields for the AP exception-audit workflow (CASE-FR-022). These
-# structure the evidence an analyst records when resolving an exception, beyond
-# the free-form display_projection the seed rows carry — so the case form shows
-# governed, typed inputs (root cause, out-of-band verification discipline,
-# recovered dollars) that SOX/recovery auditors and the four-eyes approver rely
-# on. purpose=update: they are captured at resolution, not at intake. field_meta
-# carries the label/help/options the case form renders; enum options are the
-# closed value set for that field.
-- name: root_cause
+# Typed custom case fields (case-service CASE-FR-022) — the AP exception work
+# item's real adjudication attributes, typed so the case form validates them
+# and decision surfaces can read them structurally instead of parsing notes.
+# data_type is IMMUTABLE after creation (case-service) — chosen deliberately.
+# Names/values mirror the ap_exceptions binding-contract columns
+# (data/datasets.yaml); enum options are the closed value sets those columns
+# actually carry, so field data and dataset agree.
+- name: exception_type
   data_type: enum
-  purpose: update
+  purpose: both
   field_meta:
-    label: "Root cause"
-    required: true
-    help: "The confirmed driver of the exception, for recovery + control analytics."
-    options: [duplicate_payment, bec_banking_change, shell_vendor, split_invoicing, price_variance, missing_po, benign_timing]
-- name: oob_verified
-  data_type: boolean
-  purpose: update
-  field_meta:
-    label: "Out-of-band verification completed"
+    label: "Exception type"
+    options: [duplicate_invoice, missing_po, missing_receipt, price_variance,
+              quantity_mismatch, suspicious_banking_change,
+              vendor_master_change, weekend_submission]
     required: false
-    help: "For banking-change / BEC exceptions: vendor confirmed via the known-good phone number on the vendor master — NEVER a contact in the request."
-- name: verification_method
+- name: three_way_match
   data_type: enum
-  purpose: update
+  purpose: both
   field_meta:
-    label: "Verification method"
+    label: "Three-way-match result"
+    options: [matched, po_gap, receipt_gap, price_gap]
     required: false
-    help: "How the vendor / invoice was verified before release."
-    options: [out_of_band_phone, vendor_portal, three_way_match, none]
+- name: fraud_indicator
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Fraud indicator"
+    options: [none, bec_suspect, shell_vendor_suspect, split_invoicing]
+    required: false
+- name: deadline_bucket
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Payment-run deadline bucket"
+    options: [0_5_days, 6_15_days, over_15_days, closed]
+    required: false
+- name: days_to_deadline
+  data_type: integer
+  purpose: both
+  field_meta:
+    label: "Payment-run clock — days left"
+    required: false
+- name: invoice_amount
+  data_type: float
+  purpose: both
+  field_meta:
+    label: "Invoice amount (USD)"
+    required: false
 - name: recovered_amount
   data_type: float
-  purpose: update
+  purpose: both
   field_meta:
     label: "Recovered amount (USD)"
     required: false
-    help: "Dollars recovered on a duplicate payment or negotiated vendor credit."
-- name: control_approver
-  data_type: string
-  purpose: update
-  field_meta:
-    label: "Control approver"
-    required: false
-    help: "The AP Controls Manager who signed off the payment block or release (four-eyes)."

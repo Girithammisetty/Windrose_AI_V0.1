@@ -1,0 +1,23 @@
+# Governed typed case schema (case-service inc10): the workers'-comp claim
+# work item as a named case TYPE binding the adjudication field set, so intake
+# creates a structurally-complete claim-review case (not a generic case with
+# prose notes). Embedded field defs use {name, data_type, label, required};
+# names align with cases/fields.yaml and the wc_claims binding-contract
+# columns.
+- schema_key: comp_claim_review
+  name: "Workers' comp claim review"
+  description: >-
+    A workers' compensation claim under review: AOE/COE compensability
+    evidence, the jurisdiction-configured accept/deny decision clock, reserve
+    and paid exposure, return-to-work posture, and litigation status. The
+    schema types the work item; every compensability determination, reserve
+    change, and settlement remains a four-eyes human decision.
+  fields:
+    - { name: claim_type,         data_type: enum,    label: "Claim type",                                          required: true }
+    - { name: injury_type,        data_type: enum,    label: "Injury type",                                         required: false }
+    - { name: jurisdiction_state, data_type: string,  label: "Jurisdiction state",                                  required: true }
+    - { name: rtw_status,         data_type: enum,    label: "Return-to-work status",                               required: false }
+    - { name: litigation_flag,    data_type: enum,    label: "Litigation / attorney representation",                required: false }
+    - { name: incurred_reserve,   data_type: float,   label: "Incurred reserve (USD)",                              required: false }
+    - { name: paid_to_date,       data_type: float,   label: "Paid to date (USD)",                                  required: false }
+    - { name: days_to_deadline,   data_type: integer, label: "Compensability decision clock — days left",           required: false }

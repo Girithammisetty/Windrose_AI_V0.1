@@ -1,0 +1,21 @@
+# Governed source-connector templates (ingestion-service inc13): INCOMING
+# connections pre-declared with skip_test + EMPTY secrets, so the OEM's
+# expected feeds exist as governed starting points the tenant completes with
+# real hosts/credentials in Data → Connections. Nothing is polled at install.
+- name: "Dealer claim batch drop (SFTP)"
+  connector_type: sftp
+  direction: incoming
+  config:
+    host: "dealer-edi-gateway.example.invalid"
+    port: 22
+    username: datacern_ingest
+    root_directory: "/outbound/warranty-claims"
+- name: "Service and parts extracts (S3)"
+  connector_type: s3
+  direction: incoming
+  config:
+    region: us-east-1
+    bucket: oem-service-parts-extracts
+    root_prefix: "daily/"
+    file_format: csv
+    glob: "*.csv"

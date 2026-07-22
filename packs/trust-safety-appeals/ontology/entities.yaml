@@ -1,0 +1,81 @@
+# Domain ontology (dataset-service inc11): the entity TYPES this vertical
+# operates on and their typed relationships — the type-level model behind the
+# ts_appeals / ts_enforcements / ts_accounts binding contracts. Attribute
+# names match the contract columns so the ontology describes data the bound
+# tenant datasets actually carry (content_item is the one modeled surface
+# whose attributes live on the enforcement rows that reference it).
+- entity_key: account
+  name: "Platform account"
+  description: "The enforced/appealing account (creator, seller, member, or player)."
+  attributes:
+    - { name: account_handle, data_type: string }
+    - { name: account_type, data_type: string, description: "creator | seller | member | player" }
+    - { name: account_age_bucket, data_type: string }
+    - { name: audience_tier, data_type: string, description: "micro | mid | large | top" }
+    - { name: prior_violations, data_type: string, description: "none | 1_2 | 3_plus" }
+    - { name: verified, data_type: string }
+    - { name: monetized, data_type: string }
+  relationships:
+    - { name: content_items, target: content_item, cardinality: has_many }
+    - { name: enforcement_actions, target: enforcement_action, cardinality: has_many }
+- entity_key: content_item
+  name: "Content item"
+  description: >-
+    The posted surface an enforcement action can target (post, video,
+    listing, message, profile) — typed via the enforcement row's
+    content_type column.
+  attributes:
+    - { name: content_type, data_type: string, description: "post | video | listing | message | profile" }
+  relationships:
+    - { name: account, target: account, cardinality: belongs_to }
+    - { name: enforcement_actions, target: enforcement_action, cardinality: has_many }
+- entity_key: enforcement_action
+  name: "Enforcement action"
+  description: >-
+    A moderation decision against an account or content item (removal, reach
+    restriction, demonetization, suspension), carrying its detection source
+    signal (classifier confidence, report volume) and the policy version it
+    enforced.
+  attributes:
+    - { name: content_type, data_type: string }
+    - { name: classifier_score_band, data_type: string, description: "none | low | medium | high" }
+    - { name: policy_version, data_type: string }
+    - { name: action, data_type: string, description: "remove_content | restrict_reach | demonetize | suspend_account" }
+    - { name: enforce_month, data_type: string }
+    - { name: geography, data_type: string }
+    - { name: report_count, data_type: integer, description: "user reports behind the decision (mass-report surface)" }
+  relationships:
+    - { name: account, target: account, cardinality: belongs_to }
+    - { name: content_item, target: content_item, cardinality: belongs_to }
+    - { name: policy, target: policy, cardinality: belongs_to }
+    - { name: appeals, target: appeal, cardinality: has_many }
+- entity_key: appeal
+  name: "Moderation appeal"
+  description: >-
+    A user's complaint against one enforcement decision, carrying the
+    complaint-handling clock, the enforcement-source context, and the human
+    determination outcome.
+  attributes:
+    - { name: appeal_type, data_type: string }
+    - { name: policy_area, data_type: string }
+    - { name: enforcement_source, data_type: string, description: "automated_classifier | moderator | user_report" }
+    - { name: user_standing, data_type: string }
+    - { name: severity, data_type: string }
+    - { name: status, data_type: string }
+    - { name: disposition, data_type: string }
+    - { name: age_days, data_type: integer }
+    - { name: days_to_deadline, data_type: integer }
+  relationships:
+    - { name: enforcement_action, target: enforcement_action, cardinality: belongs_to }
+- entity_key: policy
+  name: "Platform policy"
+  description: >-
+    The versioned content-policy text an enforcement cites — the unit the
+    policy team amends when appeals expose a gap (satire/parody,
+    counter-speech, newsworthiness contexts the written text does not
+    resolve).
+  attributes:
+    - { name: policy_version, data_type: string }
+    - { name: policy_area, data_type: string }
+  relationships:
+    - { name: enforcement_actions, target: enforcement_action, cardinality: has_many }

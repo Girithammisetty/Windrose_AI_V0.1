@@ -1,0 +1,35 @@
+# Governed decision table (BRD 54) — deterministic, explainable, no-LLM
+# ROUTING over the claim intake queue. It EXECUTES to the same governed
+# four-eyes proposal an agent produces: an operator dry-runs or batch-runs it
+# across the worklist, and every matched case becomes a case.apply_disposition
+# proposal the Claims Review Board Manager must approve. The table NEVER
+# proposes an entitlement determination (approve/reject/negotiate) — it only
+# routes claims to the right human review lane. Columns are drawn ONLY from
+# the cc_claims binding contract (data/datasets.yaml required_columns).
+# Outcome disposition_codes are validated against this workspace's
+# disposition catalog at install (dispositions install first).
+- identity: claim_intake_routing
+  name: "Claim intake routing — deadline and exposure"
+  rules:
+    # Contract-configured response window nearly exhausted — a determination
+    # window can lapse by silence; move the claim to the front of the board.
+    - when:
+        - { column: days_to_deadline, op: between, value: [0, 7] }
+      then: { disposition_code: escalate_review_board, severity: critical }
+      note: "Contract-configured response window nearly exhausted — expedited human review before the response deadline lapses"
+    # High-exposure claims get senior commercial eyes before any position is
+    # taken; the threshold is a routing heuristic the tenant tunes.
+    - when:
+        - { column: claimed_amount, op: gte, value: 500000 }
+      then: { disposition_code: escalate_review_board, severity: high }
+      note: "High-exposure claim — senior commercial review before any entitlement position is taken"
+    # Major asserted schedule impact on a delay/acceleration claim — needs
+    # the scheduling & delay specialist's CPM-method review, not queue order.
+    - when:
+        - { column: claim_type, op: in, value: [delay_claim, acceleration] }
+        - { column: schedule_impact, op: eq, value: days_30_plus }
+      then: { disposition_code: escalate_review_board, severity: high }
+      note: "Major asserted schedule impact — route to scheduling & delay specialist for critical-path method review"
+  # default_outcome deliberately OMITTED: an unmatched claim simply stays on
+  # the standard analyst worklist — this table routes, it never adjudicates,
+  # so there is no honest deterministic default disposition.

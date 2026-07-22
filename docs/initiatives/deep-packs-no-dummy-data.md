@@ -6,10 +6,20 @@ insurance-claims-payer, healthcare-provider-rcm, chargeback-representment
 (commit 9546564); wave 2, every healthcare + banking vertical:
 care-management-medicare, post-acute-care, payer-fwa-siu, pharmacy-benefit-mgmt,
 pharmacovigilance, device-complaints, credit-disputes, mortgage-loss-mitigation
-(commit dc17df4). Full live install e2e proven on card-disputes (wave 1) AND
-credit-disputes (wave 2): real tenant uploads → reuse×2 + explicit bind×1 →
-0 failed → four-eyes semantic approval → dashboards materialized → macro
-rewrite to the bound dataset name confirmed in saved-query SQL.
+(commit dc17df4); wave 3, every remaining vertical: ap-invoice-audit,
+background-screening, benefits-appeals, construction-claims, manufacturing-mrb,
+seller-vetting, tax-notices, trade-compliance, trucking-claims,
+trust-safety-appeals, underwriting-intake, utility-inspections,
+warranty-claims, workers-comp-claims — **all 27 authored packs are now deep
+v2.0.0** (investigation-framework, the library pack, was already data-free).
+Cross-verified: 27× lint 0 errors/0 warnings; 53 decision tables / 201 rules,
+every rule column validated against a dataset contract and every disposition
+code against the pack's catalog; live dry-run plans for all 27 surface
+`requires_binding` per dataset. Full live install e2e proven on card-disputes
+(wave 1) AND credit-disputes (wave 2): real tenant uploads → reuse×2 +
+explicit bind×1 → 0 failed → four-eyes semantic approval → dashboards
+materialized → macro rewrite to the bound dataset name confirmed in
+saved-query SQL.
 
 **Wave-2 governance patterns worth keeping:** decision tables never propose a
 clinical/fraud/regulatory determination — routing and expediting only. Packs

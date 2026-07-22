@@ -1,0 +1,42 @@
+# Second governed decision table (BRD 54): deterministic supplier-quality
+# investigation ROUTING — the supplier-facing complement to mrb_board_routing.
+# Operates ONLY on columns the nc-nonconformances binding contract carries
+# (detection_point, nc_type, severity); supplier identity and scorecard live
+# in nc-suppliers and are NOT case columns, so recurrence/scorecard judgment
+# stays with the Supplier Quality Engineer the rule routes to. Routing-only:
+# the outcome code is always quarantine_pending_analysis (hold the material,
+# open the investigation) — the return-to-supplier/SCAR determination itself,
+# like every material disposition, is a human four-eyes decision. Executes to
+# the same governed proposal path: the table proposes, the Quality Manager
+# decides.
+- identity: supplier_quality_routing
+  name: "Supplier-quality investigation routing"
+  rules:
+    # Supplier self-reported nonconformance: suspect stock may already be in
+    # the building — hold it and put the Supplier Quality Engineer on it.
+    - when:
+        - { column: detection_point, op: eq, value: supplier_notification }
+      then: { disposition_code: quarantine_pending_analysis, severity: high }
+      note: "Supplier-notified defect — quarantine suspect stock; supplier-quality investigation (SCAR is a human call)"
+    # Supplier-caused defect signature at the receiving boundary: material or
+    # dimensional escape caught at incoming inspection routes to the
+    # supplier-quality lane, where the SQE checks the supplier's SCAR history
+    # and scorecard before any return/SCAR determination.
+    - when:
+        - { column: detection_point, op: eq, value: incoming_inspection }
+        - { column: nc_type, op: in, value: [material_property, dimensional] }
+      then: { disposition_code: quarantine_pending_analysis, severity: medium }
+      note: "Incoming-inspection material/dimensional defect — hold at receiving; SQE reviews supplier history for a recurrence pattern"
+    # Severe incoming find of any type: do not let it reach stock while the
+    # supplier-quality review runs.
+    - when:
+        - { column: detection_point, op: eq, value: incoming_inspection }
+        - { column: severity, op: eq, value: high }
+      then: { disposition_code: quarantine_pending_analysis, severity: high }
+      note: "High-severity incoming defect — quarantine before stock; expedited supplier-quality review"
+  # default_outcome deliberately OMITTED: nonconformances detected in-process
+  # or at final inspection are internally-caused until a human investigation
+  # says otherwise — they stay in the standard triage queue with no
+  # rule-generated proposal (no neutral supplier-referral code exists, and
+  # return_to_supplier_scar is a material action this routing table must not
+  # propose).

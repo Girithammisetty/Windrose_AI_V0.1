@@ -1,26 +1,30 @@
 # trucking-claims capability pack — Core-neutral edition: cargo OS&D claims,
-# telematics safety-event review, and carrier vetting/fraud adjudication for
-# motor carriers, freight brokers, and 3PLs. Installable TODAY against
-# Datacern Core's public APIs via packctl; the manifest envelope follows
+# telematics safety-event review, and carrier vetting adjudication for motor
+# carriers, freight brokers, and 3PLs. Installable TODAY against Datacern
+# Core's public APIs via packctl/pack-service; the manifest envelope follows
 # BRD 23 (PKG-FR-001/003). Components the current Core cannot materialize are
 # declared under `deferred` — recorded in the install ledger, never faked.
+# v2.0.0 (no-dummy-data rule): the pack ships ZERO seed data — datasets are
+# binding CONTRACTS resolved to the tenant's REAL data at install; cases
+# arrive from real rows via case triggers/intake, not seeds; eval golden sets
+# are curated by the tenant from its own adjudicated history.
 pack_manifest: 1
 name: trucking-claims
-version: 1.0.0
+version: 2.0.0
 publisher: { id: pub-datacern, name: "Datacern Inc." }
 description: >-
   AI-assisted trucking and logistics claims & safety adjudication for motor
   carriers, freight brokers, and 3PLs: cargo OS&D claim triage with
-  Carmack-liability and filing-deadline awareness (9-month claim / 2-year
-  suit windows on standard bill-of-lading terms), reefer temperature-excursion
-  evidence workflow, carrier recovery filing, double-brokering and carrier
-  identity-theft fraud vetting, telematics safety-event review with
-  preventability-and-coaching discipline (litigation-discoverable decision
-  files), a claims-and-safety KPI semantic model and dashboards (pay rate,
-  denial rate, recovery rate, deadline runway, coaching closure, carrier
-  risk mix, on-time share), carrier-lane network analytics, Carmack/FMCSA
-  grounding memories, and shipment-anomaly + claim-outcome training
-  pipelines.
+  liability-framework and filing-deadline awareness (claim-notice and suit
+  windows are contract-configured on the tenant's bill-of-lading terms),
+  reefer temperature-excursion evidence workflow, carrier recovery filing,
+  carrier-identity and payment-change vetting review, telematics
+  safety-event review with evidence-first coaching discipline
+  (litigation-discoverable decision files), a claims-and-safety KPI semantic
+  model and dashboards (pay rate, denial rate, recovery rate, deadline
+  runway, coaching closure, carrier risk mix, on-time share), carrier-lane
+  network analytics, claims-practice grounding memories, and
+  shipment-anomaly + claim-outcome training pipelines.
 categories: [logistics, trucking, cargo_claims, safety, carrier_fraud]
 regulatory: [carmack_amendment, cfr49_part370, fmcsa_csa, bill_of_lading_terms]
 components:
@@ -38,21 +42,38 @@ components:
     - { file: "dashboards/carrier_risk_watch.yaml", identity: "carrier_risk_watch" }
   dispositions:
     - { file: "cases/dispositions.yaml", identity: "dispositions" }
-  cases:
-    - { file: "cases/queue.yaml", identity: "claims_safety_queue" }
+  case_fields:
+    - { file: "cases/fields.yaml", identity: "claim_fields" }
+  case_schemas:
+    - { file: "cases/schemas.yaml", identity: "cargo_claim_schema" }
+  ontology:
+    - { file: "ontology/entities.yaml", identity: "claims_ontology" }
+  decision_models:
+    - { file: "decisions/claim_exposure_routing.yaml", identity: "claim_exposure_routing" }
+    - { file: "decisions/claim_pattern_screen.yaml", identity: "claim_pattern_screen" }
   roles:
     - { file: "rbac/roles.yaml", identity: "roles" }
   agent_configs:
     - { file: "agents/configs.yaml", identity: "agent_configs" }
+  guardrails:
+    - { file: "agents/guardrails.yaml", identity: "agent_guardrails" }
   memories:
     - { file: "memories/grounding.yaml", identity: "grounding" }
   pipelines:
     - { file: "pipelines/templates.yaml", identity: "pipelines" }
+  display_labels:
+    - { file: "labels/overrides.yaml", identity: "label_overrides" }
+  model_archetypes:
+    - { file: "models/archetypes.yaml", identity: "model_blueprints" }
+  write_adapters:
+    - { file: "connections/write_adapters.yaml", identity: "sor_writeback" }
+  connection_templates:
+    - { file: "connections/sources.yaml", identity: "source_feeds" }
 deferred:
   - kind: agent_recipes
     reason: >-
       Bespoke LangGraph recipes (Cargo Claim Intake Copilot, Carrier Recovery
-      Builder, Double-Broker Fraud Screener, Filing-Deadline Sentinel,
+      Builder, Carrier Vetting Screener, Filing-Deadline Sentinel,
       Preventability Review Assistant) require agent-runtime graph-module
       registration (BRD 23 BR-12). This pack specializes the existing
       case-triage + analytics agents via TenantAgentConfig prompt_params +

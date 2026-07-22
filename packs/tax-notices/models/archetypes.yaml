@@ -1,0 +1,33 @@
+# Governed model blueprints (experiment-service inc9): the intended models
+# this vertical runs, independent of any trained artifact. Each corresponds
+# to a training pipeline this pack already ships (pipelines/templates.yaml),
+# so the blueprint and its implementation stay in one governed pair.
+- archetype_key: tx_notice_outcome_scorer
+  name: "Notice outcome scorer"
+  task_type: classification
+  target: disposition
+  description: >-
+    Supervised scorer over the tenant's adjudicated notices (tx-notices):
+    predicts the likely disposition from notice type, tax type, root cause,
+    jurisdiction level, amount band, and account context — the
+    deterministic-first pre-router for notice triage. Implemented by the
+    pack's xgboost training pipeline.
+  expected_metrics: { f1: 0.80 }
+  governance_notes: >-
+    Scores order the docket only — concessions, abatement requests, amended
+    returns, and payments are always four-eyes human decisions with
+    documented findings. Promotion requires eval-gate + Tax Compliance
+    Manager approval.
+- archetype_key: tx_account_anomaly_detector
+  name: "Tax account anomaly detector"
+  task_type: anomaly_detection
+  target: null
+  description: >-
+    Unsupervised surface scan over tx-accounts for registration gaps,
+    filing-history outliers, and jurisdictions drifting toward nexus
+    exposure. Implemented by the pack's isolation-forest training pipeline.
+  expected_metrics: {}
+  governance_notes: >-
+    Detector output opens review work, never a filing, payment, or
+    registration; flagged accounts route to the compliance queue for human
+    investigation.

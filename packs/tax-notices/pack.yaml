@@ -2,12 +2,16 @@
 # and exemption-certificate resolution for corporate tax departments,
 # tax-compliance BPOs/firms, multi-state retailers and SaaS sellers (sales
 # tax), and payroll providers. Installable TODAY against Datacern Core's
-# public APIs via packctl; the manifest envelope follows BRD 23
+# public APIs via packctl/pack-service; the manifest envelope follows BRD 23
 # (PKG-FR-001/003). Components the current Core cannot materialize are
 # declared under `deferred` — recorded in the install ledger, never faked.
+# v2.0.0 (no-dummy-data rule): the pack ships ZERO seed data — datasets are
+# binding CONTRACTS resolved to the tenant's REAL data at install; cases
+# arrive from real rows via case triggers/intake, not seeds; eval golden sets
+# are curated by the tenant from its own adjudicated history.
 pack_manifest: 1
 name: tax-notices
-version: 1.0.0
+version: 2.0.0
 publisher: { id: pub-datacern, name: "Datacern Inc." }
 description: >-
   AI-assisted corporate tax notice and exemption-certificate resolution:
@@ -38,16 +42,33 @@ components:
     - { file: "dashboards/root_cause_abatement.yaml", identity: "root_cause_abatement" }
   dispositions:
     - { file: "cases/dispositions.yaml", identity: "dispositions" }
-  cases:
-    - { file: "cases/queue.yaml", identity: "notice_queue" }
+  case_fields:
+    - { file: "cases/fields.yaml", identity: "notice_fields" }
+  case_schemas:
+    - { file: "cases/schemas.yaml", identity: "notice_schema" }
+  ontology:
+    - { file: "ontology/entities.yaml", identity: "notice_ontology" }
+  decision_models:
+    - { file: "decisions/deadline_docket_triage.yaml", identity: "deadline_docket_triage" }
+    - { file: "decisions/root_cause_review_routing.yaml", identity: "root_cause_review_routing" }
   roles:
     - { file: "rbac/roles.yaml", identity: "roles" }
   agent_configs:
     - { file: "agents/configs.yaml", identity: "agent_configs" }
+  guardrails:
+    - { file: "agents/guardrails.yaml", identity: "agent_guardrails" }
   memories:
     - { file: "memories/grounding.yaml", identity: "grounding" }
   pipelines:
     - { file: "pipelines/templates.yaml", identity: "pipelines" }
+  display_labels:
+    - { file: "labels/overrides.yaml", identity: "label_overrides" }
+  model_archetypes:
+    - { file: "models/archetypes.yaml", identity: "model_blueprints" }
+  write_adapters:
+    - { file: "connections/write_adapters.yaml", identity: "sor_writeback" }
+  connection_templates:
+    - { file: "connections/sources.yaml", identity: "source_feeds" }
 deferred:
   - kind: agent_recipes
     reason: >-

@@ -12,3 +12,11 @@
 - { code: request_missing_information,  label: "Request missing information from broker",                 category: inconclusive,   requires_note: true }
 - { code: refer_specialty_market,       label: "Refer to specialty / E&S market",                         category: other,          requires_note: true }
 - { code: close_broker_withdrawn,       label: "Close — broker withdrew the submission",                  category: benign,         requires_note: true }
+# escalate_referral_review is the NEUTRAL routing code the governed decision
+# tables target: it commits to no underwriting outcome — it only places the
+# submission in front of a human referral underwriter. Added in v2 so the
+# routing-only tables (decisions/) never propose an outcome-bearing code
+# (decline / E&S referral) themselves; quote, decline, and bind remain
+# four-eyes human underwriting authority under the carrier-configured
+# authority limits.
+- { code: escalate_referral_review,     label: "Escalate to underwriting referral review (human)",        category: inconclusive,   requires_note: true }

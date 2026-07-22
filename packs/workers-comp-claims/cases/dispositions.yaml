@@ -7,9 +7,12 @@
 # and fee-schedule questions to UR/bill review; escalate_siu_fraud sends
 # red-flag clusters to the Special Investigation Unit (benefits continue
 # unless disqualifying evidence develops); close_return_to_work records a
-# successful RTW closure.
+# successful RTW closure; escalate_senior_adjuster is a NEUTRAL routing code
+# (no determination implied) so deterministic routing tables can move a claim
+# to a senior adjuster without ever proposing an accept/deny outcome.
 - { code: accept_compensable,        label: "Accept — compensable (AOE/COE established)",          category: true_positive,  requires_note: true }
 - { code: deny_not_compensable,      label: "Deny — compensability not established",               category: false_positive, requires_note: true }
 - { code: refer_utilization_review,  label: "Refer to utilization review / bill review",           category: other,          requires_note: true }
 - { code: escalate_siu_fraud,        label: "Escalate to SIU — fraud red flags",                   category: inconclusive,   requires_note: true }
 - { code: close_return_to_work,      label: "Close — successful return to work",                   category: benign,         requires_note: true }
+- { code: escalate_senior_adjuster,  label: "Escalate — senior adjuster review (routing only)",    category: other,          requires_note: true }

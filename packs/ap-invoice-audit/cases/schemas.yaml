@@ -1,45 +1,21 @@
-# Typed case SCHEMAS (case-service case types, inc10). Each is a named case type
-# for the AP exception-audit workflow binding a DISTINCT field set — the per-type
-# keying the flat case_fields catalog (cases/fields.yaml) cannot express. These
-# document and govern the structured evidence each exception TYPE requires; the
-# shared case_fields set carries the cross-type fields.
-- schema_key: banking_change_verification
-  name: "Banking-change verification"
+# Governed typed case schema (case-service inc10): the AP invoice-exception
+# work item as a named case TYPE binding the adjudication field set, so intake
+# creates a structurally-complete exception case (not a generic case with
+# prose notes). Embedded field defs use {name, data_type, label, required};
+# names align with cases/fields.yaml and the ap_exceptions binding-contract
+# columns.
+- schema_key: ap_invoice_exception
+  name: "AP invoice exception"
   description: >-
-    BEC / vendor banking-change exception: the out-of-band verification
-    discipline before any remittance-detail change is accepted.
+    An accounts-payable invoice exception (duplicate, three-way-match gap,
+    price/quantity variance, banking-change or vendor-master anomaly)
+    investigated under the company's payment-control framework, with
+    payment-run deadline awareness and duplicate/credit recovery follow-up.
   fields:
-    - { name: verification_method, data_type: enum, label: "Verification method", required: true, options: [out_of_band_phone, vendor_portal, none] }
-    - { name: known_good_number_used, data_type: boolean, label: "Verified via the known-good number on the vendor master", required: true }
-    - { name: requester_domain_mismatch, data_type: boolean, label: "Requester domain differs from vendor-master contact" }
-    - { name: control_approver, data_type: string, label: "AP Controls Manager approver", required: true }
-- schema_key: duplicate_review
-  name: "Duplicate-pair review"
-  description: >-
-    Duplicate-invoice exception: the matched-pair evidence and shipment/PO
-    confirmation before a payment is blocked as a confirmed duplicate.
-  fields:
-    - { name: matched_invoice_id, data_type: string, label: "Matched paid invoice id", required: true }
-    - { name: match_basis, data_type: enum, label: "Match basis", required: true, options: [vendor_amount_date, ocr_confusable_number, po_line] }
-    - { name: shipment_confirmed, data_type: boolean, label: "Shipment count confirmed against the PO" }
-    - { name: recovered_amount, data_type: float, label: "Recovered amount (USD)" }
-- schema_key: shell_vendor_investigation
-  name: "Shell-vendor investigation"
-  description: >-
-    Suspected shell-vendor exception: vendor-master integrity + goods-receipt
-    evidence supporting a fraud-investigation escalation.
-  fields:
-    - { name: tin_verified, data_type: boolean, label: "TIN / W-9 verified", required: true }
-    - { name: sanctions_screened, data_type: boolean, label: "Sanctions screening complete", required: true }
-    - { name: address_collision, data_type: enum, label: "Remittance address collision", options: [none, employee_address, po_box, other_vendor] }
-    - { name: goods_receipt_exists, data_type: boolean, label: "Goods receipt exists" }
-- schema_key: price_variance_negotiation
-  name: "Price-variance negotiation"
-  description: >-
-    Price-variance exception: the PO-vs-invoice gap and the negotiated
-    partial-credit recovery.
-  fields:
-    - { name: po_unit_price, data_type: float, label: "PO unit price", required: true }
-    - { name: variance_pct, data_type: float, label: "Variance vs PO (%)", required: true }
-    - { name: credit_negotiated, data_type: boolean, label: "Vendor credit negotiated" }
-    - { name: recovered_amount, data_type: float, label: "Recovered amount (USD)" }
+    - { name: exception_type,    data_type: enum,    label: "Exception type",               required: true }
+    - { name: three_way_match,   data_type: enum,    label: "Three-way-match result",       required: false }
+    - { name: fraud_indicator,   data_type: enum,    label: "Fraud indicator",              required: false }
+    - { name: deadline_bucket,   data_type: enum,    label: "Payment-run deadline bucket",  required: false }
+    - { name: days_to_deadline,  data_type: integer, label: "Payment-run clock — days left", required: false }
+    - { name: invoice_amount,    data_type: float,   label: "Invoice amount (USD)",         required: true }
+    - { name: recovered_amount,  data_type: float,   label: "Recovered amount (USD)",       required: false }

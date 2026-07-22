@@ -1,0 +1,46 @@
+# Governed decision table (BRD 54) — deterministic, explainable, no-LLM
+# ROUTING of safety-exposed findings into the expedited crew-dispatch queue.
+# Operates ONLY on columns the ui_findings binding contract guarantees
+# (risk_zone, severity, finding_type, priority, days_to_deadline). It
+# EXECUTES to the same governed four-eyes proposal an agent produces: every
+# matched finding becomes a case.apply_disposition proposal the Asset Risk
+# Manager must approve — the table orders the queue, a human engineer
+# decides. This table NEVER proposes closing a finding (no close_* code
+# appears): closure of a safety-critical finding is a human four-eyes
+# engineering decision. Make-safe and remediation windows are
+# program-configured by the utility's inspection/mitigation program.
+# Outcome disposition_codes are validated against this workspace's
+# disposition catalog at install (dispositions install first).
+- identity: wildfire_dispatch_routing
+  name: "Wildfire-zone expedited dispatch routing"
+  rules:
+    # Extreme fire-threat zone + safety severity — front of the expedited queue.
+    - when:
+        - { column: risk_zone, op: eq, value: hftd_tier3 }
+        - { column: severity, op: eq, value: high }
+      then: { disposition_code: dispatch_immediate_repair, severity: critical }
+      note: "Tier-3 high fire-threat district + safety severity — expedited crew dispatch queue; human approves before any work order"
+    # Immediate-priority finding with its program-configured make-safe clock
+    # nearly expired — cannot wait for routine queue ordering.
+    - when:
+        - { column: priority, op: eq, value: immediate }
+        - { column: days_to_deadline, op: between, value: [0, 3] }
+      then: { disposition_code: dispatch_immediate_repair, severity: critical }
+      note: "Immediate-priority finding within 3 days of its program-configured make-safe deadline — expedite"
+    # Safety-severity gas leak indication — existing/probable-hazard profile.
+    - when:
+        - { column: finding_type, op: eq, value: leak_indication }
+        - { column: severity, op: eq, value: high }
+      then: { disposition_code: dispatch_immediate_repair, severity: critical }
+      note: "High-severity leak indication — existing/probable-hazard profile, immediate-response track"
+    # Elevated fire-threat zone + safety severity — expedited, one tier down.
+    - when:
+        - { column: risk_zone, op: eq, value: hftd_tier2 }
+        - { column: severity, op: eq, value: high }
+      then: { disposition_code: dispatch_immediate_repair, severity: high }
+      note: "Tier-2 elevated fire-threat district + safety severity — expedited dispatch queue"
+  # default_outcome deliberately OMITTED: this table is routing-only for the
+  # expedited-dispatch lane. A finding that matches no rule produces NO
+  # proposal and remains in the human triage worklist (and in scope for the
+  # verification/program routing table) — the table never guesses and never
+  # closes.

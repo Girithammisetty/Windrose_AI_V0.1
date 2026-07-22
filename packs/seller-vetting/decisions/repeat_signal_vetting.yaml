@@ -1,0 +1,46 @@
+# Second governed decision table (BRD 54): deterministic enhanced-vetting
+# routing for seller-level risk signals — the seller-conduct complement to
+# ip_claim_expedite. Operates ONLY on columns the sv-reviews binding
+# contract guarantees (review_type, claim_basis, days_to_deadline,
+# gmv_at_risk, severity). Same governance: every match becomes a four-eyes
+# case.apply_disposition proposal, and the ONLY code proposed is the
+# allegation-neutral routing code escalate_priority_review — a seller
+# suspension or network termination is NEVER a table output; it is a human
+# decision with a documented linkage/violation finding.
+#
+# Repeat-instance linkage (the same operator returning under new accounts)
+# is deliberately NOT expressed as rules: the single-review projection
+# carries no cross-account history, and cross-row linkage is what entity
+# resolution (BRD 56) plus the human investigator establish. The table
+# routes the SIGNALS (fraud alerts, KYB mismatches) to the enhanced-vetting
+# track; the finding is made there.
+- identity: repeat_signal_vetting
+  name: "Repeat-signal seller enhanced-vetting routing"
+  rules:
+    # Seller-fraud / linked-account alert (ML detector or KYB re-screen):
+    # route to enhanced vetting for linkage investigation. A network
+    # suspension needs multiple corroborated shared attributes — the human
+    # investigator assembles that file; the table only queues it.
+    - when:
+        - { column: review_type, op: eq, value: seller_fraud_alert }
+      then: { disposition_code: escalate_priority_review, severity: high }
+      note: "Seller-fraud / linked-account signal — enhanced-vetting track; any network suspension requires a human four-eyes decision naming the corroborated shared attributes"
+    # KYB verification mismatch with the verification clock nearly
+    # exhausted (INFORM-style: verify or restrict after notice — the
+    # restriction decision is human).
+    - when:
+        - { column: claim_basis, op: eq, value: kyb_mismatch }
+        - { column: days_to_deadline, op: between, value: [0, 3] }
+      then: { disposition_code: escalate_priority_review, severity: high }
+      note: "KYB mismatch with ≤3 days of verification clock — expedited human verification review; any selling restriction is a human decision after notice"
+    # High-exposure onboarding verification: a high-GMV seller book rides on
+    # the verification outcome — front-load the human review.
+    - when:
+        - { column: review_type, op: eq, value: onboarding_vetting }
+        - { column: gmv_at_risk, op: gte, value: 10000 }
+      then: { disposition_code: escalate_priority_review, severity: medium }
+      note: "High-exposure onboarding verification (GMV at risk ≥ $10,000) — enhanced-vetting track"
+  # default_outcome deliberately OMITTED (same reasoning as
+  # ip_claim_expedite): the remaining catalog codes are adjudication
+  # outcomes this routing table must never propose; unmatched reviews stay
+  # on the standard ranked worklist.

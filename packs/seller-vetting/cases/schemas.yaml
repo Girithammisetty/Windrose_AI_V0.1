@@ -1,0 +1,22 @@
+# Governed typed case schema (case-service inc10): the seller-vetting /
+# enforcement review work item as a named case TYPE binding the adjudication
+# field set, so intake creates a structurally-complete review case (not a
+# generic case with prose notes). Embedded field defs use {name, data_type,
+# label, required}; names align with cases/fields.yaml and the sv-reviews /
+# sv-sellers binding-contract columns.
+- schema_key: seller_risk_review
+  name: "Seller risk / IP-enforcement review"
+  description: >-
+    A marketplace trust-and-safety review over one listing and its seller:
+    counterfeit-takedown signal, rights-holder IP claim (allegation, not
+    finding), seller-fraud / linked-account alert, onboarding KYB
+    verification, or reinstatement request — adjudicated with response-clock
+    awareness and a four-eyes human disposition.
+  fields:
+    - { name: review_type,      data_type: enum,    label: "Review type",                          required: true }
+    - { name: claim_basis,      data_type: enum,    label: "Claim basis",                          required: true }
+    - { name: trigger_source,   data_type: enum,    label: "Trigger source",                       required: false }
+    - { name: product_vertical, data_type: enum,    label: "Product vertical",                     required: false }
+    - { name: kyb_verified,     data_type: enum,    label: "Seller KYB verification state",        required: false }
+    - { name: gmv_at_risk,      data_type: float,   label: "Listing GMV at risk (USD)",            required: false }
+    - { name: days_to_deadline, data_type: integer, label: "Response/takedown clock — days left",  required: false }

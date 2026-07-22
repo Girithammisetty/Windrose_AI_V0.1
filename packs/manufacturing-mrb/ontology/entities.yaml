@@ -1,0 +1,82 @@
+# Domain ontology (dataset-service inc11): the entity TYPES this vertical
+# operates on and their typed relationships — the type-level model behind the
+# nc-suppliers / nc-lots / nc-nonconformances binding contracts. Attribute
+# names match the contracts' required columns so the ontology describes data
+# the tenant actually binds; the MRB review entity models the adjudication
+# record the case workflow produces over a nonconformance.
+- entity_key: supplier
+  name: Supplier
+  description: >-
+    An external source of purchased material or processing, carrying its
+    quality-system certification, scorecard standing, and corrective-action
+    (SCAR) history.
+  attributes:
+    - { name: supplier_name, data_type: string }
+    - { name: tier, data_type: string, description: "tier_1 | tier_2 | tier_3" }
+    - { name: certification, data_type: string, description: "quality-system certification held (e.g. as9100 | iso13485 | iatf | iso9001)" }
+    - { name: scorecard, data_type: string, description: "green | yellow | red" }
+    - { name: prior_scars, data_type: string, description: "prior supplier-corrective-action band: none | 1_2 | 3_plus" }
+    - { name: approved, data_type: string, description: "on the approved supplier list: yes | no" }
+  relationships:
+    - { name: lots, target: lot, cardinality: has_many }
+- entity_key: part
+  name: "Part family"
+  description: >-
+    A family of manufactured part numbers sharing a design and process
+    (machined, casting, molded, pcb_assembly, harness, fastener), produced
+    for a program in traceable lots.
+  attributes:
+    - { name: part_family, data_type: string }
+    - { name: program, data_type: string }
+  relationships:
+    - { name: lots, target: lot, cardinality: has_many }
+- entity_key: lot
+  name: "Manufacturing lot"
+  description: >-
+    A traceable production or receiving lot of one part family from one
+    supplier; serialized lots carry unit-level traceability that bounds
+    containment sweeps.
+  attributes:
+    - { name: part_family, data_type: string }
+    - { name: program, data_type: string }
+    - { name: lot_size_band, data_type: string }
+    - { name: mfg_month, data_type: string }
+    - { name: serialized, data_type: string, description: "yes | no — unit-level traceability" }
+  relationships:
+    - { name: supplier, target: supplier, cardinality: belongs_to }
+    - { name: part, target: part, cardinality: belongs_to }
+    - { name: nonconformances, target: nonconformance, cardinality: has_many }
+- entity_key: nonconformance
+  name: Nonconformance
+  description: >-
+    A documented departure of material in one lot from its
+    quality-system-configured acceptance criteria, carrying detection point,
+    specification class, containment state, and the disposition-deadline
+    clock.
+  attributes:
+    - { name: nc_type, data_type: string }
+    - { name: detection_point, data_type: string }
+    - { name: spec_class, data_type: string, description: "critical_characteristic | major | minor" }
+    - { name: quantity_band, data_type: string }
+    - { name: severity, data_type: string }
+    - { name: containment, data_type: string }
+    - { name: est_cost_impact, data_type: float }
+    - { name: days_to_deadline, data_type: integer }
+  relationships:
+    - { name: lot, target: lot, cardinality: belongs_to }
+    - { name: mrb_review, target: mrb_review, cardinality: has_one }
+- entity_key: mrb_review
+  name: "MRB disposition review"
+  description: >-
+    The Material Review Board adjudication record over one nonconformance:
+    the governed human determination (rework, release, use-as-is concession,
+    quarantine, or supplier return) with its justification and
+    re-verification evidence. Always a four-eyes human decision within the
+    board's delegated authority.
+  attributes:
+    - { name: disposition, data_type: string }
+    - { name: status, data_type: string, description: "open | closed" }
+    - { name: filed_month, data_type: string }
+    - { name: age_days, data_type: integer }
+  relationships:
+    - { name: nonconformance, target: nonconformance, cardinality: belongs_to }

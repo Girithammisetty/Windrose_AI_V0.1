@@ -1,0 +1,37 @@
+# Governed model blueprints (experiment-service inc9): the intended models
+# this vertical runs, independent of any trained artifact. Each corresponds
+# to a training pipeline this pack already ships (pipelines/templates.yaml),
+# so the blueprint and its implementation stay in one governed pair.
+- archetype_key: tc_review_outcome_scorer
+  name: "Review outcome scorer"
+  task_type: classification
+  target: disposition
+  description: >-
+    Supervised scorer over the tenant's human-adjudicated review items
+    (tc-review-items): predicts the likely disposition from item type,
+    declared HS chapter, product category, origin, valuation band, screening
+    list, match score, and duty risk — the deterministic-first pre-router
+    that ranks the review queue. Implemented by the pack's xgboost training
+    pipeline.
+  expected_metrics: { f1: 0.80 }
+  governance_notes: >-
+    Scores prioritize review only — the model NEVER confirms a sanctions
+    hit, holds or releases a shipment, files or corrects an entry, or makes
+    a voluntary-disclosure call; every determination remains a four-eyes
+    human decision by the analyst and the Trade Compliance Manager.
+    Promotion requires eval-gate + manager approval.
+- archetype_key: tc_shipment_anomaly_detector
+  name: "Shipment anomaly detector"
+  task_type: anomaly_detection
+  target: null
+  description: >-
+    Unsupervised surface scan over tc-shipments for valuation outliers and
+    sourcing-lane shifts (an importer's volume migrating to a different
+    origin lane — a transshipment-review trigger). Implemented by the pack's
+    isolation-forest training pipeline.
+  expected_metrics: {}
+  governance_notes: >-
+    Detector output OPENS review work, never adverse action: flagged
+    shipments route to the compliance review queue for human investigation
+    and never trigger a hold, a corrected entry, or any communication with
+    an authority. Promotion requires manager approval (four-eyes).

@@ -1,0 +1,72 @@
+# Domain ontology (dataset-service inc11): the entity TYPES this vertical
+# operates on and their typed relationships — the type-level model behind the
+# gb-claimants / gb-claims / gb-determinations binding contracts. Attribute
+# names match the contracts' required_columns so the ontology describes data
+# the bound tenant datasets actually carry.
+- entity_key: claimant
+  name: Claimant
+  description: >-
+    The person applying for or receiving benefits — the party every
+    due-process protection attaches to (notice, hearing rights, language
+    access, vulnerable-population care).
+  attributes:
+    - { name: claimant_name, data_type: string }
+    - { name: county, data_type: string }
+    - { name: prior_claims_band, data_type: string, description: "none | 1_2 | 3_plus" }
+    - { name: identity_verified, data_type: string, description: "yes | no" }
+    - { name: vulnerable_population, data_type: string, description: "yes | no — heightened due-process care" }
+    - { name: language, data_type: string, description: "preferred notice language" }
+  relationships:
+    - { name: claims, target: benefit_claim, cardinality: has_many }
+- entity_key: benefit_claim
+  name: "Benefit claim"
+  description: >-
+    An application or continuing claim under one benefit program
+    (unemployment, SNAP, Medicaid eligibility, TANF, state disability).
+  attributes:
+    - { name: program, data_type: string }
+    - { name: filing_month, data_type: string }
+    - { name: weekly_amount_band, data_type: string }
+    - { name: claim_context, data_type: string, description: "employer_contested | shared_address | ..." }
+    - { name: verification_docs, data_type: string, description: "complete | partial | missing" }
+  relationships:
+    - { name: claimant, target: claimant, cardinality: belongs_to }
+    - { name: determinations, target: determination, cardinality: has_many }
+- entity_key: determination
+  name: "Eligibility determination"
+  description: >-
+    An adjudication event on a claim — initial eligibility, redetermination,
+    or overpayment — carrying the issue, the program-configured processing
+    clock, and the human disposition.
+  attributes:
+    - { name: determination_type, data_type: string }
+    - { name: issue_type, data_type: string }
+    - { name: severity, data_type: string }
+    - { name: status, data_type: string, description: "open | closed" }
+    - { name: disposition, data_type: string }
+    - { name: days_to_deadline, data_type: integer }
+    - { name: age_days, data_type: integer }
+  relationships:
+    - { name: claim, target: benefit_claim, cardinality: belongs_to }
+    - { name: appeal, target: appeal, cardinality: has_one }
+    - { name: overpayment, target: overpayment, cardinality: has_one }
+- entity_key: appeal
+  name: "Appeal (fair hearing)"
+  description: >-
+    The claimant's challenge to a determination, decided by an impartial
+    hearing officer on the record — the outcome is a human hearing decision.
+  attributes:
+    - { name: appeal_outcome, data_type: string, description: "pending | upheld | overturned | not_applicable" }
+    - { name: days_to_deadline, data_type: integer, description: "hearing-packet runway" }
+  relationships:
+    - { name: determination, target: determination, cardinality: belongs_to }
+- entity_key: overpayment
+  name: Overpayment
+  description: >-
+    An established or alleged benefit overpayment on a determination —
+    fault analysis (agency error vs claimant fault) precedes any recovery,
+    and waiver review applies the equity-and-good-conscience standard.
+  attributes:
+    - { name: overpayment_amount, data_type: float }
+  relationships:
+    - { name: determination, target: determination, cardinality: belongs_to }

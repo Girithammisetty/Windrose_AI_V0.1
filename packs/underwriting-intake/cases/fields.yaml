@@ -1,0 +1,54 @@
+# Typed custom case fields (case-service CASE-FR-022) — the submission-triage
+# work item's real intake attributes, typed so the case form validates them and
+# decision surfaces can read them structurally instead of parsing notes.
+# data_type is IMMUTABLE after creation (case-service) — chosen deliberately.
+# Enum options mirror the uw-submissions binding-contract landing values so
+# field data and dataset agree; premium and TIV are captured as true floats on
+# the case even though the dataset lands banded, so triage ordering can use
+# exact dollars where the broker supplied them.
+- name: line_of_business
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Line of business"
+    options: [commercial_auto, cyber, general_liability, professional, property, workers_comp]
+    required: false
+- name: appetite_fit
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Appetite fit (carrier-configured appetite statement)"
+    options: [in_appetite, marginal, out_of_appetite, pending]
+    required: false
+- name: completeness
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "File completeness"
+    options: [complete, missing_apps, missing_loss_runs, missing_sov]
+    required: false
+- name: broker_tier
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Broker tier"
+    options: [tier_1, tier_2, tier_3]
+    required: false
+- name: estimated_premium
+  data_type: float
+  purpose: both
+  field_meta:
+    label: "Estimated annual premium (USD)"
+    required: false
+- name: total_insured_value
+  data_type: float
+  purpose: both
+  field_meta:
+    label: "Total insured value (USD)"
+    required: false
+- name: days_to_deadline
+  data_type: integer
+  purpose: both
+  field_meta:
+    label: "Broker needed-by runway (days)"
+    required: false

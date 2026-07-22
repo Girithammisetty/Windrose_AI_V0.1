@@ -1,0 +1,21 @@
+# Governed typed case schema (case-service inc10): the submission-triage work
+# item as a named case TYPE binding the intake field set, so intake creates a
+# structurally-complete triage case (not a generic case with prose notes).
+# Embedded field defs use {name, data_type, label, required}; names align with
+# cases/fields.yaml and the uw-submissions binding-contract columns.
+- schema_key: submission_triage
+  name: "Underwriting submission triage"
+  description: >-
+    A commercial-lines submission working through clearance, appetite fit,
+    and completeness triage against the carrier-configured appetite statement
+    and authority framework — routed to an underwriter queue, broker
+    outreach, or human referral review; quote/decline/bind decisions remain
+    human underwriting authority.
+  fields:
+    - { name: line_of_business,    data_type: enum,    label: "Line of business",                  required: true }
+    - { name: appetite_fit,        data_type: enum,    label: "Appetite fit (carrier-configured)",  required: false }
+    - { name: completeness,        data_type: enum,    label: "File completeness",                  required: false }
+    - { name: broker_tier,         data_type: enum,    label: "Broker tier",                        required: false }
+    - { name: estimated_premium,   data_type: float,   label: "Estimated annual premium (USD)",     required: false }
+    - { name: total_insured_value, data_type: float,   label: "Total insured value (USD)",          required: false }
+    - { name: days_to_deadline,    data_type: integer, label: "Broker needed-by runway (days)",     required: false }

@@ -1,0 +1,48 @@
+# Second governed decision table (BRD 54): deterministic clock-runway
+# escalation — the deadline complement to screening_hit_routing. Operates
+# ONLY on bs_reviews binding-contract columns (status, days_to_deadline,
+# deadline_bucket, severity) and executes to the same governed four-eyes
+# proposal path: the table proposes a priority-queue escalation, a human
+# approves it, and the underlying decision (report, suppress, send or hold a
+# pre-adverse or adverse-action notice) is ALWAYS made by the human
+# adjudicator and the Screening Operations Manager. The runway thresholds
+# are process-configured bands over the tenant's own days_to_deadline /
+# deadline_bucket columns — not regulatory day-counts.
+- identity: adverse_action_clock_escalation
+  name: "Adverse-action clock escalation"
+  rules:
+    # Tightest process-configured runway band — leads the queue, always.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: days_to_deadline, op: between, value: [0, 3] }
+      then: { disposition_code: escalate_adjudication_review, severity: critical }
+      note: >-
+        Open review inside the tightest process-configured runway band on
+        its adverse-action or dispute clock — escalate to the priority
+        adjudication queue now so the window never lapses silently. What
+        happens on the clock (hold the notice, resolve the dispute, close
+        the review) is the human's decision, never this table's.
+    # High-severity hit in the program's own tightest deadline bucket.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: deadline_bucket, op: eq, value: 0_3_days }
+        - { column: severity, op: eq, value: high }
+      then: { disposition_code: escalate_adjudication_review, severity: critical }
+      note: >-
+        High-severity hit already bucketed in the program's tightest
+        deadline band — priority human review; catches rows whose numeric
+        runway column is absent or stale but whose bucket says the clock is
+        nearly out.
+    # High-severity hits with mid runway move up ahead of the routine book.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: severity, op: eq, value: high }
+        - { column: deadline_bucket, op: eq, value: 4_10_days }
+      then: { disposition_code: escalate_adjudication_review, severity: high }
+      note: >-
+        High-severity hit with a mid-band runway — move it ahead of the
+        routine book so the human reaches it before the clock tightens; the
+        adjudication itself stays with the human.
+  # default_outcome deliberately OMITTED: reviews outside the escalation
+  # bands remain in the normal worklist untouched — the table prioritizes,
+  # it never adjudicates.

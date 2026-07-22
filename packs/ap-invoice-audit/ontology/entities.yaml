@@ -1,81 +1,66 @@
-# Domain ontology (dataset-service entity-type registry, inc11). The AP
-# invoice-audit vertical's entity TYPES with their attributes and typed
-# RELATIONSHIPS to each other — the type-level domain model (a Vendor has many
-# Invoices; an Invoice belongs to a PaymentRun; an Exception is raised on an
-# Invoice). Distinct from the flat dataset-derived semantic entities and from
-# entity RESOLUTION (which resolves instances of these types). Grounds agent
-# reasoning and documents the governed domain graph.
+# Domain ontology (dataset-service inc11): the entity TYPES this vertical
+# operates on and their typed relationships — the type-level model behind the
+# ap_vendors / ap_invoices / ap_exceptions binding contracts. Attribute names
+# are drawn strictly from the contract columns (data/datasets.yaml) so the
+# ontology describes data the bound datasets actually carry.
 - entity_key: vendor
   name: Vendor
-  description: "A supplier the organization pays. The fraud surface for shell-vendor and BEC banking-change schemes."
+  description: >-
+    A supplier on the vendor master — the surface for shell-vendor and
+    banking-change (BEC) schemes, screened via TIN verification, sanctions
+    screening and master-data-change history.
   attributes:
-    - { name: vendor_id, data_type: string }
-    - { name: name, data_type: string }
-    - { name: tenure_days, data_type: integer }
-    - { name: tin_verified, data_type: boolean }
-    - { name: sanctions_screened, data_type: boolean }
+    - { name: vendor_name, data_type: string }
+    - { name: country, data_type: string }
+    - { name: tenure_band, data_type: string, description: "new_under_1y | 1_3_years | over_3_years" }
+    - { name: spend_tier, data_type: string }
+    - { name: master_data_changes, data_type: string, description: "none | one | multiple" }
+    - { name: w9_tin_verified, data_type: string, description: "yes | no" }
+    - { name: sanctions_screened, data_type: string, description: "yes | no" }
   relationships:
-    - { name: bank_accounts, target: vendor_bank_account, cardinality: has_many }
     - { name: invoices, target: invoice, cardinality: has_many }
-- entity_key: vendor_bank_account
-  name: VendorBankAccount
-  description: "Remittance banking details for a vendor. A change request near a payment run is the BEC signature."
-  attributes:
-    - { name: account_ref, data_type: string }
-    - { name: verified_out_of_band, data_type: boolean }
-  relationships:
-    - { name: vendor, target: vendor, cardinality: belongs_to }
-- entity_key: purchase_order
-  name: PurchaseOrder
-  description: "What was ordered and at what price — one leg of the three-way match."
-  attributes:
-    - { name: po_number, data_type: string }
-    - { name: unit_price, data_type: float }
-  relationships:
-    - { name: vendor, target: vendor, cardinality: belongs_to }
-    - { name: goods_receipts, target: goods_receipt, cardinality: has_many }
-- entity_key: goods_receipt
-  name: GoodsReceipt
-  description: "What actually arrived — the receipt leg of the three-way match."
-  attributes:
-    - { name: receipt_id, data_type: string }
-    - { name: quantity, data_type: integer }
-  relationships:
-    - { name: purchase_order, target: purchase_order, cardinality: belongs_to }
 - entity_key: invoice
   name: Invoice
-  description: "A vendor bill. Matched against its PO and goods receipt within tolerances before payment."
+  description: >-
+    A vendor bill on the AP register, matched against its PO and goods
+    receipt within company-configured tolerances before payment.
   attributes:
-    - { name: invoice_id, data_type: string }
-    - { name: vendor_invoice_number, data_type: string }
-    - { name: amount, data_type: float }
+    - { name: vendor_invoice_no, data_type: string }
+    - { name: category, data_type: string }
+    - { name: po_flag, data_type: string, description: "yes | no — non-PO invoices lack a three-way-match anchor" }
+    - { name: payment_terms, data_type: string }
+    - { name: invoice_month, data_type: string }
+    - { name: approval_route, data_type: string, description: "auto_approved | single_approver | dual_approver" }
+    - { name: currency, data_type: string }
   relationships:
     - { name: vendor, target: vendor, cardinality: belongs_to }
-    - { name: purchase_order, target: purchase_order, cardinality: references }
-    - { name: payment_run, target: payment_run, cardinality: references }
-- entity_key: payment_run
-  name: PaymentRun
-  description: "A scheduled batch that disburses invoices. Its deadline drives triage urgency; a block holds only the payment at risk."
-  attributes:
-    - { name: run_id, data_type: string }
-    - { name: run_date, data_type: date }
-  relationships:
-    - { name: invoices, target: invoice, cardinality: has_many }
+    - { name: exceptions, target: exception, cardinality: has_many }
 - entity_key: exception
-  name: Exception
-  description: "A control exception raised on an invoice (duplicate, banking-change, shell-vendor, split-invoicing, price variance) that a human triages."
+  name: "AP exception"
+  description: >-
+    A control exception raised on an invoice (duplicate, match gap, price or
+    quantity variance, banking-change or vendor-master anomaly), carrying the
+    payment-run clock and the human adjudication outcome.
   attributes:
-    - { name: exception_id, data_type: string }
     - { name: exception_type, data_type: string }
-    - { name: fraud_indicator, data_type: string }
+    - { name: three_way_match, data_type: string, description: "matched | po_gap | receipt_gap | price_gap" }
+    - { name: fraud_indicator, data_type: string, description: "none | bec_suspect | shell_vendor_suspect | split_invoicing" }
+    - { name: severity, data_type: string }
+    - { name: status, data_type: string, description: "open | closed" }
+    - { name: disposition, data_type: string }
+    - { name: age_days, data_type: integer }
+    - { name: days_to_deadline, data_type: integer }
+    - { name: deadline_bucket, data_type: string }
+    - { name: invoice_amount, data_type: float }
   relationships:
-    - { name: invoice, target: invoice, cardinality: references }
-    - { name: recovery_claim, target: recovery_claim, cardinality: has_many }
-- entity_key: recovery_claim
-  name: RecoveryClaim
-  description: "A duplicate-payment recovery or negotiated vendor credit closing an exception."
+    - { name: invoice, target: invoice, cardinality: belongs_to }
+    - { name: recovery, target: recovery, cardinality: has_one }
+- entity_key: recovery
+  name: Recovery
+  description: >-
+    The dollars recovered or prevented when an exception closes — a blocked
+    duplicate before disbursement or a negotiated vendor credit.
   attributes:
-    - { name: claim_id, data_type: string }
     - { name: recovered_amount, data_type: float }
   relationships:
     - { name: exception, target: exception, cardinality: belongs_to }

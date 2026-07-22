@@ -2,12 +2,16 @@
 # benefits eligibility adjudication & appeals for state workforce/human-
 # services agencies, county eligibility offices, and government BPO
 # contractors. Installable TODAY against Datacern Core's public APIs via
-# packctl; the manifest envelope follows BRD 23 (PKG-FR-001/003).
-# Components the current Core cannot materialize are declared under
-# `deferred` — recorded in the install ledger, never faked.
+# packctl/pack-service; the manifest envelope follows BRD 23
+# (PKG-FR-001/003). Components the current Core cannot materialize are
+# declared under `deferred` — recorded in the install ledger, never faked.
+# v2.0.0 (no-dummy-data rule): the pack ships ZERO seed data — datasets are
+# binding CONTRACTS resolved to the tenant's REAL data at install; cases
+# arrive from real rows via case triggers/intake, not seeds; eval golden
+# sets are curated by the tenant from its own adjudicated history.
 pack_manifest: 1
 name: benefits-appeals
-version: 1.0.0
+version: 2.0.0
 publisher: { id: pub-datacern, name: "Datacern Inc." }
 description: >-
   AI-assisted eligibility adjudication and appeals workflow for government
@@ -40,16 +44,33 @@ components:
     - { file: "dashboards/integrity_overpayments.yaml", identity: "integrity_overpayments" }
   dispositions:
     - { file: "cases/dispositions.yaml", identity: "dispositions" }
-  cases:
-    - { file: "cases/queue.yaml", identity: "determination_queue" }
+  case_fields:
+    - { file: "cases/fields.yaml", identity: "determination_fields" }
+  case_schemas:
+    - { file: "cases/schemas.yaml", identity: "determination_schemas" }
+  ontology:
+    - { file: "ontology/entities.yaml", identity: "benefits_ontology" }
+  decision_models:
+    - { file: "decisions/expedited_docket_routing.yaml", identity: "expedited_docket_routing" }
+    - { file: "decisions/verification_outreach_routing.yaml", identity: "verification_outreach_routing" }
   roles:
     - { file: "rbac/roles.yaml", identity: "roles" }
   agent_configs:
     - { file: "agents/configs.yaml", identity: "agent_configs" }
+  guardrails:
+    - { file: "agents/guardrails.yaml", identity: "agent_guardrails" }
   memories:
     - { file: "memories/grounding.yaml", identity: "grounding" }
   pipelines:
     - { file: "pipelines/templates.yaml", identity: "pipelines" }
+  display_labels:
+    - { file: "labels/overrides.yaml", identity: "label_overrides" }
+  model_archetypes:
+    - { file: "models/archetypes.yaml", identity: "model_blueprints" }
+  write_adapters:
+    - { file: "connections/write_adapters.yaml", identity: "sor_writeback" }
+  connection_templates:
+    - { file: "connections/sources.yaml", identity: "source_feeds" }
 deferred:
   - kind: agent_recipes
     reason: >-

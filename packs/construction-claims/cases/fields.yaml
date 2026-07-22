@@ -1,0 +1,55 @@
+# Typed custom case fields (case-service CASE-FR-022) — the claim work item's
+# real adjudication attributes, typed so the case form validates them and
+# decision surfaces can read them structurally instead of parsing notes.
+# data_type is IMMUTABLE after creation (case-service) — chosen deliberately.
+# Names and enum options mirror the cc_claims binding-contract columns so
+# field data and the bound dataset agree.
+- name: claim_type
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Claim type"
+    options: [acceleration, change_order_request, defect_backcharge,
+              delay_claim, differing_site_conditions, payment_dispute]
+    required: false
+- name: entitlement_basis
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Asserted entitlement basis"
+    options: [design_change, owner_directive, site_conditions,
+              spec_ambiguity, subcontractor_default, weather]
+    required: false
+- name: notice_timely
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Notice timeliness (per the contract's notice provision)"
+    # quoted so YAML keeps the dataset's literal yes/no strings, not booleans
+    options: ["yes", "no", disputed]
+    required: false
+- name: schedule_impact
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Asserted schedule impact"
+    options: [none, days_15, days_30_plus]
+    required: false
+- name: claimed_amount
+  data_type: float
+  purpose: both
+  field_meta:
+    label: "Claimed amount (USD)"
+    required: false
+- name: approved_amount
+  data_type: float
+  purpose: both
+  field_meta:
+    label: "Approved amount (USD)"
+    required: false
+- name: days_to_deadline
+  data_type: integer
+  purpose: both
+  field_meta:
+    label: "Contract-configured response window — days left"
+    required: false

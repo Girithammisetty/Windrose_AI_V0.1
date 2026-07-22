@@ -1,0 +1,45 @@
+# Second governed decision table (BRD 54): deterministic dealer-pattern and
+# field-quality ROUTING — the surveillance complement to claim_intake_routing.
+# Operates ONLY on wa_claims binding-contract columns (labor_op_band,
+# claim_amount, usage_band, severity, failure_mode, claim_type). ROUTING
+# ONLY: escalate_dealer_audit places a claim in the dealer-audit program's
+# review queue and escalate_claim_review names the quality-engineering queue
+# in its note — a statistical pattern is a signal, not proof, so each claim
+# is still adjudicated by a human on its own evidence, and the table never
+# proposes paying, denying, or charging back anyone. Executes to the same
+# governed four-eyes proposal path.
+- identity: dealer_pattern_audit_routing
+  name: "Dealer pattern and field-quality audit routing"
+  rules:
+    # Labor-op stacking on a material amount — the classic padding signal.
+    - when:
+        - { column: labor_op_band, op: eq, value: three_plus_ops }
+        - { column: claim_amount, op: gte, value: 1500 }
+      then: { disposition_code: escalate_dealer_audit, severity: high }
+      note: "Three-plus labor ops at material value (program-configured) — dealer-audit review; signal, not proof"
+    # Labor-op stacking at lower value still enters the audit sample.
+    - when:
+        - { column: labor_op_band, op: eq, value: three_plus_ops }
+      then: { disposition_code: escalate_dealer_audit, severity: medium }
+      note: "Labor-op stacking — include in the dealer-audit sample; claim still adjudicated on its own evidence"
+    # Usage meter over the program limit on a repair claim — meter-consistency check.
+    - when:
+        - { column: usage_band, op: eq, value: over_limit }
+        - { column: claim_type, op: in, value: [repair, replacement] }
+      then: { disposition_code: escalate_dealer_audit, severity: medium }
+      note: "Usage meter over program limit on a paid-repair filing — meter-consistency audit review"
+    # Early low-hours severe failures are field-quality signals, not dealer issues.
+    - when:
+        - { column: usage_band, op: eq, value: under_250_hrs }
+        - { column: severity, op: eq, value: high }
+      then: { disposition_code: escalate_claim_review, severity: high }
+      note: "Severe failure under 250 hours — quality-engineering review queue (build-batch early-warning check)"
+    # Wear-mode failures at low hours suggest a component/supplier issue.
+    - when:
+        - { column: failure_mode, op: in, value: [seal_leak, premature_wear] }
+        - { column: usage_band, op: eq, value: under_250_hrs }
+      then: { disposition_code: escalate_claim_review, severity: medium }
+      note: "Wear-class failure at low hours — quality-engineering review for supplier/part cluster analysis"
+  # No default_outcome ON PURPOSE: this is a surveillance overlay — a claim
+  # that matches no pattern rule simply stays on the intake-routing path
+  # (claim_intake_routing) instead of being force-routed here.

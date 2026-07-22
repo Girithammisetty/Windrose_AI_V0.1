@@ -1,40 +1,32 @@
-# Model archetypes (experiment-service governed blueprints, inc9). Each archetype
-# is the INTENDED-model spec for the AP invoice-audit vertical — task, target,
-# expected metrics, governance expectations — declared independent of any trained
-# artifact. The pack's pipeline seeds (isolation_forest anomaly + xgboost outcome
-# scorer) and the ml-engineer agent fulfil these; the archetype is the governed
-# catalog entry the model must satisfy before promotion.
-- archetype_key: duplicate_pair_confidence
-  name: "Duplicate invoice-pair confidence"
-  task_type: pairwise_binary_classification
-  target: is_duplicate_pair
+# Governed model blueprints (experiment-service inc9): the intended models this
+# vertical runs, independent of any trained artifact. Each corresponds to a
+# training pipeline this pack already ships (pipelines/templates.yaml), so the
+# blueprint and its implementation stay in one governed pair.
+- archetype_key: ap_exception_outcome_scorer
+  name: "Exception outcome scorer"
+  task_type: classification
+  target: disposition
   description: >-
-    Scores whether two invoices are a duplicate pair (same obligation billed
-    twice) from vendor, amount, date and OCR-confusable invoice-number distance —
-    the pre-router for the duplicate-payment recovery workflow.
-  expected_metrics:
-    precision_min: 0.95
-    recall_min: 0.80
-    primary: precision
+    Supervised scorer over adjudicated exceptions (ap-exceptions): predicts
+    the likely disposition from exception type, three-way-match result, fraud
+    indicator, amount and deadline runway — the deterministic-first pre-router
+    for exception triage. Implemented by the pack's xgboost training pipeline.
+  expected_metrics: { f1: 0.80 }
   governance_notes: >-
-    A duplicate call only HOLDS a payment for human confirmation; it never blocks
-    or releases autonomously. False positives are cheaper than a double payment,
-    so precision is the promotion gate. Four-eyes on every payment block stands.
-- archetype_key: vendor_fraud_risk_score
-  name: "Vendor fraud-risk score"
-  task_type: binary_classification
-  target: vendor_fraud_escalation
+    Payment-decision relevant: scores order the review queue only — every
+    determination (block, release, credit, escalation) remains a four-eyes
+    human decision by the AP Controls Manager. Promotion requires eval-gate +
+    manager approval.
+- archetype_key: ap_invoice_anomaly_detector
+  name: "Invoice anomaly detector"
+  task_type: anomaly_detection
+  target: null
   description: >-
-    Scores a vendor/invoice for shell-vendor and BEC banking-change fraud
-    indicators (vendor tenure, TIN/sanctions status, address collisions,
-    sequential invoice numbering, banking-change timing vs the payment run) to
-    prioritise the fraud-escalation queue.
-  expected_metrics:
-    roc_auc_min: 0.85
-    recall_min: 0.75
-    primary: recall
+    Unsupervised surface scan over the invoice register (ap-invoices) for
+    duplicate resubmissions, threshold-clustered invoice strings and
+    new-vendor billing bursts. Implemented by the pack's isolation-forest
+    training pipeline.
+  expected_metrics: {}
   governance_notes: >-
-    Advisory only — the score prioritises an investigations handoff, never a
-    payment decision. Banking-change acceptance always requires documented
-    out-of-band verification by a human. Model card must record the fairness
-    review across vendor categories before promotion.
+    Detector output opens review work, never a payment action; flagged
+    invoices route to the exception worklist for human investigation.

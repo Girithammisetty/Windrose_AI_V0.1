@@ -1,0 +1,25 @@
+# Governed source-connector templates (ingestion-service inc13): INCOMING
+# connections pre-declared with skip_test + EMPTY secrets, so the carrier's
+# expected feeds exist as governed starting points the tenant completes with
+# real hosts/credentials in Data → Connections. Nothing is polled at install.
+# The SFTP drop is the broker submission channel — ACORD-form intake is
+# decoded per BRD 57 (standards interop) where applicable before landing in
+# the uw-submissions shape; the S3 feed carries policy-admin extracts for the
+# account book and insured registry.
+- name: "Broker submission drop (SFTP)"
+  connector_type: sftp
+  direction: incoming
+  config:
+    host: "broker-gateway.example.invalid"
+    port: 22
+    username: datacern_ingest
+    root_directory: "/outbound/submissions"
+- name: "Policy admin extracts (S3)"
+  connector_type: s3
+  direction: incoming
+  config:
+    region: us-east-1
+    bucket: policy-admin-extracts
+    root_prefix: "daily/"
+    file_format: csv
+    glob: "*.csv"

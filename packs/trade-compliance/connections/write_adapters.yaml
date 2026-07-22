@@ -1,0 +1,20 @@
+# Governed SoR write-back adapters (ingestion-service inc12): OUTGOING
+# connections declared with skip_test + EMPTY secrets — the tenant completes
+# real credentials/endpoints in Data → Connections, and every write executes
+# proposal-mode with four-eyes (no autonomous SoR change; a status sync never
+# holds or releases a shipment by itself). The URLs/hosts are placeholders
+# the tenant replaces; nothing is called at install.
+- name: "Customs broker entry review status sync"
+  connector_type: http_api
+  direction: outgoing
+  config:
+    method: POST
+    url: "https://broker-gateway.example.invalid/api/v1/entries/review-status"
+    headers: { Content-Type: "application/json" }
+- name: "GTM platform screening disposition sync"
+  connector_type: http_api
+  direction: outgoing
+  config:
+    method: POST
+    url: "https://gtm-platform.example.invalid/api/v1/screening/dispositions"
+    headers: { Content-Type: "application/json" }

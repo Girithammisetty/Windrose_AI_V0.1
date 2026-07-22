@@ -1,0 +1,52 @@
+# Governed decision table (BRD 54) — deterministic, explainable, no-LLM
+# ROUTING over the wa_claims binding-contract columns (claim_type,
+# in_warranty, labor_op_band, severity, days_to_deadline, claim_amount).
+# ROUTING ONLY: every outcome is a neutral queue placement
+# (escalate_claim_review) that EXECUTES to the same governed four-eyes
+# case.apply_disposition proposal an agent produces — the table never
+# proposes approving, denying, adjusting, or charging back a claim; the
+# Warranty Operations Manager and analysts make every determination.
+# Dollar/day thresholds are PROGRAM-CONFIGURED starting points the tenant
+# tunes to its dealer agreements, not legal or network mandates. Outcome
+# disposition_codes are validated against this workspace's disposition
+# catalog at install (dispositions installs first).
+- identity: claim_intake_routing
+  name: "Warranty claim intake routing"
+  rules:
+    # Payment-decision clock nearly spent — a human must decide now.
+    - when:
+        - { column: days_to_deadline, op: between, value: [0, 3] }
+      then: { disposition_code: escalate_claim_review, severity: critical }
+      note: "Payment-decision runway ≤ 3 days (program-configured) — front of the human review queue"
+    # Recall-adjacent claims route to the safety campaign owner, never a
+    # table outcome — safety routing is always a human call.
+    - when:
+        - { column: claim_type, op: eq, value: recall_related }
+      then: { disposition_code: escalate_claim_review, severity: critical }
+      note: "Recall-related claim — route to the safety-campaign reviewer; never adjudicated by rule"
+    # High-value claims get the enhanced-documentation audit queue.
+    - when:
+        - { column: claim_amount, op: gte, value: 5000 }
+      then: { disposition_code: escalate_claim_review, severity: high }
+      note: "High-value claim (program-configured threshold) — enhanced-documentation audit queue before any payment decision"
+    # Goodwill is discretionary and manager-tier by program design.
+    - when:
+        - { column: claim_type, op: eq, value: goodwill }
+      then: { disposition_code: escalate_claim_review, severity: medium }
+      note: "Goodwill request — manager-tier review against the program's documented cost-share matrix"
+    # Out-of-coverage filings need a human coverage read, not a rule denial.
+    - when:
+        - { column: in_warranty, op: eq, value: "no" }
+      then: { disposition_code: escalate_claim_review, severity: medium }
+      note: "Filed outside warranty term/usage limit — human coverage review; the table never denies"
+    # Clean, low-value, in-policy claims flow to standard processing.
+    - when:
+        - { column: in_warranty, op: eq, value: "yes" }
+        - { column: claim_amount, op: lte, value: 1000 }
+        - { column: labor_op_band, op: eq, value: single_op }
+        - { column: severity, op: in, value: [low, medium] }
+      then: { disposition_code: escalate_claim_review, severity: low }
+      note: "Clean low-value in-policy claim — standard processing queue (human still decides payment)"
+  # Anything unmatched still reaches a human reviewer — the table never
+  # leaves a claim unrouted and never guesses a determination.
+  default_outcome: { disposition_code: escalate_claim_review, severity: medium }

@@ -1,0 +1,49 @@
+# Governed decision table (BRD 54) — deterministic, explainable, no-LLM
+# ROUTING over the submission queue's binding-contract columns (appetite_fit,
+# completeness, priority_band, days_to_deadline). It EXECUTES to the same
+# governed four-eyes proposal an agent produces: an operator dry-runs or
+# batch-runs it across the worklist, and every matched case becomes a
+# case.apply_disposition proposal the Underwriting Operations Manager must
+# approve. This table ROUTES ONLY — it places files in the right queue
+# (underwriter queue for the line, broker outreach, human referral review).
+# It NEVER proposes quote, decline, or bind: those are four-eyes human
+# underwriting authority under the carrier-configured appetite statement and
+# authority limits. Outcome disposition_codes are validated against this
+# workspace's disposition catalog at install (dispositions install first).
+- identity: submission_intake_routing
+  name: "Submission intake routing table"
+  rules:
+    # Urgent-priority, in-appetite, complete file — first-touch today: the
+    # renewal-defense / tight needed-by slice where speed drives hit ratio.
+    - when:
+        - { column: appetite_fit, op: eq, value: in_appetite }
+        - { column: completeness, op: eq, value: complete }
+        - { column: priority_band, op: eq, value: urgent }
+      then: { disposition_code: accept_route_to_underwriter, severity: high }
+      note: "Urgent in-appetite complete file — route to the line's underwriter queue first (speed-to-first-touch drives hit ratio)"
+    # In-appetite, complete, needed-by runway nearly gone — same routing, ahead
+    # of the standard queue.
+    - when:
+        - { column: appetite_fit, op: eq, value: in_appetite }
+        - { column: completeness, op: eq, value: complete }
+        - { column: days_to_deadline, op: between, value: [0, 3] }
+      then: { disposition_code: accept_route_to_underwriter, severity: high }
+      note: "In-appetite complete file inside a 3-day broker needed-by runway — route to the underwriter queue ahead of standard flow"
+    # The clean core of the funnel: in appetite, file complete — clear and
+    # route to the line's underwriter queue in standard order.
+    - when:
+        - { column: appetite_fit, op: eq, value: in_appetite }
+        - { column: completeness, op: eq, value: complete }
+      then: { disposition_code: accept_route_to_underwriter, severity: medium }
+      note: "In-appetite, complete — clear and route to the line's underwriter queue (standard order)"
+    # Incomplete file on a risk not flagged out of appetite — broker-outreach
+    # queue naming the exact missing documents (loss runs / SOV+COPE / apps).
+    - when:
+        - { column: completeness, op: in, value: [missing_loss_runs, missing_sov, missing_apps] }
+        - { column: appetite_fit, op: ne, value: out_of_appetite }
+      then: { disposition_code: request_missing_information, severity: medium }
+      note: "Incomplete file — broker-outreach queue; the note must name the exact missing documents (currently-valued loss runs, SOV with COPE detail, ACORD apps/attestations)"
+  # Nothing matched (out-of-appetite, marginal, or pending-clearance files) ->
+  # a human referral underwriter looks at it. The neutral escalation code
+  # commits to no underwriting outcome — the table routes, humans decide.
+  default_outcome: { disposition_code: escalate_referral_review, severity: medium }

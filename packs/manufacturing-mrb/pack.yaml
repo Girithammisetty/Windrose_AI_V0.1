@@ -1,15 +1,18 @@
 # manufacturing-mrb capability pack — Core-neutral edition: manufacturing
 # nonconformance disposition / Material Review Board (MRB) adjudication for
-# regulated discrete manufacturers (aerospace & defense suppliers under
-# AS9100, medical-device manufacturers under ISO 13485 / 21 CFR 820.90,
-# automotive tiers under IATF 16949, and contract manufacturers spanning all
-# three). Installable TODAY against Datacern Core's public APIs via packctl;
-# the manifest envelope follows BRD 23 (PKG-FR-001/003). Components the
-# current Core cannot materialize are declared under `deferred` — recorded in
-# the install ledger, never faked.
+# regulated discrete manufacturers (aerospace & defense suppliers,
+# medical-device manufacturers, automotive tiers, and contract manufacturers
+# spanning all three). Installable TODAY against Datacern Core's public APIs
+# via packctl/pack-service; the manifest envelope follows BRD 23
+# (PKG-FR-001/003). Components the current Core cannot materialize are
+# declared under `deferred` — recorded in the install ledger, never faked.
+# v2.0.0 (no-dummy-data rule): the pack ships ZERO seed data — datasets are
+# binding CONTRACTS resolved to the tenant's REAL data at install; cases
+# arrive from real rows via case triggers/intake, not seeds; eval golden sets
+# are curated by the tenant from its own adjudicated MRB history.
 pack_manifest: 1
 name: manufacturing-mrb
-version: 1.0.0
+version: 2.0.0
 publisher: { id: pub-datacern, name: "Datacern Inc." }
 description: >-
   AI-assisted nonconformance disposition and Material Review Board workflow
@@ -21,8 +24,10 @@ description: >-
   quality-operations KPI semantic model and dashboards (rework rate,
   use-as-is share, scrap share, supplier-return share, backlog aging,
   deadline runway, detection-point and spec-class mix), supplier-part-family
-  network analytics, AS9100 / ISO 13485 / IATF 16949 + 8D/CAPA grounding
-  memories, and lot-anomaly + disposition-outcome training pipelines.
+  network analytics, quality-system and 8D/CAPA grounding memories,
+  deterministic board- and supplier-quality routing tables, governed QMS/MES
+  write-back and source-feed connectors, and lot-anomaly +
+  disposition-outcome training pipelines.
 categories: [manufacturing, quality, aerospace, medical_devices, automotive]
 regulatory: [as9100, iso13485, iatf16949, fda_21cfr820, iso9001]
 components:
@@ -40,16 +45,33 @@ components:
     - { file: "dashboards/supplier_quality_watch.yaml", identity: "supplier_quality_watch" }
   dispositions:
     - { file: "cases/dispositions.yaml", identity: "dispositions" }
-  cases:
-    - { file: "cases/queue.yaml", identity: "mrb_queue" }
+  case_fields:
+    - { file: "cases/fields.yaml", identity: "nonconformance_fields" }
+  case_schemas:
+    - { file: "cases/schemas.yaml", identity: "nonconformance_schema" }
+  ontology:
+    - { file: "ontology/entities.yaml", identity: "mrb_ontology" }
+  decision_models:
+    - { file: "decisions/mrb_board_routing.yaml", identity: "mrb_board_routing" }
+    - { file: "decisions/supplier_quality_routing.yaml", identity: "supplier_quality_routing" }
   roles:
     - { file: "rbac/roles.yaml", identity: "roles" }
   agent_configs:
     - { file: "agents/configs.yaml", identity: "agent_configs" }
+  guardrails:
+    - { file: "agents/guardrails.yaml", identity: "agent_guardrails" }
   memories:
     - { file: "memories/grounding.yaml", identity: "grounding" }
   pipelines:
     - { file: "pipelines/templates.yaml", identity: "pipelines" }
+  display_labels:
+    - { file: "labels/overrides.yaml", identity: "label_overrides" }
+  model_archetypes:
+    - { file: "models/archetypes.yaml", identity: "model_blueprints" }
+  write_adapters:
+    - { file: "connections/write_adapters.yaml", identity: "qms_writeback" }
+  connection_templates:
+    - { file: "connections/sources.yaml", identity: "source_feeds" }
 deferred:
   - kind: agent_recipes
     reason: >-

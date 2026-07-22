@@ -1,0 +1,33 @@
+# Governed model blueprints (experiment-service inc9): the intended models this
+# vertical runs, independent of any trained artifact. Each corresponds to a
+# training pipeline this pack already ships (pipelines/templates.yaml), so the
+# blueprint and its implementation stay in one governed pair.
+- archetype_key: tl_claim_outcome_scorer
+  name: "Claim outcome scorer"
+  task_type: classification
+  target: disposition
+  description: >-
+    Supervised scorer over adjudicated claims (tl-claims): predicts the likely
+    disposition from claim kind, claim type, liability band, amount, and
+    deadline runway — the deterministic-first pre-router for claim intake
+    triage. Implemented by the pack's xgboost training pipeline.
+  expected_metrics: { f1: 0.80 }
+  governance_notes: >-
+    Outcome-relevant: scores inform triage ordering only — every liability
+    position, payment, denial, recovery filing, and settlement remains a
+    four-eyes human decision with documented findings. Promotion requires
+    eval-gate + Claims & Safety Manager approval.
+- archetype_key: tl_shipment_anomaly_detector
+  name: "Shipment anomaly detector"
+  task_type: anomaly_detection
+  target: null
+  description: >-
+    Unsupervised surface scan over tl-shipments for out-of-pattern loads
+    (lane/value/service outliers, repeat carrier-lane claim clusters) worth
+    a closer look. Implemented by the pack's isolation-forest training
+    pipeline.
+  expected_metrics: {}
+  governance_notes: >-
+    Detector output opens review work, never adverse action against a carrier
+    or driver; an anomaly flag is not an allegation — flagged activity routes
+    to the vetting/review queue for human investigation.

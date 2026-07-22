@@ -1,24 +1,23 @@
-# Pack datasets (ingestion-service file_upload, stable names for idempotency).
-# In production these tables arrive via the marketplace's catalog, seller
-# onboarding, and brand-protection connectors (deferred until pack-service
-# ships connector materialization); this seed data is REAL rows in the same
-# landing shape, encoding genuine marketplace trust-and-safety patterns so
-# every downstream component runs against real signal from day one: a
-# luxury-goods listing at a deep discount with reused stock images (test buy
-# in flight), a brand trademark claim against an apparently genuine reseller
-# (first-sale tension), a KYB banking-name mismatch on a high-GMV new seller,
-# a linked-account ring resurrecting a previously banned seller, a
-# safety-flagged toy listing, and a reinstatement request backed by a
-# plan-of-action and distributor invoices.
+# Pack dataset BINDING CONTRACTS (no-dummy-data rule): the pack ships ZERO
+# seed data. Each entry declares the dataset the workflow needs and the exact
+# landing-shape columns it requires; at install the tenant binds it to a REAL
+# dataset (explicit dataset_bindings on the install request, or same-name
+# reuse), and pack-service validates the bound dataset exposes every required
+# column — failing closed with the missing list. Real data arrives through the
+# pack's governed source connectors (connections/sources.yaml) or file upload.
 - identity: sv_sellers
   name: sv-sellers
-  file: data/sv_sellers.csv
-  format: csv
+  required_columns:
+    [seller_id, seller_name, country, account_age_bucket, gmv_tier,
+     prior_violations, kyb_verified, linked_accounts]
 - identity: sv_listings
   name: sv-listings
-  file: data/sv_listings.csv
-  format: csv
+  required_columns:
+    [listing_id, seller_id, category, price_vs_msrp, fulfillment,
+     listing_month, buyer_complaint_band, image_reuse, list_price]
 - identity: sv_reviews
   name: sv-reviews
-  file: data/sv_reviews.csv
-  format: csv
+  required_columns:
+    [review_id, listing_id, review_type, trigger_source, product_vertical,
+     claim_basis, severity, status, disposition, filed_month, age_days,
+     days_to_deadline, deadline_bucket, gmv_at_risk]

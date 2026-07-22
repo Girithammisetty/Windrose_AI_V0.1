@@ -1,0 +1,35 @@
+# Governed model blueprints (experiment-service inc9): the intended models
+# this vertical runs, independent of any trained artifact. Each corresponds
+# to a training pipeline this pack already ships (pipelines/templates.yaml),
+# so the blueprint and its implementation stay in one governed pair.
+- archetype_key: bs_hit_outcome_scorer
+  name: "Screening-hit outcome scorer"
+  task_type: classification
+  target: disposition
+  description: >-
+    Supervised scorer over adjudicated hit reviews (bs-reviews): predicts the
+    likely adjudication outcome from check type, hit type, record age band,
+    identity confidence, and severity — the deterministic-first pre-router
+    for hit-triage ordering. Implemented by the pack's xgboost training
+    pipeline.
+  expected_metrics: { f1: 0.80 }
+  governance_notes: >-
+    FCRA adverse-action relevant: scores order the adjudication queue ONLY —
+    they never decide reportability, relevance, or hire/no-hire. Adverse
+    action, individualized assessment, and pre-adverse notices are ALWAYS
+    human four-eyes steps with documented findings. Promotion requires
+    eval-gate + Screening Operations Manager approval.
+- archetype_key: bs_order_anomaly_detector
+  name: "Screening order anomaly detector"
+  task_type: anomaly_detection
+  target: null
+  description: >-
+    Unsupervised surface scan over bs-orders for turnaround outliers and
+    unusual order/velocity patterns worth an operations look (SLA breaches,
+    repeat-screen bursts). Implemented by the pack's isolation-forest
+    training pipeline.
+  expected_metrics: {}
+  governance_notes: >-
+    Detector output opens operations review work only — it never touches an
+    applicant's report, adjudication, or adverse-action process; flagged
+    orders route to the operations queue for human investigation.

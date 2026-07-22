@@ -1,0 +1,75 @@
+# Domain ontology (dataset-service inc11): the entity TYPES this vertical
+# operates on and their typed relationships — the type-level model behind the
+# cc_claims / cc_contracts / cc_parties binding contracts. Attribute names
+# match the required_columns so the ontology describes data the tenant
+# actually binds.
+- entity_key: project
+  name: Project
+  description: >-
+    The capital project (job) the contract book rolls up to — the exposure
+    and claim-clustering unit for owner/GC portfolio views.
+  attributes:
+    - { name: project, data_type: string, description: "Project key as carried on the contract book" }
+  relationships:
+    - { name: contracts, target: contract, cardinality: has_many }
+- entity_key: party
+  name: "Contract party"
+  description: >-
+    A subcontractor, supplier, GC, or owner's representative in the party
+    register — the claimant or backcharge counterparty, with prequal tier,
+    claims-conduct history, and surety backing.
+  attributes:
+    - { name: party_name, data_type: string }
+    - { name: party_type, data_type: string, description: "subcontractor | supplier | gc | owner_rep" }
+    - { name: trade, data_type: string }
+    - { name: prequal_tier, data_type: string }
+    - { name: prior_claims_band, data_type: string, description: "none | 1_2 | 3_plus" }
+    - { name: surety_backed, data_type: string, description: "yes | no — performance/payment bonds in place" }
+  relationships:
+    - { name: contracts, target: contract, cardinality: has_many }
+- entity_key: contract
+  name: Contract
+  description: >-
+    The commercial agreement (GMP, lump-sum, unit-price, or T&M) between the
+    paying side and a party on one project — the instrument whose clauses
+    (changes, notice, payment, differing site conditions) govern every claim.
+  attributes:
+    - { name: contract_type, data_type: string, description: "gmp | lump_sum | unit_price | t_and_m" }
+    - { name: value_band, data_type: string }
+    - { name: start_year, data_type: string }
+    - { name: retention_band, data_type: string }
+    - { name: claim_month, data_type: string, description: "earliest claim-activity month; none when claim-free" }
+  relationships:
+    - { name: party, target: party, cardinality: belongs_to }
+    - { name: project, target: project, cardinality: belongs_to }
+    - { name: claims, target: claim, cardinality: has_many }
+- entity_key: claim
+  name: "Construction claim"
+  description: >-
+    A claim or change-order request asserted under one contract — delay,
+    acceleration, differing site conditions, defect backcharge, or payment
+    dispute — carrying notice timeliness, asserted schedule impact, and the
+    contract-configured response-window clock.
+  attributes:
+    - { name: claim_type, data_type: string }
+    - { name: entitlement_basis, data_type: string }
+    - { name: notice_timely, data_type: string, description: "yes | no | disputed" }
+    - { name: schedule_impact, data_type: string }
+    - { name: claimed_amount, data_type: float }
+    - { name: approved_amount, data_type: float }
+    - { name: days_to_deadline, data_type: integer }
+    - { name: age_days, data_type: integer }
+  relationships:
+    - { name: contract, target: contract, cardinality: belongs_to }
+    - { name: change_order, target: change_order, cardinality: has_one }
+- entity_key: change_order
+  name: "Change order"
+  description: >-
+    The executed contract-modification instrument produced when a claim or
+    change-order request is approved or settled — the scope/price/time
+    adjustment at the approved quantum.
+  attributes:
+    - { name: approved_amount, data_type: float }
+  relationships:
+    - { name: claim, target: claim, cardinality: belongs_to }
+    - { name: contract, target: contract, cardinality: belongs_to }

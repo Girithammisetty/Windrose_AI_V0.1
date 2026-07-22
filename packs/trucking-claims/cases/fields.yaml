@@ -1,0 +1,53 @@
+# Typed custom case fields (case-service CASE-FR-022) — the claims-and-safety
+# work item's real adjudication attributes, typed so the case form validates
+# them and decision surfaces can read them structurally instead of parsing
+# notes. data_type is IMMUTABLE after creation (case-service) — chosen
+# deliberately. Enum options mirror the tl-claims binding-contract landing
+# shape so field data and the bound dataset agree.
+- name: claim_kind
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Work item kind"
+    options: [cargo_osd, safety_event, carrier_vetting]
+    required: false
+- name: claim_type
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Claim / event type"
+    options: [damage, shortage, overage, reefer_breakdown, theft,
+              harsh_event, following_distance, carrier_fraud_check]
+    required: false
+- name: liability_band
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Liability assessment band"
+    options: [carrier_liable, shipper_fault, undetermined,
+              released_value_cap, not_applicable]
+    required: false
+- name: commodity_event
+  data_type: string
+  purpose: both
+  field_meta:
+    label: "Commodity / event detail"
+    required: false
+- name: claim_amount
+  data_type: float
+  purpose: both
+  field_meta:
+    label: "Claimed amount (USD)"
+    required: false
+- name: recovery_amount
+  data_type: float
+  purpose: both
+  field_meta:
+    label: "Recovered from responsible carrier (USD)"
+    required: false
+- name: days_to_deadline
+  data_type: integer
+  purpose: both
+  field_meta:
+    label: "Contract clock — days to response/filing deadline"
+    required: false

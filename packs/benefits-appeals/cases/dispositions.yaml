@@ -7,8 +7,12 @@
 # the decision without an adverse action; refer_fraud_investigation routes to
 # program integrity WITHOUT suspending the claimant's rights on the pending
 # claim; close_withdrawn records a claimant-initiated withdrawal.
+# escalate_expedited_docket is the NEUTRAL routing outcome the pack's
+# decision tables use: it moves a deadline-critical determination or appeal
+# to the front of the human docket and decides NOTHING about eligibility.
 - { code: approve_benefits,                label: "Approve benefits — eligibility confirmed",                     category: true_positive,  requires_note: true }
 - { code: deny_with_findings,              label: "Deny — written findings and appeal rights issued",             category: false_positive, requires_note: true }
 - { code: request_verification_documents,  label: "Request verification documents — decision deferred",           category: inconclusive,   requires_note: true }
 - { code: refer_fraud_investigation,       label: "Refer to program-integrity fraud investigation",               category: other,          requires_note: true }
 - { code: close_withdrawn,                 label: "Close — application or claim withdrawn by the claimant",       category: benign,         requires_note: true }
+- { code: escalate_expedited_docket,       label: "Escalate — expedited docket, deadline at risk (no eligibility decision)", category: inconclusive, requires_note: true }

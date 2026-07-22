@@ -8,8 +8,15 @@
 # name the shared attributes); request_authenticity_evidence pauses for
 # invoices/test-buy results; reinstate_seller_cleared closes onboarding
 # verifications and plan-of-action reinstatements.
+# escalate_priority_review is the ONE allegation-neutral ROUTING code (v2):
+# it moves a review to the expedited human track (IP claims near their
+# response clock, safety signals, enhanced seller vetting) and takes NO
+# position on the merits — it is the only code the pack's decision tables
+# (decisions/) ever propose; enforcement outcomes remain human four-eyes
+# decisions with documented findings.
 - { code: remove_listing_enforce,        label: "Remove listing — counterfeit/IP/safety violation confirmed", category: true_positive,  requires_note: true }
 - { code: reject_claim_insufficient,     label: "Reject claim — insufficient evidence of infringement",        category: false_positive, requires_note: true }
 - { code: suspend_seller_network,        label: "Suspend seller network — linked-account ring confirmed",      category: other,          requires_note: true }
 - { code: request_authenticity_evidence, label: "Request authenticity evidence — invoices / test buy",         category: inconclusive,   requires_note: true }
 - { code: reinstate_seller_cleared,      label: "Clear or reinstate seller — verification passed",             category: benign,         requires_note: true }
+- { code: escalate_priority_review,      label: "Escalate — priority human review (routing only, no enforcement)", category: inconclusive, requires_note: true }

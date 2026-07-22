@@ -1,0 +1,54 @@
+# Typed custom case fields (case-service CASE-FR-022) — the tax-notice work
+# item's real triage attributes, typed so the case form validates them and
+# decision surfaces can read them structurally instead of parsing notes.
+# data_type is IMMUTABLE after creation (case-service) — chosen deliberately.
+# Enum options mirror the tx-notices binding-contract column values so field
+# data and the bound dataset agree.
+- name: notice_type
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Notice type"
+    options: [sales_use_assessment, penalty_interest, income_franchise,
+              information_mismatch, exemption_cert_audit, payroll_withholding]
+    required: false
+- name: jurisdiction_level
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Jurisdiction level"
+    options: [irs, state, county_city]
+    required: false
+- name: tax_type
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Tax type"
+    options: [sales_use, payroll, income, franchise, property]
+    required: false
+- name: root_cause
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Root cause"
+    options: [rate_change, timing_difference, nexus_question, cert_expired,
+              data_mismatch, filing_gap, pending]
+    required: false
+- name: assessed_amount
+  data_type: float
+  purpose: both
+  field_meta:
+    label: "Assessed amount (USD)"
+    required: false
+- name: abated_amount
+  data_type: float
+  purpose: both
+  field_meta:
+    label: "Abated / reduced amount (USD)"
+    required: false
+- name: days_to_deadline
+  data_type: integer
+  purpose: both
+  field_meta:
+    label: "Response window — days left"
+    required: false

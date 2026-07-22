@@ -1,0 +1,23 @@
+# Governed typed case schema (case-service inc10): the inspection-finding
+# work item as a named case TYPE binding the triage field set, so intake
+# creates a structurally-complete finding case (not a generic case with
+# prose notes). Embedded field defs use {name, data_type, label, required};
+# names align with cases/fields.yaml and the ui_findings binding contract.
+- schema_key: inspection_finding
+  name: "Inspection finding (repair / defer)"
+  description: >-
+    An asset-inspection finding (drone-AI, LiDAR, infrared, foot patrol, or
+    customer report) triaged to a repair/defer decision with wildfire
+    risk-zone awareness. Make-safe and remediation windows are
+    program-configured by the utility's inspection and mitigation program;
+    closure of safety-critical findings is always a human four-eyes
+    engineering decision.
+  fields:
+    - { name: finding_type,         data_type: enum,    label: "Finding type",                      required: true }
+    - { name: detection_source,     data_type: enum,    label: "Detection source",                  required: true }
+    - { name: risk_zone,            data_type: enum,    label: "Fire-threat risk zone",             required: true }
+    - { name: asset_class,          data_type: enum,    label: "Asset class",                       required: false }
+    - { name: priority,             data_type: enum,    label: "Triage priority",                   required: false }
+    - { name: detection_confidence, data_type: float,   label: "Detection confidence (0-1)",        required: false }
+    - { name: est_repair_cost,      data_type: float,   label: "Estimated repair cost (USD)",       required: false }
+    - { name: days_to_deadline,     data_type: integer, label: "Repair/decision clock — days left", required: false }

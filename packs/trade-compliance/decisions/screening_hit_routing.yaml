@@ -1,0 +1,63 @@
+# Governed decision table (BRD 54) — a deterministic, explainable, no-LLM
+# ROUTING-ONLY first pass over denied-party screening alerts, using ONLY
+# columns the tc_review_items binding contract carries (item_type,
+# screening_list, match_score, days_to_deadline, severity). It EXECUTES to
+# the same governed four-eyes proposal an agent produces: an operator
+# dry-runs or batch-runs it across the worklist, and every matched case
+# becomes a case.apply_disposition proposal a human reviewer must approve.
+# This table NEVER proposes sanctions_true_hit_hold or
+# release_false_positive: confirming a sanctions hit, holding or releasing
+# a shipment, and any disclosure to an authority is ALWAYS a human four-eyes
+# determination on distinguishing evidence (mirroring the reference pack's
+# sanctions true-hit reservation). All numeric cut-offs below are
+# program-configured triage thresholds, not regulatory requirements.
+# Outcome disposition_codes are validated against this workspace's
+# disposition catalog at install, so `dispositions` installs before this
+# (packctl INSTALL_ORDER).
+- identity: screening_hit_routing
+  name: "Screening-hit routing table"
+  rules:
+    # Action clock nearly exhausted — the one queue where waiting is not an
+    # option; the hold/release call itself stays human.
+    - when:
+        - { column: item_type, op: eq, value: screening_alert }
+        - { column: days_to_deadline, op: between, value: [0, 3] }
+      then: { disposition_code: escalate_compliance_review, severity: critical }
+      note: >-
+        Screening alert inside the program-configured action-clock runway —
+        route to expedited human adjudication now. The table routes; it
+        never makes the hold/release or true-hit call.
+    # High fuzzy match score above the program-configured expedited floor.
+    - when:
+        - { column: item_type, op: eq, value: screening_alert }
+        - { column: match_score, op: gte, value: 0.85 }
+      then: { disposition_code: escalate_compliance_review, severity: critical }
+      note: >-
+        Match score at/above the program-configured expedited-adjudication
+        threshold — a senior screening analyst adjudicates on distinguishing
+        evidence (address, registry, ownership records); a true hit is never
+        declared from a score.
+    # Entity-list matches need a license-requirement analysis — specialist
+    # licensing queue, never an automatic block or release.
+    - when:
+        - { column: item_type, op: eq, value: screening_alert }
+        - { column: screening_list, op: eq, value: entity_list }
+      then: { disposition_code: escalate_licensing_review, severity: high }
+      note: >-
+        Entity-list match — route to the licensing specialist queue for a
+        license-requirement analysis; the licensing determination and any
+        hold/release remain human decisions.
+    # High-severity alerts (program-configured high-risk lane/party scoring
+    # feeds severity) jump the standard queue.
+    - when:
+        - { column: item_type, op: eq, value: screening_alert }
+        - { column: severity, op: eq, value: high }
+      then: { disposition_code: escalate_compliance_review, severity: high }
+      note: >-
+        High-severity screening alert per the program's risk scoring
+        (high-risk lanes/parties) — expedited compliance review ahead of
+        the standard queue.
+  # Nothing matched deterministically -> neutral routing to the standard
+  # human review flow; a reviewer must approve even this routing proposal
+  # (four-eyes). The table never proposes a determination.
+  default_outcome: { disposition_code: escalate_compliance_review, severity: low }

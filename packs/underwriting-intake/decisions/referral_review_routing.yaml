@@ -1,0 +1,47 @@
+# Second governed decision table (BRD 54): deterministic routing of
+# out-of-appetite and specialty SIGNALS to the human referral-review queue —
+# the signal-scoped complement to submission_intake_routing. Operates ONLY on
+# uw-submissions binding-contract columns (line_of_business, completeness,
+# appetite_fit, premium_band, days_to_deadline). ROUTING ONLY: it never
+# proposes decline, E&S referral, quote, or bind — where a declination or
+# specialty placement is warranted, the human referral underwriter makes and
+# documents that call (risk-based declination reasons; the admitted-market
+# declination E&S placement rests on) under the carrier-configured appetite
+# statement and authority limits. Executes to the same governed four-eyes
+# proposal path: the table routes, the Underwriting Operations Manager
+# approves.
+- identity: referral_review_routing
+  name: "Referral review signal routing"
+  rules:
+    # Cyber file without its application/attestation package: not
+    # appetite-callable until the carrier's control attestations arrive —
+    # broker outreach, elevated (market practice treats absent control
+    # attestations as blocking any appetite call).
+    - when:
+        - { column: line_of_business, op: eq, value: cyber }
+        - { column: completeness, op: eq, value: missing_apps }
+      then: { disposition_code: request_missing_information, severity: high }
+      note: "Cyber submission without application/control attestations — request the carrier-configured controls supplemental before any appetite call"
+    # Out of appetite against the carrier-configured appetite statement —
+    # human referral review; the table never declines.
+    - when:
+        - { column: appetite_fit, op: eq, value: out_of_appetite }
+      then: { disposition_code: escalate_referral_review, severity: high }
+      note: "Outside the carrier-configured appetite statement — human referral review; any declination is a human call with documented risk-based reasons"
+    # Marginal appetite fit — a human judgment call by construction.
+    - when:
+        - { column: appetite_fit, op: eq, value: marginal }
+      then: { disposition_code: escalate_referral_review, severity: medium }
+      note: "Marginal appetite fit — human referral review (specialty/E&S suitability is a human placement decision)"
+    # Largest-premium files still pending an appetite call get senior eyes
+    # before the runway erodes.
+    - when:
+        - { column: appetite_fit, op: eq, value: pending }
+        - { column: premium_band, op: eq, value: over_500k }
+        - { column: days_to_deadline, op: between, value: [0, 5] }
+      then: { disposition_code: escalate_referral_review, severity: high }
+      note: "Large-premium file pending appetite/clearance inside a 5-day runway — senior referral review before the needed-by date erodes"
+  # No default_outcome ON PURPOSE: this table is signal-scoped — a file that
+  # matches none of these signals is simply not referral-review work, and a
+  # default here would wrongly escalate the clean in-appetite flow that
+  # submission_intake_routing already routes. No-match means "no proposal".

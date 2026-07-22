@@ -1,0 +1,80 @@
+# Domain ontology (dataset-service inc11): the entity TYPES this vertical
+# operates on and their typed relationships — the type-level model behind the
+# sv-sellers / sv-listings / sv-reviews binding contracts. Attribute names
+# match the contract columns so the ontology describes data the tenant
+# actually binds. Instance-level identity is a separate concern: entity
+# resolution (BRD 56) is what links REPEAT SELLER instances — the same
+# operator returning under new accounts via shared payout banking, addresses,
+# or device attributes — into one resolved seller for review; this ontology
+# only declares the types that resolution operates over.
+- entity_key: seller
+  name: Seller
+  description: >-
+    A marketplace selling account subject to onboarding verification
+    (INFORM Consumers Act / EU DSA trader-traceability duties) and ongoing
+    conduct review. Distinct accounts operated by one real-world party are
+    resolved by entity resolution (BRD 56), not modeled as separate types.
+  attributes:
+    - { name: seller_name, data_type: string }
+    - { name: country, data_type: string }
+    - { name: account_age_bucket, data_type: string, description: "new | recent | established" }
+    - { name: gmv_tier, data_type: string, description: "low | mid | high" }
+    - { name: prior_violations, data_type: string, description: "none | one | multiple" }
+    - { name: kyb_verified, data_type: string, description: "yes | no | mismatch" }
+    - { name: linked_accounts, data_type: string, description: "yes | no — shares payout/address/device attributes with other accounts" }
+  relationships:
+    - { name: listings, target: listing, cardinality: has_many }
+    - { name: reviews, target: enforcement_review, cardinality: has_many }
+- entity_key: listing
+  name: "Marketplace listing"
+  description: "A product offer a review, claim, or enforcement action can reference."
+  attributes:
+    - { name: category, data_type: string }
+    - { name: price_vs_msrp, data_type: string, description: "market | premium | deep_discount" }
+    - { name: fulfillment, data_type: string, description: "platform | seller" }
+    - { name: buyer_complaint_band, data_type: string, description: "none | low | elevated | high" }
+    - { name: image_reuse, data_type: string, description: "yes | no — stock/copied imagery signal" }
+    - { name: list_price, data_type: float }
+  relationships:
+    - { name: seller, target: seller, cardinality: belongs_to }
+    - { name: reviews, target: enforcement_review, cardinality: has_many }
+- entity_key: rights_holder
+  name: "Rights holder"
+  description: >-
+    A brand owner or other IP rights holder that files complaints against
+    listings (trigger_source = brand_owner_complaint). A complaint is an
+    ALLEGATION until adjudicated: the review record carries whether the claim
+    was substantiated, rejected for insufficient evidence, or held for more
+    evidence — so both enforcement quality and claim quality stay measurable.
+  relationships:
+    - { name: claims, target: enforcement_review, cardinality: has_many }
+- entity_key: enforcement_review
+  name: "Vetting / enforcement review"
+  description: >-
+    One trust-and-safety review over a listing and its seller — a counterfeit
+    signal, a rights-holder IP claim, a seller-fraud / linked-account alert,
+    an onboarding KYB verification, or a reinstatement request — carrying the
+    response clock, exposure, and the adjudicated human disposition.
+  attributes:
+    - { name: review_type, data_type: string }
+    - { name: trigger_source, data_type: string }
+    - { name: claim_basis, data_type: string, description: "authenticity | copyright | trademark | safety | kyb_mismatch" }
+    - { name: severity, data_type: string }
+    - { name: status, data_type: string, description: "open | closed" }
+    - { name: gmv_at_risk, data_type: float }
+    - { name: days_to_deadline, data_type: integer }
+  relationships:
+    - { name: listing, target: listing, cardinality: belongs_to }
+    - { name: rights_holder, target: rights_holder, cardinality: belongs_to }
+    - { name: enforcement_action, target: enforcement_action, cardinality: has_one }
+- entity_key: enforcement_action
+  name: "Enforcement action"
+  description: >-
+    The human-approved outcome of a review (the disposition record): listing
+    removal, claim rejection, network suspension, evidence request, or
+    clearance/reinstatement. Always a four-eyes human decision with a
+    documented finding — never applied autonomously by a model or table.
+  attributes:
+    - { name: disposition, data_type: string }
+  relationships:
+    - { name: review, target: enforcement_review, cardinality: belongs_to }

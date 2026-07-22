@@ -1,0 +1,21 @@
+# Governed typed case schema (case-service inc10): the construction-claim
+# work item as a named case TYPE binding the adjudication field set, so
+# intake creates a structurally-complete claim case (not a generic case with
+# prose notes). Embedded field defs use {name, data_type, label, required};
+# names align with cases/fields.yaml and the cc_claims binding-contract
+# columns.
+- schema_key: construction_claim
+  name: "Construction claim / change-order request"
+  description: >-
+    A construction claim or change-order request adjudicated by the paying
+    side of the contract (owner, GC, or CM): entitlement analyzed first
+    against the governing contract clause, quantum second, inside the
+    contract-configured response window.
+  fields:
+    - { name: claim_type,        data_type: enum,    label: "Claim type",                                    required: true }
+    - { name: entitlement_basis, data_type: enum,    label: "Asserted entitlement basis",                    required: false }
+    - { name: notice_timely,     data_type: enum,    label: "Notice timeliness (per contract)",              required: false }
+    - { name: schedule_impact,   data_type: enum,    label: "Asserted schedule impact",                      required: false }
+    - { name: claimed_amount,    data_type: float,   label: "Claimed amount (USD)",                          required: true }
+    - { name: approved_amount,   data_type: float,   label: "Approved amount (USD)",                         required: false }
+    - { name: days_to_deadline,  data_type: integer, label: "Contract-configured response window — days left", required: false }

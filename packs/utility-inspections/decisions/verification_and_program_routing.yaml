@@ -1,0 +1,48 @@
+# Second governed decision table (BRD 54): deterministic verification and
+# planned-work ROUTING — the non-expedited complement to
+# wildfire_dispatch_routing. Operates ONLY on columns the ui_findings
+# binding contract guarantees (detection_source, detection_confidence,
+# finding_type, asset_class, severity, risk_zone). Executes to the same
+# governed four-eyes proposal path: the table routes, the Asset Risk
+# Manager decides. It NEVER proposes closing a finding — a suspected false
+# detection routes to field verification (whose crew outcome becomes a
+# detector-retraining label), never to silent closure; program windows for
+# scheduled work are program-configured by the utility.
+- identity: verification_and_program_routing
+  name: "Verification & planned-work routing"
+  rules:
+    # Low-confidence drone-AI detection — the known artifact band (shadow /
+    # glint / imaging angle). Verify in the field; never close from the desk.
+    - when:
+        - { column: detection_source, op: eq, value: drone_ai }
+        - { column: detection_confidence, op: lte, value: 0.65 }
+      then: { disposition_code: request_field_verification, severity: medium }
+      note: "Low-confidence drone-AI detection — field-verify, never desk-close; the crew outcome is a detector-retraining label"
+    # Corrosion on gas-system asset classes — integrity-management threat
+    # class; engineering review scopes repair-vs-replacement before any
+    # schedule is set, and any deferral needs a documented rationale.
+    - when:
+        - { column: finding_type, op: eq, value: corrosion }
+        - { column: asset_class, op: in, value: [pipeline_segment, regulator_station] }
+      then: { disposition_code: request_field_verification, severity: high }
+      note: "Corrosion on a gas-system asset — route to engineering integrity review; deferral requires documented risk-based rationale"
+    # Non-high-severity leak indication — grading is re-assessed in the
+    # field with instruments; the table never grades a leak from data alone.
+    - when:
+        - { column: finding_type, op: eq, value: leak_indication }
+        - { column: severity, op: ne, value: high }
+      then: { disposition_code: request_field_verification, severity: medium }
+      note: "Leak indication below safety severity — instrument re-survey; grading is a field decision, not a table decision"
+    # Low-severity vegetation in a standard zone — the routine clearance
+    # program's bread and butter; window is program-configured.
+    - when:
+        - { column: finding_type, op: eq, value: vegetation_encroachment }
+        - { column: severity, op: eq, value: low }
+        - { column: risk_zone, op: eq, value: standard }
+      then: { disposition_code: schedule_planned_work, severity: low }
+      note: "Standard-zone low-severity vegetation — standard clearance schedule inside the program-configured window"
+  # Neutral escalation default: nothing matched deterministically -> route
+  # to a human field/engineering verification (the catalog's inconclusive
+  # code). The table never closes, never defers unseen defect classes, and
+  # never guesses on safety-relevant findings.
+  default_outcome: { disposition_code: request_field_verification, severity: medium }

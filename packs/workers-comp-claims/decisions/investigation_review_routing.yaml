@@ -1,0 +1,31 @@
+# Second governed decision table (BRD 54): deterministic, allegation-neutral
+# routing of pattern-flagged claims to the investigation queue and of
+# outsized medical-only spend to utilization/bill review. Operates ONLY on
+# wc_claims binding-contract columns (siu_flag, claim_type, paid_to_date).
+# Routing, never adjudication: a pattern flag is a risk signal, not a
+# finding — benefits and jurisdiction-configured deadlines continue during
+# any investigation, and the table NEVER proposes a compensability
+# determination, denial, or settlement. Executes to the same governed
+# four-eyes proposal path: the table proposes a route, the WC Claims Manager
+# decides.
+- identity: investigation_review_routing
+  name: "Investigation and bill-review routing"
+  rules:
+    # Pattern-flag indicators present — route to the SIU review queue.
+    # Allegation-neutral: the referral opens a review, implies no wrongdoing,
+    # and never interrupts benefits or the decision clock.
+    - when:
+        - { column: siu_flag, op: eq, value: "yes" }
+      then: { disposition_code: escalate_siu_fraud, severity: medium }
+      note: "Pattern-flag indicators — allegation-neutral SIU review; benefits and the jurisdiction-configured clock continue"
+    # Medical-only claim with outsized paid medical spend — route to
+    # utilization review / bill review (medical-necessity and fee-schedule
+    # audit), not to any adverse action.
+    - when:
+        - { column: claim_type, op: eq, value: medical_only }
+        - { column: paid_to_date, op: gte, value: 5000 }
+      then: { disposition_code: refer_utilization_review, severity: medium }
+      note: "Medical-only claim with paid-to-date ≥ $5k — utilization/bill-review audit of treatment and fee-schedule variance"
+  # default_outcome deliberately OMITTED: an unmatched claim stays in the
+  # standard queue. There is no neutral "no-action" disposition, and this
+  # routing table must never fall through to a determination-shaped outcome.

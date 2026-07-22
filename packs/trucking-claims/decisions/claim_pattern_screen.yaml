@@ -1,0 +1,33 @@
+# Second governed decision table (BRD 54): deterministic investigation-queue
+# ROUTING for items whose evidence pattern warrants investigator review. A
+# route here is allegation-NEUTRAL — a flag is not a finding, and the table
+# never proposes pay/deny/settle; the investigator documents facts and the
+# Claims & Safety Manager makes every four-eyes determination. Columns are
+# tl-claims binding-contract columns only (claim_type, claim_kind,
+# liability_band); values are the contract's landing-shape enums.
+- identity: claim_pattern_screen
+  name: "Claim pattern investigation screen"
+  rules:
+    # Carrier vetting items exist BECAUSE something needs verification
+    # (identity, references, banking/factoring change) — investigator work.
+    - when:
+        - { column: claim_type, op: eq, value: carrier_fraud_check }
+      then: { disposition_code: escalate_fraud_investigation, severity: high }
+      note: "Carrier-vetting signal — investigator verifies identity/authority/payment details by direct callback; verification routing, no wrongdoing implied"
+    # Full-load theft claims need investigator verification (possession, GPS
+    # and seal history, police report) before any liability position.
+    - when:
+        - { column: claim_type, op: eq, value: theft }
+      then: { disposition_code: escalate_fraud_investigation, severity: high }
+      note: "Theft-of-load claim — investigator assembles police report, GPS/seal history, and possession evidence; evidence routing, no allegation implied"
+    # Shortage with liability still undetermined: count/seal evidence is
+    # unresolved — an investigator documents the origin count, seal record,
+    # and CCTV before the adjuster takes a position either way.
+    - when:
+        - { column: claim_type, op: eq, value: shortage }
+        - { column: liability_band, op: eq, value: undetermined }
+      then: { disposition_code: escalate_fraud_investigation, severity: medium }
+      note: "Undetermined-liability shortage — investigator resolves origin count vs transit loss from seal/count/CCTV records; neutral evidence review"
+  # No default_outcome ON PURPOSE: everything else stays with the assigned
+  # analyst — this screen only ADDS investigator review where the pattern
+  # warrants it, it never disposes of a claim.

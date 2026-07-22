@@ -1,0 +1,34 @@
+# Governed decision table (BRD 54) — deterministic, explainable, no-LLM
+# ROUTING over claim intake: it orders WHO reviews an item next, never what
+# the outcome is. Every liability position, payment, denial, recovery filing,
+# and settlement remains a four-eyes human decision. The table EXECUTES to the
+# same governed proposal an agent produces: each matched case becomes a
+# case.apply_disposition proposal the Claims & Safety Manager must approve.
+# Columns are tl-claims binding-contract columns (days_to_deadline, amount,
+# liability_band); deadline runways are contract-configured on the tenant's
+# own bill-of-lading / carrier-agreement terms — the table reads the runway
+# the tenant's data carries, it asserts no statutory window of its own.
+# Outcome disposition_codes are validated against this workspace's disposition
+# catalog at install (dispositions install first).
+- identity: claim_exposure_routing
+  name: "High-exposure and deadline claim routing"
+  rules:
+    # Contract clock nearly exhausted — expedite to a senior adjuster now.
+    - when:
+        - { column: days_to_deadline, op: between, value: [0, 7] }
+      then: { disposition_code: route_senior_adjuster, severity: critical }
+      note: "Contract-configured response/filing runway ≤ 7 days — expedited senior-adjuster review; routing only, no outcome implied"
+    # High dollar exposure — senior adjuster owns the review from the start.
+    - when:
+        - { column: amount, op: gte, value: 25000 }
+      then: { disposition_code: route_senior_adjuster, severity: high }
+      note: "High-exposure claim (≥ $25,000) — senior adjuster review before any liability position"
+    # Limitation-of-liability valuation — released-value terms need a senior
+    # read of the contract before the claim is valued.
+    - when:
+        - { column: liability_band, op: eq, value: released_value_cap }
+      then: { disposition_code: route_senior_adjuster, severity: medium }
+      note: "Released-value / limitation-of-liability terms in play — senior adjuster confirms the contractual cap before valuation"
+  # No default_outcome ON PURPOSE: an unmatched claim simply stays in the
+  # standard analyst queue — the pack ships no neutral 'work it normally'
+  # disposition, and this table must never guess a substantive outcome.

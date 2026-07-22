@@ -1,0 +1,87 @@
+# Domain ontology (dataset-service inc11): the entity TYPES this vertical
+# operates on and their typed relationships — the type-level model behind the
+# tc_trading_partners / tc_shipments / tc_review_items binding contracts.
+# Attribute names match the contract columns so the ontology describes data
+# the bound tenant datasets actually carry. This is the data-unification
+# contract entity resolution (BRD 56) resolves INSTANCES of: duplicate
+# trading-partner records (the same supplier under name variants across the
+# broker feed and the GTM extract — exactly what a screening hit fuzzy-matches
+# on) merge into one golden `trading_partner` the shipment book and the
+# screening history attach to.
+- entity_key: trading_partner
+  name: "Trading partner"
+  description: >-
+    A party on the import lane — importer of record, supplier, or consignee —
+    the roster entry shipments reference and denied-party screening runs
+    against.
+  attributes:
+    - { name: partner_name, data_type: string }
+    - { name: partner_type, data_type: string, description: "importer | supplier | consignee" }
+    - { name: country, data_type: string }
+    - { name: denied_party_risk, data_type: string, description: "Program-assigned denied-party risk tier" }
+    - { name: ctpat_flag, data_type: string, description: "Supply-chain-security program participation (yes | no)" }
+    - { name: industry, data_type: string }
+  relationships:
+    - { name: shipments, target: shipment, cardinality: has_many }
+    - { name: screening_hits, target: screening_hit, cardinality: has_many }
+- entity_key: shipment
+  name: "Shipment / customs entry"
+  description: >-
+    An import shipment and its customs entry — the lane, mode, entered value,
+    and broker context every review item traces back to.
+  attributes:
+    - { name: origin_country, data_type: string }
+    - { name: dest_port, data_type: string }
+    - { name: lane, data_type: string, description: "Origin-destination trade lane" }
+    - { name: mode, data_type: string, description: "ocean | air | rail | truck" }
+    - { name: value, data_type: float, description: "Entered value (USD)" }
+    - { name: entry_month, data_type: string }
+    - { name: broker, data_type: string }
+  relationships:
+    - { name: importer, target: trading_partner, cardinality: belongs_to }
+    - { name: review_items, target: review_item, cardinality: has_many }
+- entity_key: review_item
+  name: "Compliance review item"
+  description: >-
+    The unit of compliance work over one shipment — an HS classification /
+    entry review or a denied-party screening alert — carrying severity,
+    action-clock state, and its human disposition once adjudicated.
+  attributes:
+    - { name: item_type, data_type: string, description: "hs_classification | screening_alert" }
+    - { name: valuation_band, data_type: string }
+    - { name: severity, data_type: string }
+    - { name: status, data_type: string, description: "open | closed" }
+    - { name: disposition, data_type: string, description: "Human adjudication outcome once closed" }
+    - { name: filed_month, data_type: string }
+    - { name: age_days, data_type: integer }
+    - { name: days_to_deadline, data_type: integer }
+    - { name: deadline_bucket, data_type: string }
+  relationships:
+    - { name: shipment, target: shipment, cardinality: belongs_to }
+    - { name: screening_hit, target: screening_hit, cardinality: has_one }
+    - { name: classification_question, target: hs_classification_question, cardinality: has_one }
+- entity_key: screening_hit
+  name: "Screening hit"
+  description: >-
+    A denied-party screening match on a trading partner — the list matched
+    and the fuzzy score. Confirming or clearing a hit is always a human
+    adjudication on distinguishing evidence, never a score alone.
+  attributes:
+    - { name: screening_list, data_type: string, description: "sdn | entity_list | unlisted" }
+    - { name: match_score, data_type: float, description: "Fuzzy name-match score (0 on non-screening items)" }
+  relationships:
+    - { name: review_item, target: review_item, cardinality: belongs_to }
+    - { name: matched_party, target: trading_partner, cardinality: belongs_to }
+- entity_key: hs_classification_question
+  name: "HS classification question"
+  description: >-
+    The classification/origin aspect of a review — the declared HS chapter,
+    product category, declared origin, and the program-assessed duty
+    exposure the review adjudicates.
+  attributes:
+    - { name: declared_hs_chapter, data_type: string }
+    - { name: product_category, data_type: string }
+    - { name: origin_country, data_type: string }
+    - { name: duty_risk, data_type: string }
+  relationships:
+    - { name: review_item, target: review_item, cardinality: belongs_to }

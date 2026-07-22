@@ -1,0 +1,75 @@
+# Domain ontology (dataset-service inc11): the entity TYPES this vertical
+# operates on and their typed relationships — the type-level model behind the
+# uw-submissions / uw-accounts / uw-insureds binding contracts. Attribute
+# names match the required_columns of those contracts so the ontology
+# describes data the bound tenant datasets actually carry; the quote entity
+# models the downstream underwriter work product this intake stage feeds
+# (quoting itself happens outside this pack, under carrier-configured
+# authority limits).
+- entity_key: broker
+  name: Broker
+  description: >-
+    The producing retail or wholesale broker/agency submitting risks; the
+    first-in broker holds the market on a cleared account absent a
+    broker-of-record letter.
+  attributes:
+    - { name: broker_name, data_type: string }
+    - { name: broker_tier, data_type: string, description: "tier_1 | tier_2 | tier_3 — carrier-configured service tiering" }
+  relationships:
+    - { name: submissions, target: submission, cardinality: has_many }
+- entity_key: insured
+  name: Insured
+  description: "The commercial applicant/named insured behind the account."
+  attributes:
+    - { name: insured_name, data_type: string }
+    - { name: industry_group, data_type: string }
+    - { name: size_tier, data_type: string }
+    - { name: prior_carrier_band, data_type: string, description: "carrier changes in recent years (banded)" }
+    - { name: risk_grade, data_type: string, description: "preferred | standard | substandard" }
+  relationships:
+    - { name: accounts, target: account, cardinality: has_many }
+- entity_key: account
+  name: Account
+  description: >-
+    One insured's placement on the carrier's book for a period — the unit
+    clearance operates on and exposure attaches to.
+  attributes:
+    - { name: industry, data_type: string, description: "NAICS-prefixed industry code" }
+    - { name: state, data_type: string }
+    - { name: tiv_band, data_type: string, description: "total insured value (banded)" }
+    - { name: loss_history, data_type: string, description: "clean | moderate | adverse" }
+    - { name: years_in_business, data_type: string }
+  relationships:
+    - { name: insured, target: insured, cardinality: belongs_to }
+    - { name: submissions, target: submission, cardinality: has_many }
+- entity_key: submission
+  name: "Underwriting submission"
+  description: >-
+    One broker's request for terms on one account and line — the intake work
+    item carrying clearance state, appetite fit, file completeness, and the
+    broker's needed-by runway.
+  attributes:
+    - { name: line_of_business, data_type: string }
+    - { name: segment, data_type: string }
+    - { name: appetite_fit, data_type: string, description: "in_appetite | marginal | out_of_appetite | pending — against the carrier-configured appetite statement" }
+    - { name: completeness, data_type: string, description: "complete | missing_apps | missing_loss_runs | missing_sov" }
+    - { name: priority_band, data_type: string }
+    - { name: premium_band, data_type: string }
+    - { name: days_to_deadline, data_type: integer }
+    - { name: age_days, data_type: integer }
+  relationships:
+    - { name: account, target: account, cardinality: belongs_to }
+    - { name: broker, target: broker, cardinality: belongs_to }
+    - { name: quote, target: quote, cardinality: has_one }
+- entity_key: quote
+  name: Quote
+  description: >-
+    The downstream underwriter work product an accepted submission feeds:
+    terms offered on a line of business. Produced OUTSIDE this pack by a
+    human underwriter under carrier-configured authority limits — intake
+    triage only routes toward it, never issues it.
+  attributes:
+    - { name: line_of_business, data_type: string }
+    - { name: premium_band, data_type: string }
+  relationships:
+    - { name: submission, target: submission, cardinality: belongs_to }

@@ -6,10 +6,16 @@
 # reject_return_to_vendor sends a defective invoice back for correction;
 # partial_credit_recovery closes on a negotiated vendor credit;
 # escalate_fraud_investigation hands a suspected-fraud file to the
-# investigations team. requires_note captures the row-level evidence that
-# SOX/recovery auditors and the four-eyes approver rely on.
+# investigations team; escalate_recovery_review (added in v2.0.0 as the ONE
+# neutral human-escalation code, pharmacovigilance precedent) routes an
+# exception to the recovery analyst for human investigation WITHOUT any
+# payment action or fraud implication — it is the only code the pack's
+# decision tables propose for duplicate/variance/expedite routing.
+# requires_note captures the row-level evidence that SOX/recovery auditors
+# and the four-eyes approver rely on.
 - { code: block_payment_confirmed_error,  label: "Block payment — error or fraud confirmed",           category: true_positive,  requires_note: true }
 - { code: reject_return_to_vendor,        label: "Reject — return invoice to vendor for correction",   category: false_positive, requires_note: true }
 - { code: release_payment_cleared,        label: "Release payment — exception cleared",                category: benign,         requires_note: true }
 - { code: partial_credit_recovery,        label: "Close on partial vendor credit — recovery negotiated", category: other,        requires_note: true }
 - { code: escalate_fraud_investigation,   label: "Escalate to fraud investigation",                    category: inconclusive,   requires_note: true }
+- { code: escalate_recovery_review,       label: "Escalate to recovery review — human investigation required", category: inconclusive, requires_note: true }

@@ -1,0 +1,60 @@
+# Typed custom case fields (case-service CASE-FR-022) — the warranty-claim
+# work item's real adjudication attributes, typed so the case form validates
+# them and decision surfaces can read them structurally instead of parsing
+# notes. data_type is IMMUTABLE after creation (case-service) — chosen
+# deliberately. Enum options mirror the wa_claims binding-contract columns'
+# actual value sets so field data and dataset agree.
+- name: claim_type
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Claim type"
+    options: [repair, replacement, goodwill, recall_related]
+    required: false
+- name: component_system
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Component system"
+    options: [powertrain, hydraulics, electrical, brakes, hvac, infotainment]
+    required: false
+- name: failure_mode
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Failure mode"
+    options: [seal_leak, harness_short, hydraulic_leak, compressor_failure,
+              premature_wear, no_start, sensor_fault, software_fault]
+    required: false
+- name: labor_op_band
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Labor operations billed"
+    options: [single_op, two_ops, three_plus_ops]
+    required: false
+- name: in_warranty
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "In-warranty status"
+    options: ["yes", "no"]
+    required: false
+- name: claim_amount
+  data_type: float
+  purpose: both
+  field_meta:
+    label: "Claimed amount (USD)"
+    required: false
+- name: recovery_amount
+  data_type: float
+  purpose: both
+  field_meta:
+    label: "Recovered from supplier (USD)"
+    required: false
+- name: days_to_deadline
+  data_type: integer
+  purpose: both
+  field_meta:
+    label: "Payment-decision clock — days left"
+    required: false

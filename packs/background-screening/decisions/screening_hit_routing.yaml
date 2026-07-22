@@ -1,0 +1,68 @@
+# Governed decision table (BRD 54) — a deterministic, explainable, no-LLM
+# intake-triage ROUTER over bs_reviews binding-contract columns (status,
+# identity_confidence, hit_type, record_age_band). It EXECUTES to the same
+# governed four-eyes proposal an agent produces: an operator dry-runs or
+# batch-runs it across the worklist, and every matched case becomes a
+# case.apply_disposition proposal a human must approve. The table ONLY
+# routes work to the right human queue — it NEVER proposes a reportability,
+# relevance, or hire/no-hire determination, so clear_report_eligible,
+# report_adverse_finding, and suppress_not_reportable never appear as rule
+# outcomes: reporting a record, suppressing it, and every adverse-action
+# step are exclusively human four-eyes decisions. Outcome disposition_codes
+# are validated against this workspace's disposition catalog at install, so
+# `dispositions` installs before this (packctl INSTALL_ORDER).
+- identity: screening_hit_routing
+  name: "Screening-hit intake routing"
+  rules:
+    # Identity match below the accuracy bar — identity work comes before any
+    # adjudication; the match/no-match call itself stays human.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: identity_confidence, op: eq, value: low }
+      then: { disposition_code: request_identity_verification, severity: high }
+      note: >-
+        Identity-match confidence recorded LOW — below the FCRA 607(b)
+        maximum-possible-accuracy matching standard this program applies.
+        Route to the identity-resolution queue for corroboration (full
+        middle name, full DOB, address history at the source); whether the
+        record matches this applicant, and whether anything is ever
+        reported, remain human decisions.
+    # Mixed-file candidate: the hit itself is a record-to-person mismatch.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: hit_type, op: eq, value: record_mismatch }
+      then: { disposition_code: request_identity_verification, severity: medium }
+      note: >-
+        Hit typed as a record mismatch — the classic mixed-file error class.
+        Route to identity resolution regardless of recorded confidence; the
+        suppression decision after identity work is the adjudicator's, never
+        this table's.
+    # Pending charge: not a conviction — the job-relatedness analysis is a
+    # human assessment, never a rule outcome.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: hit_type, op: eq, value: pending_charge }
+      then: { disposition_code: individualized_assessment_review, severity: medium }
+      note: >-
+        Pending charge is not a conviction. Route to the
+        individualized-assessment queue so a human runs the job-relatedness
+        analysis (nature of the alleged conduct vs the position's duties)
+        under the program's jurisdiction rules; the relevance conclusion is
+        made by the human assessor, never by this table.
+    # Old reportable-record class: obsolescence, state limits, and EEOC
+    # Green factors are weighed by a human assessor.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: hit_type, op: in, value: [felony, misdemeanor] }
+        - { column: record_age_band, op: eq, value: over_7_years }
+      then: { disposition_code: individualized_assessment_review, severity: medium }
+      note: >-
+        Criminal record in the oldest age band the program tracks. Whether
+        it is obsolete under FCRA 605(a), barred by state limits, or still
+        properly considered via the EEOC Green factors is a human
+        individualized-assessment call — this rule only moves the review to
+        that queue with the age evidence attached.
+  # default_outcome deliberately OMITTED: hits that match no routing rule
+  # simply remain in the adjudicator's normal worklist — the table stays
+  # silent rather than proposing an outcome, because every determination
+  # (clear, report, suppress) is a human decision.

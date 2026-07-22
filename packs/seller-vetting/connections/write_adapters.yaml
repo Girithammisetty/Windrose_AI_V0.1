@@ -1,0 +1,13 @@
+# Governed SoR write-back adapters (ingestion-service inc12): OUTGOING
+# connections declared with skip_test + EMPTY secrets — the tenant completes
+# real credentials/endpoints in Data → Connections, and every write executes
+# proposal-mode with four-eyes (no autonomous change to the marketplace
+# platform). The URL is a placeholder the tenant replaces; nothing is called
+# at install, and no credentials ship in the pack.
+- name: "Marketplace platform enforcement-status sync"
+  connector_type: http_api
+  direction: outgoing
+  config:
+    method: POST
+    url: "https://marketplace-platform.example.invalid/api/v1/enforcement/status"
+    headers: { Content-Type: "application/json" }

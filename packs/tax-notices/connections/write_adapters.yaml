@@ -1,0 +1,21 @@
+# Governed SoR write-back adapters (ingestion-service inc12): OUTGOING
+# connections declared with skip_test + EMPTY secrets — the tenant completes
+# real credentials/endpoints in Data → Connections, and every write executes
+# proposal-mode with four-eyes (no autonomous SoR change: no payment,
+# concession, or abatement filing ever originates here — only status sync).
+# The URLs/hosts are placeholders the tenant replaces; nothing is called at
+# install.
+- name: "Tax engine notice status sync"
+  connector_type: http_api
+  direction: outgoing
+  config:
+    method: POST
+    url: "https://tax-engine.example.invalid/api/v1/notices/status"
+    headers: { Content-Type: "application/json" }
+- name: "ERP tax ledger status sync"
+  connector_type: http_api
+  direction: outgoing
+  config:
+    method: POST
+    url: "https://erp-tax.example.invalid/api/v1/tax-notices/status"
+    headers: { Content-Type: "application/json" }

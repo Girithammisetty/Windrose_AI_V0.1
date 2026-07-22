@@ -1,0 +1,55 @@
+# Typed custom case fields (case-service CASE-FR-022) — the nonconformance
+# work item's real adjudication attributes, typed so the case form validates
+# them and decision surfaces can read them structurally instead of parsing
+# notes. data_type is IMMUTABLE after creation (case-service) — chosen
+# deliberately. Enum options mirror the nc-nonconformances landing-shape
+# values the binding contract expects, so field data and dataset agree.
+- name: nc_type
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Nonconformance type"
+    options: [dimensional, surface_finish, material_property,
+              process_deviation, foreign_object, documentation]
+    required: false
+- name: spec_class
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Specification class"
+    options: [critical_characteristic, major, minor]
+    required: false
+- name: detection_point
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Detection point"
+    options: [incoming_inspection, in_process, final_inspection,
+              customer_return, supplier_notification]
+    required: false
+- name: containment
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Containment status"
+    options: [not_required, quarantined, released, customer_hold]
+    required: false
+- name: quantity_band
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Affected quantity band"
+    options: [single_unit, 2_10, 11_50, over_50]
+    required: false
+- name: est_cost_impact
+  data_type: float
+  purpose: both
+  field_meta:
+    label: "Estimated cost impact (USD)"
+    required: false
+- name: days_to_deadline
+  data_type: integer
+  purpose: both
+  field_meta:
+    label: "Disposition deadline — days left"
+    required: false

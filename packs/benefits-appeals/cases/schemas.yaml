@@ -1,0 +1,35 @@
+# Governed typed case schemas (case-service inc10): the two work items this
+# vertical adjudicates as named case TYPES binding the adjudication field set,
+# so intake creates structurally-complete cases (not generic cases with prose
+# notes). Embedded field defs use {name, data_type, label, required}; names
+# align with cases/fields.yaml and the gb-determinations binding-contract
+# columns. Deadlines are program-configured (SNAP processing standards, UI
+# promptness standards, fair-hearing schedules vary by state and program
+# year) — the schema carries the runway, the agency configures the clock.
+- schema_key: eligibility_determination
+  name: "Eligibility determination"
+  description: >-
+    An initial-eligibility, redetermination, or overpayment work item on a
+    benefits claim, adjudicated with due-process notice requirements and the
+    program-configured processing clock. Every adverse action is a four-eyes
+    human decision.
+  fields:
+    - { name: program,             data_type: enum,    label: "Benefit program",              required: true }
+    - { name: determination_type,  data_type: enum,    label: "Determination type",           required: true }
+    - { name: issue_type,          data_type: enum,    label: "Adjudication issue",           required: false }
+    - { name: verification_docs,   data_type: enum,    label: "Verification documents",       required: false }
+    - { name: days_to_deadline,    data_type: integer, label: "Processing clock — days left", required: false }
+    - { name: overpayment_amount,  data_type: float,   label: "Overpayment at issue (USD)",   required: false }
+- schema_key: benefit_appeal
+  name: "Benefit appeal (fair hearing)"
+  description: >-
+    A claimant appeal of an eligibility determination headed to a fair
+    hearing: packet assembly, exhibit completeness, and the
+    program-configured hearing-deadline runway. The hearing officer's
+    outcome is recorded — never predicted or proposed.
+  fields:
+    - { name: program,             data_type: enum,    label: "Benefit program",              required: true }
+    - { name: issue_type,          data_type: enum,    label: "Issue under appeal",           required: false }
+    - { name: appeal_outcome,      data_type: enum,    label: "Appeal outcome",               required: false }
+    - { name: verification_docs,   data_type: enum,    label: "Record completeness",          required: false }
+    - { name: days_to_deadline,    data_type: integer, label: "Hearing clock — days left",    required: true }

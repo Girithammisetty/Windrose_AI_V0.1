@@ -1,0 +1,41 @@
+# Governed decision table (BRD 54) — deterministic, explainable, no-LLM
+# routing of AP exceptions to the right HUMAN review lane, over columns the
+# ap_exceptions binding contract guarantees (exception_type, fraud_indicator).
+# It EXECUTES to the same governed four-eyes proposal an agent produces: an
+# operator dry-runs or batch-runs it across the worklist and every matched
+# case becomes a case.apply_disposition proposal the AP Controls Manager must
+# approve. The table ROUTES — it never blocks or releases a payment and never
+# makes a fraud finding; both stay human. Outcome disposition_codes are
+# validated against this workspace's disposition catalog at install
+# (dispositions install first — packctl INSTALL_ORDER).
+- identity: recovery_review_routing
+  name: "Exception recovery-review routing"
+  rules:
+    # Fraud-PATTERN indicators route to the investigations team first — an
+    # escalation for human investigation, never a fraud finding.
+    - when:
+        - { column: fraud_indicator, op: in, value: [bec_suspect, shell_vendor_suspect, split_invoicing] }
+      then: { disposition_code: escalate_fraud_investigation, severity: high }
+      note: "BEC / shell-vendor / split-invoicing indicator — route to human fraud investigation (routing, not a finding)"
+    # Possible double payment: the recovery analyst confirms the matched pair
+    # (vendor + amount + date, OCR-confusable invoice numbers) before any
+    # hold — a payment block is never proposed by this table.
+    - when:
+        - { column: exception_type, op: eq, value: duplicate_invoice }
+      then: { disposition_code: escalate_recovery_review, severity: medium }
+      note: "Duplicate-invoice exception — recovery analyst confirms the matched pair before any action"
+    # Price billed above PO: recovery review negotiates a vendor credit
+    # against the PO price.
+    - when:
+        - { column: exception_type, op: eq, value: price_variance }
+      then: { disposition_code: escalate_recovery_review, severity: medium }
+      note: "Price variance vs PO — recovery review for a negotiated vendor credit"
+    # Quantity billed vs received gap — same recovery-review lane.
+    - when:
+        - { column: exception_type, op: eq, value: quantity_mismatch }
+      then: { disposition_code: escalate_recovery_review, severity: medium }
+      note: "Quantity billed exceeds quantity received — recovery review against the goods receipt"
+  # No default_outcome ON PURPOSE: an unmatched exception stays in the
+  # worklist for a human analyst — the table never guesses on ambiguous
+  # exception types (missing_po, missing_receipt, banking/vendor-master
+  # changes need row-level evidence a deterministic rule cannot weigh).

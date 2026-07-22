@@ -1,0 +1,34 @@
+# Governed model blueprints (experiment-service inc9): the intended models
+# this vertical runs, independent of any trained artifact. Each corresponds
+# to a training pipeline this pack already ships (pipelines/templates.yaml),
+# so the blueprint and its implementation stay in one governed pair.
+- archetype_key: sv_review_outcome_scorer
+  name: "Review outcome scorer"
+  task_type: classification
+  target: disposition
+  description: >-
+    Supervised scorer over adjudicated reviews (sv-reviews): predicts the
+    likely human disposition from review type, trigger source, claim basis,
+    severity, and exposure — the deterministic-first pre-router for vetting
+    triage ordering. Implemented by the pack's xgboost training pipeline.
+  expected_metrics: { f1: 0.80 }
+  governance_notes: >-
+    Livelihood-relevant: scores PRIORITIZE review ordering only — seller
+    suspensions, listing removals, and claim rejections are always four-eyes
+    human decisions with documented findings, never model outputs applied
+    directly. Promotion requires eval-gate + Marketplace Trust Manager
+    approval.
+- archetype_key: sv_listing_anomaly_detector
+  name: "Listing anomaly detector"
+  task_type: anomaly_detection
+  target: null
+  description: >-
+    Unsupervised surface scan over sv-listings for counterfeit-shaped
+    outliers (deep-discount + image-reuse clusters, wide-fan sellers,
+    complaint-band spikes). Implemented by the pack's isolation-forest
+    training pipeline.
+  expected_metrics: {}
+  governance_notes: >-
+    Detector output opens review work, never adverse action; flagged
+    listings and sellers route to the human vetting queue for
+    investigation — a flag is a signal, not a finding.

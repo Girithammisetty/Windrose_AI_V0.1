@@ -1,0 +1,35 @@
+# Governed model blueprints (experiment-service inc9): the intended models
+# this vertical runs, independent of any trained artifact. Each corresponds
+# to a training pipeline this pack already ships (pipelines/templates.yaml),
+# so the blueprint and its implementation stay in one governed pair.
+- archetype_key: ui_finding_disposition_scorer
+  name: "Finding disposition scorer"
+  task_type: classification
+  target: disposition
+  description: >-
+    Supervised scorer over adjudicated findings (ui-findings): predicts the
+    likely repair/defer disposition from finding type, detection source and
+    confidence, risk zone, priority, severity, and deadline runway — the
+    deterministic-first pre-router for inspection triage. Implemented by
+    the pack's xgboost training pipeline.
+  expected_metrics: { f1: 0.80 }
+  governance_notes: >-
+    Safety-relevant: scores order the remediation queue only — closure or
+    deferral of any safety-critical finding remains a human four-eyes
+    engineering decision with a documented rationale, and no work order is
+    ever opened or deferred from a score alone. Promotion requires
+    eval-gate + Asset Risk Manager approval.
+- archetype_key: ui_asset_condition_anomaly_detector
+  name: "Asset condition anomaly detector"
+  task_type: anomaly_detection
+  target: null
+  description: >-
+    Unsupervised surface scan over the asset registry (ui-assets) for units
+    that look unlike their peers — age/material/criticality/inspection-
+    recency outliers that merit proactive inspection before they raise
+    findings. Implemented by the pack's isolation-forest training pipeline.
+  expected_metrics: {}
+  governance_notes: >-
+    Detector output opens inspection review work, never a repair/defer
+    determination; flagged assets route to the inspection-planning queue
+    for human scoping and field verification.

@@ -1,0 +1,48 @@
+# Governed decision table (BRD 54) — deterministic, explainable, no-LLM
+# ROUTING over the nonconformance queue's structured columns (all drawn from
+# the nc-nonconformances binding contract in data/datasets.yaml). This table
+# routes work; it NEVER proposes a material determination: use-as-is, repair,
+# and scrap are human four-eyes engineering determinations within the board's
+# quality-system-configured authority limits, so every rule outcome here is
+# quarantine_pending_analysis — the neutral hold-and-escalate code whose only
+# effect is containment while the expedited human review runs. The table
+# EXECUTES to the same governed four-eyes proposal an agent produces: every
+# matched case becomes a case.apply_disposition proposal the Quality Manager
+# must approve. disposition_codes are validated against this workspace's
+# disposition catalog at install (dispositions install first).
+- identity: mrb_board_routing
+  name: "MRB board routing — expedited review"
+  rules:
+    # Safety/airworthiness-relevant class: a critical-characteristic
+    # nonconformance ALWAYS goes to the full board on the expedited track —
+    # any acceptance outcome on this class routes onward to the
+    # customer/design authority per the tenant's quality-system-configured
+    # authority limits.
+    - when:
+        - { column: spec_class, op: eq, value: critical_characteristic }
+      then: { disposition_code: quarantine_pending_analysis, severity: critical }
+      note: "Critical characteristic — full-board expedited review; hold under containment, acceptance outcomes are never rule-proposed"
+    # Foreign-object debris: stop-ship condition until the containment sweep
+    # across adjacent lots clears — full board, expedited.
+    - when:
+        - { column: nc_type, op: eq, value: foreign_object }
+      then: { disposition_code: quarantine_pending_analysis, severity: critical }
+      note: "FOD find — quarantine and containment-sweep adjacent lots; full-board expedited review"
+    # Customer-detected nonconformance is an ESCAPE — the board must also
+    # answer the customer-notification / correction-and-removal question.
+    - when:
+        - { column: detection_point, op: eq, value: customer_return }
+      then: { disposition_code: quarantine_pending_analysis, severity: high }
+      note: "Escape (customer-detected) — board review plus customer-notification assessment"
+    # Disposition-deadline runway nearly exhausted on the open book — pull to
+    # the front of the board's agenda before the clock lapses.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: days_to_deadline, op: between, value: [0, 3] }
+      then: { disposition_code: quarantine_pending_analysis, severity: high }
+      note: "Disposition deadline within 3 days — expedite to the next board session"
+  # default_outcome deliberately OMITTED: an unmatched nonconformance (e.g. a
+  # low-severity cosmetic or documentation NC) stays in the standard human
+  # triage queue with NO rule-generated proposal — defaulting to quarantine
+  # would over-contain conforming-adjacent material, and no other disposition
+  # code is routing-neutral.

@@ -1,0 +1,20 @@
+# Governed SoR write-back adapters (ingestion-service inc12): OUTGOING
+# connections declared with skip_test + EMPTY secrets — the tenant completes
+# real credentials/endpoints in Data → Connections, and every write executes
+# proposal-mode with four-eyes (no autonomous SoR change — a work order is
+# opened or updated only after the human engineering decision). The URLs are
+# placeholders the tenant replaces; nothing is called at install.
+- name: "Work-order management system sync"
+  connector_type: http_api
+  direction: outgoing
+  config:
+    method: POST
+    url: "https://work-management.example.invalid/api/v1/work-orders"
+    headers: { Content-Type: "application/json" }
+- name: "Asset-registry condition status update"
+  connector_type: http_api
+  direction: outgoing
+  config:
+    method: POST
+    url: "https://asset-management.example.invalid/api/v1/assets/condition-status"
+    headers: { Content-Type: "application/json" }

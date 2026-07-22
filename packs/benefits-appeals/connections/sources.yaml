@@ -1,0 +1,24 @@
+# Governed source-connector templates (ingestion-service inc13): INCOMING
+# connections pre-declared with skip_test + EMPTY secrets, so the agency's
+# expected feeds exist as governed starting points the tenant completes with
+# real hosts/credentials in Data → Connections. Nothing is polled at
+# install. These feeds satisfy the pack's dataset binding contracts
+# (data/datasets.yaml) with the tenant's REAL determination, claim, and
+# claimant data.
+- name: "Determination and appeal intake drop (SFTP)"
+  connector_type: sftp
+  direction: incoming
+  config:
+    host: "agency-transfer.example.invalid"
+    port: 22
+    username: datacern_ingest
+    root_directory: "/outbound/determination-extracts"
+- name: "Benefits program extracts (S3)"
+  connector_type: s3
+  direction: incoming
+  config:
+    region: us-east-1
+    bucket: agency-benefits-extracts
+    root_prefix: "daily/"
+    file_format: csv
+    glob: "*.csv"

@@ -6,9 +6,14 @@
 # negotiate_partial_merit is the partial-merit settlement path;
 # request_substantiation sends an unsupported quantum back for
 # contemporaneous records (measured-mile, not total-cost);
-# close_withdrawn_resolved records claimant withdrawal or field resolution.
+# close_withdrawn_resolved records claimant withdrawal or field resolution;
+# escalate_review_board is the NEUTRAL routing code the pack's decision
+# tables use — it takes no entitlement position, it only moves a claim to
+# expedited human review (deadline-near, high-exposure, or major
+# schedule-impact claims).
 - { code: approve_change_order,      label: "Approve — entitlement and quantum substantiated",        category: true_positive,  requires_note: true }
 - { code: reject_no_entitlement,     label: "Reject — no contractual entitlement",                    category: false_positive, requires_note: true }
 - { code: negotiate_partial_merit,   label: "Negotiate — partial merit, settle at adjusted quantum",  category: other,          requires_note: true }
 - { code: request_substantiation,    label: "Request substantiation — quantum or causation unsupported", category: inconclusive, requires_note: true }
 - { code: close_withdrawn_resolved,  label: "Close — withdrawn or resolved in the field",             category: benign,         requires_note: true }
+- { code: escalate_review_board,     label: "Escalate — expedited claims-review-board review",        category: inconclusive,   requires_note: true }

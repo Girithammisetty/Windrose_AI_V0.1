@@ -1,0 +1,41 @@
+# Governed decision table (BRD 54) — deterministic, explainable, no-LLM
+# ROUTING over the gb-determinations binding-contract columns (status,
+# determination_type, days_to_deadline, deadline_bucket). It orders the human
+# docket ONLY: deadline-critical determinations and hearing-prep items are
+# escalated to the expedited docket via the NEUTRAL escalate_expedited_docket
+# code — the table NEVER proposes granting, denying, or dismissing anything;
+# eligibility determinations and appeal outcomes are four-eyes human
+# decisions. Deadlines themselves are program-configured (SNAP processing
+# standards, UI promptness standards, and fair-hearing schedules vary by
+# state and program year) — days_to_deadline carries whatever clock the
+# agency configured. It EXECUTES to the same governed four-eyes proposal an
+# agent produces: every matched case becomes a case.apply_disposition
+# proposal the Program Integrity Manager must approve. Outcome
+# disposition_codes are validated against this workspace's disposition
+# catalog at install time, so `dispositions` installs before this.
+- identity: expedited_docket_routing
+  name: "Expedited docket routing (deadline runway)"
+  rules:
+    # Clock nearly exhausted on any open item — front of the docket now.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: days_to_deadline, op: between, value: [0, 3] }
+      then: { disposition_code: escalate_expedited_docket, severity: critical }
+      note: "Program-configured processing/hearing clock at ≤ 3 days — expedite to the front of the human docket"
+    # Fair-hearing packet prep inside a week of the hearing deadline.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: determination_type, op: eq, value: appeal_hearing_prep }
+        - { column: days_to_deadline, op: between, value: [0, 7] }
+      then: { disposition_code: escalate_expedited_docket, severity: high }
+      note: "Hearing-packet deadline inside 7 days — expedite packet assembly; the hearing officer decides the appeal"
+    # Anything else already in the agency's tightest deadline bucket.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: deadline_bucket, op: eq, value: "0_7_days" }
+      then: { disposition_code: escalate_expedited_docket, severity: high }
+      note: "Open item in the 0-7 day deadline bucket — expedite ahead of standard-runway work"
+  # No default_outcome ON PURPOSE: items with adequate runway proceed through
+  # the standard docket untouched — this table stays silent on them rather
+  # than proposing any eligibility outcome (grant/deny/dismiss are NEVER
+  # proposed by a table; they are human four-eyes decisions).

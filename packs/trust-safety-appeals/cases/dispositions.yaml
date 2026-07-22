@@ -11,4 +11,9 @@
 - { code: uphold_enforcement,    label: "Uphold — appeal without merit, enforcement stands",                category: false_positive, requires_note: true }
 - { code: partial_modify_action, label: "Partial — modify the enforcement action (proportionality)",       category: other,          requires_note: true }
 - { code: escalate_policy_team,  label: "Escalate to policy team (policy gap / precedent question)",       category: inconclusive,   requires_note: true }
+# escalate_senior_review is the NEUTRAL routing code the pack's decision
+# tables target: it moves an appeal to the senior/specialist/expedited queue
+# without prejudging the outcome — reinstate/uphold remain human four-eyes
+# determinations with documented policy grounds.
+- { code: escalate_senior_review, label: "Escalate to senior review queue (priority / specialist routing)", category: inconclusive,  requires_note: true }
 - { code: close_duplicate_appeal, label: "Close — duplicate of an existing appeal on this decision",       category: benign,         requires_note: true }

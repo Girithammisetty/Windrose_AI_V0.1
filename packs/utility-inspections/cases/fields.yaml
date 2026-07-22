@@ -1,0 +1,61 @@
+# Typed custom case fields (case-service CASE-FR-022) — the inspection
+# finding work item's real triage attributes, typed so the case form
+# validates them and decision surfaces can read them structurally instead of
+# parsing notes. data_type is IMMUTABLE after creation (case-service) —
+# chosen deliberately. Enum options are the actual value domains of the
+# ui_findings binding contract, so field data and dataset agree.
+- name: finding_type
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Finding type"
+    options: [equipment_damage, vegetation_encroachment, corrosion,
+              leak_indication, thermal_hotspot, hardware_wear]
+    required: false
+- name: detection_source
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Detection source"
+    options: [drone_ai, lidar, infrared, foot_patrol, customer_report]
+    required: false
+- name: risk_zone
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Fire-threat risk zone"
+    options: [hftd_tier3, hftd_tier2, standard]
+    required: false
+- name: asset_class
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Asset class"
+    options: [pole, transformer, conductor, substation_component,
+              pipeline_segment, regulator_station]
+    required: false
+- name: priority
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Triage priority"
+    options: [immediate, scheduled, monitor]
+    required: false
+- name: detection_confidence
+  data_type: float
+  purpose: both
+  field_meta:
+    label: "Detection confidence (0-1)"
+    required: false
+- name: est_repair_cost
+  data_type: float
+  purpose: both
+  field_meta:
+    label: "Estimated repair cost (USD)"
+    required: false
+- name: days_to_deadline
+  data_type: integer
+  purpose: both
+  field_meta:
+    label: "Repair/decision clock — days left"
+    required: false

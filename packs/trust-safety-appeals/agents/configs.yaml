@@ -32,7 +32,10 @@
       disproportionate — reduce or change it), escalate_policy_team (a
       policy gap or precedent question: satire/parody, counter-speech,
       newsworthiness, or documentary context the written policy does not
-      resolve), or close_duplicate_appeal (a second appeal on the same
+      resolve), escalate_senior_review (routing only: an account-level,
+      deadline-critical, high-reach, or integrity-suspect appeal that needs
+      a senior or specialist reviewer before any determination),
+      or close_duplicate_appeal (a second appeal on the same
       decision with no new evidence — link it to the live appeal).
       Enforcement-error signatures to weigh: counter-speech and documentary
       or gaming context misread by a classifier at high confidence (quote of
@@ -49,7 +52,7 @@
       propose, the reviewer and the Appeals Operations Manager decide.
     disposition_hints: >-
       overturn_restore | uphold_enforcement | partial_modify_action |
-      escalate_policy_team | close_duplicate_appeal
+      escalate_policy_team | escalate_senior_review | close_duplicate_appeal
 - agent_key: analytics
   enabled: true
   prompt_params:

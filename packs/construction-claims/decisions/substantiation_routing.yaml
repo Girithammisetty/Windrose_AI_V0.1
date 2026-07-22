@@ -1,0 +1,38 @@
+# Second governed decision table (BRD 54): deterministic documentation-
+# completeness routing — sends predictably under-documented claim types to
+# the evidence-collection queue and notice-provision questions to human
+# review. Like claim_intake_routing it is ROUTING-ONLY: request_substantiation
+# asks for records (no position taken) and escalate_review_board moves the
+# claim to humans; the table never proposes approve/reject/negotiate.
+# Columns are drawn ONLY from the cc_claims binding contract
+# (data/datasets.yaml required_columns); codes from cases/dispositions.yaml.
+- identity: substantiation_routing
+  name: "Documentation completeness routing"
+  rules:
+    # Notice recorded outside the contract-configured window: notice
+    # provisions are often condition-precedent language — an entitlement
+    # question that must reach a human/counsel, never an auto-rejection.
+    - when:
+        - { column: notice_timely, op: eq, value: "no" }
+      then: { disposition_code: escalate_review_board, severity: high }
+      note: "Notice recorded outside the contract-configured window — condition-precedent question for human review; never auto-reject on notice alone"
+    # Notice timeliness itself disputed — collect the notice record first.
+    - when:
+        - { column: notice_timely, op: eq, value: disputed }
+      then: { disposition_code: request_substantiation, severity: medium }
+      note: "Notice timeliness disputed — collect the notice record (date, method, recipient) before entitlement analysis"
+    # Acceleration/productivity claims routinely arrive without a
+    # contemporaneous production baseline — request the records up front.
+    - when:
+        - { column: claim_type, op: eq, value: acceleration }
+      then: { disposition_code: request_substantiation, severity: medium }
+      note: "Acceleration/productivity claim — request contemporaneous production records (measured-mile baseline preferred over total-cost assertions)"
+    # DSC claims turn on the indicated-conditions comparison — collect the
+    # contract's subsurface documents and the encountered-condition record.
+    - when:
+        - { column: claim_type, op: eq, value: differing_site_conditions }
+      then: { disposition_code: request_substantiation, severity: medium }
+      note: "Differing-site-conditions claim — collect boring logs / geotech baseline and the encountered-condition record for the indicated-conditions comparison"
+  # default_outcome deliberately OMITTED: a claim with no documentation gap
+  # matched here stays on the standard worklist for human triage — the table
+  # routes, it never adjudicates.

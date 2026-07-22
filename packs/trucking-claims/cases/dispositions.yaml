@@ -13,3 +13,8 @@
 - { code: file_carrier_recovery,        label: "File recovery against responsible carrier",               category: other,          requires_note: true }
 - { code: escalate_fraud_investigation, label: "Escalate to fraud investigation (double-broker / staged-loss watch)", category: inconclusive, requires_note: true }
 - { code: close_coaching_completed,     label: "Close safety event — coaching completed & documented",    category: benign,         requires_note: true }
+# route_senior_adjuster is the NEUTRAL routing outcome the pack's decision
+# tables (BRD 54) propose: it moves an item to expedited senior-adjuster
+# review and asserts NOTHING about liability, payment, or settlement — those
+# remain four-eyes human decisions recorded under the codes above.
+- { code: route_senior_adjuster,        label: "Route to senior adjuster — expedited human review",       category: inconclusive,   requires_note: true }

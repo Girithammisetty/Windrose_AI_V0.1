@@ -1,25 +1,24 @@
-# Pack datasets (ingestion-service file_upload, stable names for idempotency).
-# In production these tables arrive via the utility's asset registry, drone/
-# LiDAR analytics platforms, and inspection work-management systems (deferred
-# until pack-service ships connector materialization); this seed data is REAL
-# rows in the same landing shape, encoding genuine inspection-triage patterns
-# so every downstream component runs against real signal from day one: a
-# drone-AI thermal hotspot on a Tier-3 HFTD transformer (immediate-dispatch
-# candidate, 2-day deadline), a probable shadow-artifact "damage" detection
-# (field-verify — the detector-training loop), a Grade-2-style leak
-# indication scheduled inside its window, a vegetation-encroachment cluster
-# on a PSPS-history circuit, corrosion on a 1960s cast-iron pipeline segment
-# (planned work + engineering review), and a repeat hotspot on the same
-# conductor splice after a prior monitor decision (escalation candidate).
+# Pack dataset BINDING CONTRACTS (no-dummy-data rule): the pack ships ZERO
+# seed data. Each entry declares the dataset the workflow needs and the exact
+# landing-shape columns it requires; at install the tenant binds it to a REAL
+# dataset (explicit dataset_bindings on the install request, or same-name
+# reuse), and pack-service validates the bound dataset exposes every required
+# column — failing closed with the missing list. Real data arrives through the
+# pack's governed source connectors (connections/sources.yaml) or file upload.
 - identity: ui_circuits
   name: ui-circuits
-  file: data/ui_circuits.csv
-  format: csv
+  required_columns:
+    [circuit_id, circuit_name, service_type, region, customers_served,
+     wildfire_risk, psps_history, reliability_tier]
 - identity: ui_assets
   name: ui-assets
-  file: data/ui_assets.csv
-  format: csv
+  required_columns:
+    [asset_id, circuit_id, asset_class, install_decade, material,
+     last_inspection, criticality]
 - identity: ui_findings
   name: ui-findings
-  file: data/ui_findings.csv
-  format: csv
+  required_columns:
+    [finding_id, asset_id, finding_type, asset_class, detection_source,
+     risk_zone, priority, severity, status, disposition, filed_month,
+     age_days, days_to_deadline, deadline_bucket, est_repair_cost,
+     detection_confidence]

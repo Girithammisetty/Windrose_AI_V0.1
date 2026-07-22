@@ -1,0 +1,20 @@
+# Governed typed case schema (case-service inc10): the tax-notice work item
+# as a named case TYPE binding the triage field set, so intake creates a
+# structurally-complete notice case (not a generic case with prose notes).
+# Embedded field defs use {name, data_type, label, required}; names align
+# with cases/fields.yaml and the tx-notices binding-contract columns.
+- schema_key: tax_notice_review
+  name: "Tax notice review"
+  description: >-
+    An agency tax notice (assessment, penalty/interest, information mismatch,
+    nexus questionnaire, or exemption-certificate audit) worked inside its
+    authority-configured response window, with a human-approved disposition
+    behind every response, payment, or abatement request.
+  fields:
+    - { name: notice_type,        data_type: enum,    label: "Notice type",                  required: true }
+    - { name: jurisdiction_level, data_type: enum,    label: "Jurisdiction level",           required: true }
+    - { name: tax_type,           data_type: enum,    label: "Tax type",                     required: false }
+    - { name: root_cause,         data_type: enum,    label: "Root cause",                   required: false }
+    - { name: assessed_amount,    data_type: float,   label: "Assessed amount (USD)",        required: true }
+    - { name: abated_amount,      data_type: float,   label: "Abated / reduced amount (USD)", required: false }
+    - { name: days_to_deadline,   data_type: integer, label: "Response window — days left",  required: false }

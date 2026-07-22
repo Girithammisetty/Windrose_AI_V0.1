@@ -1,0 +1,54 @@
+# Typed custom case fields (case-service CASE-FR-022) — the screening-hit
+# adjudication work item's real attributes, typed so the case form validates
+# them and decision surfaces can read them structurally instead of parsing
+# notes. data_type is IMMUTABLE after creation (case-service) — chosen
+# deliberately. Enum options mirror the bs_reviews / bs_orders binding-
+# contract value domains so field data and dataset agree.
+- name: check_type
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Check type"
+    options: [criminal, mvr, employment_verification, education, credit_header]
+    required: false
+- name: hit_type
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Hit type"
+    options: [felony, misdemeanor, pending_charge, record_mismatch, discrepancy]
+    required: false
+- name: record_age_band
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Record age band"
+    options: [under_3_years, 3_7_years, over_7_years]
+    required: false
+- name: relevance
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Job-relatedness analysis"
+    options: [job_related, not_job_related, pending]
+    required: false
+- name: identity_confidence
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Identity-match confidence"
+    options: [low, medium, high]
+    required: false
+- name: position_category
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Position category"
+    options: [driver, healthcare, finance, admin, hospitality, retail, warehouse]
+    required: false
+- name: days_to_deadline
+  data_type: integer
+  purpose: both
+  field_meta:
+    label: "Adverse-action / dispute clock — days left"
+    required: false

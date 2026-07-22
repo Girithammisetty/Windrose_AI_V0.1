@@ -1,0 +1,67 @@
+# Domain ontology (dataset-service inc11): the entity TYPES this vertical
+# operates on and their typed relationships — the type-level model behind the
+# tx_entities / tx_accounts / tx_notices binding contracts. Attribute names
+# match the required_columns so the ontology describes data the bound
+# datasets actually carry.
+- entity_key: legal_entity
+  name: "Legal entity"
+  description: "The filing legal entity (corporate group member) whose registrations and notices are managed."
+  attributes:
+    - { name: business_unit, data_type: string }
+    - { name: industry, data_type: string }
+    - { name: nexus_footprint, data_type: string, description: "single_state | regional | national" }
+    - { name: erp_system, data_type: string }
+    - { name: voluntary_disclosure_history, data_type: string, description: "prior VDA history with any jurisdiction (yes | no)" }
+  relationships:
+    - { name: tax_accounts, target: tax_account, cardinality: has_many }
+- entity_key: tax_account
+  name: "Tax account"
+  description: "A legal entity's registration with one taxing jurisdiction (federal, state, or local) for one filing obligation."
+  attributes:
+    - { name: jurisdiction, data_type: string }
+    - { name: registration_status, data_type: string }
+    - { name: filing_frequency, data_type: string }
+    - { name: filing_history, data_type: string, description: "clean | occasional_late | frequent_late — the compliance history an abatement request cites" }
+  relationships:
+    - { name: legal_entity, target: legal_entity, cardinality: belongs_to }
+    - { name: notices, target: tax_notice, cardinality: has_many }
+- entity_key: tax_notice
+  name: "Tax notice"
+  description: >-
+    One agency notice on a tax account — assessment, penalty/interest,
+    information mismatch, nexus questionnaire, or certificate audit — worked
+    inside its authority-configured response window.
+  attributes:
+    - { name: notice_type, data_type: string }
+    - { name: jurisdiction_level, data_type: string, description: "irs | state | county_city" }
+    - { name: tax_type, data_type: string }
+    - { name: root_cause, data_type: string }
+    - { name: severity, data_type: string }
+    - { name: status, data_type: string }
+    - { name: age_days, data_type: integer }
+    - { name: days_to_deadline, data_type: integer }
+  relationships:
+    - { name: tax_account, target: tax_account, cardinality: belongs_to }
+    - { name: assessment, target: assessment, cardinality: has_one }
+    - { name: agency_response, target: agency_response, cardinality: has_one }
+- entity_key: assessment
+  name: "Assessment"
+  description: "The dollar exposure a notice proposes or asserts, and what abatement, withdrawal, or amendment later recovered."
+  attributes:
+    - { name: assessed_amount, data_type: float }
+    - { name: abated_amount, data_type: float }
+    - { name: amount_band, data_type: string }
+  relationships:
+    - { name: tax_notice, target: tax_notice, cardinality: belongs_to }
+- entity_key: agency_response
+  name: "Agency response"
+  description: >-
+    The response filed back to the taxing authority within the notice's
+    response window, carrying the human-approved disposition (abatement
+    request, payment, amended return, clarification, or duplicate
+    reconciliation) — always a four-eyes decision.
+  attributes:
+    - { name: disposition, data_type: string }
+    - { name: deadline_bucket, data_type: string }
+  relationships:
+    - { name: tax_notice, target: tax_notice, cardinality: belongs_to }

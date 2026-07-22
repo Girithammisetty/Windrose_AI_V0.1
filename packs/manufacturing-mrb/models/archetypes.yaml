@@ -1,0 +1,36 @@
+# Governed model blueprints (experiment-service inc9): the intended models
+# this vertical runs, independent of any trained artifact. Each corresponds
+# to a training pipeline this pack already ships (pipelines/templates.yaml),
+# so the blueprint and its implementation stay in one governed pair.
+- archetype_key: mrb_disposition_outcome_scorer
+  name: "NC disposition outcome scorer"
+  task_type: classification
+  target: disposition
+  description: >-
+    Supervised scorer over the tenant's adjudicated nonconformance history
+    (nc-nonconformances): predicts the likely MRB disposition from
+    nonconformance type, detection point, specification class, quantity
+    band, severity, and cost impact — the deterministic-first pre-router for
+    NC intake triage. Implemented by the pack's xgboost training pipeline.
+  expected_metrics: { f1: 0.80 }
+  governance_notes: >-
+    Scores order the MRB queue only — use-as-is, repair, and scrap
+    dispositions are human four-eyes engineering determinations within the
+    board's quality-system-configured authority limits, and
+    safety/airworthiness-critical nonconformances always go to the board
+    regardless of score. Promotion requires eval-gate + Quality Manager
+    approval.
+- archetype_key: mrb_lot_anomaly_detector
+  name: "Manufacturing lot anomaly detector"
+  task_type: anomaly_detection
+  target: null
+  description: >-
+    Unsupervised surface scan over the manufacturing lot book (nc-lots) for
+    lots that look unlike the rest — supplier / part-family / program /
+    lot-size combinations worth containment-sweep and incoming-inspection
+    targeting. Implemented by the pack's isolation-forest training pipeline.
+  expected_metrics: {}
+  governance_notes: >-
+    Detector output opens review work, never a material action; flagged lots
+    route to the quality engineer's queue for human investigation and any
+    hold decision is a governed human disposition.

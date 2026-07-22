@@ -1,0 +1,23 @@
+# Governed typed case schema (case-service inc10): the cargo/trucking claim
+# work item as a named case TYPE binding the adjudication field set, so intake
+# creates a structurally-complete claim case (not a generic case with prose
+# notes). Embedded field defs use {name, data_type, label, required}; names
+# align with cases/fields.yaml and the tl-claims binding-contract columns.
+# Claim-notice and suit deadlines are contract-configured on the tenant's own
+# bill-of-lading / carrier-agreement terms — the schema carries the runway,
+# the tenant's contracts define the window.
+- schema_key: cargo_claim
+  name: "Cargo claim (OS&D / safety / vetting)"
+  description: >-
+    A cargo over-short-and-damage claim, telematics safety-event review, or
+    carrier vetting review, adjudicated with contract-configured
+    notice-and-filing-deadline awareness and optional recovery filing
+    against the responsible carrier.
+  fields:
+    - { name: claim_kind,       data_type: enum,    label: "Work item kind",                              required: false }
+    - { name: claim_type,       data_type: enum,    label: "Claim / event type",                          required: true }
+    - { name: liability_band,   data_type: enum,    label: "Liability assessment band",                   required: false }
+    - { name: commodity_event,  data_type: string,  label: "Commodity / event detail",                    required: false }
+    - { name: claim_amount,     data_type: float,   label: "Claimed amount (USD)",                        required: true }
+    - { name: recovery_amount,  data_type: float,   label: "Recovered from responsible carrier (USD)",    required: false }
+    - { name: days_to_deadline, data_type: integer, label: "Contract clock — days to response/filing deadline", required: false }

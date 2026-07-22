@@ -1,0 +1,41 @@
+# Governed decision table (BRD 54) — deterministic, explainable, no-LLM
+# ROUTING over the wc_claims binding-contract columns (claim_type, severity,
+# litigation_flag, days_to_deadline, incurred_reserve). It EXECUTES to the
+# same governed four-eyes proposal an agent produces: every matched claim
+# becomes a case.apply_disposition proposal the WC Claims Manager must
+# approve. This table only ORDERS and ROUTES the queue — it NEVER proposes a
+# compensability determination, denial, reserve change, or settlement; those
+# are always human four-eyes decisions. Outcome disposition_codes are
+# validated against this workspace's disposition catalog at install time, so
+# `dispositions` installs before this (install phasing).
+- identity: claim_triage_routing
+  name: "Claim triage routing — senior adjuster escalation"
+  rules:
+    # Jurisdiction-configured accept/deny decision window nearly lapsed —
+    # a senior adjuster must work the claim now (decide on the evidence in
+    # file or issue the jurisdiction's delay/investigation notice).
+    - when:
+        - { column: days_to_deadline, op: between, value: [0, 3] }
+      then: { disposition_code: escalate_senior_adjuster, severity: critical }
+      note: "Compensability decision clock ≤ 3 days (jurisdiction-configured window) — senior adjuster now"
+    # Lost-time claim already marked high severity — senior handling.
+    - when:
+        - { column: claim_type, op: eq, value: indemnity }
+        - { column: severity, op: in, value: [high] }
+      then: { disposition_code: escalate_senior_adjuster, severity: high }
+      note: "High-severity lost-time claim — senior adjuster ownership and reserve-adequacy review"
+    # Lost-time claim with major reserve exposure — management attention.
+    - when:
+        - { column: claim_type, op: eq, value: indemnity }
+        - { column: incurred_reserve, op: gte, value: 50000 }
+      then: { disposition_code: escalate_senior_adjuster, severity: high }
+      note: "Lost-time claim with incurred reserve ≥ $50k — senior adjuster + documented reserve rationale"
+    # Litigated claim — counsel-managed handling by a senior adjuster.
+    - when:
+        - { column: litigation_flag, op: eq, value: "yes" }
+      then: { disposition_code: escalate_senior_adjuster, severity: high }
+      note: "Attorney representation / active litigation — senior adjuster; all claimant contact via counsel"
+  # default_outcome deliberately OMITTED: an unmatched claim (e.g. a clean
+  # medical-only claim) simply stays in the standard adjuster queue. The
+  # disposition catalog has no "no-action" code, and a routing table must
+  # never fall through to a determination-shaped outcome.

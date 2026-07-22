@@ -1,0 +1,35 @@
+# Governed model blueprints (experiment-service inc9): the intended models this
+# vertical runs, independent of any trained artifact. Each corresponds to a
+# training pipeline this pack already ships (pipelines/templates.yaml), so the
+# blueprint and its implementation stay in one governed pair.
+- archetype_key: uw_submission_triage_scorer
+  name: "Submission triage outcome scorer"
+  task_type: classification
+  target: disposition
+  description: >-
+    Supervised scorer over the tenant's triaged submissions (uw-submissions):
+    predicts the likely intake disposition from line of business, appetite
+    fit, completeness, broker tier, premium band, and deadline runway — the
+    deterministic-first pre-router for ordering the intake queue. Implemented
+    by the pack's xgboost training pipeline.
+  expected_metrics: { f1: 0.80 }
+  governance_notes: >-
+    Scores order the submission queue ONLY — quote, decline, and bind are
+    four-eyes human underwriting authority under the carrier-configured
+    appetite statement and authority limits, and every declination carries
+    documented, risk-based human reasons. Promotion requires eval-gate +
+    manager approval.
+- archetype_key: uw_account_anomaly_screen
+  name: "Account book anomaly screen"
+  task_type: anomaly_detection
+  target: null
+  description: >-
+    Unsupervised surface scan over the tenant's account book (uw-accounts)
+    for odd TIV / loss-history / industry / tenure combinations — the
+    valuation-inconsistency and moral-hazard review surface. Implemented by
+    the pack's isolation-forest training pipeline.
+  expected_metrics: {}
+  governance_notes: >-
+    Detector output opens human review work, never adverse action; flagged
+    accounts route to referral review for human scrutiny, and scrutiny is
+    never by itself a reason to decline.

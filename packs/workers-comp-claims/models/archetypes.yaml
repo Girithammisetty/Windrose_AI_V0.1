@@ -1,0 +1,34 @@
+# Governed model blueprints (experiment-service inc9): the intended models this
+# vertical runs, independent of any trained artifact. Each corresponds to a
+# training pipeline this pack already ships (pipelines/templates.yaml), so the
+# blueprint and its implementation stay in one governed pair.
+- archetype_key: wc_compensability_outcome_scorer
+  name: "Compensability outcome scorer"
+  task_type: classification
+  target: disposition
+  description: >-
+    Supervised scorer over adjudicated claims (wc-claims): predicts the likely
+    disposition from injury mechanism, claim type, jurisdiction, reserve/paid
+    trajectory, and employer context — the deterministic-first pre-router for
+    FNOL triage ordering. Implemented by the pack's xgboost training pipeline.
+  expected_metrics: { f1: 0.80 }
+  governance_notes: >-
+    Determination-relevant: scores order the triage queue only — every
+    compensability determination, denial, reserve change, and settlement
+    remains a four-eyes human decision with documented findings. Promotion
+    requires eval-gate + manager approval.
+- archetype_key: wc_bill_anomaly_detector
+  name: "Medical bill anomaly detector"
+  task_type: anomaly_detection
+  target: null
+  description: >-
+    Unsupervised surface scan over wc-medical-bills for fee-schedule outliers
+    and provider billing clusters (one provider fanning above-schedule charges
+    across many claims). Implemented by the pack's isolation-forest training
+    pipeline.
+  expected_metrics: {}
+  governance_notes: >-
+    Detector output opens bill-review/utilization-review work, never adverse
+    action against a claimant or provider. Any SIU referral it informs is
+    allegation-neutral: pattern flags are risk signals, not findings, and
+    benefits plus jurisdiction-configured deadlines continue during review.

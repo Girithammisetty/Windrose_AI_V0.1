@@ -1,0 +1,22 @@
+# Governed typed case schema (case-service inc10): the nonconformance review
+# work item as a named case TYPE binding the MRB adjudication field set, so
+# intake creates a structurally-complete disposition case (not a generic case
+# with prose notes). Embedded field defs use {name, data_type, label,
+# required}; names align with cases/fields.yaml and the nc-nonconformances
+# binding contract.
+- schema_key: nonconformance_review
+  name: "Nonconformance review (MRB)"
+  description: >-
+    A manufacturing nonconformance awaiting a Material Review Board
+    disposition under the tenant's quality-system-configured authority
+    limits, with containment state and disposition-deadline awareness.
+    Use-as-is, repair, and scrap outcomes are always human four-eyes
+    engineering determinations.
+  fields:
+    - { name: nc_type,           data_type: enum,    label: "Nonconformance type",             required: true }
+    - { name: spec_class,        data_type: enum,    label: "Specification class",             required: true }
+    - { name: detection_point,   data_type: enum,    label: "Detection point",                 required: false }
+    - { name: containment,       data_type: enum,    label: "Containment status",              required: false }
+    - { name: quantity_band,     data_type: enum,    label: "Affected quantity band",          required: false }
+    - { name: est_cost_impact,   data_type: float,   label: "Estimated cost impact (USD)",     required: false }
+    - { name: days_to_deadline,  data_type: integer, label: "Disposition deadline — days left", required: false }

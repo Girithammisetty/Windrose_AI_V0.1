@@ -1,24 +1,24 @@
-# Pack datasets (ingestion-service file_upload, stable names for idempotency).
-# In production these tables arrive via the carrier/TPA's claims
-# administration system and state EDI / bill-review connectors (deferred until
-# pack-service ships connector materialization); this seed data is REAL rows
-# in the same landing shape, encoding genuine workers'-comp patterns so every
-# downstream component runs against real signal from day one: a
-# Monday-morning unwitnessed back strain reported right after a layoff notice
-# (SIU red-flag cluster), a compensability claim 2 days from its statutory
-# decision deadline, a catastrophic scaffold fall with fast-rising reserves,
-# a medical-only knee claim converting to indemnity, a pain-management
-# provider billing far above the fee schedule across four claims, and a
-# litigated repetitive-stress claim with attorney representation.
+# Pack dataset BINDING CONTRACTS (no-dummy-data rule): the pack ships ZERO
+# seed data. Each entry declares the dataset the workflow needs and the exact
+# landing-shape columns it requires; at install the tenant binds it to a REAL
+# dataset (explicit dataset_bindings on the install request, or same-name
+# reuse), and pack-service validates the bound dataset exposes every required
+# column — failing closed with the missing list. Real data arrives through the
+# pack's governed source connectors (connections/sources.yaml) or file upload.
 - identity: wc_claims
   name: wc-claims
-  file: data/wc_claims.csv
-  format: csv
+  required_columns:
+    [claim_id, employer_id, claimant_name, jurisdiction_state, injury_type,
+     body_part, cause_code, claim_type, severity, status, disposition,
+     siu_flag, litigation_flag, rtw_status, filed_month, age_days,
+     days_to_deadline, deadline_bucket, incurred_reserve, paid_to_date]
 - identity: wc_medical_bills
   name: wc-medical-bills
-  file: data/wc_medical_bills.csv
-  format: csv
+  required_columns:
+    [bill_id, claim_id, provider_name, provider_type, service_category,
+     billed_amount, paid_amount, bill_month, fee_schedule_flag]
 - identity: wc_employers
   name: wc-employers
-  file: data/wc_employers.csv
-  format: csv
+  required_columns:
+    [employer_id, employer_name, industry, class_code_group, state,
+     safety_program, experience_mod_tier]

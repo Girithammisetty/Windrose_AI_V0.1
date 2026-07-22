@@ -1,0 +1,47 @@
+# Second governed decision table (BRD 54): deterministic systemic root-cause
+# routing — the pattern-level complement to deadline_docket_triage. The
+# root_cause column of the tx-notices binding contract carries the recurring
+# signal (a rate-table lag or certificate-hygiene failure recurs every cycle
+# on the same account until the upstream fix lands), so the table routes
+# those classes to root-cause review instead of case-by-case response.
+# ROUTING-ONLY, same as the docket table: the ONLY outcome it ever proposes
+# is the neutral escalate_notice_review code — registration decisions,
+# voluntary-disclosure posture, certificate remediation commitments, and
+# every response to an authority are four-eyes human determinations. Executes
+# to the same governed proposal path: the table proposes, the Tax Compliance
+# Manager decides.
+- identity: root_cause_review_routing
+  name: "Recurring root-cause review routing"
+  rules:
+    # ERP rate-table lag — recurs every filing cycle until the rate feed is
+    # fixed; route to systemic root-cause review, not just this notice.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: root_cause, op: eq, value: rate_change }
+      then: { disposition_code: escalate_notice_review, severity: medium }
+      note: "Rate-change root cause — recurring ERP rate-table-lag class; root-cause review of the rate-subscription feed alongside the case response"
+    # Expired/incomplete exemption certificates — the remediation sprint has
+    # to start while the audit's cure window is still open.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: root_cause, op: eq, value: cert_expired }
+      then: { disposition_code: escalate_notice_review, severity: high }
+      note: "Certificate-hygiene root cause — start the re-solicitation sprint while any authority-allowed cure window is open; a human owns the remediation plan"
+    # Nexus questionnaires — registration and voluntary-disclosure posture is
+    # decided by the Controversy & Abatement Lead before ANY response, since
+    # VDA relief is typically unavailable once the authority has made contact.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: root_cause, op: eq, value: nexus_question }
+      then: { disposition_code: escalate_notice_review, severity: high }
+      note: "Nexus-question root cause — registration and voluntary-disclosure posture must be set by the Controversy & Abatement Lead before any response is filed"
+    # Root cause not yet confirmed — a possible duplicate of an already-paid
+    # liability; reconcile payment records before anything else. Never pay twice.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: root_cause, op: eq, value: pending }
+      then: { disposition_code: escalate_notice_review, severity: medium }
+      note: "Unconfirmed root cause — reconcile payment and filing records first (possible duplicate of a resolved liability); a human confirms before any response or payment"
+  # default_outcome deliberately OMITTED: notices without a systemic-cause
+  # signal are ordered by deadline_docket_triage; this table adds no proposal
+  # for them, and closed rows get NO proposal at all.

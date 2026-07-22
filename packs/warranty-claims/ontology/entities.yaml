@@ -1,0 +1,73 @@
+# Domain ontology (dataset-service inc11): the entity TYPES this vertical
+# operates on and their typed relationships — the type-level model behind the
+# wa_dealers / wa_units / wa_claims binding contracts. Attribute names match
+# the contracts' required_columns so the ontology describes data the bound
+# tenant datasets actually carry; repair_order and supplied_part model the
+# claim's service-event and cost-recovery sides the workflow reasons about.
+- entity_key: dealer
+  name: Dealer
+  description: "The franchised dealer / service-network outlet filing warranty claims against the manufacturer."
+  attributes:
+    - { name: dealer_name, data_type: string }
+    - { name: region, data_type: string }
+    - { name: volume_tier, data_type: string }
+    - { name: audit_score_tier, data_type: string, description: "standing of the dealer in the warranty audit program" }
+    - { name: claims_per_unit_tier, data_type: string, description: "claims-per-unit versus peer tier (padding watch)" }
+    - { name: certified, data_type: string, description: "yes | no — current service certification" }
+  relationships:
+    - { name: units, target: unit, cardinality: has_many }
+    - { name: claims, target: warranty_claim, cardinality: has_many }
+- entity_key: unit
+  name: "Unit in operation"
+  description: "A sold product unit under a warranty plan — the thing that fails and gets repaired."
+  attributes:
+    - { name: product_line, data_type: string }
+    - { name: model_year, data_type: string }
+    - { name: warranty_plan, data_type: string, description: "base | extended (per program terms)" }
+    - { name: build_batch, data_type: string, description: "production batch — the early-warning cluster key" }
+    - { name: sale_month, data_type: string }
+    - { name: service_visits_band, data_type: string, description: "service-visit frequency band (comeback watch)" }
+  relationships:
+    - { name: dealer, target: dealer, cardinality: belongs_to }
+    - { name: claims, target: warranty_claim, cardinality: has_many }
+- entity_key: warranty_claim
+  name: "Warranty claim"
+  description: >-
+    A dealer-filed claim for a covered failure on one unit, carrying the
+    payment-decision clock, coverage state, and adjudication outcome.
+  attributes:
+    - { name: claim_type, data_type: string, description: "repair | replacement | goodwill | recall_related" }
+    - { name: component_system, data_type: string }
+    - { name: failure_mode, data_type: string }
+    - { name: labor_op_band, data_type: string }
+    - { name: usage_band, data_type: string, description: "usage-meter band at failure, incl. over_limit" }
+    - { name: in_warranty, data_type: string, description: "yes | no" }
+    - { name: claim_amount, data_type: float }
+    - { name: adjusted_amount, data_type: float }
+    - { name: recovery_amount, data_type: float }
+    - { name: days_to_deadline, data_type: integer }
+  relationships:
+    - { name: unit, target: unit, cardinality: belongs_to }
+    - { name: dealer, target: dealer, cardinality: belongs_to }
+    - { name: repair_order, target: repair_order, cardinality: has_one }
+- entity_key: repair_order
+  name: "Repair order"
+  description: >-
+    The dealer's service event behind the claim — the diagnostic findings and
+    billed labor operations the adjudicator verifies against the failure.
+  attributes:
+    - { name: failure_mode, data_type: string }
+    - { name: labor_op_band, data_type: string, description: "billed labor-operation count band (stacking signal)" }
+  relationships:
+    - { name: claim, target: warranty_claim, cardinality: belongs_to }
+    - { name: parts_replaced, target: supplied_part, cardinality: has_many }
+- entity_key: supplied_part
+  name: "Supplied part"
+  description: >-
+    A supplier-furnished component implicated in failures — the pivot for
+    supplier warranty chargebacks and build-batch early-warning clusters.
+  attributes:
+    - { name: component_system, data_type: string }
+    - { name: recovery_amount, data_type: float, description: "cost recovered from the supplier when the part caused the failure" }
+  relationships:
+    - { name: claims, target: warranty_claim, cardinality: has_many }

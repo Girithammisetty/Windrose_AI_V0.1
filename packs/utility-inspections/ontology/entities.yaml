@@ -1,0 +1,81 @@
+# Domain ontology (dataset-service inc11): the entity TYPES this vertical
+# operates on and their typed relationships — the type-level model behind
+# the ui_circuits / ui_assets / ui_findings binding contracts. Attribute
+# names match the contract columns so the ontology describes data the
+# tenant's bound datasets actually carry; inspection and work_order model
+# the surrounding operational objects those columns reference.
+- entity_key: circuit
+  name: "Circuit / district"
+  description: >-
+    An electric circuit or gas district in the service territory, carrying
+    the wildfire-risk tier, PSPS history, and reliability posture that
+    drive triage weighting.
+  attributes:
+    - { name: circuit_name, data_type: string }
+    - { name: service_type, data_type: string, description: "electric | gas" }
+    - { name: region, data_type: string }
+    - { name: customers_served, data_type: string }
+    - { name: wildfire_risk, data_type: string, description: "extreme | elevated | standard" }
+    - { name: psps_history, data_type: string, description: "yes | no" }
+    - { name: reliability_tier, data_type: string }
+  relationships:
+    - { name: assets, target: asset, cardinality: has_many }
+- entity_key: asset
+  name: "Utility asset"
+  description: >-
+    A physical asset in the inspection registry — pole, transformer,
+    conductor, substation component, pipeline segment, or regulator
+    station — with age, material, criticality, and inspection recency.
+  attributes:
+    - { name: asset_class, data_type: string }
+    - { name: install_decade, data_type: string }
+    - { name: material, data_type: string }
+    - { name: last_inspection, data_type: string, description: "under_1yr | 1_3yr | over_3yr" }
+    - { name: criticality, data_type: string, description: "critical | high | standard" }
+  relationships:
+    - { name: circuit, target: circuit, cardinality: belongs_to }
+    - { name: findings, target: finding, cardinality: has_many }
+    - { name: inspections, target: inspection, cardinality: has_many }
+- entity_key: inspection
+  name: "Inspection survey"
+  description: >-
+    A detection event over an asset — a drone-AI or LiDAR flight, an
+    infrared read, a foot-patrol instrument survey, or a customer report —
+    that raises findings with a per-detection confidence score.
+  attributes:
+    - { name: detection_source, data_type: string }
+    - { name: detection_confidence, data_type: float }
+  relationships:
+    - { name: asset, target: asset, cardinality: belongs_to }
+    - { name: findings, target: finding, cardinality: has_many }
+- entity_key: finding
+  name: "Inspection finding"
+  description: >-
+    A defect or condition raised by an inspection over one asset, carrying
+    the fire-threat risk zone, triage priority, repair/decision clock, and
+    the human repair/defer disposition.
+  attributes:
+    - { name: finding_type, data_type: string }
+    - { name: risk_zone, data_type: string, description: "hftd_tier3 | hftd_tier2 | standard" }
+    - { name: priority, data_type: string }
+    - { name: severity, data_type: string }
+    - { name: status, data_type: string }
+    - { name: disposition, data_type: string }
+    - { name: days_to_deadline, data_type: integer }
+    - { name: est_repair_cost, data_type: float }
+    - { name: detection_confidence, data_type: float }
+  relationships:
+    - { name: asset, target: asset, cardinality: belongs_to }
+    - { name: inspection, target: inspection, cardinality: belongs_to }
+    - { name: work_order, target: work_order, cardinality: has_one }
+- entity_key: work_order
+  name: "Work order"
+  description: >-
+    The remediation action a dispatched or scheduled finding becomes in the
+    utility's work-management system — the target of the pack's governed
+    write-back adapter; created only after the human four-eyes decision.
+  attributes:
+    - { name: est_repair_cost, data_type: float }
+    - { name: disposition, data_type: string, description: "the human decision that opened the order" }
+  relationships:
+    - { name: finding, target: finding, cardinality: belongs_to }

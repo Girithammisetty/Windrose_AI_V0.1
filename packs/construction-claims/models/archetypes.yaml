@@ -1,0 +1,35 @@
+# Governed model blueprints (experiment-service inc9): the intended models
+# this vertical runs, independent of any trained artifact. Each corresponds
+# to a training pipeline this pack already ships (pipelines/templates.yaml),
+# so the blueprint and its implementation stay in one governed pair.
+- archetype_key: cc_claim_outcome_scorer
+  name: "Claim outcome scorer"
+  task_type: classification
+  target: disposition
+  description: >-
+    Supervised scorer over adjudicated claims (cc-claims): predicts the
+    likely disposition from claim type, entitlement basis, notice
+    timeliness, schedule impact, amount, and deadline runway — the
+    deterministic-first pre-router for intake triage ordering. Implemented
+    by the pack's xgboost training pipeline.
+  expected_metrics: { f1: 0.80 }
+  governance_notes: >-
+    Determination-relevant: scores order review only — every entitlement and
+    quantum determination remains a four-eyes human decision, and rejection
+    letters always carry documented human findings citing the governing
+    contract clause. Promotion requires eval-gate + Claims Review Board
+    Manager approval.
+- archetype_key: cc_contract_anomaly_detector
+  name: "Contract-book anomaly detector"
+  task_type: anomaly_detection
+  target: null
+  description: >-
+    Unsupervised surface scan over cc-contracts for unusual claim-frequency /
+    value-band / retention combinations that flag claim-prone contracts and
+    concentration risk. Implemented by the pack's isolation-forest training
+    pipeline.
+  expected_metrics: {}
+  governance_notes: >-
+    Detector output opens review work, never adverse action; flagged
+    contracts route to the project-controls review queue for human
+    investigation.

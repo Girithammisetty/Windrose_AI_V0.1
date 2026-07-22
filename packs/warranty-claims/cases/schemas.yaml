@@ -1,0 +1,21 @@
+# Governed typed case schema (case-service inc10): the warranty-claim work
+# item as a named case TYPE binding the adjudication field set, so intake
+# creates a structurally-complete claim case (not a generic case with prose
+# notes). Embedded field defs use {name, data_type, label, required}; names
+# align with cases/fields.yaml and the wa_claims binding-contract columns.
+- schema_key: warranty_claim_review
+  name: "Warranty claim review"
+  description: >-
+    A dealer/service-network warranty claim adjudicated by the manufacturer:
+    coverage and diagnostic-evidence review with payment-decision deadline
+    awareness, dealer-audit and supplier-recovery routing, and
+    program-configured goodwill governance.
+  fields:
+    - { name: claim_type,        data_type: enum,    label: "Claim type",                        required: true }
+    - { name: component_system,  data_type: enum,    label: "Component system",                  required: true }
+    - { name: failure_mode,      data_type: enum,    label: "Failure mode",                      required: false }
+    - { name: labor_op_band,     data_type: enum,    label: "Labor operations billed",           required: false }
+    - { name: in_warranty,       data_type: enum,    label: "In-warranty status",                required: true }
+    - { name: claim_amount,      data_type: float,   label: "Claimed amount (USD)",              required: true }
+    - { name: recovery_amount,   data_type: float,   label: "Recovered from supplier (USD)",     required: false }
+    - { name: days_to_deadline,  data_type: integer, label: "Payment-decision clock — days left", required: false }

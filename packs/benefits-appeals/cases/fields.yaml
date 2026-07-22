@@ -1,0 +1,54 @@
+# Typed custom case fields (case-service CASE-FR-022) — the benefits
+# determination/appeal work item's real adjudication attributes, typed so the
+# case form validates them and decision surfaces can read them structurally
+# instead of parsing notes. data_type is IMMUTABLE after creation
+# (case-service) — chosen deliberately. Enum options mirror the
+# gb-determinations / gb-claims binding-contract value sets so field data and
+# the bound datasets agree.
+- name: program
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Benefit program"
+    options: [unemployment, snap, medicaid_eligibility, tanf, disability_state]
+    required: false
+- name: determination_type
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Determination type"
+    options: [initial_eligibility, redetermination, overpayment, appeal_hearing_prep]
+    required: false
+- name: issue_type
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Adjudication issue"
+    options: [income_verification, separation_reason, identity, household_composition, work_search]
+    required: false
+- name: appeal_outcome
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Appeal outcome"
+    options: [not_applicable, pending, upheld, overturned]
+    required: false
+- name: verification_docs
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Verification documents"
+    options: [complete, partial, missing]
+    required: false
+- name: days_to_deadline
+  data_type: integer
+  purpose: both
+  field_meta:
+    label: "Processing clock — days left"
+    required: false
+- name: overpayment_amount
+  data_type: float
+  purpose: both
+  field_meta:
+    label: "Overpayment at issue (USD)"
+    required: false

@@ -1,0 +1,79 @@
+# Domain ontology (dataset-service inc11): the entity TYPES this vertical
+# operates on and their typed relationships — the type-level model behind the
+# wc_claims / wc_medical_bills / wc_employers binding contracts. Attribute
+# names match the contracts' required_columns so the ontology describes data
+# the bound datasets actually carry.
+- entity_key: claimant
+  name: Claimant
+  description: "The injured worker whose claim is under adjudication."
+  attributes:
+    - { name: claimant_name, data_type: string }
+  relationships:
+    - { name: claims, target: claim, cardinality: has_many }
+    - { name: employer, target: employer, cardinality: belongs_to }
+- entity_key: employer
+  name: Employer
+  description: "The insured employer (or self-insured entity) on the policy."
+  attributes:
+    - { name: employer_name, data_type: string }
+    - { name: industry, data_type: string }
+    - { name: class_code_group, data_type: string }
+    - { name: state, data_type: string }
+    - { name: safety_program, data_type: string, description: "yes | no" }
+    - { name: experience_mod_tier, data_type: string, description: "credit | neutral | debit" }
+  relationships:
+    - { name: claims, target: claim, cardinality: has_many }
+    - { name: claimants, target: claimant, cardinality: has_many }
+- entity_key: claim
+  name: "Workers' comp claim"
+  description: >-
+    A first-notice-of-loss claim carrying the AOE/COE compensability question,
+    the jurisdiction-configured decision clock, reserve and paid exposure,
+    litigation posture, and return-to-work state.
+  attributes:
+    - { name: claim_type, data_type: string, description: "medical_only | indemnity" }
+    - { name: severity, data_type: string }
+    - { name: status, data_type: string }
+    - { name: disposition, data_type: string }
+    - { name: siu_flag, data_type: string, description: "pattern-flag indicator — a risk signal, not a finding" }
+    - { name: litigation_flag, data_type: string }
+    - { name: rtw_status, data_type: string }
+    - { name: days_to_deadline, data_type: integer }
+    - { name: incurred_reserve, data_type: float }
+    - { name: paid_to_date, data_type: float }
+  relationships:
+    - { name: claimant, target: claimant, cardinality: belongs_to }
+    - { name: employer, target: employer, cardinality: belongs_to }
+    - { name: injury, target: injury, cardinality: has_one }
+    - { name: medical_bills, target: medical_bill, cardinality: has_many }
+- entity_key: injury
+  name: Injury
+  description: "The reported workplace injury — mechanism, nature, and body part."
+  attributes:
+    - { name: injury_type, data_type: string }
+    - { name: body_part, data_type: string }
+    - { name: cause_code, data_type: string }
+  relationships:
+    - { name: claim, target: claim, cardinality: belongs_to }
+- entity_key: medical_bill
+  name: "Medical bill"
+  description: >-
+    A provider bill on a claim, reviewed against the state fee schedule
+    (billed vs allowed/paid, fee-schedule variance flag).
+  attributes:
+    - { name: service_category, data_type: string }
+    - { name: billed_amount, data_type: float }
+    - { name: paid_amount, data_type: float }
+    - { name: bill_month, data_type: string }
+    - { name: fee_schedule_flag, data_type: string, description: "within | above" }
+  relationships:
+    - { name: claim, target: claim, cardinality: belongs_to }
+    - { name: provider, target: provider, cardinality: belongs_to }
+- entity_key: provider
+  name: "Medical provider"
+  description: "The treating/billing provider — the unit of bill-review cluster analytics."
+  attributes:
+    - { name: provider_name, data_type: string }
+    - { name: provider_type, data_type: string }
+  relationships:
+    - { name: medical_bills, target: medical_bill, cardinality: has_many }

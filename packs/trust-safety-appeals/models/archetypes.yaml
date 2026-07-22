@@ -1,0 +1,35 @@
+# Governed model blueprints (experiment-service inc9): the intended models
+# this vertical runs, independent of any trained artifact. Each corresponds
+# to a training pipeline this pack already ships (pipelines/templates.yaml),
+# so the blueprint and its implementation stay in one governed pair.
+- archetype_key: ts_appeal_outcome_scorer
+  name: "Appeal outcome scorer"
+  task_type: classification
+  target: disposition
+  description: >-
+    Supervised scorer over human-adjudicated appeals (ts-appeals): predicts
+    the likely disposition from appeal type, policy area, enforcement source,
+    appellant standing, and deadline runway — the deterministic-first
+    pre-router that orders the appeal review queue. Implemented by the pack's
+    xgboost training pipeline.
+  expected_metrics: { f1: 0.80 }
+  governance_notes: >-
+    Scores order the appeal queue ONLY — every reinstate/uphold determination
+    is a human four-eyes decision with documented policy grounds, and appeal
+    decisions are never taken solely by automated means. Overturn labels feed
+    enforcement-classifier retraining review. Promotion requires eval-gate +
+    manager approval.
+- archetype_key: ts_enforcement_anomaly_detector
+  name: "Enforcement decision anomaly detector"
+  task_type: anomaly_detection
+  target: null
+  description: >-
+    Unsupervised surface scan over ts-enforcements for mass-report bursts
+    (brigading candidates) and classifier-drift signatures (high-confidence
+    enforcement volume shifting within one policy version or geography).
+    Implemented by the pack's isolation-forest training pipeline.
+  expected_metrics: {}
+  governance_notes: >-
+    Detector output opens review work, never enforcement or appeal action;
+    flagged decisions route to report-integrity and classifier-quality review
+    for human investigation.

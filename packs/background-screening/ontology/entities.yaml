@@ -1,0 +1,76 @@
+# Domain ontology (dataset-service inc11): the entity TYPES this vertical
+# operates on and their typed relationships — the type-level model behind the
+# bs_applicants / bs_orders / bs_reviews binding contracts. Attribute names
+# match the binding-contract columns so the ontology describes data the bound
+# tenant datasets actually carry. Consumer PII is kept deliberately MINIMAL:
+# the applicant entity models screening-history flags, not identifiers —
+# consumer-report content stays in the governed datasets behind RBAC, and
+# agent egress of it is redacted (agents/guardrails.yaml).
+- entity_key: applicant
+  name: Applicant
+  description: >-
+    The consumer being screened (candidate or active worker under continuous
+    monitoring). Modeled PII-minimally: history flags only, no identifiers.
+  attributes:
+    - { name: state, data_type: string }
+    - { name: prior_orders_band, data_type: string, description: "none | one_two | three_plus" }
+    - { name: dispute_history, data_type: string, description: "prior FCRA dispute on file (yes | no)" }
+    - { name: common_name, data_type: string, description: "common-name flag — heightened identity-matching standard (yes | no)" }
+  relationships:
+    - { name: orders, target: screening_order, cardinality: has_many }
+- entity_key: employer
+  name: Employer
+  description: >-
+    The end-user of the consumer report — the employer or gig platform that
+    ordered the screen and owns the adverse-action two-step toward the
+    applicant.
+  attributes:
+    - { name: employer_name, data_type: string }
+    - { name: employer_industry, data_type: string }
+  relationships:
+    - { name: orders, target: screening_order, cardinality: has_many }
+- entity_key: screening_order
+  name: "Screening order"
+  description: >-
+    One employer-requested background screen on one applicant for a specific
+    position — the unit of turnaround SLA and package scope.
+  attributes:
+    - { name: position_category, data_type: string }
+    - { name: package, data_type: string, description: "basic | standard | premium" }
+    - { name: order_month, data_type: string }
+    - { name: turnaround_days, data_type: integer }
+    - { name: turnaround_band, data_type: string }
+  relationships:
+    - { name: applicant, target: applicant, cardinality: belongs_to }
+    - { name: employer, target: employer, cardinality: belongs_to }
+    - { name: hits, target: screening_hit, cardinality: has_many }
+- entity_key: screening_hit
+  name: "Screening hit"
+  description: >-
+    A potentially adverse record or discrepancy a check surfaced on an order
+    — a criminal record, MVR entry, or verification mismatch that must clear
+    the FCRA accuracy and obsolescence rails before it may be reported.
+  attributes:
+    - { name: check_type, data_type: string }
+    - { name: hit_type, data_type: string }
+    - { name: record_age_band, data_type: string }
+    - { name: identity_confidence, data_type: string, description: "identity-match confidence vs the 607(b) maximum-possible-accuracy bar" }
+    - { name: severity, data_type: string }
+  relationships:
+    - { name: order, target: screening_order, cardinality: belongs_to }
+    - { name: adjudication, target: adjudication, cardinality: has_one }
+- entity_key: adjudication
+  name: Adjudication
+  description: >-
+    The human-owned review of one hit: job-relatedness analysis, adjudication
+    status and outcome, and the adverse-action / dispute clock runway. Final
+    determinations and every notice are four-eyes human steps.
+  attributes:
+    - { name: relevance, data_type: string, description: "job_related | not_job_related | pending" }
+    - { name: status, data_type: string }
+    - { name: disposition, data_type: string }
+    - { name: deadline_bucket, data_type: string }
+    - { name: days_to_deadline, data_type: integer }
+    - { name: age_days, data_type: integer }
+  relationships:
+    - { name: hit, target: screening_hit, cardinality: belongs_to }

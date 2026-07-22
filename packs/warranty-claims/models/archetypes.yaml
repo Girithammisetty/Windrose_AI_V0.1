@@ -1,0 +1,34 @@
+# Governed model blueprints (experiment-service inc9): the intended models
+# this vertical runs, independent of any trained artifact. Each corresponds
+# to a training pipeline this pack already ships (pipelines/templates.yaml),
+# so the blueprint and its implementation stay in one governed pair.
+- archetype_key: wa_claim_outcome_scorer
+  name: "Warranty claim outcome scorer"
+  task_type: classification
+  target: disposition
+  description: >-
+    Supervised scorer over adjudicated claims (wa-claims): predicts the
+    likely disposition from claim type, component system, failure mode,
+    labor-op band, usage band, coverage state and amount — the
+    deterministic-first pre-router for claim intake triage. Implemented by
+    the pack's xgboost training pipeline.
+  expected_metrics: { f1: 0.80 }
+  governance_notes: >-
+    Scores order the audit/review worklist ONLY — claim approval, denial,
+    goodwill and dealer/supplier chargeback decisions are always four-eyes
+    human determinations, and every denial carries documented findings the
+    dealer can be told. Promotion requires eval-gate + manager approval.
+- archetype_key: wa_unit_anomaly_detector
+  name: "Unit service-pattern anomaly detector"
+  task_type: anomaly_detection
+  target: null
+  description: >-
+    Unsupervised surface scan over wa-units for service-pattern outliers —
+    comeback-heavy units, build-batch clusters, and dealers whose serviced
+    fleet skews far from peers. Implemented by the pack's isolation-forest
+    training pipeline.
+  expected_metrics: {}
+  governance_notes: >-
+    Detector output opens review work, never adverse action; flagged units
+    and dealers route to quality-engineering or dealer-audit review for
+    human investigation.

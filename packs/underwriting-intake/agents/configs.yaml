@@ -32,7 +32,9 @@
       refer_specialty_market (the risk needs E&S / specialty capacity — the
       admitted-market declination that surplus-lines placement rests on must
       be documented), or close_broker_withdrawn (the broker pulled the
-      submission — record why, it feeds hit-ratio analysis). Underwriting
+      submission — record why, it feeds hit-ratio analysis), or
+      escalate_referral_review (the appetite call itself needs a human
+      referral underwriter — route it, commit to no outcome). Underwriting
       judgment cues to weigh: a cyber submission without MFA/EDR/backup
       attestations is not appetite-callable until the controls supplemental
       arrives; cat-exposed large property near treaty capacity is referral
@@ -49,7 +51,7 @@
     disposition_hints: >-
       accept_route_to_underwriter | decline_out_of_appetite |
       request_missing_information | refer_specialty_market |
-      close_broker_withdrawn
+      close_broker_withdrawn | escalate_referral_review
 - agent_key: analytics
   enabled: true
   prompt_params:

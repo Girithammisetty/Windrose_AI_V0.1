@@ -1,0 +1,22 @@
+# Governed typed case schema (case-service inc10): the screening-hit
+# adjudication work item as a named case TYPE binding the adjudication field
+# set, so intake creates a structurally-complete review case (not a generic
+# case with prose notes). Embedded field defs use {name, data_type, label,
+# required}; names align with cases/fields.yaml and the bs_reviews
+# binding-contract columns.
+- schema_key: screening_adjudication
+  name: "Screening-hit adjudication (FCRA)"
+  description: >-
+    An employment background-screening hit review adjudicated under the FCRA
+    accuracy (607(b)) and obsolescence (605(a)) rails, with identity-match
+    verification, job-relatedness analysis, EEOC individualized-assessment
+    routing, and pre-adverse/adverse-action clock awareness. Every reportable
+    determination and every notice is a human four-eyes step.
+  fields:
+    - { name: check_type,           data_type: enum,    label: "Check type",                              required: true }
+    - { name: hit_type,             data_type: enum,    label: "Hit type",                                required: true }
+    - { name: record_age_band,      data_type: enum,    label: "Record age band",                         required: false }
+    - { name: relevance,            data_type: enum,    label: "Job-relatedness analysis",                required: false }
+    - { name: identity_confidence,  data_type: enum,    label: "Identity-match confidence",               required: false }
+    - { name: position_category,    data_type: enum,    label: "Position category",                       required: false }
+    - { name: days_to_deadline,     data_type: integer, label: "Adverse-action / dispute clock — days left", required: false }

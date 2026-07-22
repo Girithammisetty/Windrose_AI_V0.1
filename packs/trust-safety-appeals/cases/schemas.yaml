@@ -1,0 +1,21 @@
+# Governed typed case schema (case-service inc10): the moderation-appeal work
+# item as a named case TYPE binding the adjudication field set, so intake
+# creates a structurally-complete appeal case (not a generic case with prose
+# notes). Embedded field defs use {name, data_type, label, required}; names
+# align with cases/fields.yaml and the ts_appeals binding-contract columns.
+- schema_key: moderation_appeal
+  name: "Moderation enforcement appeal"
+  description: >-
+    A user's appeal against a platform enforcement decision (content removal,
+    account suspension, demonetization, ranking restriction), handled under
+    the platform's internal complaint-handling obligations: timely within the
+    policy-configured SLA, diligent, non-arbitrary, and never decided solely
+    by automated means — the determination is always a human four-eyes call.
+  fields:
+    - { name: appeal_type,           data_type: enum,    label: "Contested enforcement type",       required: true }
+    - { name: policy_area,           data_type: enum,    label: "Policy area",                       required: true }
+    - { name: decision_id,           data_type: string,  label: "Contested enforcement decision id", required: true }
+    - { name: enforcement_source,    data_type: enum,    label: "Enforcement source",                required: false }
+    - { name: user_standing,         data_type: enum,    label: "Appellant enforcement standing",    required: false }
+    - { name: days_to_deadline,      data_type: integer, label: "Complaint-handling clock — days left", required: false }
+    - { name: classifier_score_band, data_type: enum,    label: "Classifier confidence band at enforcement", required: false }

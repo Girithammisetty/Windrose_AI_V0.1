@@ -1,0 +1,53 @@
+# Typed custom case fields (case-service CASE-FR-022) — the appeal work item's
+# real adjudication attributes, typed so the case form validates them and
+# decision surfaces can read them structurally instead of parsing notes.
+# data_type is IMMUTABLE after creation (case-service) — chosen deliberately.
+# Enum options mirror the ts_appeals / ts_enforcements binding-contract
+# columns so field data and dataset agree.
+- name: appeal_type
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Contested enforcement type"
+    options: [content_removal, account_suspension, demonetization, ranking_restriction]
+    required: false
+- name: policy_area
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Policy area"
+    options: [adult, counterfeit, harassment, hate_speech, misinformation, spam, violence]
+    required: false
+- name: enforcement_source
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Enforcement source"
+    options: [automated_classifier, moderator, user_report]
+    required: false
+- name: user_standing
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Appellant enforcement standing"
+    options: [first_strike, repeat, power_user]
+    required: false
+- name: decision_id
+  data_type: string
+  purpose: both
+  field_meta:
+    label: "Contested enforcement decision id"
+    required: false
+- name: days_to_deadline
+  data_type: integer
+  purpose: both
+  field_meta:
+    label: "Complaint-handling clock — days left (policy-configured SLA)"
+    required: false
+- name: classifier_score_band
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Classifier confidence band at enforcement"
+    options: [none, low, medium, high]
+    required: false

@@ -1,0 +1,36 @@
+# Second governed decision table (BRD 54): deterministic policy-gap and
+# report-integrity ROUTING — the context-sensitivity complement to
+# appeal_priority_routing. Operates ONLY on ts_appeals binding-contract
+# columns (policy_area, appeal_type, enforcement_source) and, like the first
+# table, executes to the governed four-eyes proposal path: the table routes,
+# a human decides. It NEVER proposes reinstate/uphold — context-sensitive
+# and integrity-suspect appeals are exactly the ones that need a qualified
+# human (or the policy team) most.
+- identity: policy_gap_and_integrity_routing
+  name: "Policy-gap and report-integrity routing"
+  rules:
+    # Misinformation demonetization — the satire/parody precedent family the
+    # pack's grounding flags as a policy-text gap; route for a precedent
+    # ruling rather than case-by-case re-decision.
+    - when:
+        - { column: policy_area, op: eq, value: misinformation }
+        - { column: appeal_type, op: eq, value: demonetization }
+      then: { disposition_code: escalate_policy_team, severity: medium }
+      note: "Misinformation demonetization — satire/parody precedent question for the policy team"
+    # Classifier-initiated enforcement in context-sensitive policy areas
+    # (counter-speech, quoted-slur, documentary context risk) — specialist
+    # review before determination.
+    - when:
+        - { column: enforcement_source, op: eq, value: automated_classifier }
+        - { column: policy_area, op: in, value: [hate_speech, harassment] }
+      then: { disposition_code: escalate_senior_review, severity: medium }
+      note: "Automated enforcement in a context-sensitive policy area — counter-speech false-positive screen"
+    # Report-volume-driven reach restriction — brigading/mass-report
+    # integrity screen; judge the content, never the report count.
+    - when:
+        - { column: enforcement_source, op: eq, value: user_report }
+        - { column: appeal_type, op: eq, value: ranking_restriction }
+      then: { disposition_code: escalate_senior_review, severity: high }
+      note: "User-report-driven reach restriction — report-integrity (brigading) review"
+  # No default_outcome ON PURPOSE: unmatched appeals stay in the standard
+  # first-line queue — the table routes, it never guesses a determination.

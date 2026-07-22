@@ -1,0 +1,77 @@
+# Domain ontology (dataset-service inc11): the entity TYPES this vertical
+# operates on and their typed relationships — the type-level model behind the
+# tl-claims / tl-shipments / tl-carriers binding contracts. Attribute names
+# match the contracts' required_columns wherever the type is dataset-backed,
+# so the ontology describes data the bound tenant datasets actually carry;
+# shipper and recovery are workflow-level types the claim references.
+- entity_key: shipper
+  name: Shipper
+  description: >-
+    The cargo owner / claimant asserting loss or damage on a shipment (or the
+    consignee claiming on its behalf).
+  attributes:
+    - { name: shipper_name, data_type: string }
+  relationships:
+    - { name: claims, target: claim, cardinality: has_many }
+    - { name: shipments, target: shipment, cardinality: has_many }
+- entity_key: carrier
+  name: Carrier
+  description: >-
+    A motor carrier on the roster (own fleet, partner carrier, or
+    owner-operator) with its safety, authority, insurance, and vetting-risk
+    posture.
+  attributes:
+    - { name: carrier_name, data_type: string }
+    - { name: type, data_type: string, description: "own_fleet | partner_carrier | owner_operator" }
+    - { name: safety_tier, data_type: string, description: "satisfactory | conditional | watch" }
+    - { name: authority_age, data_type: string, description: "new | developing | established" }
+    - { name: insurance_ok, data_type: string, description: "yes | no — certificate current and verified" }
+    - { name: fraud_risk, data_type: string, description: "low | medium | high vetting-risk tier" }
+  relationships:
+    - { name: shipments, target: shipment, cardinality: has_many }
+    - { name: recoveries, target: recovery, cardinality: has_many }
+- entity_key: shipment
+  name: "Shipment (load)"
+  description: >-
+    A tendered load moved by one carrier over one lane — the operational
+    event a claim or safety review attaches to.
+  attributes:
+    - { name: lane, data_type: string }
+    - { name: mode, data_type: string, description: "dry_van | reefer | intermodal" }
+    - { name: service, data_type: string, description: "asset | brokerage" }
+    - { name: value, data_type: float }
+    - { name: on_time, data_type: string }
+    - { name: telematics_flags, data_type: string }
+  relationships:
+    - { name: carrier, target: carrier, cardinality: belongs_to }
+    - { name: shipper, target: shipper, cardinality: belongs_to }
+    - { name: claims, target: claim, cardinality: has_many }
+- entity_key: claim
+  name: "Cargo claim / review item"
+  description: >-
+    A cargo OS&D claim, telematics safety-event review, or carrier vetting
+    review over one shipment, carrying the contract-configured deadline
+    runway, liability assessment band, and adjudication outcome.
+  attributes:
+    - { name: claim_kind, data_type: string, description: "cargo_osd | safety_event | carrier_vetting" }
+    - { name: claim_type, data_type: string }
+    - { name: commodity_event, data_type: string }
+    - { name: liability_band, data_type: string }
+    - { name: severity, data_type: string }
+    - { name: amount, data_type: float }
+    - { name: recovery_amount, data_type: float }
+    - { name: days_to_deadline, data_type: integer }
+  relationships:
+    - { name: shipment, target: shipment, cardinality: belongs_to }
+    - { name: shipper, target: shipper, cardinality: belongs_to }
+    - { name: recovery, target: recovery, cardinality: has_one }
+- entity_key: recovery
+  name: "Carrier recovery"
+  description: >-
+    The recovery filing against the responsible carrier when claim evidence
+    supports shifting the loss upstream (subrogation of the paid claim).
+  attributes:
+    - { name: recovery_amount, data_type: float }
+  relationships:
+    - { name: claim, target: claim, cardinality: belongs_to }
+    - { name: responsible_carrier, target: carrier, cardinality: belongs_to }

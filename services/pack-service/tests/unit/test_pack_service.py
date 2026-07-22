@@ -213,7 +213,7 @@ def test_plan_materializes_case_fields(tmp_path):
     assert field_ops, "case_fields must appear in the plan"
     assert all(o["action"] == "create" for o in field_ops)
     names = {o["name"] for o in field_ops}
-    assert {"root_cause", "oob_verified", "recovered_amount"} <= names
+    assert {"exception_type", "invoice_amount", "recovered_amount"} <= names
     # display_labels (inc3) also materialize as real creates (identity registry),
     # never deferred — the AP "Cases -> AP Exceptions" vocabulary.
     label_ops = [o for o in ops if o["kind"] == "display_labels"]
@@ -229,11 +229,15 @@ def test_plan_materializes_case_fields(tmp_path):
     cfg_ops = [o for o in ops if o["kind"] == "agent_configs"]
     assert cfg_ops and all(o["action"] == "create" for o in cfg_ops)
     assert {"case-triage", "analytics"} <= {o["name"] for o in cfg_ops}
-    # cases (inc6) — the seeded worklist, one op per row_pk, materializable (was
-    # deferred). Depends on the dataset URN, so it runs in the data chain.
-    case_ops = [o for o in ops if o["kind"] == "cases"]
-    assert case_ops and all(o["action"] == "create" for o in case_ops)
-    assert any(o["name"] == "EX-7001" for o in case_ops)  # a real seed row_pk
+    # v2.0.0 (no-dummy-data rule): the pack ships NO seeded cases and NO frozen
+    # eval golden set — cases arrive from real rows via triggers/intake, and the
+    # tenant curates goldens from its own adjudicated history.
+    assert not [o for o in ops if o["kind"] == "cases"]
+    assert not [o for o in ops if o["kind"] == "eval_sets"]
+    # its file-less dataset contracts, with nothing bound and no same-name
+    # tenant dataset, plan as an honest requires_binding.
+    ds_ops = [o for o in ops if o["kind"] == "datasets"]
+    assert ds_ops and all(o["action"] == "requires_binding" for o in ds_ops)
     # pipelines (inc7) — algorithm-template seeds, data-chain (need the dataset),
     # materializable (was deferred).
     pipe_ops = [o for o in ops if o["kind"] == "pipelines"]
@@ -244,38 +248,37 @@ def test_plan_materializes_case_fields(tmp_path):
     # path, materializable (was deferred behind the agent-token barrier).
     mem_ops = [o for o in ops if o["kind"] == "memories"]
     assert mem_ops and all(o["action"] == "create" for o in mem_ops)
-    # eval_sets (inc8) — golden eval dataset, materializable (was deferred behind
-    # the eval-service unregisterable-verb barrier, now reconciled).
-    eval_ops = [o for o in ops if o["kind"] == "eval_sets"]
-    assert eval_ops and all(o["action"] == "create" for o in eval_ops)
-    assert any(o["name"] == "ap_exception_triage_gold" for o in eval_ops)
+    # decision_models (BRD 54) — governed routing tables, planned as creates.
+    dm_ops = [o for o in ops if o["kind"] == "decision_models"]
+    assert dm_ops and all(o["action"] == "create" for o in dm_ops)
+    assert {"Exception recovery-review routing",
+            "High-value and deadline expedite"} <= {o["name"] for o in dm_ops}
     # model_archetypes (inc9) — governed model blueprints, materializable (new
-    # experiment-service archetype registry).
+    # experiment-service archetype registry), one per shipped pipeline.
     arch_ops = [o for o in ops if o["kind"] == "model_archetypes"]
     assert arch_ops and all(o["action"] == "create" for o in arch_ops)
-    assert {"duplicate_pair_confidence", "vendor_fraud_risk_score"} <= {o["name"] for o in arch_ops}
+    assert {"ap_exception_outcome_scorer", "ap_invoice_anomaly_detector"} <= {o["name"] for o in arch_ops}  # noqa: E501
     # case_schemas (inc10) — typed case types, materializable (new case-service
     # case-schema registry).
     schema_ops = [o for o in ops if o["kind"] == "case_schemas"]
     assert schema_ops and all(o["action"] == "create" for o in schema_ops)
-    assert {"banking_change_verification", "duplicate_review",
-            "shell_vendor_investigation"} <= {o["name"] for o in schema_ops}
+    assert "ap_invoice_exception" in {o["name"] for o in schema_ops}
     # ontology (inc11) — governed entity-type registry, materializable (new
     # dataset-service ontology surface).
     onto_ops = [o for o in ops if o["kind"] == "ontology"]
     assert onto_ops and all(o["action"] == "create" for o in onto_ops)
-    assert {"vendor", "invoice", "payment_run", "exception"} <= {o["name"] for o in onto_ops}
+    assert {"vendor", "invoice", "exception", "recovery"} <= {o["name"] for o in onto_ops}
     # write_adapters (inc12) — governed SoR write-back adapters (outgoing
     # ingestion connections), materializable by reusing the decision-writeback
     # surface (skip_test declaration, proposal-mode + four-eyes preserved).
     wa_ops = [o for o in ops if o["kind"] == "write_adapters"]
     assert wa_ops and all(o["action"] == "create" for o in wa_ops)
-    assert "AP ERP payment-control write-back" in {o["name"] for o in wa_ops}
+    assert "AP platform exception-status sync" in {o["name"] for o in wa_ops}
     # connection_templates (inc13) — governed incoming source connectors, the
     # mirror of write_adapters (skip_test declaration, tenant completes creds).
     ct_ops = [o for o in ops if o["kind"] == "connection_templates"]
     assert ct_ops and all(o["action"] == "create" for o in ct_ops)
-    assert "ERP AP subledger (read)" in {o["name"] for o in ct_ops}
+    assert "ERP AP subledger extract drop (SFTP)" in {o["name"] for o in ct_ops}
 
 
 # ---- inc14: version lifecycle (upgrade + rollback) --------------------------

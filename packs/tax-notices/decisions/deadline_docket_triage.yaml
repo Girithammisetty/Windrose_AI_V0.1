@@ -1,0 +1,50 @@
+# Governed decision table (BRD 54) — a deterministic, explainable, no-LLM
+# docket-ordering pass over the tax-notice worklist. Columns are the
+# tx-notices binding-contract columns (data/datasets.yaml), so the table
+# reads exactly what intake projects from the real dataset. It EXECUTES to
+# the same governed four-eyes proposal an agent produces: every matched case
+# becomes a case.apply_disposition proposal a human must approve — the table
+# proposes, a human decides. It is ROUTING-ONLY: it NEVER proposes
+# pay_assessment_valid, abate_penalty_resolved, file_amended_return,
+# request_agency_clarification, or close_duplicate_notice — payments,
+# concessions, abatement requests, and filings are human four-eyes
+# determinations with documented findings. Response windows are
+# authority-configured per jurisdiction and notice type — the table cites no
+# statutory day-count as its own; the runway and dollar thresholds below are
+# institution-configured operational bands. Outcome disposition_codes are
+# validated against this workspace's disposition catalog at install time, so
+# `dispositions` installs before this.
+- identity: deadline_docket_triage
+  name: "Notice response-window docket triage"
+  rules:
+    # Response window nearly exhausted — a missed window typically forfeits
+    # administrative appeal rights and lets a proposed assessment go final by
+    # default. Deadline outranks FIFO.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: days_to_deadline, op: between, value: [0, 10] }
+      then: { disposition_code: escalate_notice_review, severity: critical }
+      note: "Authority-configured response window nearly exhausted — expedited docket ahead of FIFO; file a timely response or extension first, refine substance after"
+    # High-assessment exposure — senior review before any response posture.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: assessed_amount, op: gte, value: 50000 }
+      then: { disposition_code: escalate_notice_review, severity: high }
+      note: "High-assessment exposure (institution-configured band, aligned to the over_50k amount_band break) — senior reviewer owns the response posture"
+    # Trust-fund tax — payroll withholding carries potential responsible-person
+    # liability; prioritized ahead of same-dollar income or franchise notices.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: tax_type, op: eq, value: payroll }
+      then: { disposition_code: escalate_notice_review, severity: high }
+      note: "Trust-fund exposure (payroll withholding) with potential personal responsible-person liability — triaged ahead of same-dollar income or franchise notices"
+    # Catch-all for the OPEN worklist: nothing matched deterministically ->
+    # standard human review at low severity. The neutral human-review code is
+    # the ONLY thing this table ever proposes — never a payment, concession,
+    # abatement, or filing.
+    - when:
+        - { column: status, op: eq, value: open }
+      then: { disposition_code: escalate_notice_review, severity: low }
+      note: "No deterministic route matched — standard human review queue; the analyst evaluates on the notice's own evidence"
+  # default_outcome deliberately OMITTED: the open-status catch-all rule above
+  # is the routing floor, and closed rows get NO proposal at all.

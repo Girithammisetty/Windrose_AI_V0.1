@@ -1,27 +1,25 @@
-# Pack datasets (ingestion-service file_upload, stable names for idempotency).
-# In production these tables arrive via the owner's/GC's project-controls and
-# ERP connectors (deferred until pack-service ships connector
-# materialization); this seed data is REAL rows in the same landing shape,
-# encoding genuine construction-claim patterns so every downstream component
-# runs against real signal from day one: an owner-furnished-equipment delay
-# claim with concurrent contractor delay (TIA requested), a differing-site-
-# conditions rock claim with a boring-log dispute, a change-order request
-# priced ~3x the trade's measured-mile norm, a total-cost productivity claim
-# awaiting substantiation, a roofing defect backcharge with a surety notice
-# pending, and a pay-if-paid payment dispute. Chain shape:
-# cc_claims (main work items) -> cc_contracts (contract book; claim_month is
-# the earliest claim-activity month under the contract, `none` when the
-# contract has no claims) -> cc_parties (subcontractor/supplier/GC/owner-rep
-# register).
+# Pack dataset BINDING CONTRACTS (no-dummy-data rule): the pack ships ZERO
+# seed data. Each entry declares the dataset the workflow needs and the exact
+# landing-shape columns it requires; at install the tenant binds it to a REAL
+# dataset (explicit dataset_bindings on the install request, or same-name
+# reuse), and pack-service validates the bound dataset exposes every required
+# column — failing closed with the missing list. Real data arrives through the
+# pack's governed source connectors (connections/sources.yaml) or file upload.
+# Chain shape: cc_claims (claim/change-order work items) -> cc_contracts
+# (contract book) -> cc_parties (subcontractor/supplier/GC/owner-rep register).
 - identity: cc_claims
   name: cc-claims
-  file: data/cc_claims.csv
-  format: csv
+  required_columns:
+    [claim_id, contract_id, claim_type, entitlement_basis, notice_timely,
+     schedule_impact, severity, status, disposition, deadline_bucket,
+     filed_month, age_days, days_to_deadline, claimed_amount, approved_amount]
 - identity: cc_contracts
   name: cc-contracts
-  file: data/cc_contracts.csv
-  format: csv
+  required_columns:
+    [contract_id, party_id, project, contract_type, value_band, start_year,
+     retention_band, claim_month]
 - identity: cc_parties
   name: cc-parties
-  file: data/cc_parties.csv
-  format: csv
+  required_columns:
+    [party_id, party_name, party_type, trade, prequal_tier,
+     prior_claims_band, surety_backed]

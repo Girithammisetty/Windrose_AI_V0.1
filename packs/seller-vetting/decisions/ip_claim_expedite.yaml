@@ -1,0 +1,51 @@
+# Governed decision table (BRD 54) — a deterministic, explainable, no-LLM
+# ROUTING pass over the enforcement worklist, on columns the sv-reviews
+# binding contract guarantees (review_type, trigger_source, claim_basis,
+# days_to_deadline, gmv_at_risk). It EXECUTES to the same governed four-eyes
+# proposal an agent produces: every matched case becomes a
+# case.apply_disposition proposal a human must approve. The table ONLY
+# routes to the expedited human review track (escalate_priority_review,
+# category inconclusive — the pack's single allegation-neutral routing
+# code): it NEVER proposes a listing takedown, claim rejection, seller
+# suspension, or reinstatement — those are human determinations with
+# documented findings, and a rights-holder complaint is an ALLEGATION until
+# a human adjudicates it. Outcome disposition_codes are validated against
+# this workspace's disposition catalog at install, so `dispositions`
+# installs first.
+#
+# The contract has no rights-holder-verification or listing-velocity column;
+# gmv_at_risk is the exposure proxy that stands in for "high-velocity /
+# high-exposure listing" — noted here rather than invented as data.
+- identity: ip_claim_expedite
+  name: "Rights-holder claim expedited-review routing"
+  rules:
+    # Rights-holder IP claim with the response clock nearly exhausted — the
+    # tightest window in the workflow; late handling harms claimant and
+    # seller alike, so it goes to the front of the human IP-review track.
+    - when:
+        - { column: review_type, op: eq, value: ip_infringement_claim }
+        - { column: trigger_source, op: eq, value: brand_owner_complaint }
+        - { column: days_to_deadline, op: between, value: [0, 3] }
+      then: { disposition_code: escalate_priority_review, severity: high }
+      note: "Rights-holder claim with ≤3 days of response clock — expedited human IP review; the table takes no position on the claim's merits"
+    # High-exposure listing under a rights-holder claim: large GMV at risk
+    # either way the adjudication goes.
+    - when:
+        - { column: review_type, op: eq, value: ip_infringement_claim }
+        - { column: trigger_source, op: eq, value: brand_owner_complaint }
+        - { column: gmv_at_risk, op: gte, value: 5000 }
+      then: { disposition_code: escalate_priority_review, severity: high }
+      note: "Rights-holder claim on a high-exposure listing (GMV at risk ≥ $5,000) — expedited human IP review"
+    # Product-safety signal on a counterfeit review: routed to the FRONT of
+    # the human queue with critical severity. The table still only routes —
+    # any removal is proposed and approved by humans.
+    - when:
+        - { column: review_type, op: eq, value: counterfeit_takedown }
+        - { column: claim_basis, op: eq, value: safety }
+      then: { disposition_code: escalate_priority_review, severity: critical }
+      note: "Product-safety signal — front of the human review queue; enforcement itself remains a four-eyes human decision"
+  # default_outcome deliberately OMITTED: every other catalog code is an
+  # adjudication outcome (removal, claim rejection, suspension, evidence
+  # request, reinstatement) this routing table must never propose. Unmatched
+  # reviews simply stay on the deadline/GMV-ranked analyst worklist
+  # (queries/saved.yaml high_exposure_open_reviews).

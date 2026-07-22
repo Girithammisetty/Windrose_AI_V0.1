@@ -1,0 +1,51 @@
+# Second governed decision table (BRD 54): deterministic ROUTING-ONLY
+# prioritization of HS classification / entry reviews — the classification
+# complement to screening_hit_routing. Operates ONLY on tc_review_items
+# binding-contract columns (item_type, declared_hs_chapter, duty_risk,
+# valuation_band, days_to_deadline). Executes to the same governed four-eyes
+# proposal path: the table proposes a queue, a human decides. It NEVER
+# proposes confirm_classification or reclassify_correct_entry — whether a
+# declared code stands or an entry is corrected (and whether any disclosure
+# is warranted) is always a human determination. Watch lists and cut-offs
+# below are program-configured, not statements of customs law.
+- identity: classification_review_routing
+  name: "Classification-review routing table"
+  rules:
+    # Corrected-entry window nearly exhausted — expedite regardless of topic.
+    - when:
+        - { column: item_type, op: eq, value: hs_classification }
+        - { column: days_to_deadline, op: between, value: [0, 5] }
+      then: { disposition_code: escalate_compliance_review, severity: critical }
+      note: >-
+        Classification review inside the program-configured action-clock
+        runway — expedite so a human decides before the window closes.
+    # Program-configured dual-use watch chapters -> licensing specialists.
+    - when:
+        - { column: item_type, op: eq, value: hs_classification }
+        - { column: declared_hs_chapter, op: in, value: ["84", "85"] }
+      then: { disposition_code: escalate_licensing_review, severity: medium }
+      note: >-
+        Declared chapter is on the program-configured dual-use watch list —
+        route to the licensing specialist queue for a license-condition /
+        export-control determination; the determination itself stays human.
+    # High duty/penalty exposure -> senior classification review.
+    - when:
+        - { column: item_type, op: eq, value: hs_classification }
+        - { column: duty_risk, op: eq, value: high }
+      then: { disposition_code: escalate_compliance_review, severity: high }
+      note: >-
+        High program-assessed duty/penalty exposure (potential
+        classification mismatch) — expedited senior review; confirm vs
+        reclassify remains a human four-eyes call.
+    # Largest entered-value band -> expedited review (exposure-weighted, not FIFO).
+    - when:
+        - { column: item_type, op: eq, value: hs_classification }
+        - { column: valuation_band, op: eq, value: over_250k }
+      then: { disposition_code: escalate_compliance_review, severity: high }
+      note: >-
+        Top entered-value band — exposure-weighted routing puts the largest
+        entries in front of a senior reviewer first.
+  # No default_outcome ON PURPOSE: an unmatched item (including every
+  # screening alert, which screening_hit_routing owns) gets NO proposal from
+  # this table and simply stays in the standard human review queue — the
+  # honest neutral outcome for a routing-only table.

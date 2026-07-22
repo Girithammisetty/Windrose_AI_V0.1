@@ -1,0 +1,58 @@
+# Typed custom case fields (case-service CASE-FR-022) — the workers'-comp
+# claim work item's real adjudication attributes, typed so the case form
+# validates them and decision surfaces can read them structurally instead of
+# parsing notes. data_type is IMMUTABLE after creation (case-service) — chosen
+# deliberately. Names and enum options mirror the wc_claims binding-contract
+# columns so field data and the bound dataset agree.
+- name: claim_type
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Claim type"
+    options: [medical_only, indemnity]
+    required: false
+- name: injury_type
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Injury type"
+    options: [strain_sprain, fracture, laceration, burn, contusion, crush_injury, concussion, repetitive_stress]
+    required: false
+- name: jurisdiction_state
+  data_type: string
+  purpose: both
+  field_meta:
+    label: "Jurisdiction state"
+    required: false
+- name: rtw_status
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Return-to-work status"
+    options: [full_duty, modified_duty, not_released, not_applicable]
+    required: false
+- name: litigation_flag
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Litigation / attorney representation"
+    options: ["yes", "no"]   # quoted — the dataset carries literal yes/no strings
+    required: false
+- name: incurred_reserve
+  data_type: float
+  purpose: both
+  field_meta:
+    label: "Incurred reserve (USD)"
+    required: false
+- name: paid_to_date
+  data_type: float
+  purpose: both
+  field_meta:
+    label: "Paid to date (USD)"
+    required: false
+- name: days_to_deadline
+  data_type: integer
+  purpose: both
+  field_meta:
+    label: "Compensability decision clock — days left (jurisdiction-configured)"
+    required: false

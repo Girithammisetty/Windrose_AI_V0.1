@@ -1,0 +1,20 @@
+# Governed SoR write-back adapters (ingestion-service inc12): OUTGOING
+# connections declared with skip_test + EMPTY secrets — the tenant completes
+# real credentials/endpoints in Data → Connections, and every write executes
+# proposal-mode with four-eyes (no autonomous SoR change). The URLs/hosts are
+# placeholders the tenant replaces; nothing is called at install, and no
+# credentials or Authorization headers ship in the pack.
+- name: "TMS claim status sync"
+  connector_type: http_api
+  direction: outgoing
+  config:
+    method: POST
+    url: "https://tms.example.invalid/api/v1/claims/status"
+    headers: { Content-Type: "application/json" }
+- name: "Claims platform disposition sync"
+  connector_type: http_api
+  direction: outgoing
+  config:
+    method: POST
+    url: "https://claims-platform.example.invalid/api/v1/claims/disposition"
+    headers: { Content-Type: "application/json" }

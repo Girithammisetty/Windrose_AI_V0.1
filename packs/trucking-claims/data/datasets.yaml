@@ -1,25 +1,24 @@
-# Pack datasets (ingestion-service file_upload, stable names for idempotency).
-# In production these tables arrive via the tenant's TMS, telematics/video
-# platform, and FMCSA-data connectors (deferred until pack-service ships
-# connector materialization); this seed data is REAL rows in the same landing
-# shape, encoding genuine claims-and-safety patterns so every downstream
-# component runs against real signal from day one: a reefer
-# temperature-excursion produce claim with the unit download pending, a
-# repeat intact-seal shortage on the same carrier/lane (origin short-count vs
-# seal-tamper question), a new-authority partner carrier changing banking
-# details mid-load (double-brokering signature), a harsh-braking camera event
-# disputed by a million-mile driver, a full-trailer electronics theft on a
-# known hot lane by a carrier already escalated in vetting, and a
-# repeat-damage carrier/lane cluster feeding carrier recovery.
+# Pack dataset BINDING CONTRACTS (no-dummy-data rule): the pack ships ZERO
+# seed data. Each entry declares the dataset the workflow needs and the exact
+# landing-shape columns it requires; at install the tenant binds it to a REAL
+# dataset (explicit dataset_bindings on the install request, or same-name
+# reuse), and pack-service validates the bound dataset exposes every required
+# column — failing closed with the missing list. Real data arrives through the
+# pack's governed source connectors (connections/sources.yaml) — the TMS
+# extract drop and the claim-document SFTP feed — or file upload.
 - identity: tl_claims
   name: tl-claims
-  file: data/tl_claims.csv
-  format: csv
+  required_columns:
+    [claim_id, shipment_id, claim_kind, claim_type, commodity_event,
+     liability_band, severity, status, disposition, deadline_bucket,
+     filed_month, age_days, days_to_deadline, amount, recovery_amount]
 - identity: tl_shipments
   name: tl-shipments
-  file: data/tl_shipments.csv
-  format: csv
+  required_columns:
+    [shipment_id, carrier_id, lane, mode, service, value, ship_month,
+     on_time, telematics_flags]
 - identity: tl_carriers
   name: tl-carriers
-  file: data/tl_carriers.csv
-  format: csv
+  required_columns:
+    [carrier_id, carrier_name, type, safety_tier, authority_age,
+     insurance_ok, fraud_risk]

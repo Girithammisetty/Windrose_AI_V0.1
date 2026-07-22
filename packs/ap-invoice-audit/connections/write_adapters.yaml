@@ -1,0 +1,22 @@
+# Governed SoR write-back adapters (ingestion-service inc12): OUTGOING
+# connections declared with skip_test + EMPTY secrets — the tenant completes
+# real credentials/endpoints in Data → Connections, and every write executes
+# proposal-mode with four-eyes (no autonomous payment movement or vendor-master
+# change, ever). The URLs/hosts are placeholders the tenant replaces; nothing
+# is called at install, and no credential material ships in the pack.
+- name: "AP platform exception-status sync"
+  connector_type: http_api
+  direction: outgoing
+  config:
+    method: POST
+    url: "https://ap-platform.example.invalid/api/v1/exceptions/status"
+    headers: { Content-Type: "application/json" }
+- name: "ERP AP subledger write-back"
+  connector_type: postgres
+  direction: outgoing
+  config:
+    host: "erp-ap.example.invalid"
+    port: 5432
+    database: ap_subledger
+    username: datacern_writeback
+    ssl_mode: require

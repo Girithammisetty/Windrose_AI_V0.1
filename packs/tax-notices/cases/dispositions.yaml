@@ -5,8 +5,14 @@
 # abatement request cited); pay_assessment_valid is the "agency was right"
 # outcome; file_amended_return fixes our own filing; the clarification and
 # duplicate codes keep the queue honest about non-determinations.
+# escalate_notice_review is the NEUTRAL human-review routing outcome
+# (expedited docket / senior review / root-cause review) — it decides nothing
+# about the notice; it is the only code the pack's decision tables may use to
+# order the docket, because payments, concessions, abatement requests, and
+# amended filings are always four-eyes human determinations.
 - { code: abate_penalty_resolved,        label: "Abated/withdrawn — agency error or reasonable cause won",  category: true_positive,  requires_note: true }
 - { code: pay_assessment_valid,          label: "Pay — notice correct, assessment valid",                   category: false_positive, requires_note: true }
 - { code: file_amended_return,           label: "File amended return — correct our filing",                 category: other,          requires_note: true }
 - { code: request_agency_clarification,  label: "Request agency clarification — facts unresolved",          category: inconclusive,   requires_note: true }
 - { code: close_duplicate_notice,        label: "Close — duplicate of an already-resolved liability",       category: benign,         requires_note: true }
+- { code: escalate_notice_review,        label: "Escalate for priority human review (expedited docket / senior review)", category: inconclusive, requires_note: false }

@@ -1,0 +1,23 @@
+# Governed SoR write-back adapters (ingestion-service inc12): OUTGOING
+# connections declared with skip_test + EMPTY secrets — the tenant completes
+# real credentials/endpoints in Data → Connections, and every write executes
+# proposal-mode with four-eyes (no autonomous SoR change). The URLs are
+# placeholders the tenant replaces; nothing is called at install. Status sync
+# only: the adapters carry adjudication-status updates back to the ATS and
+# the CRA platform — they NEVER transmit an adverse-action decision or
+# notice; the pre-adverse/adverse-action two-step stays a human-run process
+# in the system of record.
+- name: "ATS adjudication status sync"
+  connector_type: http_api
+  direction: outgoing
+  config:
+    method: POST
+    url: "https://ats-gateway.example.invalid/api/v1/screenings/status"
+    headers: { Content-Type: "application/json" }
+- name: "CRA platform report status sync"
+  connector_type: http_api
+  direction: outgoing
+  config:
+    method: POST
+    url: "https://cra-platform.example.invalid/api/v1/reports/status"
+    headers: { Content-Type: "application/json" }

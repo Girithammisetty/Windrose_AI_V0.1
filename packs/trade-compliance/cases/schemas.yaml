@@ -1,0 +1,23 @@
+# Governed typed case schema (case-service inc10): the trade-compliance
+# review work item as a named case TYPE binding the adjudication field set,
+# so intake creates a structurally-complete review case (not a generic case
+# with prose notes). Embedded field defs use {name, data_type, label,
+# required}; names align with cases/fields.yaml and the tc_review_items
+# binding-contract columns.
+- schema_key: trade_compliance_review
+  name: "Trade compliance review"
+  description: >-
+    An import compliance review item — an HS classification / entry review or
+    a denied-party screening alert — adjudicated under the program's
+    reasonable-care procedures with action-clock awareness. Sanctions-hit
+    confirmation, shipment hold/release, corrected entries, and any
+    disclosure are always human four-eyes determinations.
+  fields:
+    - { name: item_type,           data_type: enum,    label: "Review item type",              required: true }
+    - { name: screening_list,      data_type: enum,    label: "Screening list matched",        required: false }
+    - { name: match_score,         data_type: float,   label: "Screening match score (0-1)",   required: false }
+    - { name: declared_hs_chapter, data_type: string,  label: "Declared HS chapter",           required: false }
+    - { name: duty_risk,           data_type: enum,    label: "Duty/penalty exposure tier",    required: false }
+    - { name: valuation_band,      data_type: enum,    label: "Entered-value band (USD)",      required: false }
+    - { name: origin_country,      data_type: string,  label: "Declared country of origin",    required: false }
+    - { name: days_to_deadline,    data_type: integer, label: "Action clock — days to deadline", required: false }

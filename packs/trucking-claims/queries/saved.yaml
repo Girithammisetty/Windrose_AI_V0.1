@@ -6,9 +6,8 @@
   description: >-
     Carrier -> lane edge list (parent/child/n) from the shipment book —
     network-chart source for spotting repeat-damage carrier/lane clusters
-    (one carrier concentrated on one lane, like the Ironbridge CHI-DAL
-    damage cluster) and theft hot-lane exposure (which carriers run the
-    ONT-LAS corridor).
+    (one carrier concentrated on one lane) and theft hot-lane exposure
+    (which carriers run a high-loss corridor).
   sql: >-
     SELECT carrier_id AS parent, lane AS child,
            count(*) AS n

@@ -1,0 +1,36 @@
+# Governed decision table (BRD 54) — a deterministic, explainable, no-LLM
+# ROUTING-ONLY first cut over the appeal queue's projection columns
+# (ts_appeals binding-contract columns: days_to_deadline, appeal_type,
+# user_standing). It EXECUTES to the same governed four-eyes proposal an
+# agent produces: an operator dry-runs or batch-runs it across the worklist,
+# and every matched appeal becomes a case.apply_disposition proposal that
+# the Appeals Operations Manager must approve. The table only ORDERS AND
+# ROUTES the appeal queue — it NEVER proposes reinstate (overturn_restore)
+# or uphold (uphold_enforcement); those determinations are human four-eyes
+# decisions with documented policy grounds. Deadlines are the tenant's
+# policy-configured complaint-handling SLA. Outcome disposition_codes are
+# validated against this workspace's disposition catalog at install time,
+# so `dispositions` installs before this (packctl INSTALL_ORDER).
+- identity: appeal_priority_routing
+  name: "Appeal priority routing table"
+  rules:
+    # Complaint-handling clock nearly exhausted — expedited senior queue.
+    - when:
+        - { column: days_to_deadline, op: between, value: [0, 2] }
+      then: { disposition_code: escalate_senior_review, severity: critical }
+      note: "Policy-configured complaint-handling SLA ≤ 2 days — expedited senior review"
+    # Account-level enforcement (vs content-level) — highest-impact appeal
+    # type, routed to the senior reviewer queue.
+    - when:
+        - { column: appeal_type, op: eq, value: account_suspension }
+      then: { disposition_code: escalate_senior_review, severity: high }
+      note: "Account-level enforcement appeal (suspension) — senior reviewer queue"
+    # High-reach appellant — enforcement and restoration both carry outsized
+    # visibility; specialist review before any determination.
+    - when:
+        - { column: user_standing, op: eq, value: power_user }
+      then: { disposition_code: escalate_senior_review, severity: high }
+      note: "High-reach (power-user standing) account — specialist review queue"
+  # No default_outcome ON PURPOSE: there is no honest catch-all — an
+  # unmatched appeal simply stays in the standard first-line reviewer queue,
+  # and the table must never fall through to a reinstate/uphold guess.

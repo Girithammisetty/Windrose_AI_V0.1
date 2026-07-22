@@ -1,29 +1,24 @@
-# Governed SOURCE connector templates (ingestion-service INCOMING connections,
-# inc13). The mirror of writeback/adapters.yaml: each pre-declares an expected
-# read connector for the AP vertical — ERP AP subledger, P2P suite, invoice-
-# capture/OCR drop — as a governed incoming connection with skip_test + EMPTY
-# secrets. The pack ships the connector SHAPE/target as a starting point; the
-# tenant supplies real host + credentials via Data > Connections, and the config
-# below is a template the tenant completes, never a live secret. (The pack also
-# ships seed datasets in the exact landing shape so the vertical is usable on
-# day one before the live connectors are wired.)
-- name: "ERP AP subledger (read)"
-  connector_type: postgres
-  config:
-    host: erp-ap.internal
-    port: 5432
-    database: ap_subledger
-    username: datacern_read
-    ssl_mode: require
-- name: "Coupa P2P suite (read)"
-  connector_type: http_api
-  config:
-    method: GET
-    url: https://your-tenant.coupahost.com/api/purchase_orders
-- name: "Invoice-capture / OCR drop (read)"
+# Governed source-connector templates (ingestion-service inc13): INCOMING
+# connections pre-declared with skip_test + EMPTY secrets, so the AP team's
+# expected feeds exist as governed starting points the tenant completes with
+# real hosts/credentials in Data → Connections. Nothing is polled at install.
+# These are the feeds that satisfy the pack's dataset binding contracts
+# (data/datasets.yaml): the ERP AP subledger extract and the invoice-capture
+# (OCR) output drop.
+- name: "ERP AP subledger extract drop (SFTP)"
   connector_type: sftp
+  direction: incoming
   config:
-    host: ocr-capture.internal
+    host: "erp-gateway.example.invalid"
     port: 22
-    username: datacern_read
-    root_directory: /exports/invoices
+    username: datacern_ingest
+    root_directory: "/outbound/ap-subledger"
+- name: "Invoice-capture feed (S3)"
+  connector_type: s3
+  direction: incoming
+  config:
+    region: us-east-1
+    bucket: invoice-capture-exports
+    root_prefix: "daily/"
+    file_format: csv
+    glob: "*.csv"

@@ -1,0 +1,58 @@
+# Typed custom case fields (case-service CASE-FR-022) — the trade-compliance
+# review work item's real adjudication attributes, typed so the case form
+# validates them and decision surfaces can read them structurally instead of
+# parsing notes. data_type is IMMUTABLE after creation (case-service) —
+# chosen deliberately. Names and enum options mirror the tc_review_items
+# binding-contract columns so field data and the bound dataset agree.
+- name: item_type
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Review item type"
+    options: [hs_classification, screening_alert]
+    required: false
+- name: screening_list
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Screening list matched"
+    options: [sdn, entity_list, unlisted]
+    required: false
+- name: match_score
+  data_type: float
+  purpose: both
+  field_meta:
+    label: "Screening match score (0-1)"
+    required: false
+- name: declared_hs_chapter
+  data_type: string
+  purpose: both
+  field_meta:
+    label: "Declared HS chapter"
+    required: false
+- name: duty_risk
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Duty/penalty exposure tier"
+    options: [low, medium, high]
+    required: false
+- name: valuation_band
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Entered-value band (USD)"
+    options: [10k_50k, 50k_250k, over_250k]
+    required: false
+- name: origin_country
+  data_type: string
+  purpose: both
+  field_meta:
+    label: "Declared country of origin"
+    required: false
+- name: days_to_deadline
+  data_type: integer
+  purpose: both
+  field_meta:
+    label: "Action clock — days to deadline"
+    required: false

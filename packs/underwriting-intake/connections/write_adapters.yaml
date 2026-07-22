@@ -1,0 +1,21 @@
+# Governed SoR write-back adapters (ingestion-service inc12): OUTGOING
+# connections declared with skip_test + EMPTY secrets — the tenant completes
+# real credentials/endpoints in Data → Connections, and every write executes
+# proposal-mode with four-eyes (no autonomous SoR change). The URLs/hosts are
+# placeholders the tenant replaces; nothing is called at install. Both
+# adapters sync intake ROUTING status only — quote/decline/bind records are
+# written by humans in the policy-admin system itself.
+- name: "Policy admin submission status sync"
+  connector_type: http_api
+  direction: outgoing
+  config:
+    method: POST
+    url: "https://policy-admin.example.invalid/api/v1/submissions/status"
+    headers: { Content-Type: "application/json" }
+- name: "Underwriting workbench referral sync"
+  connector_type: http_api
+  direction: outgoing
+  config:
+    method: POST
+    url: "https://underwriting-workbench.example.invalid/api/v1/referrals"
+    headers: { Content-Type: "application/json" }

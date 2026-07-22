@@ -1,25 +1,23 @@
-# Pack datasets (ingestion-service file_upload, stable names for idempotency).
-# In production these tables arrive via the platform's moderation/enforcement
-# systems and appeal-intake surfaces (deferred until pack-service ships
-# connector materialization); this seed data is REAL rows in the same landing
-# shape, encoding genuine trust-and-safety appeal patterns so every downstream
-# component runs against real signal from day one: an automated hate-speech
-# removal of counter-speech (classic classifier false positive), a
-# repeat-infringer counterfeit seller appealing with new authorization
-# documents, a mass-reported creator whose reach restriction rode a
-# coordinated report wave (brigading suspicion), a satire channel demonetized
-# under the misinformation policy (policy-gap escalation), an account
-# suspension triggered by a spam blast from a compromised account (restore
-# path), and a duplicate second appeal filed while the first is pending.
+# Pack dataset BINDING CONTRACTS (no-dummy-data rule): the pack ships ZERO
+# seed data. Each entry declares the dataset the workflow needs and the exact
+# landing-shape columns it requires; at install the tenant binds it to a REAL
+# dataset (explicit dataset_bindings on the install request, or same-name
+# reuse), and pack-service validates the bound dataset exposes every required
+# column — failing closed with the missing list. Real data arrives through the
+# pack's governed source connectors (connections/sources.yaml) or file upload.
 - identity: ts_appeals
   name: ts-appeals
-  file: data/ts_appeals.csv
-  format: csv
+  required_columns:
+    [appeal_id, decision_id, appeal_type, policy_area, enforcement_source,
+     user_standing, severity, status, disposition, filed_month, age_days,
+     days_to_deadline, deadline_bucket]
 - identity: ts_enforcements
   name: ts-enforcements
-  file: data/ts_enforcements.csv
-  format: csv
+  required_columns:
+    [decision_id, account_id, content_type, classifier_score_band,
+     policy_version, action, enforce_month, geography, report_count]
 - identity: ts_accounts
   name: ts-accounts
-  file: data/ts_accounts.csv
-  format: csv
+  required_columns:
+    [account_id, account_handle, account_type, account_age_bucket,
+     audience_tier, prior_violations, verified, monetized]

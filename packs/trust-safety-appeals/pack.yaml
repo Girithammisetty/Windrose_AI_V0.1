@@ -2,12 +2,17 @@
 # trust & safety appeals adjudication (content and account enforcement
 # appeals) for social/UGC platforms, marketplaces, gaming platforms, and
 # dating apps under DSA/OSA process obligations. Installable TODAY against
-# Datacern Core's public APIs via packctl; the manifest envelope follows
-# BRD 23 (PKG-FR-001/003). Components the current Core cannot materialize
-# are declared under `deferred` — recorded in the install ledger, never faked.
+# Datacern Core's public APIs via packctl/pack-service; the manifest envelope
+# follows BRD 23 (PKG-FR-001/003). Components the current Core cannot
+# materialize are declared under `deferred` — recorded in the install ledger,
+# never faked.
+# v2.0.0 (no-dummy-data rule): the pack ships ZERO seed data — datasets are
+# binding CONTRACTS resolved to the tenant's REAL data at install; cases
+# arrive from real rows via case triggers/intake, not seeds; eval golden sets
+# are curated by the tenant from its own adjudicated appeal history.
 pack_manifest: 1
 name: trust-safety-appeals
-version: 1.0.0
+version: 2.0.0
 publisher: { id: pub-datacern, name: "Datacern Inc." }
 description: >-
   AI-assisted trust-and-safety appeals adjudication for online platforms:
@@ -38,16 +43,33 @@ components:
     - { file: "dashboards/dsa_compliance_transparency.yaml", identity: "dsa_compliance_transparency" }
   dispositions:
     - { file: "cases/dispositions.yaml", identity: "dispositions" }
-  cases:
-    - { file: "cases/queue.yaml", identity: "appeals_queue" }
+  case_fields:
+    - { file: "cases/fields.yaml", identity: "appeal_fields" }
+  case_schemas:
+    - { file: "cases/schemas.yaml", identity: "appeal_schema" }
+  ontology:
+    - { file: "ontology/entities.yaml", identity: "appeals_ontology" }
+  decision_models:
+    - { file: "decisions/appeal_priority_routing.yaml", identity: "appeal_priority_routing" }
+    - { file: "decisions/policy_gap_and_integrity_routing.yaml", identity: "policy_gap_and_integrity_routing" }
   roles:
     - { file: "rbac/roles.yaml", identity: "roles" }
   agent_configs:
     - { file: "agents/configs.yaml", identity: "agent_configs" }
+  guardrails:
+    - { file: "agents/guardrails.yaml", identity: "agent_guardrails" }
   memories:
     - { file: "memories/grounding.yaml", identity: "grounding" }
   pipelines:
     - { file: "pipelines/templates.yaml", identity: "pipelines" }
+  display_labels:
+    - { file: "labels/overrides.yaml", identity: "label_overrides" }
+  model_archetypes:
+    - { file: "models/archetypes.yaml", identity: "model_blueprints" }
+  write_adapters:
+    - { file: "connections/write_adapters.yaml", identity: "sor_writeback" }
+  connection_templates:
+    - { file: "connections/sources.yaml", identity: "source_feeds" }
 deferred:
   - kind: agent_recipes
     reason: >-

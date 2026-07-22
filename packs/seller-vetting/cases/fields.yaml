@@ -1,0 +1,55 @@
+# Typed custom case fields (case-service CASE-FR-022) — the seller-vetting /
+# enforcement review's real adjudication attributes, typed so the case form
+# validates them and decision surfaces can read them structurally instead of
+# parsing notes. data_type is IMMUTABLE after creation (case-service) —
+# chosen deliberately. Enum options mirror the sv-reviews / sv-sellers
+# binding-contract value domains so field data and dataset agree.
+- name: review_type
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Review type"
+    options: [counterfeit_takedown, ip_infringement_claim, seller_fraud_alert,
+              onboarding_vetting, reinstatement_request]
+    required: false
+- name: claim_basis
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Claim basis"
+    options: [authenticity, copyright, trademark, safety, kyb_mismatch]
+    required: false
+- name: trigger_source
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Trigger source"
+    options: [ml_detector, test_buy, buyer_reports, brand_owner_complaint, kyb_screen]
+    required: false
+- name: product_vertical
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Product vertical"
+    options: [electronics, beauty, apparel, luxury, toys, media]
+    required: false
+- name: kyb_verified
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Seller KYB verification state"
+    # quoted: bare yes/no would YAML-parse as booleans, not the data's strings
+    options: ["yes", "no", mismatch]
+    required: false
+- name: gmv_at_risk
+  data_type: float
+  purpose: both
+  field_meta:
+    label: "Listing GMV at risk (USD)"
+    required: false
+- name: days_to_deadline
+  data_type: integer
+  purpose: both
+  field_meta:
+    label: "Response/takedown clock — days left"
+    required: false

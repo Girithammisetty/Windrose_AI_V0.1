@@ -1,0 +1,27 @@
+# Second governed decision table (BRD 54): payment-run urgency triage — the
+# expedite lane. Operates only on ap_exceptions binding-contract columns
+# (days_to_deadline, invoice_amount, status). Dollar thresholds are
+# company-configured examples the tenant tunes to its own approval matrix —
+# they cite no external rule. Executes to the same governed four-eyes
+# proposal path: the table proposes an expedited human review, the AP
+# Controls Manager decides.
+- identity: high_value_expedite
+  name: "High-value and deadline expedite"
+  rules:
+    # Exception still open with the payment run at most 2 days out — a human
+    # must look before the money moves.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: days_to_deadline, op: between, value: [0, 2] }
+      then: { disposition_code: escalate_recovery_review, severity: critical }
+      note: "Open exception inside the 2-day payment-run window (company-configured) — expedited human review before disbursement"
+    # High-dollar open exposure (company-configured threshold) — expedited
+    # review ahead of FIFO regardless of deadline.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: invoice_amount, op: gte, value: 100000 }
+      then: { disposition_code: escalate_recovery_review, severity: high }
+      note: "Open exposure at/above the company-configured high-value threshold ($100k example) — expedited review"
+  # No default_outcome ON PURPOSE: everything else keeps its normal queue
+  # position — the expedite table only pulls work forward, it never
+  # dispositions the remainder.

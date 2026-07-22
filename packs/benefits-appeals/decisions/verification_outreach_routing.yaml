@@ -1,0 +1,38 @@
+# Second governed decision table (BRD 54): deterministic
+# missing-documentation ROUTING — the outreach complement to
+# expedited_docket_routing. Operates ONLY on gb-determinations
+# binding-contract columns (status, issue_type, days_to_deadline). It routes
+# open determinations whose issue is evidence-shaped to the
+# verification-outreach queue via request_verification_documents — a
+# deferral WITHOUT adverse action. It NEVER proposes approving, denying, or
+# dismissing a claim, and it deliberately never proposes
+# refer_fraud_investigation: a fraud referral from coarse columns is exactly
+# the blunt-automated-filter pattern that has wrongly penalized legitimate
+# claimants — integrity referrals require individual human review of the
+# actual evidence. Executes to the same governed four-eyes proposal path:
+# the table proposes, the examiner and Program Integrity Manager decide.
+- identity: verification_outreach_routing
+  name: "Verification outreach routing (missing documentation)"
+  rules:
+    # Identity flags are verification LEADS, not verdicts — route through
+    # the identity-verification pathway; an address or cross-match hit alone
+    # never justifies denial of a claimant whose own documents verify.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: issue_type, op: eq, value: identity }
+      then: { disposition_code: request_verification_documents, severity: medium }
+      note: "Identity flag — route to the identity-verification pathway; never auto-deny on a match alone, and any integrity referral is an individual human call"
+    # Evidence-shaped eligibility issues with runway: request the documents
+    # before any adverse action. A wage-match mismatch can be an employer
+    # payroll-reporting lag, not misreporting — check current documentation
+    # first. Deadline-critical rows (< 4 days) route via the expedited
+    # docket table instead of waiting on an outreach cycle.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: issue_type, op: in, value: [income_verification, household_composition] }
+        - { column: days_to_deadline, op: gte, value: 4 }
+      then: { disposition_code: request_verification_documents, severity: low }
+      note: "Evidence-shaped issue with runway — request current verification documents before any adverse action (income mismatches are often payroll-reporting lags)"
+  # No default_outcome ON PURPOSE: complete-record determinations proceed to
+  # the examiner docket — this table stays silent on them rather than
+  # proposing an outcome; eligibility decisions are human four-eyes.

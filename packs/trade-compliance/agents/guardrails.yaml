@@ -1,0 +1,15 @@
+# Per-agent security envelopes (agent-runtime PA-FR-060, BRD 53 inc2) for the
+# two agents this pack configures. Applied as a partial upsert — prompt_params
+# from agents/configs.yaml are untouched. bind_workspace confines grounding
+# reads to the install workspace; the budget is clamped DOWN server-side to
+# the operator platform ceiling (BR-8) — a pack can never raise it. PII
+# egress is redacted: review notes and screening evidence carry party names,
+# addresses, and registry identifiers that must not leave in agent output.
+- agent_key: case-triage
+  budget: { max_tokens_per_session: 60000 }
+  pii: { block_pii_egress: false, redact: true }
+  bind_workspace: true
+- agent_key: analytics
+  budget: { max_tokens_per_session: 40000 }
+  pii: { block_pii_egress: false, redact: true }
+  bind_workspace: true
