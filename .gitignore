@@ -28,3 +28,8 @@ test-results*/
 playwright-report*/
 playwright-live-report/
 *.tsbuildinfo
+
+# stray local `go build -o server` output — not read by any Dockerfile or CI
+# step (services build from source); two copies landed in the initial commit
+# by accident and were untracked to stop the repo growing every rebuild.
+/services/*/server
