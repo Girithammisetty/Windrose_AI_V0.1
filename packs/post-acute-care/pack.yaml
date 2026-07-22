@@ -1,18 +1,25 @@
 # post-acute-care capability pack (BRD 29) — Core-neutral edition.
-# Installable TODAY against Datacern Core's public APIs via packctl; the
-# manifest envelope follows BRD 23 (PKG-FR-001/003). Components today's Core
-# cannot materialize are declared under `deferred` with the exact PAC-FR
-# requirement they trace to — recorded in the install ledger, never faked.
+# Installable TODAY against Datacern Core's public APIs via packctl/pack-service;
+# the manifest envelope follows BRD 23 (PKG-FR-001/003). Components the current
+# Core cannot materialize are declared under `deferred` — recorded in the
+# install ledger, never faked.
+# v2.0.0 (no-dummy-data rule): the pack ships ZERO seed data — datasets are
+# binding CONTRACTS resolved to the tenant's REAL data at install; cases arrive
+# from real rows via case triggers/intake, not seeds; eval golden sets are
+# curated by the tenant from its own adjudicated history.
 pack_manifest: 1
 name: post-acute-care
-version: 1.0.0
+version: 2.0.0
 publisher: { id: pub-datacern, name: "Datacern Inc." }
 description: >-
   Post-acute care AI for home health, SNF, and hospice operators (BRD 29):
   PDGM/PDPM episode and assessment semantic models, network / readmission /
-  referral dashboards, care-transition review queues with dispositions,
-  post-acute role catalog, domain-grounded copilot configuration, and a
-  30-day rehospitalization-risk training pipeline.
+  referral dashboards, typed referral-triage and episode-review case schemas
+  with dispositions, governed referral-routing and episode-escalation
+  decision tables, post-acute ontology and role catalog, domain-grounded
+  copilot configuration with PHI-redacting guardrails, referral/EHR source
+  and write-back connection templates, and a 30-day rehospitalization-risk
+  training pipeline with its governed model blueprint.
 categories: [healthcare, post-acute, home-health, snf, hospice, medicare]
 regulatory: [hipaa, cms_pdgm, cms_pdpm, oasis_e, mds_3, hospice_lcd, cert_uic_defensible, hitrust]
 components:
@@ -31,16 +38,33 @@ components:
     - { file: "dashboards/referral_intake.yaml", identity: "referral_intake" }
   dispositions:
     - { file: "cases/dispositions.yaml", identity: "dispositions" }
-  cases:
-    - { file: "cases/queue.yaml", identity: "care_transition_queue" }
+  case_fields:
+    - { file: "cases/fields.yaml", identity: "pac_case_fields" }
+  case_schemas:
+    - { file: "cases/schemas.yaml", identity: "pac_case_schemas" }
+  ontology:
+    - { file: "ontology/entities.yaml", identity: "pac_ontology" }
+  decision_models:
+    - { file: "decisions/referral_triage.yaml", identity: "referral_triage" }
+    - { file: "decisions/episode_escalation.yaml", identity: "episode_escalation" }
   roles:
     - { file: "rbac/roles.yaml", identity: "roles" }
   agent_configs:
     - { file: "agents/configs.yaml", identity: "agent_configs" }
+  guardrails:
+    - { file: "agents/guardrails.yaml", identity: "agent_guardrails" }
   memories:
     - { file: "memories/grounding.yaml", identity: "grounding" }
   pipelines:
     - { file: "pipelines/templates.yaml", identity: "pipelines" }
+  display_labels:
+    - { file: "labels/overrides.yaml", identity: "label_overrides" }
+  model_archetypes:
+    - { file: "models/archetypes.yaml", identity: "model_blueprints" }
+  write_adapters:
+    - { file: "connections/write_adapters.yaml", identity: "sor_writeback" }
+  connection_templates:
+    - { file: "connections/sources.yaml", identity: "source_feeds" }
 deferred:
   - kind: agent_recipes
     reason: >-

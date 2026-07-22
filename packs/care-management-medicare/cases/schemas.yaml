@@ -1,0 +1,34 @@
+# Governed typed case schemas (case-service inc10): the care-management review
+# work items as named case TYPES binding the typed field set, so intake creates
+# structurally-complete cases (not generic cases with prose notes). Embedded
+# field defs use {name, data_type, label, required}; names align with
+# cases/fields.yaml and the care-billing-candidates contract columns.
+- schema_key: monthly_billing_review
+  name: "Monthly billing candidate review"
+  description: >-
+    A held or pending care-management billing candidate under monthly billing
+    review: the reviewer confirms the documentation artifacts (consent, time
+    log, care plan, audit package) before the practice bills — every billing
+    decision is a four-eyes human approval, never autonomous.
+  fields:
+    - { name: program_code,           data_type: enum,    label: "Care-management program",        required: true }
+    - { name: cpt_code,               data_type: string,  label: "Proposed billing code",          required: true }
+    - { name: service_month,          data_type: string,  label: "Service month (YYYY-MM)",        required: true }
+    - { name: hold_reason,            data_type: enum,    label: "Documentation hold reason",      required: false }
+    - { name: expected_reimbursement, data_type: float,   label: "Expected reimbursement (USD)",   required: false }
+    - { name: total_time_min,         data_type: integer, label: "Time-tracked minutes this month", required: false }
+    - { name: audit_package_status,   data_type: enum,    label: "Audit package status",           required: false }
+    - { name: fqhc_flag,              data_type: enum,    label: "FQHC/RHC billing provider",      required: false }
+- schema_key: rpm_cycle_review
+  name: "RPM cycle review"
+  description: >-
+    A remote-monitoring review cycle work item: a patient-month device summary
+    routed for clinician data review and note sign-off before the cycle's
+    device-supply and review codes are considered for billing. Device-level
+    detail lives on the bound care-rpm-readings dataset.
+  fields:
+    - { name: program_code,         data_type: enum,    label: "Care-management program",         required: true }
+    - { name: service_month,        data_type: string,  label: "Service month (YYYY-MM)",         required: true }
+    - { name: hold_reason,          data_type: enum,    label: "Documentation hold reason",       required: false }
+    - { name: total_time_min,       data_type: integer, label: "Time-tracked minutes this month", required: false }
+    - { name: audit_package_status, data_type: enum,    label: "Audit package status",            required: false }

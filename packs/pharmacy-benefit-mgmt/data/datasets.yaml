@@ -1,24 +1,37 @@
-# Pack datasets (ingestion-service file_upload, stable names for idempotency).
-# In production these tables arrive via Rx-claim / ePA / formulary connectors
-# (RX-FR-080 — deferred until pack-service ships connector materialization);
-# this seed data is REAL rows in the exact landing shape those connectors
-# produce (NCPDP-style Rx claims with 11-digit NDCs, GPI classes, DAW codes,
-# NCPDP reject codes; DUR alerts with NCPDP conflict codes), so every
-# downstream component (semantic models, dashboards, cases, pipelines) runs
-# against genuine data from day one.
+# Pack dataset BINDING CONTRACTS (no-dummy-data rule): the pack ships ZERO
+# seed data. Each entry declares the dataset the workflow needs and the exact
+# landing-shape columns it requires; at install the tenant binds it to a REAL
+# dataset (explicit dataset_bindings on the install request, or same-name
+# reuse), and pack-service validates the bound dataset exposes every required
+# column — failing closed with the missing list. Real data arrives through the
+# pack's governed source connectors (connections/sources.yaml) or file upload.
+# The landing shapes are the NCPDP-style surfaces PBM adjudication systems
+# emit (11-digit NDCs, GPI classes, DAW codes, NCPDP reject and DUR conflict
+# codes) — the contract names the columns, not any vendor's file format.
 - identity: pbm_rx_claims
   name: pbm-rx-claims
-  file: data/pbm_rx_claims.csv
-  format: csv
+  required_columns:
+    [rx_claim_id, member_id, pharmacy_npi, prescriber_npi, ndc, drug_name,
+     gpi_class, brand_generic, formulary_tier, daw_code, fill_month,
+     days_supply, quantity, ingredient_cost, dispensing_fee, plan_paid,
+     member_copay, rebate_expected, rebate_collected, claim_status,
+     reject_code, channel, member_state]
 - identity: pbm_formulary
   name: pbm-formulary
-  file: data/pbm_formulary.csv
-  format: csv
+  required_columns:
+    [formulary_row_id, gpi_class, therapeutic_class, preferred_tier,
+     pa_required, step_therapy, quantity_limit, preferred_agent,
+     specialty_flag]
 - identity: pbm_pa_requests
   name: pbm-pa-requests
-  file: data/pbm_pa_requests.csv
-  format: csv
+  required_columns:
+    [pa_id, member_id, prescriber_npi, ndc, drug_name, gpi_class, urgency,
+     submitted_month, status, turnaround_hours, controlled_substance,
+     cs_schedule, formulary_tier, step_therapy_met, agent_recommendation,
+     agent_confidence, denial_reason, member_state]
 - identity: pbm_dur_alerts
   name: pbm-dur-alerts
-  file: data/pbm_dur_alerts.csv
-  format: csv
+  required_columns:
+    [dur_id, rx_claim_id, member_id, ndc, drug_name, conflict_code,
+     severity_level, conflict_description, alert_month, status,
+     pharmacist_action, member_state]

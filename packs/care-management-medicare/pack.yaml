@@ -2,22 +2,27 @@
 # The first provider-side vertical: Medicare care-management program family
 # (CCM / PCM / TCM / BHI / CoCM / RPM / RTM / APCM 2025) for practices, FQHCs,
 # RHCs, and ambulatory groups. Installable TODAY against Datacern Core's
-# public APIs via packctl; the manifest envelope follows BRD 23 (PKG-FR-001/
-# 003) so this bundle is forward-compatible with pack-service when it ships.
-# Components the current Core cannot materialize are declared under `deferred`
-# with the exact CMM-FR requirement they trace to — recorded in the install
-# ledger, never faked.
+# public APIs via packctl/pack-service; the manifest envelope follows BRD 23
+# (PKG-FR-001/003). Components the current Core cannot materialize are
+# declared under `deferred` — recorded in the install ledger, never faked.
+# v2.0.0 (no-dummy-data rule): the pack ships ZERO seed data — datasets are
+# binding CONTRACTS resolved to the tenant's REAL data at install; cases
+# arrive from real rows via case triggers/intake, not seeds; eval golden sets
+# are curated by the tenant from its own reviewed history.
 pack_manifest: 1
 name: care-management-medicare
-version: 1.0.0
+version: 2.0.0
 publisher: { id: pub-datacern, name: "Datacern Inc." }
 description: >-
   AI-assisted Medicare care management (CCM/PCM/TCM/BHI/CoCM/RPM/RTM/APCM) for
   providers, FQHCs, and health-system ambulatory groups: enrollment-funnel and
   revenue-leakage KPI semantic models, RPM operations dashboards, a monthly
-  billing review queue gated on documentation completeness, care-team role
-  catalog, CMS-rule-grounded copilot configuration, and an enrollment
-  propensity training pipeline.
+  billing review workflow gated on documentation completeness with typed case
+  schemas and deterministic triage decision tables, care-team role catalog,
+  CMS-rule-grounded copilot configuration with PHI-redacting guardrails,
+  governed EHR/RPM/claims source connectors and SoR write-back adapters, and
+  an enrollment propensity training pipeline with its governed model
+  blueprint.
 categories: [healthcare, provider, care-management, chronic-care, remote-monitoring, medicare]
 regulatory: [cms_ccm_rules, cms_rpm_rules, cms_apcm_2025, no_surprises_act, hipaa, hitrust_csf, rac_audit_defensible]
 components:
@@ -36,16 +41,33 @@ components:
     - { file: "dashboards/rpm_ops.yaml", identity: "rpm_ops" }
   dispositions:
     - { file: "cases/dispositions.yaml", identity: "dispositions" }
-  cases:
-    - { file: "cases/queue.yaml", identity: "billing_review_queue" }
+  case_fields:
+    - { file: "cases/fields.yaml", identity: "care_fields" }
+  case_schemas:
+    - { file: "cases/schemas.yaml", identity: "care_schemas" }
+  ontology:
+    - { file: "ontology/entities.yaml", identity: "care_ontology" }
+  decision_models:
+    - { file: "decisions/billing_review_triage.yaml", identity: "billing_review_triage" }
+    - { file: "decisions/rpm_review_routing.yaml", identity: "rpm_review_routing" }
   roles:
     - { file: "rbac/roles.yaml", identity: "roles" }
   agent_configs:
     - { file: "agents/configs.yaml", identity: "agent_configs" }
+  guardrails:
+    - { file: "agents/guardrails.yaml", identity: "agent_guardrails" }
   memories:
     - { file: "memories/grounding.yaml", identity: "grounding" }
   pipelines:
     - { file: "pipelines/templates.yaml", identity: "pipelines" }
+  display_labels:
+    - { file: "labels/overrides.yaml", identity: "label_overrides" }
+  model_archetypes:
+    - { file: "models/archetypes.yaml", identity: "model_blueprints" }
+  write_adapters:
+    - { file: "connections/write_adapters.yaml", identity: "sor_writeback" }
+  connection_templates:
+    - { file: "connections/sources.yaml", identity: "source_feeds" }
 deferred:
   - kind: agent_recipes
     reason: >-

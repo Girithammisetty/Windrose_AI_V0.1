@@ -1,0 +1,39 @@
+# Governed decision table (BRD 54) — a deterministic, explainable, no-LLM
+# first-cut triage over the complaint queue's binding-contract columns
+# (patient_harm, days_to_deadline, investigation_status). It EXECUTES to the
+# same governed four-eyes proposal an agent produces: an operator dry-runs or
+# batch-runs it across the worklist, and every matched case becomes a
+# case.apply_disposition proposal the Quality & Regulatory Manager must
+# approve. The table routes work to the expedited investigation queue — it
+# NEVER proposes the reportability determination itself (file_mdr_report /
+# close_not_reportable are exclusively human decisions), which is why the only
+# code it emits is request_device_return_info: secure the device and complete
+# the evidence file NOW, at critical/high queue priority. Outcome
+# disposition_codes are validated against this workspace's disposition catalog
+# at install time, so `dispositions` installs before this.
+- identity: complaint_triage_routing
+  name: "Complaint triage routing table"
+  rules:
+    # Reported death with the investigation still open — the reportability
+    # presumption applies, so the evidence file must be completed fastest.
+    - when:
+        - { column: patient_harm, op: eq, value: death }
+        - { column: investigation_status, op: in, value: [not_started, in_progress] }
+      then: { disposition_code: request_device_return_info, severity: critical }
+      note: "Reported death, investigation open — expedite device return/explant analysis and evidence completion; the reportability presumption applies and the determination is the human analyst + Quality & Regulatory Manager's, never this table's"
+    # Regulatory reporting clock nearly exhausted with the investigation open.
+    - when:
+        - { column: days_to_deadline, op: between, value: [0, 5] }
+        - { column: investigation_status, op: in, value: [not_started, in_progress] }
+      then: { disposition_code: request_device_return_info, severity: critical }
+      note: "Regulatory reporting clock nearly exhausted — expedite the evidence file now; the human determination can be made on the available information and must never be held for the device"
+    # Serious patient harm with the investigation still open.
+    - when:
+        - { column: patient_harm, op: eq, value: serious }
+        - { column: investigation_status, op: in, value: [not_started, in_progress] }
+      then: { disposition_code: request_device_return_info, severity: high }
+      note: "Serious patient harm, investigation open — expedite device return and investigation evidence; reportability evaluation stays with the human decision file"
+  # default_outcome deliberately OMITTED: the disposition catalog has no
+  # neutral human-review code, and the reportability determination
+  # (file_mdr_report / close_not_reportable) must never be a table outcome —
+  # unmatched complaints simply remain untouched in the analyst worklist.

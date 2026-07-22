@@ -1,0 +1,35 @@
+# Governed model blueprints (experiment-service inc9): the intended models
+# this vertical runs, independent of any trained artifact. Each corresponds to
+# a training pipeline this pack already ships (pipelines/templates.yaml), so
+# the blueprint and its implementation stay in one governed pair.
+- archetype_key: dc_reportability_scorer
+  name: "Complaint reportability scorer"
+  task_type: classification
+  target: disposition
+  description: >-
+    Supervised scorer over the adjudicated complaint book (dc-complaints):
+    predicts the likely disposition from event type, device problem, patient
+    harm, complaint source, and clock position — the deterministic-first
+    pre-router for complaint intake triage. Implemented by the pack's xgboost
+    training pipeline.
+  expected_metrics: { f1: 0.80 }
+  governance_notes: >-
+    Scores prioritize the investigation queue ONLY — reportability
+    determinations and regulatory submissions are human four-eyes decisions
+    (the Quality & Regulatory Manager approves), and every complaint file
+    carries a human-owned documented rationale. Promotion requires eval-gate +
+    manager approval.
+- archetype_key: dc_device_fleet_anomaly_detector
+  name: "Device fleet anomaly detector"
+  task_type: anomaly_detection
+  target: null
+  description: >-
+    Unsupervised surface scan over the fielded-device book (dc-devices) for
+    repeat-repair, lot, and software-version outliers feeding trending review.
+    Implemented by the pack's isolation-forest training pipeline.
+  expected_metrics: {}
+  governance_notes: >-
+    Detector output prioritizes the quality-engineering investigation queue
+    only, never a regulatory posture: flagged fleet segments route to human
+    trending review, and any CAPA, reportability, or field-action decision
+    that follows is a human four-eyes determination.

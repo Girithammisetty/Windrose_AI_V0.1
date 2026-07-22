@@ -7,8 +7,14 @@
 # closes an incomplete file after the documented follow-up chase;
 # refer_foreclosure_alternatives routes non-retention outcomes to short-sale/
 # DIL counseling; close_reinstated records a borrower cure.
+# escalate_underwriting_review is the NEUTRAL human-review routing outcome
+# (expedited underwriting / SPOC outreach) — it decides nothing about the
+# workout or the foreclosure path; it is the only code the pack's decision
+# tables and agent may use to prioritize a file, because approvals, denials,
+# and any foreclosure-path step are always four-eyes human determinations.
 - { code: approve_workout_offer,          label: "Approve workout offer — borrower qualifies",                 category: true_positive,  requires_note: true }
 - { code: deny_with_specific_reasons,     label: "Deny — specific reasons documented (appeal rights attach)",  category: false_positive, requires_note: true }
 - { code: request_missing_documents,      label: "Close incomplete — missing documents after follow-up",       category: inconclusive,   requires_note: true }
 - { code: refer_foreclosure_alternatives, label: "Refer to foreclosure alternatives (short sale / DIL)",       category: other,          requires_note: true }
 - { code: close_reinstated,               label: "Close — loan reinstated by borrower",                        category: benign,         requires_note: true }
+- { code: escalate_underwriting_review,   label: "Escalate for priority human review (underwriting / SPOC outreach)", category: inconclusive, requires_note: false }

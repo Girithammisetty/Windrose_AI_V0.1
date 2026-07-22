@@ -1,0 +1,21 @@
+# Governed SoR write-back adapters (ingestion-service inc12): OUTGOING
+# connections declared with skip_test + EMPTY secrets — the tenant completes
+# real endpoints/credentials in Data → Connections, and every write executes
+# proposal-mode with four-eyes (no autonomous system-of-record change; a
+# provider flag or lead-status sync is proposed by the workflow and approved
+# by a human before anything is sent). The URLs are placeholders the tenant
+# replaces; nothing is called at install, and no credentials ship in the pack.
+- name: "SIU case-management lead status sync"
+  connector_type: http_api
+  direction: outgoing
+  config:
+    method: POST
+    url: "https://siu-case-mgmt.example.invalid/api/v1/leads/status"
+    headers: { Content-Type: "application/json" }
+- name: "Claims platform provider review-flag sync"
+  connector_type: http_api
+  direction: outgoing
+  config:
+    method: POST
+    url: "https://claims-platform.example.invalid/api/v1/providers/review-flags"
+    headers: { Content-Type: "application/json" }

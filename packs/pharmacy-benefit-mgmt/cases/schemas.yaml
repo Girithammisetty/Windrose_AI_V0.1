@@ -1,0 +1,28 @@
+# Governed typed case schemas (case-service inc10): the two PBM review work
+# items as named case TYPES binding their adjudication field sets, so intake
+# creates structurally-complete cases (not generic cases with prose notes).
+# Embedded field defs use {name, data_type, label, required}; names align with
+# cases/fields.yaml and the pbm_pa_requests / pbm_dur_alerts binding contracts.
+- schema_key: pharmacy_pa_review
+  name: "Rx prior-authorization review"
+  description: >-
+    A pharmacy prior-authorization coverage-determination work item reviewed
+    against the plan formulary and utilization-management criteria within the
+    plan-configured turnaround window. An adverse determination (denial) is
+    always a licensed human pharmacist's documented decision.
+  fields:
+    - { name: urgency,              data_type: enum,   label: "PA urgency",                    required: true }
+    - { name: formulary_tier,       data_type: string, label: "Formulary tier",                required: false }
+    - { name: step_therapy_met,     data_type: enum,   label: "Step therapy documented",       required: false }
+    - { name: cs_schedule,          data_type: string, label: "Controlled-substance schedule", required: false }
+    - { name: agent_recommendation, data_type: enum,   label: "Copilot recommendation",        required: false }
+    - { name: agent_confidence,     data_type: float,  label: "Copilot confidence",            required: false }
+- schema_key: dur_safety_review
+  name: "DUR safety-alert review"
+  description: >-
+    A drug-utilization-review safety alert (interaction, duplication, dosing,
+    or refill-timing/adherence conflict) awaiting a pharmacist's documented
+    override or prescriber-contact intervention.
+  fields:
+    - { name: conflict_code,  data_type: enum, label: "DUR conflict code",                     required: true }
+    - { name: severity_level, data_type: enum, label: "DUR severity level (1 = clinical-critical)", required: true }

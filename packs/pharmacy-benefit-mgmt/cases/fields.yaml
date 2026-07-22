@@ -1,0 +1,60 @@
+# Typed custom case fields (case-service CASE-FR-022) — the PA / DUR review
+# work item's real adjudication attributes, typed so the case form validates
+# them and decision surfaces read them structurally instead of parsing notes.
+# data_type is IMMUTABLE after creation (case-service) — chosen deliberately.
+# Names and enum options mirror the pbm_pa_requests / pbm_dur_alerts binding
+# contracts so field data and dataset agree; open-ended code sets
+# (formulary_tier, cs_schedule) stay string so plan-specific values are legal.
+- name: urgency
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "PA urgency"
+    options: [expedited, standard]
+    required: false
+- name: formulary_tier
+  data_type: string
+  purpose: both
+  field_meta:
+    label: "Formulary tier"
+    required: false
+- name: step_therapy_met
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Step therapy documented"
+    options: ["yes", "no"]
+    required: false
+- name: cs_schedule
+  data_type: string
+  purpose: both
+  field_meta:
+    label: "Controlled-substance schedule"
+    required: false
+- name: agent_recommendation
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Copilot recommendation"
+    options: [approve, escalate_pharmacist]
+    required: false
+- name: agent_confidence
+  data_type: float
+  purpose: both
+  field_meta:
+    label: "Copilot confidence"
+    required: false
+- name: conflict_code
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "DUR conflict code"
+    options: [DD, ER, HD, LR, TD]
+    required: false
+- name: severity_level
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "DUR severity level (1 = clinical-critical)"
+    options: ["1", "2", "3"]
+    required: false

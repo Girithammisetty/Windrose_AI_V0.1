@@ -1,0 +1,22 @@
+# Governed SoR write-back adapters (ingestion-service inc12): OUTGOING
+# connections declared with skip_test + EMPTY secrets — the tenant completes
+# real credentials/endpoints in Data → Connections, and every write executes
+# proposal-mode with four-eyes (no autonomous SoR change — and never any
+# foreclosure-path action). The URLs/hosts are placeholders the tenant
+# replaces; nothing is called at install.
+- name: "Servicing platform loss-mit status sync"
+  connector_type: http_api
+  direction: outgoing
+  config:
+    method: POST
+    url: "https://servicing-platform.example.invalid/api/v1/loss-mitigation/status"
+    headers: { Content-Type: "application/json" }
+- name: "Servicing default ledger upsert"
+  connector_type: postgres
+  direction: outgoing
+  config:
+    host: "default-servicing-db.example.invalid"
+    port: 5432
+    database: loss_mitigation
+    username: datacern_writeback
+    ssl_mode: require

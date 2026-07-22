@@ -1,0 +1,30 @@
+# Governed typed case schemas (case-service inc10): the two post-acute work
+# items as named case TYPES binding their field sets, so intake creates
+# structurally-complete cases (not generic cases with prose notes). Embedded
+# field defs use {name, data_type, label, required}; names align with
+# cases/fields.yaml and the dataset binding contracts.
+- schema_key: pac_referral
+  name: "Post-acute referral triage"
+  description: >-
+    An inbound referral from acute discharge awaiting an intake decision:
+    capacity and complexity review, response-time tracking, and — where the
+    referral is declined — the documented rationale BR-6 requires. Clinical
+    suitability and hospice-eligibility judgments always rest with clinicians.
+  fields:
+    - { name: care_setting,     data_type: enum,   label: "Requested care setting",   required: true }
+    - { name: complexity_tier,  data_type: enum,   label: "Referral complexity tier", required: true }
+    - { name: capacity_fit,     data_type: enum,   label: "Receiving-capacity fit",   required: false }
+- schema_key: episode_review
+  name: "Care-transition episode review"
+  description: >-
+    An on-service episode flagged for human review: readmission-risk
+    intervention, PDGM comorbidity-capture review, PDPM therapy alignment, or
+    long-stay utilization review. Risk scores prioritize care-team outreach
+    only and never justify care denial or discharge decisions (BR-7).
+  fields:
+    - { name: care_setting,             data_type: enum,    label: "Care setting",                        required: true }
+    - { name: payment_model,            data_type: enum,    label: "Payment model",                       required: false }
+    - { name: case_mix_group,           data_type: string,  label: "Case-mix group (PDGM/PDPM)",          required: false }
+    - { name: readmission_risk_score,   data_type: float,   label: "30-day rehospitalization risk score", required: false }
+    - { name: los_days,                 data_type: integer, label: "Length of stay (days)",               required: false }
+    - { name: missed_comorbidity_count, data_type: integer, label: "Flagged comorbidity codes pending review", required: false }

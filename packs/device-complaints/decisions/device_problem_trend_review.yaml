@@ -1,0 +1,36 @@
+# Second governed decision table (BRD 54): deterministic quality-engineering
+# routing for the device-problem classes that recur as patterns — the trend
+# complement to complaint_triage_routing. Operates ONLY on dc_complaints
+# binding-contract columns (device_problem, patient_harm, event_type) and
+# executes to the same governed four-eyes proposal path: the table proposes a
+# quality-engineering (CAPA trend) review, the Quality & Regulatory Manager
+# decides. Opening a CAPA never substitutes for, or delays, the individual
+# complaint's reportability evaluation — that determination is exclusively
+# human and is never a table outcome.
+- identity: device_problem_trend_review
+  name: "Device-problem trend review routing"
+  rules:
+    # Software-anomaly cluster: a cluster appearing after a version rollout
+    # points at the change, not the units — a classic CAPA trend trigger.
+    - when:
+        - { column: device_problem, op: eq, value: software_anomaly }
+        - { column: patient_harm, op: eq, value: none }
+      then: { disposition_code: open_capa_investigation, severity: medium }
+      note: "Software-anomaly problem code — rollout-cluster trend class; route to quality-engineering CAPA review of the version band; each event's could-recur reportability evaluation stays human"
+    # Recurring connector-problem code across the fleet (no harm this event).
+    - when:
+        - { column: device_problem, op: eq, value: connector }
+        - { column: event_type, op: eq, value: malfunction }
+        - { column: patient_harm, op: eq, value: none }
+      then: { disposition_code: open_capa_investigation, severity: medium }
+      note: "Connector problem code recurring across the fleet — quality-engineering trend review; the individual reportability evaluation remains a human decision"
+    # Use error possibly induced by design/labeling — a design-input /
+    # human-factors finding, not user blame.
+    - when:
+        - { column: device_problem, op: eq, value: labeling_confusion }
+        - { column: event_type, op: eq, value: use_error }
+      then: { disposition_code: open_capa_investigation, severity: medium }
+      note: "Use error with a labeling/design-confusion problem code — human-factors and design-input review under quality engineering; harm and reportability evaluation stay with the human analyst"
+  # default_outcome deliberately OMITTED: no neutral human-review disposition
+  # exists, and this table must never emit a reportability determination —
+  # unmatched complaints remain in the analyst worklist untouched.

@@ -1,0 +1,33 @@
+# Governed typed case schemas (case-service inc10): the SIU work items as
+# named case TYPES binding the investigation field set, so intake creates a
+# structurally-complete lead (not a generic case with prose notes). Embedded
+# field defs use {name, data_type, label, required}; names align with
+# cases/fields.yaml and the fwa_leads / fwa_recoveries binding-contract
+# columns. A lead is an allegation-neutral review item — it records billing
+# patterns that warrant investigation, never a fraud determination.
+- schema_key: siu_lead
+  name: "SIU lead"
+  description: >-
+    A post-payment FWA lead on a billing provider — a flagged billing-pattern
+    anomaly (upcoding, unbundling, phantom billing, impossible day) or an
+    allegation (member complaint, hotline, exclusion-list hit) routed to a
+    Special Investigations Unit investigator for human review.
+  fields:
+    - { name: provider_npi,    data_type: string, label: "Provider NPI",                       required: true }
+    - { name: fwa_typology,    data_type: enum,   label: "FWA typology",                       required: true }
+    - { name: lead_source,     data_type: enum,   label: "Lead source",                        required: false }
+    - { name: fwa_score,       data_type: float,  label: "FWA screening score (human-review decision support only)", required: false }
+    - { name: exposure_amount, data_type: float,  label: "At-risk / overpayment exposure (USD)", required: true }
+    - { name: priority,        data_type: enum,   label: "Lead priority",                      required: false }
+- schema_key: overpayment_review
+  name: "Overpayment recovery review"
+  description: >-
+    A recovery work item tracking an identified overpayment from demand
+    through collection (payback demand, offset, settlement, education letter).
+    Recovery actions issue only with supervisor review plus legal concurrence;
+    the case records the governed review, never an automatic recoupment.
+  fields:
+    - { name: provider_npi,     data_type: string, label: "Provider NPI",                       required: true }
+    - { name: recovery_method,  data_type: enum,   label: "Recovery method",                    required: true }
+    - { name: exposure_amount,  data_type: float,  label: "At-risk / overpayment exposure (USD)", required: false }
+    - { name: recovered_amount, data_type: float,  label: "Recovered to date (USD)",            required: false }

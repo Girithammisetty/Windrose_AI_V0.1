@@ -1,0 +1,52 @@
+# Governed decision table (BRD 54) — deterministic, explainable, no-LLM
+# first-cut routing over referral-triage cases, on columns the pac_referrals
+# binding contract guarantees (requested_setting, complexity_tier,
+# capacity_fit, acceptance_score, status, response_hours). It EXECUTES to the
+# same governed four-eyes proposal an agent produces: every matched case
+# becomes a case.apply_disposition proposal a human intake coordinator or
+# medical director must approve. The table never makes an admission decision —
+# clinical suitability and hospice eligibility are always routed to humans
+# (BR-5/BR-6); all numeric thresholds are program-configured operational
+# values, not regulatory citations. Outcome disposition_codes are validated
+# against this workspace's disposition catalog at install (dispositions
+# install first).
+- identity: referral_triage
+  name: "Referral triage routing table"
+  rules:
+    # Hospice referrals always reach the medical director — eligibility is a
+    # physician determination the platform never automates (BR-5).
+    - when:
+        - { column: requested_setting, op: eq, value: HOSPICE }
+      then: { disposition_code: escalate_medical_director, severity: high }
+      note: "Hospice referral — eligibility is a physician determination (BR-5); table routes only"
+    # High-complexity referrals need clinician review of suitability before
+    # any intake decision.
+    - when:
+        - { column: complexity_tier, op: eq, value: high }
+      then: { disposition_code: escalate_medical_director, severity: high }
+      note: "High-complexity referral — clinical suitability review before intake decision"
+    # No receiving capacity documented: propose an operational (not clinical)
+    # decline; requires_note on the code forces the BR-6 rationale.
+    - when:
+        - { column: capacity_fit, op: eq, value: none }
+        - { column: complexity_tier, op: in, value: [low, medium] }
+      then: { disposition_code: referral_decline_confirmed, severity: medium }
+      note: "No receiving capacity — operational decline proposal; BR-6 documented rationale required at approval"
+    # Strong operational fit with a high triage score: propose acceptance for
+    # the intake coordinator to confirm.
+    - when:
+        - { column: acceptance_score, op: between, value: [0.8, 1.0] }
+        - { column: capacity_fit, op: eq, value: good }
+        - { column: complexity_tier, op: in, value: [low, medium] }
+      then: { disposition_code: referral_accept_confirmed, severity: low }
+      note: "Strong capacity + triage fit — acceptance proposal for intake-coordinator confirmation"
+    # Pending referral aging past the program-configured response window —
+    # surface it for human review before the referrer moves on.
+    - when:
+        - { column: status, op: eq, value: pending }
+        - { column: response_hours, op: gte, value: 24 }
+      then: { disposition_code: escalate_medical_director, severity: medium }
+      note: "Pending beyond the program-configured response window — human intake review"
+  # Nothing matched deterministically -> a human reviews; the table never
+  # guesses on admission decisions.
+  default_outcome: { disposition_code: escalate_medical_director, severity: low }

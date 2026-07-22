@@ -1,0 +1,61 @@
+# Governed decision table (BRD 54) — a deterministic, explainable, no-LLM
+# first-cut ROUTING over the SIU lead queue's binding-contract columns
+# (fwa_leads: priority, fwa_score, exposure_amount, fwa_typology,
+# lead_source). It EXECUTES to the same governed four-eyes proposal an agent
+# produces: an operator dry-runs or batch-runs it across the worklist, and
+# every matched case becomes a case.apply_disposition proposal an SIU
+# Supervisor must approve. The table only ROUTES work between the
+# investigator queue (open_investigation) and the data-mining watch
+# (pend_evidence) — it NEVER proposes a fraud finding, a referral, a
+# recovery, or any payment action: intent is determined by investigators and
+# counsel, and referrals stay two-signature human decisions. Numeric
+# thresholds are plan-configured defaults the tenant tunes, not regulatory
+# limits. Outcome disposition_codes are validated against this workspace's
+# disposition catalog at install (dispositions install first).
+- identity: siu_lead_triage
+  name: "SIU lead triage routing table"
+  rules:
+    # A lead already marked critical-priority by the detection layer goes to
+    # an investigator immediately.
+    - when:
+        - { column: priority, op: eq, value: critical }
+      then: { disposition_code: open_investigation, severity: critical }
+      note: "Critical-priority lead — route to investigator queue immediately"
+    # A human allegation (member complaint or hotline) always gets an
+    # investigator's review regardless of score — allegations are not scored
+    # away.
+    - when:
+        - { column: lead_source, op: in, value: [member_complaint, hotline] }
+      then: { disposition_code: open_investigation, severity: high }
+      note: "Human allegation (complaint/hotline) — investigator review, never score-filtered"
+    # An exclusion-list refresh hit warrants review of pending and recently
+    # paid claims on that provider.
+    - when:
+        - { column: lead_source, op: eq, value: leie_refresh }
+      then: { disposition_code: open_investigation, severity: high }
+      note: "Exclusion-list refresh hit — review pending/recent paid claims on this provider"
+    # High-exposure lead with a strong pattern signal (plan-configured
+    # defaults: score >= 0.85 and exposure >= $50k).
+    - when:
+        - { column: fwa_score, op: gte, value: 0.85 }
+        - { column: exposure_amount, op: gte, value: 50000 }
+      then: { disposition_code: open_investigation, severity: high }
+      note: "High exposure with strong pattern signal (plan-configured floor) — investigator queue"
+    # Phantom-billing / impossible-day typologies carry the highest
+    # evidentiary weight — investigate at a lower plan-configured score floor.
+    - when:
+        - { column: fwa_typology, op: in, value: [phantom_billing, impossible_day] }
+        - { column: fwa_score, op: gte, value: 0.7 }
+      then: { disposition_code: open_investigation, severity: high }
+      note: "Phantom-billing/impossible-day pattern at plan-configured score floor — investigate"
+    # Weak signal below the plan-configured exposure floor — hold on the
+    # data-mining watch for corroborating evidence instead of consuming
+    # investigator time.
+    - when:
+        - { column: fwa_score, op: lt, value: 0.6 }
+        - { column: exposure_amount, op: lt, value: 5000 }
+      then: { disposition_code: pend_evidence, severity: low }
+      note: "Below plan-configured exposure/score floor — data-mining watch pending corroboration"
+  # Nothing matched deterministically -> neutral pend for human triage; the
+  # table never closes a lead or proposes a determination.
+  default_outcome: { disposition_code: pend_evidence, severity: medium }

@@ -1,25 +1,36 @@
-# Pack datasets (ingestion-service file_upload, stable names for idempotency).
-# In production these tables arrive via the customer's EHR / RPM / telephony
-# connectors (CMM-FR-110 — deferred until pack-service ships connector
-# materialization); this seed data is REAL rows in the same shape those
-# connectors land — the Medicare panel (CMM-FR-010 Patient/ChronicCondition/
-# Consent/Discharge), the care coordination activity log, the code-selection
-# BillingCandidate ledger, and RPM device-reading summaries — so every
-# downstream component (semantic models, dashboards, cases, pipelines) runs
-# against genuine data from day one.
+# Pack dataset BINDING CONTRACTS (no-dummy-data rule): the pack ships ZERO
+# seed data. Each entry declares the dataset the workflow needs and the exact
+# landing-shape columns it requires; at install the tenant binds it to a REAL
+# dataset (explicit dataset_bindings on the install request, or same-name
+# reuse), and pack-service validates the bound dataset exposes every required
+# column — failing closed with the missing list. Real data arrives through the
+# pack's governed source connectors (connections/sources.yaml) — the EHR / RPM
+# vendor / claims feeds — or file upload. Identities and names are unchanged
+# from v1 so semantic `dataset:` refs, {{dataset('...')}} query macros, and
+# the pipeline ref keep resolving.
 - identity: care_patients
   name: care-patients
-  file: data/care_patients.csv
-  format: csv
+  required_columns:
+    [patient_id, mbi_last4, plan_type, qmb_flag, fqhc_flag, provider_npi,
+     provider_specialty, chronic_condition_count, primary_icd10,
+     condition_group, program_code, enrollment_status, consent_month,
+     panel_month, care_manager_id, care_manager_role, apcm_tier,
+     recent_discharge_flag, discharge_month, tcm_contact_2bd, readmitted_30d]
 - identity: care_activities
   name: care-activities
-  file: data/care_activities.csv
-  format: csv
+  required_columns:
+    [activity_id, patient_id, care_manager_id, care_manager_role,
+     program_code, activity_type, activity_month, duration_min,
+     billable_flag, note_status, proposed_by]
 - identity: care_billing_candidates
   name: care-billing-candidates
-  file: data/care_billing_candidates.csv
-  format: csv
+  required_columns:
+    [candidate_id, patient_id, program_code, cpt_code, service_month,
+     total_time_min, expected_reimbursement, decision, hold_reason,
+     proposed_by, billing_provider_npi, fqhc_flag, audit_package_status]
 - identity: care_rpm_readings
   name: care-rpm-readings
-  file: data/care_rpm_readings.csv
-  format: csv
+  required_columns:
+    [reading_id, patient_id, reading_month, device_type, device_vendor,
+     fda_cleared_flag, reading_days, anomaly_count, review_minutes,
+     review_note_status, meets_16day_flag]

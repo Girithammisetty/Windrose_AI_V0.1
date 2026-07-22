@@ -1,0 +1,36 @@
+# Governed model blueprints (experiment-service inc9): the intended models
+# this vertical runs, independent of any trained artifact. Each corresponds
+# to a training pipeline this pack already ships (pipelines/templates.yaml),
+# so the blueprint and its implementation stay in one governed pair.
+- archetype_key: pv_case_priority_scorer
+  name: "Case reporting-priority scorer"
+  task_type: classification
+  target: disposition
+  description: >-
+    Supervised scorer over processed cases (pv-cases): predicts the likely
+    reporting-decision class from case type, source, seriousness criteria,
+    expectedness, and deadline runway — the deterministic-first pre-router
+    that orders the intake worklist. Implemented by the pack's xgboost
+    training pipeline.
+  expected_metrics: { f1: 0.80 }
+  governance_notes: >-
+    Scores prioritize case-processing order ONLY — seriousness, causality,
+    and expectedness assessments and every regulatory submission decision
+    are human four-eyes determinations owned by the medical reviewer and
+    the Safety Officer (QPPV-equivalent). Promotion requires eval-gate +
+    Safety Officer approval.
+- archetype_key: pv_event_anomaly_detector
+  name: "Event signal anomaly detector"
+  task_type: anomaly_detection
+  target: null
+  description: >-
+    Unsupervised surface scan over the coded event book (pv-events) for
+    unusual term/severity/outcome combinations worth a signal analyst's
+    attention. Implemented by the pack's isolation-forest training
+    pipeline.
+  expected_metrics: {}
+  governance_notes: >-
+    Detector output opens signal-review work only, never a safety
+    determination — flagged clusters route to the signal analyst for human
+    evaluation, and any resulting reporting or labeling action follows the
+    governed human workflow.

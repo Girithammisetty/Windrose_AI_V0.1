@@ -1,0 +1,35 @@
+# Governed model blueprints (experiment-service inc9): the intended models
+# this vertical runs, independent of any trained artifact. Each corresponds
+# to a training pipeline this pack already ships (pipelines/templates.yaml),
+# so the blueprint and its implementation stay in one governed pair.
+- archetype_key: cr_dispute_outcome_scorer
+  name: "Reinvestigation outcome scorer"
+  task_type: classification
+  target: disposition
+  description: >-
+    Supervised scorer over adjudicated credit-reporting disputes
+    (cr-disputes): predicts the likely disposition from dispute reason,
+    intake channel, tradeline type, FCRA flag, and clock runway — the
+    deterministic-first pre-router for reinvestigation triage. Implemented
+    by the pack's xgboost training pipeline.
+  expected_metrics: { f1: 0.80 }
+  governance_notes: >-
+    Scores order the reinvestigation queue only — investigation outcomes,
+    tradeline corrections, deletions, and frivolous determinations are
+    human four-eyes decisions with documented findings, never model output.
+    Promotion requires eval-gate + Dispute Operations Manager approval.
+- archetype_key: cr_tradeline_anomaly_detector
+  name: "Furnished tradeline anomaly detector"
+  task_type: anomaly_detection
+  target: null
+  description: >-
+    Unsupervised surface scan over the furnished tradeline book
+    (cr-tradelines) for duplicate collection tradelines, re-aged
+    delinquency profiles, and mixed-file patterns. Implemented by the
+    pack's isolation-forest training pipeline.
+  expected_metrics: {}
+  governance_notes: >-
+    Detector output opens review work and orders the queue only, never
+    adverse action or a reporting change — every tradeline correction or
+    deletion remains a human four-eyes determination with documented
+    findings.

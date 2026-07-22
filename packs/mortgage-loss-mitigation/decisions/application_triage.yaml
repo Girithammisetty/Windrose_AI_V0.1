@@ -1,0 +1,61 @@
+# Governed decision table (BRD 54) — a deterministic, explainable, no-LLM
+# first-cut triage over the loss-mitigation worklist. Columns are the
+# lm-applications binding-contract columns (data/datasets.yaml), so the table
+# reads exactly what intake projects from the real dataset. It EXECUTES to
+# the same governed four-eyes proposal an agent produces: every matched case
+# becomes a case.apply_disposition proposal a human must approve — the table
+# proposes, a human decides. It NEVER proposes approve_workout_offer,
+# deny_with_specific_reasons, or refer_foreclosure_alternatives: workout
+# approvals/denials and every foreclosure-path step are human four-eyes
+# determinations with documented findings. Runway/aging thresholds are
+# institution-configured operational bands inside the servicing-rule clock —
+# the table cites no regulatory day-count as its own. Outcome
+# disposition_codes are validated against this workspace's disposition
+# catalog at install time, so `dispositions` installs before this.
+- identity: lossmit_application_triage
+  name: "Loss-mitigation application triage routing"
+  rules:
+    # Complete application deep into its servicing-rule evaluation clock —
+    # the written-decision runway is nearly consumed.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: doc_status, op: eq, value: complete }
+        - { column: days_to_deadline, op: between, value: [0, 7] }
+      then: { disposition_code: escalate_underwriting_review, severity: critical }
+      note: "Complete application with the servicing-rule evaluation clock nearly consumed — expedited underwriting queue ahead of FIFO order; the runway band is institution-configured"
+    # Dual-tracking protection in effect — the hold must be human-confirmed.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: dual_track_hold, op: eq, value: "yes" }
+      then: { disposition_code: escalate_underwriting_review, severity: critical }
+      note: "Foreclosure-path protection hold in effect — a human confirms the hold is logged and current; the table never touches the foreclosure path itself"
+    # Incomplete file with little runway — the document chase must move now.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: doc_status, op: eq, value: incomplete }
+        - { column: days_to_deadline, op: between, value: [0, 7] }
+      then: { disposition_code: request_missing_documents, severity: high }
+      note: "Incomplete file with the servicing-rule clock nearly consumed — document-collection outreach now; the incompleteness close is only approved after a human confirms the documented follow-up chase"
+    # Incomplete file with runway — standard document-collection outreach.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: doc_status, op: eq, value: incomplete }
+      then: { disposition_code: request_missing_documents, severity: medium }
+      note: "Incomplete application — route to the document-collection chase; a human verifies the follow-up record before any incompleteness determination"
+    # Repeat request after prior loss-mitigation history — investor
+    # re-eligibility rules must be checked by an underwriter first.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: prior_workout_flag, op: eq, value: "yes" }
+      then: { disposition_code: escalate_underwriting_review, severity: high }
+      note: "Repeat request after prior loss-mitigation history — an underwriter checks the investor's re-eligibility rules before the waterfall evaluation"
+    # Catch-all for the OPEN worklist: nothing matched deterministically ->
+    # standard human review at low severity. The neutral human-review code is
+    # the ONLY thing this table ever proposes by default — never an approval,
+    # a denial, or a foreclosure-path referral.
+    - when:
+        - { column: status, op: eq, value: open }
+      then: { disposition_code: escalate_underwriting_review, severity: low }
+      note: "No deterministic route matched — standard human review queue; the specialist evaluates on the file's own evidence"
+  # default_outcome deliberately OMITTED: the open-status catch-all rule above
+  # is the routing floor, and closed rows get NO proposal at all.

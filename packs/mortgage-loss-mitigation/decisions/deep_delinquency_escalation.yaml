@@ -1,0 +1,42 @@
+# Second governed decision table (BRD 54): deterministic deep-delinquency and
+# exposure escalation — the outreach/queue-hygiene complement to
+# lossmit_application_triage. Operates ONLY on lm-applications
+# binding-contract columns (status, delinquency_bucket, doc_status,
+# arrearage_amount, age_days). Dollar and aging cut-offs are
+# institution-configured operational bands, kept deliberately early so every
+# escalated file reaches a human with ample runway on the servicing-rule
+# clock (framed qualitatively; the table cites no regulatory deadline as its
+# own). Executes to the same governed four-eyes proposal path: the table
+# proposes, a human decides — it NEVER proposes a foreclosure-path referral;
+# deep-delinquency files route to priority human review and SPOC outreach.
+- identity: deep_delinquency_escalation
+  name: "Deep-delinquency outreach escalation"
+  rules:
+    # Deep delinquency AND still incomplete — the highest-risk combination:
+    # the file cannot be evaluated and the delinquency posture keeps worsening.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: delinquency_bucket, op: eq, value: 120_plus }
+        - { column: doc_status, op: eq, value: incomplete }
+      then: { disposition_code: escalate_underwriting_review, severity: critical }
+      note: "Deep-delinquency file still incomplete — SPOC outreach escalation now, before the posture worsens further; never a referral proposal"
+    # Large past-due exposure — risk-times-dollar ranking, not FIFO.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: arrearage_amount, op: gte, value: 15000 }
+      then: { disposition_code: escalate_underwriting_review, severity: high }
+      note: "Arrearage above the institution-configured large-exposure cut-off — priority human review ahead of queue order"
+    # Aged open application — institution-configured backlog SLA breach.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: age_days, op: gte, value: 25 }
+      then: { disposition_code: escalate_underwriting_review, severity: high }
+      note: "Open application has aged past the institution-configured review SLA — escalate before further aging erodes the servicing-rule clock runway"
+    # Any other deep-delinquency file — a human prioritizes it.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: delinquency_bucket, op: eq, value: 120_plus }
+      then: { disposition_code: escalate_underwriting_review, severity: high }
+      note: "Deep-delinquency band — priority human review; any foreclosure-path posture change is a human four-eyes determination"
+  # default_outcome deliberately OMITTED: this is an escalation-only table —
+  # unmatched rows simply remain in the standard worklist with no proposal.

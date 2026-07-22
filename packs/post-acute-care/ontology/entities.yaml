@@ -1,0 +1,87 @@
+# Domain ontology (dataset-service inc11): the entity TYPES this vertical
+# operates on and their typed relationships — the type-level model behind the
+# pac_episodes / pac_referrals / pac_assessments binding contracts. Attribute
+# names are drawn strictly from the contract columns so the ontology describes
+# data the tenant actually binds.
+- entity_key: patient
+  name: Patient
+  description: >-
+    The person receiving post-acute care — referenced by patient_id on
+    referrals and episodes. The pack's contracts carry no demographics
+    (PHI-minimal by design), so the entity models identity and linkage only.
+  relationships:
+    - { name: referrals, target: referral, cardinality: has_many }
+    - { name: episodes, target: episode, cardinality: has_many }
+- entity_key: referral
+  name: "Post-acute referral"
+  description: >-
+    An inbound request from an acute discharge planner to admit a patient to
+    home health, SNF, or hospice — carrying complexity, capacity fit, triage
+    score, response latency, and the decline rationale where declined.
+  attributes:
+    - { name: referring_hospital, data_type: string }
+    - { name: referral_month, data_type: string }
+    - { name: requested_setting, data_type: string, description: "HHA | SNF | HOSPICE" }
+    - { name: primary_dx_code, data_type: string }
+    - { name: complexity_tier, data_type: string, description: "low | medium | high" }
+    - { name: capacity_fit, data_type: string, description: "good | tight | none" }
+    - { name: acceptance_score, data_type: float }
+    - { name: status, data_type: string, description: "pending | accepted | declined" }
+    - { name: response_hours, data_type: integer }
+    - { name: decline_reason, data_type: string }
+  relationships:
+    - { name: patient, target: patient, cardinality: belongs_to }
+    - { name: episode, target: episode, cardinality: has_one }
+- entity_key: episode
+  name: "Post-acute episode"
+  description: >-
+    A period of care at one facility under one payment model (PDGM home
+    health, PDPM skilled nursing, or hospice per-diem), from admission to
+    discharge, carrying case-mix classification and readmission outcome.
+  attributes:
+    - { name: care_setting, data_type: string, description: "HHA | SNF | HOSPICE" }
+    - { name: admit_month, data_type: string }
+    - { name: primary_dx_code, data_type: string }
+    - { name: primary_dx_desc, data_type: string }
+    - { name: payment_model, data_type: string, description: "PDGM | PDPM | HOSPICE_PER_DIEM" }
+    - { name: case_mix_group, data_type: string }
+    - { name: functional_level, data_type: string }
+    - { name: comorbidity_adjusted, data_type: string, description: "yes | no" }
+    - { name: los_days, data_type: integer }
+    - { name: episode_status, data_type: string }
+    - { name: discharge_disposition, data_type: string }
+    - { name: readmitted_30d, data_type: string, description: "yes | no" }
+    - { name: readmission_risk_score, data_type: float }
+    - { name: expected_reimbursement, data_type: float }
+  relationships:
+    - { name: patient, target: patient, cardinality: belongs_to }
+    - { name: referral, target: referral, cardinality: belongs_to }
+    - { name: facility, target: facility, cardinality: belongs_to }
+    - { name: assessments, target: assessment, cardinality: has_many }
+- entity_key: facility
+  name: "Facility / agency"
+  description: >-
+    The home health agency, skilled nursing facility, or hospice delivering
+    the episode of care — the operational unit network dashboards roll up to.
+  attributes:
+    - { name: care_setting, data_type: string, description: "HHA | SNF | HOSPICE" }
+  relationships:
+    - { name: episodes, target: episode, cardinality: has_many }
+- entity_key: assessment
+  name: "Clinical assessment"
+  description: >-
+    A regulated assessment event on an episode — OASIS (home health), MDS
+    (SNF), or hospice certification — with completion effort, copilot-draft
+    provenance, comorbidity-review flags, and medical-review audit outcome.
+    Clinical staff finalize every assessment (BR-1).
+  attributes:
+    - { name: assessment_type, data_type: string }
+    - { name: assessment_month, data_type: string }
+    - { name: completion_minutes, data_type: integer }
+    - { name: drafted_by_copilot, data_type: string, description: "yes | no" }
+    - { name: reviewer_role, data_type: string }
+    - { name: missed_comorbidity_count, data_type: integer }
+    - { name: revenue_impact, data_type: float }
+    - { name: audit_result, data_type: string, description: "pass | fail" }
+  relationships:
+    - { name: episode, target: episode, cardinality: belongs_to }

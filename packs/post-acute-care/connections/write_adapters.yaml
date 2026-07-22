@@ -1,0 +1,20 @@
+# Governed SoR write-back adapters (ingestion-service inc12): OUTGOING
+# connections declared with skip_test + EMPTY secrets — the tenant completes
+# real credentials/endpoints in Data → Connections, and every write executes
+# proposal-mode with four-eyes (no autonomous change to the referral platform
+# or EHR). The URLs are placeholders the tenant replaces; nothing is called
+# at install, and no Authorization material ships in the pack.
+- name: "Referral platform decision sync"
+  connector_type: http_api
+  direction: outgoing
+  config:
+    method: POST
+    url: "https://referral-platform.example.invalid/api/v1/referrals/status"
+    headers: { Content-Type: "application/json" }
+- name: "EHR episode status sync"
+  connector_type: http_api
+  direction: outgoing
+  config:
+    method: POST
+    url: "https://pac-ehr.example.invalid/api/v1/episodes/status"
+    headers: { Content-Type: "application/json" }

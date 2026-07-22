@@ -1,0 +1,21 @@
+# Governed model blueprints (experiment-service inc9): the intended models this
+# vertical runs, independent of any trained artifact. Each corresponds to a
+# training pipeline this pack already ships (pipelines/templates.yaml), so the
+# blueprint and its implementation stay in one governed pair.
+- archetype_key: rx_pa_decision_scorer
+  name: "Rx PA decision scorer"
+  task_type: classification
+  target: status
+  description: >-
+    Supervised scorer over the tenant's adjudicated prior-authorization
+    history (pbm-pa-requests): predicts the likely determination from
+    urgency, formulary tier, step-therapy documentation, controlled-substance
+    status, and GPI class — the deterministic-first pre-router that orders
+    the pharmacist review queue. Implemented by the pack's
+    logistic-regression training pipeline.
+  expected_metrics: { f1: 0.80 }
+  governance_notes: >-
+    Coverage-determination relevant: scores order review and outreach only —
+    a coverage denial always carries documented human clinical review by a
+    licensed pharmacist, and controlled-substance PAs are never
+    auto-approved. Promotion requires eval-gate + four-eyes manager approval.

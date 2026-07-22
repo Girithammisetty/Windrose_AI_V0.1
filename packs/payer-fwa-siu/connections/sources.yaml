@@ -1,0 +1,24 @@
+# Governed source-connector templates (ingestion-service inc13): INCOMING
+# connections pre-declared with skip_test + EMPTY secrets, so the payer's
+# expected feeds exist as governed starting points the tenant completes with
+# real hosts/credentials in Data → Connections. Nothing is polled at install.
+# The SFTP drop carries the plan's post-adjudication claims extract — Core's
+# standards-interop layer (BRD 57) decodes X12 837 institutional/professional
+# files into the landing shape the fwa-claim-lines contract requires.
+- name: "Claims extract drop (SFTP, X12 837)"
+  connector_type: sftp
+  direction: incoming
+  config:
+    host: "edi-gateway.example.invalid"
+    port: 22
+    username: datacern_ingest
+    root_directory: "/outbound/claims-extracts"
+- name: "Provider and member reference extracts (S3)"
+  connector_type: s3
+  direction: incoming
+  config:
+    region: us-east-1
+    bucket: payer-reference-extracts
+    root_prefix: "monthly/"
+    file_format: csv
+    glob: "*.csv"

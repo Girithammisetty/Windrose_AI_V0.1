@@ -3,9 +3,14 @@
 # other} (CASE-FR-020). submit_expedited_report is a RECOMMENDATION — the
 # actual regulatory submission decision belongs to the QPPV / safety officer
 # (requires_note captures the seriousness/expectedness/causality assessment
-# the report narrative will cite).
-- { code: submit_expedited_report, label: "Submit expedited report (QPPV approves)",       category: true_positive,  requires_note: true }
-- { code: include_periodic_report, label: "Include in periodic report (PADER/PSUR)",       category: other,          requires_note: true }
-- { code: non_reportable_invalid,  label: "Non-reportable — valid-case criteria not met",  category: false_positive, requires_note: true }
-- { code: request_followup_info,   label: "Request follow-up information from reporter",   category: inconclusive,   requires_note: true }
-- { code: nullify_duplicate,       label: "Nullify — duplicate of an existing case",       category: benign,         requires_note: true }
+# the report narrative will cite). escalate_medical_review is the pure
+# ROUTING disposition (mirrors banking-aml's escalate_l2): it moves a case
+# to the medical reviewer's priority queue without asserting any
+# determination — it is the only code the pack's decision tables use for
+# triage routing.
+- { code: submit_expedited_report,  label: "Submit expedited report (QPPV approves)",       category: true_positive,  requires_note: true }
+- { code: include_periodic_report,  label: "Include in periodic report (PADER/PSUR)",       category: other,          requires_note: true }
+- { code: non_reportable_invalid,   label: "Non-reportable — valid-case criteria not met",  category: false_positive, requires_note: true }
+- { code: request_followup_info,    label: "Request follow-up information from reporter",   category: inconclusive,   requires_note: true }
+- { code: nullify_duplicate,        label: "Nullify — duplicate of an existing case",       category: benign,         requires_note: true }
+- { code: escalate_medical_review,  label: "Escalate to medical review — priority queue",   category: inconclusive,   requires_note: true }

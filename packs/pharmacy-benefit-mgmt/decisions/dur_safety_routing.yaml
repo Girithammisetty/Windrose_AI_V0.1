@@ -1,0 +1,42 @@
+# Second governed decision table (BRD 54): deterministic DUR safety-alert and
+# adherence-outreach routing — the safety complement to pa_triage_routing.
+# Operates ONLY on pbm_dur_alerts binding-contract columns (status,
+# severity_level, conflict_code). Executes to the same governed four-eyes
+# proposal path: the table proposes a prescriber-contact intervention, the
+# pharmacist decides. The table NEVER proposes a documented override
+# (dur_override) — an override is a clinical judgment that requires the
+# pharmacist's own documentation, so ambiguous alerts (e.g. early refills
+# that may be legitimate) stay on the worklist unmatched.
+- identity: dur_safety_routing
+  name: "DUR safety-alert routing"
+  rules:
+    # Clinical-critical alerts first, whatever the conflict code says.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: severity_level, op: eq, value: "1" }
+      then: { disposition_code: dur_intervene, severity: critical }
+      note: "Level-1 (clinical-critical) DUR alert open — propose prescriber-contact intervention before next fill"
+    # Interaction / duplication conflicts: the conflict_description carries
+    # the specific clinical finding the pharmacist relays to the prescriber.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: conflict_code, op: in, value: [DD, TD] }
+      then: { disposition_code: dur_intervene, severity: high }
+      note: "Open interaction/duplication conflict (DD/TD) — propose prescriber-contact intervention with the conflict_description finding"
+    # Dosing conflicts.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: conflict_code, op: eq, value: HD }
+      then: { disposition_code: dur_intervene, severity: high }
+      note: "Open high-dose conflict (HD) — propose prescriber-contact intervention to confirm intended dosing"
+    # Refill-timing underuse (adherence lapse) — outreach routing: the
+    # intervention disposition is the catalog's outreach-shaped action.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: conflict_code, op: eq, value: LR }
+      then: { disposition_code: dur_intervene, severity: medium }
+      note: "Late-refill adherence signal (LR) — propose outreach via prescriber-contact intervention"
+  # default_outcome deliberately OMITTED: early-refill (ER) and any other
+  # unmatched alert needs the pharmacist's own judgment — an override must be
+  # documented by a human, never proposed by a table — so those alerts remain
+  # on the worklist for review.

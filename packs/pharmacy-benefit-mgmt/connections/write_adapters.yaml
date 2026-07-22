@@ -1,0 +1,14 @@
+# Governed SoR write-back adapters (ingestion-service inc12): OUTGOING
+# connections declared with skip_test + EMPTY secrets — the tenant completes
+# real credentials/endpoints in Data → Connections, and every write executes
+# proposal-mode with four-eyes (no autonomous SoR change; a PA determination
+# is synced only after the human pharmacist decision). The URL is a
+# placeholder the tenant replaces; nothing is called at install, and no
+# Authorization material ships in the pack.
+- name: "PBM claims-platform PA status sync"
+  connector_type: http_api
+  direction: outgoing
+  config:
+    method: POST
+    url: "https://pbm-claims-platform.example.invalid/api/v1/prior-auth/status"
+    headers: { Content-Type: "application/json" }

@@ -1,0 +1,58 @@
+# Typed custom case fields (case-service CASE-FR-022) — the post-acute work
+# item's real review attributes, typed so the case form validates them and
+# decision surfaces can read them structurally instead of parsing notes.
+# data_type is IMMUTABLE after creation (case-service) — chosen deliberately.
+# Names and enum options mirror the pac_episodes / pac_referrals binding
+# contracts so case data and dataset agree.
+- name: care_setting
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Care setting"
+    options: [HHA, SNF, HOSPICE]
+    required: false
+- name: payment_model
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Payment model"
+    options: [PDGM, PDPM, HOSPICE_PER_DIEM]
+    required: false
+- name: case_mix_group
+  data_type: string
+  purpose: both
+  field_meta:
+    label: "Case-mix group (PDGM/PDPM)"
+    required: false
+- name: readmission_risk_score
+  data_type: float
+  purpose: both
+  field_meta:
+    label: "30-day rehospitalization risk score"
+    required: false
+- name: los_days
+  data_type: integer
+  purpose: both
+  field_meta:
+    label: "Length of stay (days)"
+    required: false
+- name: missed_comorbidity_count
+  data_type: integer
+  purpose: both
+  field_meta:
+    label: "Flagged comorbidity codes pending review"
+    required: false
+- name: complexity_tier
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Referral complexity tier"
+    options: [low, medium, high]
+    required: false
+- name: capacity_fit
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Receiving-capacity fit"
+    options: [good, tight, none]
+    required: false

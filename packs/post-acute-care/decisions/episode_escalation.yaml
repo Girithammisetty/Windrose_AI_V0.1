@@ -1,0 +1,53 @@
+# Second governed decision table (BRD 54): deterministic episode-escalation
+# routing over care-transition review cases, on columns the pac_episodes
+# binding contract guarantees (episode_status, care_setting, payment_model,
+# comorbidity_adjusted, readmission_risk_score, los_days). Executes to the
+# same governed four-eyes proposal path: the table proposes, a clinician or
+# care manager decides. Risk thresholds and LOS outlier bounds are
+# program-configured operational values — not CMS timeframes — and risk
+# scores order care-team outreach only, never care denial or discharge
+# decisions (BR-7).
+- identity: episode_escalation
+  name: "Episode escalation routing table"
+  rules:
+    # Elevated 30-day rehospitalization risk on an active episode — propose
+    # starting a care-team intervention (outreach prioritization only).
+    - when:
+        - { column: episode_status, op: eq, value: active }
+        - { column: readmission_risk_score, op: between, value: [0.6, 1.0] }
+      then: { disposition_code: risk_intervention_started, severity: high }
+      note: "Risk score above the program-configured intervention threshold — proposes care-team outreach; prioritization only, never discharge decisions (BR-7)"
+    # Long-stay hospice episode — recertification posture is a physician
+    # determination; the table only routes it.
+    - when:
+        - { column: episode_status, op: eq, value: active }
+        - { column: care_setting, op: eq, value: HOSPICE }
+        - { column: los_days, op: gte, value: 60 }
+      then: { disposition_code: escalate_medical_director, severity: high }
+      note: "Long-stay hospice episode (program-configured review point) — recertification is a physician determination (BR-5)"
+    # PDGM episode with no comorbidity adjustment — route to nurse coding
+    # review; codes are added only with source documentation (BR-3), so the
+    # table never proposes acceptance itself.
+    - when:
+        - { column: episode_status, op: eq, value: active }
+        - { column: payment_model, op: eq, value: PDGM }
+        - { column: comorbidity_adjusted, op: eq, value: "no" }
+      then: { disposition_code: escalate_medical_director, severity: medium }
+      note: "PDGM episode without comorbidity adjustment — clinical coding review; codes accepted only with source-documentation evidence (BR-3)"
+    # LOS outlier in HHA/SNF — utilization review by a clinician; never an
+    # automated discharge posture.
+    - when:
+        - { column: episode_status, op: eq, value: active }
+        - { column: care_setting, op: in, value: [HHA, SNF] }
+        - { column: los_days, op: gte, value: 45 }
+      then: { disposition_code: escalate_medical_director, severity: medium }
+      note: "LOS beyond the program-configured outlier bound — clinician utilization review; no automated discharge decision"
+    # Low-risk active episode — propose clearing the watch flag; a human
+    # confirms before the flag drops.
+    - when:
+        - { column: episode_status, op: eq, value: active }
+        - { column: readmission_risk_score, op: between, value: [0.0, 0.29] }
+      then: { disposition_code: risk_flag_cleared, severity: low }
+      note: "Risk score below the program-configured watch floor — propose clearing the flag; human confirms"
+  # Nothing matched deterministically -> neutral human review.
+  default_outcome: { disposition_code: escalate_medical_director, severity: low }

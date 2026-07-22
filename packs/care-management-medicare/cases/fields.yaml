@@ -1,0 +1,60 @@
+# Typed custom case fields (case-service CASE-FR-022) — the care-management
+# review work item's real attributes, typed so the case form validates them
+# and decision surfaces can read them structurally instead of parsing notes.
+# data_type is IMMUTABLE after creation (case-service) — chosen deliberately.
+# Names and enum options mirror the care-billing-candidates binding-contract
+# columns and their live value domains, so field data and dataset agree.
+- name: program_code
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Care-management program"
+    options: [apcm, bhi, ccm, cocm, pcm, rpm, rtm, tcm]
+    required: false
+- name: cpt_code
+  data_type: string
+  purpose: both
+  field_meta:
+    label: "Proposed billing code"
+    required: false
+- name: service_month
+  data_type: string
+  purpose: both
+  field_meta:
+    label: "Service month (YYYY-MM)"
+    required: false
+- name: hold_reason
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Documentation hold reason"
+    options: [care_plan_overdue, code_mutual_exclusion, consent_revoked,
+              missing_time, no_consent, none, rpm_16day_not_met,
+              tcm_window_missed]
+    required: false
+- name: expected_reimbursement
+  data_type: float
+  purpose: both
+  field_meta:
+    label: "Expected reimbursement (USD)"
+    required: false
+- name: total_time_min
+  data_type: integer
+  purpose: both
+  field_meta:
+    label: "Time-tracked minutes this month"
+    required: false
+- name: audit_package_status
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Audit package status"
+    options: [complete, incomplete]
+    required: false
+- name: fqhc_flag
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "FQHC/RHC billing provider"
+    options: ["no", "yes"]
+    required: false

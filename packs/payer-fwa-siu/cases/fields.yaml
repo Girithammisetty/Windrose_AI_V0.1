@@ -1,0 +1,58 @@
+# Typed custom case fields (case-service CASE-FR-022) — the SIU lead / claim
+# review work item's real investigation attributes, typed so the case form
+# validates them and decision surfaces read them structurally instead of
+# parsing notes. data_type is IMMUTABLE after creation (case-service) — chosen
+# deliberately. Names and enum options mirror the fwa_leads / fwa_recoveries
+# binding-contract columns so field data and dataset agree.
+- name: provider_npi
+  data_type: string
+  purpose: both
+  field_meta:
+    label: "Provider NPI"
+    required: false
+- name: fwa_typology
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "FWA typology"
+    options: [upcoding, unbundling, phantom_billing, impossible_day]
+    required: false
+- name: lead_source
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Lead source"
+    options: [nightly_scan, data_mining, member_complaint, hotline, leie_refresh]
+    required: false
+- name: fwa_score
+  data_type: float
+  purpose: both
+  field_meta:
+    label: "FWA screening score (human-review decision support only)"
+    required: false
+- name: exposure_amount
+  data_type: float
+  purpose: both
+  field_meta:
+    label: "At-risk / overpayment exposure (USD)"
+    required: false
+- name: priority
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Lead priority"
+    options: [critical, high, medium, low]
+    required: false
+- name: recovery_method
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Recovery method"
+    options: [payback_demand, offset, settlement, education_letter, prosecution_restitution]
+    required: false
+- name: recovered_amount
+  data_type: float
+  purpose: both
+  field_meta:
+    label: "Recovered to date (USD)"
+    required: false

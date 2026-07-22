@@ -1,18 +1,29 @@
-# Pack datasets (ingestion-service file_upload, stable names for idempotency).
-# In production these tables arrive via the customer's post-acute EHR /
-# referral-network connectors (PAC-FR-090 — deferred until pack-service ships
-# connector materialization); this seed data is REAL rows in the same shape
-# those connectors land, so every downstream component (semantic models,
-# dashboards, cases, pipelines) runs against genuine data from day one.
+# Pack dataset BINDING CONTRACTS (no-dummy-data rule): the pack ships ZERO
+# seed data. Each entry declares the dataset the workflow needs and the exact
+# landing-shape columns it requires; at install the tenant binds it to a REAL
+# dataset (explicit dataset_bindings on the install request, or same-name
+# reuse), and pack-service validates the bound dataset exposes every required
+# column — failing closed with the missing list. Real data arrives through the
+# pack's governed source connectors (connections/sources.yaml) or file upload
+# from the operator's post-acute EHR / referral-network extracts.
 - identity: pac_episodes
   name: pac-episodes
-  file: data/pac_episodes.csv
-  format: csv
+  required_columns:
+    [episode_id, patient_id, referral_id, care_setting, facility, admit_month,
+     primary_dx_code, primary_dx_desc, payment_model, case_mix_group,
+     functional_level, comorbidity_adjusted, los_days, episode_status,
+     discharge_disposition, readmitted_30d, readmission_risk_score,
+     expected_reimbursement]
 - identity: pac_referrals
   name: pac-referrals
-  file: data/pac_referrals.csv
-  format: csv
+  required_columns:
+    [referral_id, patient_id, referring_hospital, referral_month,
+     requested_setting, primary_dx_code, complexity_tier, capacity_fit,
+     acceptance_score, status, response_hours, expected_reimbursement,
+     decline_reason]
 - identity: pac_assessments
   name: pac-assessments
-  file: data/pac_assessments.csv
-  format: csv
+  required_columns:
+    [assessment_id, episode_id, assessment_type, assessment_month,
+     completion_minutes, drafted_by_copilot, reviewer_role,
+     missed_comorbidity_count, revenue_impact, status, audit_result]

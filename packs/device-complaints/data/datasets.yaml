@@ -1,24 +1,25 @@
-# Pack datasets (ingestion-service file_upload, stable names for idempotency).
-# In production these tables arrive via the manufacturer's eQMS/complaint
-# system, field-service platform, and distributor portals (deferred until
-# pack-service ships connector materialization); this seed data is REAL rows
-# in the same landing shape, encoding genuine complaint-handling patterns so
-# every downstream component runs against real signal from day one: a
-# reported death with device involvement unconfirmed (reportability
-# presumption, 30-day clock running), a monitor alarm failure that could
-# recur (third alarm complaint on one product — trending threshold), a
-# software-anomaly cluster after a v4.0 rollout (CAPA candidate), a possibly
-# design-induced use error (human factors), a returned-device analysis
-# pending, and a suspected distributor double-report of an already-filed MDR.
+# Pack dataset BINDING CONTRACTS (no-dummy-data rule): the pack ships ZERO
+# seed data. Each entry declares the dataset the workflow needs and the exact
+# landing-shape columns it requires; at install the tenant binds it to a REAL
+# dataset (explicit dataset_bindings on the install request, or same-name
+# reuse), and pack-service validates the bound dataset exposes every required
+# column — failing closed with the missing list. Real data arrives through the
+# pack's governed source connectors (connections/sources.yaml) or file upload
+# — the manufacturer's eQMS/complaint system, field-service platform, and
+# distributor portals.
 - identity: dc_complaints
   name: dc-complaints
-  file: data/dc_complaints.csv
-  format: csv
+  required_columns:
+    [complaint_id, device_id, complaint_source, event_type, device_problem,
+     patient_harm, reportability, investigation_status, severity, status,
+     disposition, filed_month, age_days, days_to_deadline, deadline_bucket]
 - identity: dc_devices
   name: dc-devices
-  file: data/dc_devices.csv
-  format: csv
+  required_columns:
+    [device_id, product_id, lot_batch, manufacture_year, region_sold,
+     software_version, service_history]
 - identity: dc_products
   name: dc-products
-  file: data/dc_products.csv
-  format: csv
+  required_columns:
+    [product_id, product_name, device_class, therapeutic_area,
+     regulatory_pathway, recall_history]

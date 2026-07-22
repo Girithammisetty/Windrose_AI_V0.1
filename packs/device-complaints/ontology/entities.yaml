@@ -1,0 +1,73 @@
+# Domain ontology (dataset-service inc11): the entity TYPES this vertical
+# operates on and their typed relationships — the type-level model behind the
+# dc_complaints / dc_devices / dc_products binding contracts. Attribute names
+# match the contract columns so the ontology describes data that actually
+# exists once the tenant binds real datasets.
+- entity_key: product
+  name: "Device product"
+  description: >-
+    A marketed device model in the manufacturer's catalog — the level at which
+    class, regulatory pathway, and recall history are tracked.
+  attributes:
+    - { name: product_name, data_type: string }
+    - { name: device_class, data_type: string, description: "i | ii | iii" }
+    - { name: therapeutic_area, data_type: string }
+    - { name: regulatory_pathway, data_type: string, description: "510k | pma | de_novo | exempt" }
+    - { name: recall_history, data_type: string, description: "prior recall / field action on record" }
+  relationships:
+    - { name: devices, target: device, cardinality: has_many }
+- entity_key: device
+  name: "Fielded device"
+  description: >-
+    An individual manufactured unit in the field, traceable by lot/batch and
+    software-version band — the unit complaints attach to and the grain
+    fleet-level trending runs at.
+  attributes:
+    - { name: lot_batch, data_type: string }
+    - { name: manufacture_year, data_type: string }
+    - { name: region_sold, data_type: string }
+    - { name: software_version, data_type: string }
+    - { name: service_history, data_type: string, description: "none | routine | multiple_repairs" }
+  relationships:
+    - { name: product, target: product, cardinality: belongs_to }
+    - { name: complaints, target: complaint, cardinality: has_many }
+- entity_key: complaint
+  name: "Device complaint"
+  description: >-
+    A 21 CFR 820.198 complaint file entry: the reported event, its harm and
+    device-problem coding, and the regulatory reporting clock it runs under.
+  attributes:
+    - { name: complaint_source, data_type: string }
+    - { name: event_type, data_type: string }
+    - { name: device_problem, data_type: string }
+    - { name: patient_harm, data_type: string }
+    - { name: severity, data_type: string }
+    - { name: filed_month, data_type: string }
+    - { name: age_days, data_type: integer }
+    - { name: days_to_deadline, data_type: integer }
+  relationships:
+    - { name: device, target: device, cardinality: belongs_to }
+    - { name: reporter, target: reporter, cardinality: belongs_to }
+    - { name: investigation, target: investigation, cardinality: has_one }
+- entity_key: investigation
+  name: "Complaint investigation"
+  description: >-
+    The evaluation a complaint receives — investigation progress, the MDR
+    reportability assessment, and the documented disposition the complaint
+    file closes with.
+  attributes:
+    - { name: investigation_status, data_type: string }
+    - { name: reportability, data_type: string, description: "pending | mdr_reportable | not_reportable" }
+    - { name: disposition, data_type: string }
+  relationships:
+    - { name: complaint, target: complaint, cardinality: belongs_to }
+- entity_key: reporter
+  name: "Complaint reporter"
+  description: >-
+    The intake channel the complaint arrived through — clinician, patient,
+    field service, distributor, or literature — the surface intake-quality
+    and duplicate analysis slices by.
+  attributes:
+    - { name: complaint_source, data_type: string, description: "hcp | patient | field_service | distributor | literature" }
+  relationships:
+    - { name: complaints, target: complaint, cardinality: has_many }

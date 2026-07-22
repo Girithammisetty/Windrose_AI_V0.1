@@ -1,0 +1,22 @@
+# Governed model blueprints (experiment-service inc9): the intended models
+# this vertical runs, independent of any trained artifact. Each corresponds to
+# a training pipeline this pack already ships (pipelines/templates.yaml), so
+# the blueprint and its implementation stay in one governed pair.
+- archetype_key: cm_enrollment_propensity
+  name: "Enrollment propensity classifier"
+  task_type: classification
+  target: enrollment_status
+  description: >-
+    Supervised classifier over the Medicare panel (care-patients): predicts
+    which eligible/offered patients are likely to consent and activate in a
+    care-management program from plan type, condition mix, and panel context —
+    the ranking input for enrollment outreach. Implemented by the pack's
+    xgboost training pipeline.
+  # Pack convention: expected_metrics is the ASPIRATIONAL acceptance bar the
+  # eval gate holds a trained candidate to — not a measured value.
+  expected_metrics: { f1: 0.80 }
+  governance_notes: >-
+    Propensity scores order enrollment outreach and review work only —
+    enrollment itself requires the patient's documented consent, and every
+    clinical decision remains a human decision. Promotion to serving requires
+    eval-gate + four-eyes manager approval.

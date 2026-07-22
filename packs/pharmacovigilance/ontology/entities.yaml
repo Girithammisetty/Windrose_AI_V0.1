@@ -1,0 +1,78 @@
+# Domain ontology (dataset-service inc11): the entity TYPES this vertical
+# operates on and their typed relationships — the type-level model behind the
+# pv_cases / pv_events / pv_products binding contracts. Attribute names match
+# the contract columns so the ontology describes data that actually exists.
+# The patient is DE-IDENTIFIED by design: the landing shape carries only
+# age group and sex, never identifying details.
+- entity_key: patient
+  name: "Patient (de-identified)"
+  description: >-
+    The person who experienced the adverse event, represented only by
+    de-identified demographics (age group, sex) — identifiable patient
+    details never enter the analytical landing shape.
+  attributes:
+    - { name: patient_age_group, data_type: string, description: "adult | elderly | pediatric | unknown" }
+    - { name: patient_sex, data_type: string, description: "female | male | unknown" }
+  relationships:
+    - { name: cases, target: icsr_case, cardinality: has_many }
+- entity_key: reporter
+  name: Reporter
+  description: >-
+    The source that reported the case — a healthcare professional, a
+    consumer, or the scientific literature.
+  attributes:
+    - { name: source, data_type: string, description: "hcp | consumer | literature" }
+    - { name: report_country, data_type: string }
+  relationships:
+    - { name: cases, target: icsr_case, cardinality: has_many }
+- entity_key: product
+  name: "Medicinal product"
+  description: "A product in the safety portfolio the case names as suspect."
+  attributes:
+    - { name: product_name, data_type: string }
+    - { name: active_ingredient, data_type: string }
+    - { name: therapeutic_area, data_type: string }
+    - { name: formulation, data_type: string }
+    - { name: region_scope, data_type: string, description: "us | us_eu" }
+    - { name: rems_flag, data_type: string, description: "yes when the product is under a REMS program" }
+  relationships:
+    - { name: cases, target: icsr_case, cardinality: has_many }
+    - { name: adverse_events, target: adverse_event, cardinality: has_many }
+- entity_key: icsr_case
+  name: "Adverse event case (ICSR)"
+  description: >-
+    An individual case safety report over one patient and one suspect
+    product, carrying the human-recorded seriousness, expectedness, and
+    causality assessments, the processing status, and the regulatory
+    reporting-clock runway.
+  attributes:
+    - { name: case_type, data_type: string, description: "spontaneous | solicited | literature | clinical" }
+    - { name: serious, data_type: string }
+    - { name: seriousness_criteria, data_type: string }
+    - { name: expectedness, data_type: string, description: "listed | unlisted | pending" }
+    - { name: causality, data_type: string }
+    - { name: status, data_type: string }
+    - { name: disposition, data_type: string }
+    - { name: age_days, data_type: integer }
+    - { name: days_to_deadline, data_type: integer }
+  relationships:
+    - { name: patient, target: patient, cardinality: belongs_to }
+    - { name: reporter, target: reporter, cardinality: belongs_to }
+    - { name: product, target: product, cardinality: belongs_to }
+    - { name: adverse_events, target: adverse_event, cardinality: has_many }
+- entity_key: adverse_event
+  name: "Adverse event (coded term)"
+  description: >-
+    One MedDRA-coded reaction on a case: preferred term, system organ
+    class, listedness against the reference safety information, severity
+    grade, and outcome.
+  attributes:
+    - { name: event_pt, data_type: string, description: "MedDRA preferred term" }
+    - { name: soc, data_type: string, description: "MedDRA system organ class" }
+    - { name: listed, data_type: string, description: "no when the term is not in the product's reference safety information" }
+    - { name: severity, data_type: string, description: "mild | moderate | severe" }
+    - { name: outcome, data_type: string }
+    - { name: onset_days, data_type: integer }
+  relationships:
+    - { name: case, target: icsr_case, cardinality: belongs_to }
+    - { name: product, target: product, cardinality: belongs_to }

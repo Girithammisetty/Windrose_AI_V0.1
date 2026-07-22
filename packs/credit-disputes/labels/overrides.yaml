@@ -1,0 +1,3 @@
+# Per-tenant UI label overrides (identity-service, BRD 23 inc3) —
+# domain-fluent naming for the credit-reporting dispute workspace.
+- { key: cases.title, value: "Credit Dispute Queue" }

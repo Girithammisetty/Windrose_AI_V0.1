@@ -1,0 +1,68 @@
+# Domain ontology (dataset-service inc11): the entity TYPES this vertical
+# operates on and their typed relationships — the type-level model behind the
+# lm-applications / lm-loans / lm-borrowers binding contracts. Attribute names
+# match the contract columns so the ontology describes data the bound tenant
+# datasets actually carry.
+- entity_key: borrower
+  name: Borrower
+  description: "The homeowner seeking loss-mitigation assistance (SPOC continuity-of-contact subject)."
+  attributes:
+    - { name: borrower_name, data_type: string }
+    - { name: income_band, data_type: string }
+    - { name: employment_status, data_type: string, description: "employed | self_employed | unemployed | retired" }
+    - { name: contact_recency, data_type: string, description: "outreach recency band" }
+    - { name: prior_lossmit_band, data_type: string }
+    - { name: bankruptcy_flag, data_type: string }
+  relationships:
+    - { name: loans, target: loan, cardinality: has_many }
+- entity_key: loan
+  name: "Mortgage loan"
+  description: "A serviced loan on the distressed book, carrying product, rate, and default-history posture."
+  attributes:
+    - { name: product, data_type: string, description: "fixed | arm" }
+    - { name: origination_year_band, data_type: string }
+    - { name: rate_band, data_type: string }
+    - { name: escrowed, data_type: string }
+    - { name: prior_defaults_band, data_type: string }
+    - { name: upb_amount, data_type: float, description: "unpaid principal balance" }
+  relationships:
+    - { name: borrower, target: borrower, cardinality: belongs_to }
+    - { name: property, target: property, cardinality: has_one }
+    - { name: applications, target: application, cardinality: has_many }
+- entity_key: property
+  name: "Secured property"
+  description: "The collateral home securing the loan — its state drives foreclosure-process posture, its LTV band the retention/non-retention split."
+  attributes:
+    - { name: state, data_type: string, description: "property state (foreclosure-regime jurisdiction)" }
+    - { name: ltv_band, data_type: string, description: "loan-to-value band (over_105 = underwater)" }
+  relationships:
+    - { name: loan, target: loan, cardinality: belongs_to }
+- entity_key: application
+  name: "Loss-mitigation application"
+  description: >-
+    A borrower's workout request under RESPA Reg X and the investor's
+    servicing guidelines, carrying completeness status, the servicing-rule
+    clock, dual-tracking protection state, and the evaluation outcome.
+  attributes:
+    - { name: request_type, data_type: string }
+    - { name: hardship_reason, data_type: string }
+    - { name: delinquency_bucket, data_type: string }
+    - { name: doc_status, data_type: string, description: "complete | incomplete" }
+    - { name: dual_track_hold, data_type: string }
+    - { name: prior_workout_flag, data_type: string }
+    - { name: days_to_deadline, data_type: integer }
+    - { name: arrearage_amount, data_type: float }
+  relationships:
+    - { name: loan, target: loan, cardinality: belongs_to }
+    - { name: workout, target: workout_option, cardinality: has_one }
+- entity_key: workout_option
+  name: "Workout option"
+  description: >-
+    The loss-mitigation option evaluated for the application in the
+    investor-prescribed waterfall order — retention (modification,
+    forbearance, repayment plan) or non-retention (short sale, deed-in-lieu).
+  attributes:
+    - { name: request_type, data_type: string, description: "modification | forbearance | repayment_plan | short_sale | deed_in_lieu" }
+    - { name: investor, data_type: string, description: "gse | fha | va | portfolio — the waterfall owner" }
+  relationships:
+    - { name: application, target: application, cardinality: belongs_to }

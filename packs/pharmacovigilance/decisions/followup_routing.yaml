@@ -1,0 +1,50 @@
+# Second governed decision table (BRD 54): deterministic incomplete-case
+# routing — the data-quality complement to icsr_intake_triage. Operates ONLY
+# on pv_cases binding-contract columns (status, patient_age_group,
+# patient_sex, serious, outcome, causality, case_type). It routes cases with
+# missing minimum information to the follow-up / data-entry queue
+# (request_followup_info) and cases awaiting a human assessment to medical
+# review — it NEVER proposes the assessment itself, and never proposes
+# non_reportable_invalid (a validity determination is a human call made
+# after documented follow-up attempts). Executes to the same governed
+# four-eyes proposal path: the table proposes, a human decides.
+- identity: followup_routing
+  name: "Incomplete-case follow-up routing"
+  rules:
+    # Identifiable-patient minimum-information criterion unconfirmed.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: patient_age_group, op: eq, value: unknown }
+        - { column: patient_sex, op: eq, value: unknown }
+      then: { disposition_code: request_followup_info, severity: medium }
+      note: >-
+        No patient demographics on file — the identifiable-patient
+        minimum-information criterion is unconfirmed. Route to the
+        data-entry/follow-up queue for reporter outreach, documenting each
+        follow-up attempt; the case is never dismissed while follow-up is
+        pending.
+    # Serious case whose event outcome is still unknown — targeted
+    # follow-up for outcome information.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: serious, op: eq, value: "yes" }
+        - { column: outcome, op: eq, value: unknown }
+      then: { disposition_code: request_followup_info, severity: medium }
+      note: >-
+        Serious case with an unknown event outcome — request targeted
+        outcome follow-up from the reporter so the human assessment works
+        from a complete picture.
+    # Solicited report still awaiting its causality assessment — that
+    # assessment is a medical-review task, not reporter outreach.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: case_type, op: eq, value: solicited }
+        - { column: causality, op: eq, value: pending }
+      then: { disposition_code: escalate_medical_review, severity: medium }
+      note: >-
+        Solicited reports need a causality assessment before reportability
+        can even be considered — route to medical review; the assessment
+        itself is made by the human reviewer, never by this table.
+  # No default_outcome ON PURPOSE: complete cases proceed through the
+  # icsr_intake_triage table's worklist routing — this table stays silent
+  # on them rather than proposing a follow-up nobody needs.

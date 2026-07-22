@@ -1,0 +1,58 @@
+# Governed decision table (BRD 54) — a deterministic, explainable, no-LLM
+# first-cut triage over the PA worklist's real projection columns (all from
+# the pbm_pa_requests binding contract). It EXECUTES to the same governed
+# four-eyes proposal an agent produces: an operator dry-runs or batch-runs it
+# across the worklist, and every matched case becomes a case.apply_disposition
+# proposal a licensed pharmacist must approve. This table NEVER proposes a
+# denial — an adverse coverage determination is always a documented human
+# clinical decision — and every rule excludes controlled substances, which
+# always route to pharmacist review unmatched. Turnaround windows are
+# plan-configured, so urgency (expedited vs standard) drives ordering rather
+# than any hard-coded hour count. Outcome disposition_codes are validated
+# against this workspace's disposition catalog at install (dispositions
+# install first).
+- identity: pa_triage_routing
+  name: "Rx PA triage routing"
+  rules:
+    # Expedited PA missing step-therapy documentation — the fastest way to a
+    # decidable file is to request the prescriber's records immediately.
+    - when:
+        - { column: status, op: eq, value: pending }
+        - { column: urgency, op: eq, value: expedited }
+        - { column: controlled_substance, op: eq, value: "no" }
+        - { column: step_therapy_met, op: eq, value: "no" }
+      then: { disposition_code: pa_pended_info, severity: critical }
+      note: "Expedited PA without step-therapy documentation — pend for prescriber info now (plan-configured expedited window)"
+    # Standard PA missing step-therapy documentation.
+    - when:
+        - { column: status, op: eq, value: pending }
+        - { column: controlled_substance, op: eq, value: "no" }
+        - { column: step_therapy_met, op: eq, value: "no" }
+      then: { disposition_code: pa_pended_info, severity: medium }
+      note: "Step-therapy documentation missing — pend for prescriber records before clinical review"
+    # Clean expedited PA: criteria documented, non-controlled, copilot
+    # recommends approval with high confidence — propose approval for
+    # one-click pharmacist confirmation (approval is not adverse action).
+    - when:
+        - { column: status, op: eq, value: pending }
+        - { column: urgency, op: eq, value: expedited }
+        - { column: controlled_substance, op: eq, value: "no" }
+        - { column: step_therapy_met, op: eq, value: "yes" }
+        - { column: agent_recommendation, op: eq, value: approve }
+        - { column: agent_confidence, op: gte, value: 0.85 }
+      then: { disposition_code: pa_approved, severity: high }
+      note: "Clean expedited PA (criteria met, non-controlled, high-confidence recommendation) — propose approval for one-click pharmacist confirmation"
+    # Clean standard PA at higher confidence.
+    - when:
+        - { column: status, op: eq, value: pending }
+        - { column: urgency, op: eq, value: standard }
+        - { column: controlled_substance, op: eq, value: "no" }
+        - { column: step_therapy_met, op: eq, value: "yes" }
+        - { column: agent_recommendation, op: eq, value: approve }
+        - { column: agent_confidence, op: gte, value: 0.9 }
+      then: { disposition_code: pa_approved, severity: low }
+      note: "Clean standard PA (criteria met, non-controlled, high-confidence recommendation) — propose approval for pharmacist confirmation"
+  # default_outcome deliberately OMITTED: the catalog has no neutral
+  # human-review code, and this table never proposes a denial — so every
+  # controlled-substance, denial-candidate, or low-confidence PA stays on the
+  # worklist unmatched for the licensed pharmacist's own determination.

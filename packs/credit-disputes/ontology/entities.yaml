@@ -1,0 +1,72 @@
+# Domain ontology (dataset-service inc11): the entity TYPES this vertical
+# operates on and their typed relationships — the type-level model behind the
+# cr_consumers / cr_tradelines / cr_disputes binding contracts. Attribute
+# names are drawn strictly from the contract columns so the ontology
+# describes data the tenant actually binds; the CRAs the furnisher reports
+# to appear only as relationship context (no CRA attributes exist in the
+# contracts, so no CRA entity is invented).
+- entity_key: consumer
+  name: Consumer
+  description: "The disputing consumer whose credit file the reporting concerns."
+  attributes:
+    - { name: consumer_name, data_type: string }
+    - { name: state, data_type: string }
+    - { name: prior_disputes, data_type: string, description: "prior-dispute band (none | 1_2 | 3_5 | over_5)" }
+    - { name: identity_theft_report, data_type: string, description: "identity-theft report on file (yes | no)" }
+    - { name: credit_monitoring, data_type: string, description: "credit-monitoring enrollment (yes | no)" }
+    - { name: litigation_history, data_type: string, description: "prior FCRA litigation history (yes | no)" }
+  relationships:
+    - { name: tradelines, target: tradeline, cardinality: has_many }
+- entity_key: furnisher
+  name: Furnisher
+  description: >-
+    The creditor/collector furnishing the tradeline from its system of
+    record — the party that owes the reasonable-investigation duty when a
+    dispute arrives.
+  attributes:
+    - { name: creditor_name, data_type: string }
+    - { name: furnisher_system, data_type: string, description: "system of record the tradeline is furnished from" }
+  relationships:
+    - { name: tradelines, target: tradeline, cardinality: has_many }
+- entity_key: tradeline
+  name: Tradeline
+  description: "One furnished account on the consumer's file — the object a dispute contests."
+  attributes:
+    - { name: creditor_name, data_type: string }
+    - { name: account_status, data_type: string }
+    - { name: balance_band, data_type: string }
+    - { name: delinquency_history, data_type: string }
+    - { name: opened_year, data_type: string, description: "origination-year band" }
+    - { name: furnisher_system, data_type: string }
+  relationships:
+    - { name: consumer, target: consumer, cardinality: belongs_to }
+    - { name: furnisher, target: furnisher, cardinality: belongs_to }
+    - { name: disputes, target: dispute, cardinality: has_many }
+- entity_key: dispute
+  name: "Credit-reporting dispute"
+  description: >-
+    A consumer's challenge to one tradeline's reporting, arriving direct,
+    as an e-OSCAR ACDV referral, or as a court document.
+  attributes:
+    - { name: channel, data_type: string, description: "direct | e_oscar_acdv | court_document" }
+    - { name: dispute_reason, data_type: string }
+    - { name: tradeline_type, data_type: string }
+    - { name: fcra_flag, data_type: string, description: "standard | identity_theft_block" }
+    - { name: severity, data_type: string }
+    - { name: filed_month, data_type: string }
+  relationships:
+    - { name: tradeline, target: tradeline, cardinality: belongs_to }
+    - { name: reinvestigation, target: reinvestigation, cardinality: has_one }
+- entity_key: reinvestigation
+  name: Reinvestigation
+  description: >-
+    The investigation worked against the statutory clock: its runway, its
+    open/closed state, and the human-determined outcome furnished back.
+  attributes:
+    - { name: status, data_type: string, description: "open | closed" }
+    - { name: disposition, data_type: string, description: "human-determined outcome code" }
+    - { name: age_days, data_type: integer }
+    - { name: days_to_deadline, data_type: integer }
+    - { name: deadline_bucket, data_type: string }
+  relationships:
+    - { name: dispute, target: dispute, cardinality: belongs_to }

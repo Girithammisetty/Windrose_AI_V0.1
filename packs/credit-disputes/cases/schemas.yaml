@@ -1,0 +1,21 @@
+# Governed typed case schema (case-service inc10): the FCRA reinvestigation
+# work item as a named case TYPE binding the investigation field set, so
+# intake creates a structurally-complete dispute case (not a generic case
+# with prose notes). Embedded field defs use {name, data_type, label,
+# required}; names align with cases/fields.yaml and the cr_disputes
+# binding-contract columns.
+- schema_key: furnisher_dispute
+  name: "Credit-reporting dispute (FCRA reinvestigation)"
+  description: >-
+    A consumer credit-reporting dispute worked on the furnisher/CRA side — a
+    direct dispute, an e-OSCAR ACDV referral, or a court document —
+    investigated on the statutory reinvestigation clock, with identity-theft
+    block requests routed to their own priority track.
+  fields:
+    - { name: channel,          data_type: enum,    label: "Dispute intake channel",                  required: true }
+    - { name: dispute_reason,   data_type: enum,    label: "Dispute reason",                          required: true }
+    - { name: tradeline_type,   data_type: enum,    label: "Tradeline type",                          required: false }
+    - { name: fcra_flag,        data_type: enum,    label: "FCRA handling flag",                      required: false }
+    - { name: days_to_deadline, data_type: integer, label: "Statutory investigation clock — days left", required: false }
+    - { name: deadline_bucket,  data_type: enum,    label: "Deadline runway bucket",                  required: false }
+    - { name: age_days,         data_type: integer, label: "Dispute age (days)",                      required: false }

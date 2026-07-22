@@ -1,23 +1,24 @@
-# Pack datasets (ingestion-service file_upload, stable names for idempotency).
-# In production these tables arrive via the sponsor's safety-database and
-# intake connectors (deferred until pack-service ships connector
-# materialization); this seed data is REAL rows in the same landing shape,
-# encoding genuine pharmacovigilance patterns so every downstream component
-# runs against real signal from day one: a fatal unlisted hepatic-failure
-# cluster on the oncology product (a live signal: three hepatobiliary cases),
-# a REMS neurology product with unlisted SJS and neuropathy, a clinical-trial
-# anaphylaxis on the 7-day clock, a consumer case missing valid-case minimum
-# information, and three duplicate-suspect cases pointing at already-processed
-# ICSRs.
+# Pack dataset BINDING CONTRACTS (no-dummy-data rule): the pack ships ZERO
+# seed data. Each entry declares the dataset the ICSR workflow needs and the
+# exact landing-shape columns it requires; at install the tenant binds it to a
+# REAL dataset (explicit dataset_bindings on the install request, or same-name
+# reuse), and pack-service validates the bound dataset exposes every required
+# column — failing closed with the missing list. Real data arrives through the
+# pack's governed source connectors (connections/sources.yaml) or file upload.
 - identity: pv_products
   name: pv-products
-  file: data/pv_products.csv
-  format: csv
+  required_columns:
+    [product_id, product_name, active_ingredient, therapeutic_area,
+     formulation, region_scope, rems_flag, launch_month]
 - identity: pv_cases
   name: pv-cases
-  file: data/pv_cases.csv
-  format: csv
+  required_columns:
+    [case_id, product_id, case_type, source, report_country, serious,
+     seriousness_criteria, expectedness, causality, status, disposition,
+     deadline_bucket, received_month, age_days, days_to_deadline,
+     patient_age_group, patient_sex, outcome]
 - identity: pv_events
   name: pv-events
-  file: data/pv_events.csv
-  format: csv
+  required_columns:
+    [event_id, case_id, product_id, event_pt, soc, listed, severity,
+     outcome, onset_days]

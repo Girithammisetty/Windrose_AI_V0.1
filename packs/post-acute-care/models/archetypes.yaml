@@ -1,0 +1,20 @@
+# Governed model blueprints (experiment-service inc9): the intended models
+# this vertical runs, independent of any trained artifact. Each corresponds to
+# a training pipeline this pack already ships (pipelines/templates.yaml), so
+# the blueprint and its implementation stay in one governed pair.
+- archetype_key: pac_rehospitalization_risk_scorer
+  name: "30-day rehospitalization risk scorer"
+  task_type: classification
+  target: readmitted_30d
+  description: >-
+    Supervised scorer over completed episodes (pac-episodes): predicts the
+    likelihood of a 30-day acute readmission from care setting, case-mix
+    classification, functional level, and length of stay — the ranking signal
+    behind the care-team watchlist. Implemented by the pack's random-forest
+    training pipeline.
+  expected_metrics: { f1: 0.80 }
+  governance_notes: >-
+    Prioritization only: scores order care-team outreach and never justify
+    care denial, discharge, or placement decisions — every clinical and
+    placement determination remains a human decision (BR-7). Promotion
+    requires eval-gate + manager approval (four-eyes).

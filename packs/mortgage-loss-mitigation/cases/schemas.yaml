@@ -1,0 +1,34 @@
+# Governed typed case schemas (case-service inc10): the loss-mitigation work
+# items as named case TYPES binding the evaluation field set, so intake
+# creates structurally-complete files (not generic cases with prose notes).
+# Embedded field defs use {name, data_type, label, required}; names align with
+# cases/fields.yaml and the lm-applications binding-contract columns.
+- schema_key: loss_mit_application
+  name: "Loss-mitigation application"
+  description: >-
+    A borrower's request for a workout (modification, forbearance, repayment
+    plan, short sale, deed-in-lieu) under RESPA Reg X (12 CFR 1024.39-.41)
+    and the investor's servicing guidelines, evaluated with servicing-rule
+    clock awareness and dual-tracking protection.
+  fields:
+    - { name: request_type,       data_type: enum,    label: "Workout requested",                required: true }
+    - { name: doc_status,         data_type: enum,    label: "Application completeness",         required: true }
+    - { name: delinquency_bucket, data_type: enum,    label: "Delinquency bucket (days past due)", required: false }
+    - { name: investor,           data_type: enum,    label: "Investor (waterfall owner)",       required: false }
+    - { name: dual_track_hold,    data_type: enum,    label: "Foreclosure-path hold in effect",  required: false }
+    - { name: prior_workout_flag, data_type: enum,    label: "Prior loss-mitigation history",    required: false }
+    - { name: arrearage_amount,   data_type: float,   label: "Arrearage (USD past due)",         required: false }
+    - { name: days_to_deadline,   data_type: integer, label: "Servicing-rule clock — days left", required: false }
+- schema_key: escalated_default_review
+  name: "Escalated default review"
+  description: >-
+    A priority review item for deep-delinquency or dual-tracking-exposed
+    files: an underwriter or SPOC coordinator confirms the foreclosure-path
+    hold, the outreach record, and the waterfall posture. Every
+    foreclosure-path step remains a human four-eyes determination.
+  fields:
+    - { name: delinquency_bucket, data_type: enum,    label: "Delinquency bucket (days past due)", required: true }
+    - { name: dual_track_hold,    data_type: enum,    label: "Foreclosure-path hold in effect",  required: true }
+    - { name: investor,           data_type: enum,    label: "Investor (waterfall owner)",       required: false }
+    - { name: arrearage_amount,   data_type: float,   label: "Arrearage (USD past due)",         required: false }
+    - { name: days_to_deadline,   data_type: integer, label: "Servicing-rule clock — days left", required: false }

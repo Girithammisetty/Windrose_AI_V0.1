@@ -1,0 +1,21 @@
+# Governed typed case schema (case-service inc10): the device-complaint work
+# item as a named case TYPE binding the complaint-handling field set, so
+# intake creates a structurally-complete complaint case (not a generic case
+# with prose notes). Embedded field defs use {name, data_type, label,
+# required}; names align with cases/fields.yaml and the dc_complaints
+# binding-contract columns.
+- schema_key: device_complaint
+  name: "Device complaint (MDR reportability)"
+  description: >-
+    A medical-device complaint under 21 CFR 820.198 (complaint files) carrying
+    the 21 CFR 803 MDR reportability evaluation — event and harm
+    classification, device-problem coding, investigation state, and the
+    regulatory reporting clock — with EU MDR vigilance as the parallel regime.
+  fields:
+    - { name: complaint_source,     data_type: enum,    label: "Complaint source",                     required: false }
+    - { name: event_type,           data_type: enum,    label: "Event type",                           required: true }
+    - { name: device_problem,       data_type: enum,    label: "Device problem code",                  required: false }
+    - { name: patient_harm,         data_type: enum,    label: "Patient harm",                         required: true }
+    - { name: reportability,        data_type: enum,    label: "Reportability assessment",             required: false }
+    - { name: investigation_status, data_type: enum,    label: "Investigation status",                 required: false }
+    - { name: days_to_deadline,     data_type: integer, label: "Regulatory reporting clock — days left", required: false }

@@ -1,0 +1,54 @@
+# Typed custom case fields (case-service CASE-FR-022) — the reinvestigation
+# work item's real investigation attributes, typed so the case form validates
+# them and decision surfaces can read them structurally instead of parsing
+# notes. data_type is IMMUTABLE after creation (case-service) — chosen
+# deliberately. Enum options mirror the cr_disputes binding-contract columns
+# so field data and dataset agree.
+- name: channel
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Dispute intake channel"
+    options: [direct, e_oscar_acdv, court_document]
+    required: false
+- name: dispute_reason
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Dispute reason"
+    options: [wrong_balance, not_mine, identity_theft, duplicate_tradeline,
+              obsolete_info, paid_in_full]
+    required: false
+- name: tradeline_type
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Tradeline type"
+    options: [card, auto, mortgage, student, collection]
+    required: false
+- name: fcra_flag
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "FCRA handling flag"
+    options: [standard, identity_theft_block]
+    required: false
+- name: days_to_deadline
+  data_type: integer
+  purpose: both
+  field_meta:
+    label: "Statutory investigation clock — days left"
+    required: false
+- name: deadline_bucket
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Deadline runway bucket"
+    options: [0_5_days, 6_15_days, over_15_days, closed]
+    required: false
+- name: age_days
+  data_type: integer
+  purpose: both
+  field_meta:
+    label: "Dispute age (days)"
+    required: false

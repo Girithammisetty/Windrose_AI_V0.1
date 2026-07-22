@@ -1,0 +1,34 @@
+# Governed model blueprints (experiment-service inc9): the intended models
+# this vertical runs, independent of any trained artifact. Each corresponds
+# to a training pipeline this pack already ships (pipelines/templates.yaml),
+# so the blueprint and its implementation stay in one governed pair.
+- archetype_key: lm_workout_outcome_scorer
+  name: "Workout outcome scorer"
+  task_type: classification
+  target: disposition
+  description: >-
+    Supervised scorer over adjudicated applications (lm-applications):
+    predicts the likely evaluation outcome from request type, hardship
+    reason, delinquency bucket, investor, completeness status, and prior
+    workout history — the deterministic-first pre-router for intake triage.
+    Implemented by the pack's xgboost training pipeline.
+  expected_metrics: { f1: 0.80 }
+  governance_notes: >-
+    Scores order the review queue only — workout approvals and denials and
+    any foreclosure-path step are human four-eyes determinations, and a
+    denial always carries documented human findings with appeal rights.
+    Promotion requires eval-gate + Loss Mitigation Manager approval.
+- archetype_key: lm_loan_risk_anomaly_detector
+  name: "Distressed-loan anomaly detector"
+  task_type: anomaly_detection
+  target: null
+  description: >-
+    Unsupervised surface scan over lm-loans for payment-shock and
+    underwater-cluster patterns (ARM/rate-band outliers, high-LTV pockets,
+    repeat-default concentrations). Implemented by the pack's
+    isolation-forest training pipeline.
+  expected_metrics: {}
+  governance_notes: >-
+    Detector output opens review work, never adverse action — flagged loans
+    route to human outreach and underwriting review; scores order the queue
+    only and no foreclosure-path step ever follows from a score.

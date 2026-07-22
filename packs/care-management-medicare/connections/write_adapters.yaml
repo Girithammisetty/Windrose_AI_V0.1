@@ -1,0 +1,23 @@
+# Governed SoR write-back adapters (ingestion-service inc12): OUTGOING
+# connections declared with skip_test + EMPTY secrets — the tenant completes
+# real credentials/endpoints in Data → Connections, and every write executes
+# proposal-mode with four-eyes (no autonomous SoR change, and never an
+# autonomous billing submission — BR-2). The URLs/hosts are placeholders the
+# tenant replaces; nothing is called at install. No Authorization material is
+# ever declared here — credentials live only in the tenant's secret store.
+- name: "Care management platform status sync"
+  connector_type: http_api
+  direction: outgoing
+  config:
+    method: POST
+    url: "https://care-platform.example.invalid/api/v1/billing-candidates/status"
+    headers: { Content-Type: "application/json" }
+- name: "Practice care-management ledger upsert"
+  connector_type: postgres
+  direction: outgoing
+  config:
+    host: "care-mgmt-db.example.invalid"
+    port: 5432
+    database: care_management
+    username: datacern_writeback
+    ssl_mode: require

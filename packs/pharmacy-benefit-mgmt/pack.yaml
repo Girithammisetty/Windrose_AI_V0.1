@@ -1,21 +1,27 @@
-# pharmacy-benefit-mgmt capability pack (BRD 28) — Core-neutral edition.
-# Installable TODAY against Datacern Core's public APIs via packctl; the
-# manifest envelope follows BRD 23 (PKG-FR-001/003) so this bundle is
-# forward-compatible with pack-service when it ships. Components the current
-# Core cannot materialize are declared under `deferred` with the exact BRD 28
-# requirement they trace to — recorded in the install ledger, never faked.
+# pharmacy-benefit-mgmt capability pack (BRD 28) — Core-neutral edition:
+# Rx prior-authorization and DUR safety review for PBMs, health plans, and
+# Medicare Part D sponsors. Installable TODAY against Datacern Core's public
+# APIs via packctl/pack-service; the manifest envelope follows BRD 23
+# (PKG-FR-001/003). Components the current Core cannot materialize are declared
+# under `deferred` — recorded in the install ledger, never faked.
+# v2.0.0 (no-dummy-data rule): the pack ships ZERO seed data — datasets are
+# binding CONTRACTS resolved to the tenant's REAL data at install; cases arrive
+# from real rows via case triggers/intake, not seeds; eval golden sets are
+# curated by the tenant from its own adjudicated history.
 pack_manifest: 1
 name: pharmacy-benefit-mgmt
-version: 1.0.0
+version: 2.0.0
 publisher: { id: pub-datacern, name: "Datacern Inc." }
 description: >-
   AI-assisted pharmacy benefit management for PBMs, health plans, and
   Medicare Part D sponsors: Rx prior-authorization review with formulary and
-  step-therapy grounding, DUR safety-alert triage, PBM KPI semantic models
-  (generic dispensing rate, PA turnaround, rebate capture, PMPM), three
-  dashboards, a PA/DUR review queue with pharmacist dispositions, PBM role
-  catalog, domain-grounded copilot configuration, and a PA auto-decision
-  training pipeline.
+  step-therapy grounding (denials always a documented human pharmacist
+  decision), DUR safety-alert triage with adherence-outreach routing, typed
+  PA/DUR case schemas and decision tables, PBM KPI semantic models (generic
+  dispensing rate, PA turnaround, rebate capture, PMPM), three dashboards,
+  PBM role catalog, domain ontology, governed PA-status write-back and
+  claims/eligibility source connectors, domain-grounded copilot
+  configuration, and a PA decision-scorer training pipeline.
 categories: [pharmacy, pbm, prior-auth, mtm, adherence, medicare-part-d]
 regulatory: [hipaa, hitrust, cms_part_d, cms_ma, ncpdp_ecl, dea_ec, state_pharmacy_law, ddi_alerts]
 components:
@@ -34,16 +40,33 @@ components:
     - { file: "dashboards/rebate_cost.yaml", identity: "rebate_cost" }
   dispositions:
     - { file: "cases/dispositions.yaml", identity: "dispositions" }
-  cases:
-    - { file: "cases/queue.yaml", identity: "pa_dur_queue" }
+  case_fields:
+    - { file: "cases/fields.yaml", identity: "pa_dur_fields" }
+  case_schemas:
+    - { file: "cases/schemas.yaml", identity: "review_schemas" }
+  ontology:
+    - { file: "ontology/entities.yaml", identity: "pbm_ontology" }
+  decision_models:
+    - { file: "decisions/pa_triage_routing.yaml", identity: "pa_triage_routing" }
+    - { file: "decisions/dur_safety_routing.yaml", identity: "dur_safety_routing" }
   roles:
     - { file: "rbac/roles.yaml", identity: "roles" }
   agent_configs:
     - { file: "agents/configs.yaml", identity: "agent_configs" }
+  guardrails:
+    - { file: "agents/guardrails.yaml", identity: "agent_guardrails" }
   memories:
     - { file: "memories/grounding.yaml", identity: "grounding" }
   pipelines:
     - { file: "pipelines/templates.yaml", identity: "pipelines" }
+  display_labels:
+    - { file: "labels/overrides.yaml", identity: "label_overrides" }
+  model_archetypes:
+    - { file: "models/archetypes.yaml", identity: "model_blueprints" }
+  write_adapters:
+    - { file: "connections/write_adapters.yaml", identity: "sor_writeback" }
+  connection_templates:
+    - { file: "connections/sources.yaml", identity: "source_feeds" }
 deferred:
   - kind: agent_recipes
     reason: >-

@@ -1,0 +1,61 @@
+# Typed custom case fields (case-service CASE-FR-022) — the ICSR work item's
+# real processing attributes, typed so the case form validates them and
+# decision surfaces can read them structurally instead of parsing notes.
+# data_type is IMMUTABLE after creation (case-service) — chosen deliberately.
+# Names and enum options mirror the pv_cases binding-contract columns so field
+# data and dataset agree. Seriousness/expectedness/causality here RECORD the
+# human assessment — they are never machine-determined.
+- name: case_type
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Report type"
+    options: [spontaneous, solicited, literature, clinical]
+    required: false
+- name: source
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Report source"
+    options: [hcp, consumer, literature]
+    required: false
+- name: serious
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Serious case"
+    options: ["yes", "no"]
+    required: false
+- name: seriousness_criteria
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Seriousness criterion"
+    options: [death, life_threatening, hospitalization, disability, non_serious]
+    required: false
+- name: expectedness
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Expectedness vs reference safety information"
+    options: [listed, unlisted, pending]
+    required: false
+- name: causality
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Causality assessment"
+    options: [probable, possible, unlikely, unassessable, pending]
+    required: false
+- name: report_country
+  data_type: string
+  purpose: both
+  field_meta:
+    label: "Report country"
+    required: false
+- name: days_to_deadline
+  data_type: integer
+  purpose: both
+  field_meta:
+    label: "Regulatory reporting clock — days left"
+    required: false

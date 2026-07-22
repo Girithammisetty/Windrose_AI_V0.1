@@ -1,0 +1,55 @@
+# Typed custom case fields (case-service CASE-FR-022) — the complaint work
+# item's real handling attributes, typed so the case form validates them and
+# decision surfaces can read them structurally instead of parsing notes.
+# data_type is IMMUTABLE after creation (case-service) — chosen deliberately.
+# Names and enum options mirror the dc_complaints binding-contract columns so
+# field data and dataset agree.
+- name: complaint_source
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Complaint source"
+    options: [hcp, patient, field_service, distributor, literature]
+    required: false
+- name: event_type
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Event type"
+    options: [death, serious_injury, malfunction, use_error, no_harm]
+    required: false
+- name: device_problem
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Device problem code"
+    options: [alarm_failure, battery_failure, software_anomaly, sensor_drift,
+              breakage, connector, labeling_confusion, no_problem_found, unknown]
+    required: false
+- name: patient_harm
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Patient harm"
+    options: [none, minor, serious, death]
+    required: false
+- name: reportability
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Reportability assessment"
+    options: [pending, mdr_reportable, not_reportable]
+    required: false
+- name: investigation_status
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Investigation status"
+    options: [not_started, in_progress, complete, no_investigation_justified]
+    required: false
+- name: days_to_deadline
+  data_type: integer
+  purpose: both
+  field_meta:
+    label: "Regulatory reporting clock — days left"
+    required: false

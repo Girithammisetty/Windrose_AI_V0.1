@@ -1,0 +1,21 @@
+# Governed typed case schema (case-service inc10): the ICSR work item as a
+# named case TYPE binding the processing field set, so intake creates a
+# structurally-complete adverse-event case (not a generic case with prose
+# notes). Embedded field defs use {name, data_type, label, required}; names
+# align with cases/fields.yaml and the pv_cases binding-contract columns.
+- schema_key: icsr_case
+  name: "Adverse event case (ICSR)"
+  description: >-
+    An individual case safety report: one patient, one suspect product, one
+    or more adverse events — processed for validity, duplicate status,
+    seriousness, expectedness, and causality, with every regulatory
+    reporting decision made by a human (QPPV / Safety Officer).
+  fields:
+    - { name: case_type,            data_type: enum,    label: "Report type",                               required: true }
+    - { name: source,               data_type: enum,    label: "Report source",                             required: false }
+    - { name: serious,              data_type: enum,    label: "Serious case",                              required: true }
+    - { name: seriousness_criteria, data_type: enum,    label: "Seriousness criterion",                     required: false }
+    - { name: expectedness,         data_type: enum,    label: "Expectedness vs reference safety information", required: false }
+    - { name: causality,            data_type: enum,    label: "Causality assessment",                      required: false }
+    - { name: report_country,       data_type: string,  label: "Report country",                            required: false }
+    - { name: days_to_deadline,     data_type: integer, label: "Regulatory reporting clock — days left",    required: false }

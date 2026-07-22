@@ -1,0 +1,43 @@
+# Second governed decision table (BRD 54): deterministic remote-monitoring
+# cycle routing — the RPM complement to billing_review_triage. Operates ONLY
+# on care-rpm-readings binding-contract columns. Numeric compares run over
+# bronze string-landed columns — the decision engine coerces (card-disputes
+# precedent). All thresholds are program-configured by the practice; the table
+# routes work for HUMAN review and never proposes a clinical determination —
+# a deteriorating signal reaches a clinician, it is never auto-acted-on.
+- identity: rpm_review_routing
+  name: "RPM cycle review routing"
+  rules:
+    # Deteriorating remote-monitoring signal — program-configured anomaly
+    # threshold; a clinician reviews before any care action is considered.
+    - when:
+        - { column: anomaly_count, op: gte, value: 3 }
+      then: { disposition_code: escalate_md, severity: high }
+      note: "Anomaly count at/over the program-configured threshold — clinician reviews the cycle; no automated care action"
+    # Device not marked cleared in the device registry — hold the cycle's
+    # billing consideration pending plan-configured device criteria.
+    - when:
+        - { column: fda_cleared_flag, op: eq, value: "no" }
+      then: { disposition_code: bill_held, severity: high }
+      note: "Device not marked cleared in the registry — hold the cycle pending plan-configured device criteria"
+    # Reading-day adherence below the program-configured supply-day threshold
+    # for the cycle — hold and run adherence outreach.
+    - when:
+        - { column: meets_16day_flag, op: eq, value: "no" }
+      then: { disposition_code: bill_held, severity: medium }
+      note: "Cycle reading-day threshold not met (program-configured supply-day rule) — hold and pursue adherence outreach"
+    # Data-review note still unsigned — route to the clinician reviewer
+    # worklist for sign-off.
+    - when:
+        - { column: review_note_status, op: eq, value: pending }
+      then: { disposition_code: escalate_md, severity: medium }
+      note: "Data-review note awaiting clinician signature — route to the reviewer worklist"
+    # Fully reviewed, adherent cycle with an approved note — record the signed
+    # review; the reviewer's approval of this proposal IS the four-eyes step.
+    - when:
+        - { column: review_note_status, op: eq, value: approved }
+        - { column: meets_16day_flag, op: eq, value: "yes" }
+      then: { disposition_code: rpm_review_signed, severity: low }
+      note: "Approved review note on an adherent cycle — close as signed RPM review"
+  # Anything unmatched goes to a human clinician reviewer.
+  default_outcome: { disposition_code: escalate_md, severity: low }

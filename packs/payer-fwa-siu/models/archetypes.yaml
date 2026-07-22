@@ -1,0 +1,37 @@
+# Governed model blueprints (experiment-service inc9): the intended models
+# this vertical runs, independent of any trained artifact. Each corresponds to
+# a training pipeline this pack already ships (pipelines/templates.yaml), so
+# the blueprint and its implementation stay in one governed pair.
+- archetype_key: fwa_line_anomaly_detector
+  name: "Claim-line FWA anomaly detector"
+  task_type: anomaly_detection
+  target: null
+  description: >-
+    Unsupervised outlier scan over adjudicated claim lines (fwa-claim-lines)
+    for billing-pattern anomalies — E/M level concentration, unit volumes
+    inconsistent with a service day, component codes billed alongside panels.
+    Implemented by the pack's isolation-forest training pipeline.
+  expected_metrics: {}
+  governance_notes: >-
+    Detector output only prioritizes investigation — it opens SIU review
+    work, never adverse action. A fraud determination is NEVER automated:
+    scores must not auto-deny or auto-recoup a claim, and prosecution
+    referrals are four-eyes human decisions (senior investigator plus legal
+    counsel two-signature).
+- archetype_key: fwa_lead_outcome_scorer
+  name: "SIU lead outcome scorer"
+  task_type: classification
+  target: outcome
+  description: >-
+    Supervised scorer over investigated leads (fwa-leads): predicts the
+    likelihood a new lead is confirmed versus closed as a false positive,
+    from typology, source, exposure, and provider peer-deviation signals —
+    used to rank the investigator worklist. Implemented by the pack's
+    xgboost training pipeline.
+  expected_metrics: { f1: 0.80 }
+  governance_notes: >-
+    Scores prioritize investigation ordering only — a fraud determination is
+    NEVER automated. Every determinative disposition and any referral is a
+    four-eyes human decision with a documented written basis; recovery
+    actions additionally require supervisor review plus legal concurrence.
+    Promotion requires eval-gate plus supervisor approval.

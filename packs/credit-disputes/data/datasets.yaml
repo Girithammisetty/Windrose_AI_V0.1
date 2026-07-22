@@ -1,25 +1,25 @@
-# Pack datasets (ingestion-service file_upload, stable names for idempotency).
-# In production these tables arrive via e-OSCAR/ACDV feeds and the furnisher's
-# systems of record (deferred until pack-service ships connector
-# materialization); this seed data is REAL rows in the same landing shape,
-# encoding genuine FCRA credit-reporting dispute patterns so every downstream
-# component runs against real signal from day one: an e-OSCAR ACDV sitting on
-# day 26 of the 30-day reinvestigation window, an identity-theft block request
-# with an FTC report attached (FCRA 605B 4-business-day clock), a "not mine"
-# dispute where the furnisher's data matches but the consumer has litigation
-# history (reasonable-investigation depth), a duplicate collection tradeline
-# reported by two different collectors, an obsolete 7+ year charge-off still
-# reporting, and a serial disputer's sixth round on the same accurate
-# tradeline (frivolous candidate that still must be documented).
+# Pack dataset BINDING CONTRACTS (no-dummy-data rule): the pack ships ZERO
+# seed data. Each entry declares the dataset the workflow needs and the exact
+# landing-shape columns it requires; at install the tenant binds it to a REAL
+# dataset (explicit dataset_bindings on the install request, or same-name
+# reuse), and pack-service validates the bound dataset exposes every required
+# column — failing closed with the missing list. Real data arrives through the
+# pack's governed source connectors (connections/sources.yaml) or file upload:
+# the furnisher's systems of record for the tradeline book, and the dispute
+# intake feeds (direct disputes, CRA referrals, court documents).
 - identity: cr_consumers
   name: cr-consumers
-  file: data/cr_consumers.csv
-  format: csv
+  required_columns:
+    [consumer_id, consumer_name, state, prior_disputes,
+     identity_theft_report, credit_monitoring, litigation_history]
 - identity: cr_tradelines
   name: cr-tradelines
-  file: data/cr_tradelines.csv
-  format: csv
+  required_columns:
+    [tradeline_id, consumer_id, creditor_name, account_status, balance_band,
+     delinquency_history, opened_year, furnisher_system]
 - identity: cr_disputes
   name: cr-disputes
-  file: data/cr_disputes.csv
-  format: csv
+  required_columns:
+    [dispute_id, tradeline_id, channel, dispute_reason, tradeline_type,
+     fcra_flag, severity, status, disposition, filed_month, age_days,
+     days_to_deadline, deadline_bucket]

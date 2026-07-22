@@ -1,0 +1,60 @@
+# Typed custom case fields (case-service CASE-FR-022) — the loss-mitigation
+# application work item's real evaluation attributes, typed so the case form
+# validates them and decision surfaces can read them structurally instead of
+# parsing notes. data_type is IMMUTABLE after creation (case-service) — chosen
+# deliberately. Enum options mirror the lm-applications binding-contract
+# columns so field data and dataset agree.
+- name: request_type
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Workout requested"
+    options: [modification, forbearance, repayment_plan, short_sale, deed_in_lieu]
+    required: false
+- name: doc_status
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Application completeness"
+    options: [complete, incomplete]
+    required: false
+- name: delinquency_bucket
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Delinquency bucket (days past due)"
+    options: ["30", "60", "90", "120_plus"]
+    required: false
+- name: investor
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Investor (waterfall owner)"
+    options: [gse, fha, va, portfolio]
+    required: false
+- name: dual_track_hold
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Foreclosure-path hold in effect"
+    options: ["yes", "no"]
+    required: false
+- name: prior_workout_flag
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Prior loss-mitigation history"
+    options: ["yes", "no"]
+    required: false
+- name: arrearage_amount
+  data_type: float
+  purpose: both
+  field_meta:
+    label: "Arrearage (USD past due)"
+    required: false
+- name: days_to_deadline
+  data_type: integer
+  purpose: both
+  field_meta:
+    label: "Servicing-rule clock — days left"
+    required: false
