@@ -55,14 +55,20 @@ def _base(uris: list[str]) -> str:
 
 
 def _configure_s3(con: duckdb.DuckDBPyConnection, s3: dict[str, Any]) -> None:
+    """Every value here is a tenant-configured dataset-storage setting, not a
+    literal this code controls -- quote every interpolated string (BRD 58
+    SEC-5: an unescaped single quote in e.g. a stored endpoint/access-key
+    value would otherwise break out of the SET '...' string literal into raw
+    SQL). ``use_ssl`` is excluded: it's a boolean this function derives itself
+    (never round-tripped from ``s3``), so it's not an injection surface."""
     con.execute("INSTALL httpfs; LOAD httpfs;")
     endpoint = (s3.get("endpoint") or "").replace("http://", "").replace("https://", "")
     use_ssl = "true" if str(s3.get("endpoint", "")).startswith("https://") else "false"
-    con.execute(f"SET s3_region='{s3.get('region', 'us-east-1')}';")
+    con.execute(f"SET s3_region={_q(s3.get('region', 'us-east-1'))};")
     if endpoint:
-        con.execute(f"SET s3_endpoint='{endpoint}';")
-    con.execute(f"SET s3_access_key_id='{s3.get('access_key', '')}';")
-    con.execute(f"SET s3_secret_access_key='{s3.get('secret_key', '')}';")
+        con.execute(f"SET s3_endpoint={_q(endpoint)};")
+    con.execute(f"SET s3_access_key_id={_q(s3.get('access_key', ''))};")
+    con.execute(f"SET s3_secret_access_key={_q(s3.get('secret_key', ''))};")
     con.execute(f"SET s3_use_ssl={use_ssl};")
     con.execute("SET s3_url_style='path';")
 

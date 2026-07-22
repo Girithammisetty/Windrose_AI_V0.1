@@ -116,3 +116,22 @@ def wrap_limit_zero(statement: str) -> str:
     """Column-introspection query that fetches no rows."""
     inner = statement.strip().rstrip(";")
     return f"SELECT * FROM ({inner}) _wr_cols LIMIT 0"
+
+
+def quote_identifier(identifier: str, *, quote: str) -> str:
+    """Quote a possibly dotted (schema.table / project.dataset.table)
+    identifier for a dialect that quotes with the same char on both sides
+    (backtick for BigQuery/Spanner/MySQL, double-quote for Postgres/Oracle/
+    ANSI), escaping an embedded quote char by doubling it. Each dot-separated
+    part is quoted independently so a caller-supplied table name can never
+    inject a stray token via an unescaped quote or a bogus extra qualifier
+    (BRD 58 SEC-5 — every ``preview(request={"table": ...})`` driver spliced
+    this value into ``SELECT * FROM {table}`` unescaped)."""
+    esc = quote + quote
+    return ".".join(f"{quote}{part.replace(quote, esc)}{quote}" for part in identifier.split("."))
+
+
+def quote_bracket_identifier(identifier: str) -> str:
+    """MSSQL bracket-quoting (``[part]`` per dot-separated segment), escaping
+    an embedded ``]`` by doubling it. See `quote_identifier`."""
+    return ".".join(f"[{part.replace(']', ']]')}]" for part in identifier.split("."))

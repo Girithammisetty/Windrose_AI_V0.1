@@ -44,9 +44,10 @@ type SiemDestination struct {
 // destination that needs a bearer/HEC token needs a Go secrets adapter wired
 // here first. That wiring is a real, scoped follow-up, not fabricated as done.
 type HTTPDelivery struct {
-	Configs   ConfigLookup
-	Client    *http.Client
-	Log       *slog.Logger
+	Configs ConfigLookup
+	Log     *slog.Logger
+	// Timeout bounds each delivery attempt's connect/handshake/response.
+	Timeout time.Duration
 	// AllowHTTP is the dev/e2e escape (mirrors notification-service's
 	// WEBHOOK_ALLOW_HTTP): permits http:// and loopback targets so delivery
 	// is exercisable end to end against an httptest server. Never true in prod.
@@ -57,7 +58,7 @@ type HTTPDelivery struct {
 func NewHTTPDelivery(configs ConfigLookup, allowHTTP bool) *HTTPDelivery {
 	return &HTTPDelivery{
 		Configs:   configs,
-		Client:    &http.Client{Timeout: 10 * time.Second},
+		Timeout:   10 * time.Second,
 		Log:       slog.Default(),
 		AllowHTTP: allowHTTP,
 	}
@@ -85,7 +86,8 @@ func (d *HTTPDelivery) Deliver(ctx context.Context, tenant uuid.UUID, env gceven
 	if dest == nil {
 		return
 	}
-	if _, err := httpx.GuardURL(dest.Endpoint, d.AllowHTTP); err != nil {
+	ips, err := httpx.GuardURL(dest.Endpoint, d.AllowHTTP)
+	if err != nil {
 		d.log().Warn("siem destination failed SSRF guard, skipping delivery",
 			"tenant_id", tenant.String(), "err", err)
 		return
@@ -101,7 +103,10 @@ func (d *HTTPDelivery) Deliver(ctx context.Context, tenant uuid.UUID, env gceven
 		return
 	}
 	req.Header.Set("Content-Type", contentTypeFor(dest.Format))
-	resp, err := d.Client.Do(req)
+	// Pin the connection to the IP GuardURL just validated, not whatever
+	// dest.Endpoint's hostname re-resolves to at dial time (DNS-rebind TOCTOU,
+	// BRD 58 SEC-5) -- mirrors notification-service's webhook sender.
+	resp, err := httpx.PinnedClient(ips, d.Timeout).Do(req)
 	if err != nil {
 		d.log().Warn("siem delivery failed", "tenant_id", tenant.String(), "endpoint_host", req.URL.Host, "err", err)
 		return

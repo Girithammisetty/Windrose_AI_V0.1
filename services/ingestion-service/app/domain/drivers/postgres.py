@@ -14,7 +14,7 @@ from typing import Any
 import asyncpg
 from pydantic import BaseModel
 
-from app.domain.drivers.sql import to_positional
+from app.domain.drivers.sql import quote_identifier, to_positional
 from app.domain.errors import ErrorCategory, TransientSourceError
 from app.domain.probers import PreviewResult, ProbeResult
 
@@ -82,7 +82,8 @@ class PostgresPreviewer:
         self, config: BaseModel, secrets: dict[str, str], request: dict[str, Any], limit: int
     ) -> PreviewResult:
         target = request.get("query") or (
-            f"SELECT * FROM {request['table']}" if request.get("table") else None
+            f"SELECT * FROM {quote_identifier(request['table'], quote='\"')}"
+            if request.get("table") else None
         )
         if not target:
             raise ValueError("preview requires table or query")

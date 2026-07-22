@@ -1,20 +1,28 @@
 """Guardrail model adapters.
 
 `RegexPIIAnalyzer` is a real, deterministic, fully-local analyzer covering the
-default entity set — EMAIL/PHONE/CREDIT_CARD(Luhn-checked)/SSN/IBAN (AIG-FR-050).
-It runs in-process with no external dependency and is the runtime PII analyzer.
-`HeuristicInjectionClassifier` is a real, deterministic pattern scorer
-(AIG-FR-051).
+default entity set — EMAIL/PHONE/CREDIT_CARD(Luhn-checked)/SSN/IBAN/ADDRESS/
+PERSON (AIG-FR-050). It runs in-process with no external dependency and is the
+runtime PII analyzer. `HeuristicInjectionClassifier` is a real, deterministic
+pattern scorer (AIG-FR-051).
 
-The only PII capability not covered locally is PERSON-name detection, which
-requires an NER model (Microsoft Presidio + a spaCy model). That is left as
-opt-in/credential-gated future work; every other entity is detected for real."""
+PERSON and ADDRESS are real but narrow, structural patterns (an honorific +
+capitalized name; a house-number + street-name + suffix) — a genuine floor,
+not a stub (BRD 58 SEC-5: the previous PERSON pattern, `r"$^"`, could never
+match anything). Comprehensive free-text name/address detection across
+arbitrary phrasing still needs an NER model (Microsoft Presidio + a spaCy
+model); that remains opt-in/credential-gated future work, unchanged."""
 
 from __future__ import annotations
 
 import re
 
 from app.domain.ports import PIIEntity
+
+_STREET_SUFFIXES = (
+    r"Street|St|Avenue|Ave|Boulevard|Blvd|Road|Rd|Lane|Ln|Drive|Dr|Court|Ct|"
+    r"Circle|Cir|Way|Place|Pl|Terrace|Ter|Highway|Hwy|Parkway|Pkwy|Square|Sq|Trail|Trl"
+)
 
 _PATTERNS: dict[str, re.Pattern] = {
     "EMAIL": re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"),
@@ -24,7 +32,12 @@ _PATTERNS: dict[str, re.Pattern] = {
     "CREDIT_CARD": re.compile(r"(?<!\d)(?:\d[ -]?){13,19}(?<![ -])(?!\d)"),
     "SSN": re.compile(r"(?<!\d)\d{3}-\d{2}-\d{4}(?!\d)"),
     "IBAN": re.compile(r"\b[A-Z]{2}\d{2}[A-Z0-9]{11,30}\b"),
-    "PERSON": re.compile(r"$^"),  # opt-in; requires NER — Presidio only (prod)
+    "ADDRESS": re.compile(
+        rf"\b\d{{1,6}}\s+(?:[A-Za-z0-9]+\s){{0,4}}(?:{_STREET_SUFFIXES})\.?\b", re.I
+    ),
+    "PERSON": re.compile(
+        r"\b(?:Mr|Mrs|Ms|Miss|Dr|Prof|Rev)\.?\s+[A-Z][a-zA-Z'-]+(?:\s+[A-Z][a-zA-Z'-]+){0,2}\b"
+    ),
 }
 
 

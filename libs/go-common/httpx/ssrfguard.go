@@ -1,9 +1,12 @@
 package httpx
 
 import (
+	"context"
 	"fmt"
 	"net"
+	"net/http"
 	"net/url"
+	"time"
 )
 
 // GuardURL enforces an SSRF policy for any outbound webhook-style delivery a
@@ -44,6 +47,48 @@ func GuardURL(raw string, allowHTTP bool) ([]net.IP, error) {
 		}
 	}
 	return ips, nil
+}
+
+// PinnedClient returns an http.Client whose DialContext ignores whatever
+// hostname the outgoing request carries and connects ONLY to the first IP in
+// ips — the address GuardURL already validated. This closes the DNS-rebind
+// TOCTOU gap: without it, GuardURL's decision and the eventual TCP connect
+// are two separate DNS resolutions, and an attacker who controls the target
+// hostname's DNS (or exploits a short TTL) can pass the guard against a public
+// IP and have the real dial land on a private/internal address instead.
+// Every GuardURL caller that goes on to make the actual HTTP request MUST
+// build its client through this helper, not a plain &http.Client{} — ported
+// from notification-service's original webhook sender (BR-6, AC-12), the one
+// caller that already did this correctly, so the fix lives in one place
+// instead of being re-invented per caller (BRD 58 SEC-5).
+func PinnedClient(ips []net.IP, timeout time.Duration) *http.Client {
+	pinned := ""
+	if len(ips) > 0 {
+		pinned = ips[0].String()
+	}
+	dialer := &net.Dialer{Timeout: timeout}
+	transport := &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+			_, port, err := net.SplitHostPort(addr)
+			if err != nil {
+				return nil, err
+			}
+			if pinned == "" {
+				return nil, fmt.Errorf("no validated address to dial")
+			}
+			return dialer.DialContext(ctx, network, net.JoinHostPort(pinned, port))
+		},
+		TLSHandshakeTimeout:   timeout,
+		ResponseHeaderTimeout: timeout,
+	}
+	return &http.Client{
+		Timeout:   timeout,
+		Transport: transport,
+		CheckRedirect: func(*http.Request, []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
 }
 
 // isForbiddenIP blocks loopback, private, link-local and cloud metadata ranges.

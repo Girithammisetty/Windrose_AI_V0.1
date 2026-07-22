@@ -36,6 +36,19 @@ def test_redact_direct_identifiers():
     assert "555-123-4567" not in out and "[REDACTED:phone]" in out
 
 
+def test_redact_street_address():
+    s = "claimant lives at 742 Evergreen Terrace, please mail the check there"
+    out = redact_text(s)
+    assert "742 Evergreen Terrace" not in out and "[REDACTED:address]" in out
+
+
+def test_redact_honorific_name():
+    s = "Dr. Jane Smith reviewed the claim; Mr. Bob Lee filed it"
+    out = redact_text(s)
+    assert "Jane Smith" not in out and "Bob Lee" not in out
+    assert out.count("[REDACTED:name]") == 2
+
+
 def test_redact_walks_nested_json():
     v = {"notes": ["reach a@b.com"], "n": 5, "nested": {"ip": "10.0.0.1"}}
     out = redact(v)

@@ -10,6 +10,8 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 from app.domain.drivers.sql import (
+    quote_bracket_identifier,
+    quote_identifier,
     to_at_named,
     to_format,
     to_positional,
@@ -96,3 +98,28 @@ def test_wrap_top_zero_and_where_false_shape_columns_only() -> None:
     assert wrap_where_false("SELECT * FROM orders;") == (
         "SELECT * FROM (SELECT * FROM orders) wr_cols WHERE 1=0"
     )
+
+
+def test_quote_identifier_quotes_each_dotted_part() -> None:
+    # A caller-supplied table name is never a single opaque token to trust --
+    # each dot-separated part is quoted on its own (BRD 58 SEC-5).
+    assert quote_identifier("orders", quote='"') == '"orders"'
+    assert quote_identifier("myproject.mydataset.orders", quote="`") == (
+        "`myproject`.`mydataset`.`orders`"
+    )
+
+
+def test_quote_identifier_escapes_embedded_quote_by_doubling() -> None:
+    # A malicious table name containing the quote char must not break out of
+    # the quoted identifier into raw SQL -- this is the actual vulnerability
+    # being closed: `SELECT * FROM {table}` spliced this value unescaped.
+    injected = 'orders); DROP TABLE secrets; --'
+    assert quote_identifier(injected, quote='"') == '"orders); DROP TABLE secrets; --"'
+    assert quote_identifier('a"b', quote='"') == '"a""b"'
+    assert quote_identifier("a`b", quote="`") == "`a``b`"
+
+
+def test_quote_bracket_identifier_escapes_close_bracket() -> None:
+    assert quote_bracket_identifier("orders") == "[orders]"
+    assert quote_bracket_identifier("dbo.orders") == "[dbo].[orders]"
+    assert quote_bracket_identifier("a]b") == "[a]]b]"
