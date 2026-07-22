@@ -1,6 +1,6 @@
-# BRD 58 WS1 — SEC-4 (RLS NULLIF re-remediation) + SEC-5 (residual injection edges)
+# BRD 58 WS1 — SEC-3 (headers + CORS), SEC-4 (RLS NULLIF re-remediation), SEC-5 (residual injection edges)
 
-**Status:** done — 2026-07-22
+**Status:** done — 2026-07-22 (SEC-2 remains open, tracked directly in BRD 58 WS1)
 **Related:** [58_production_hardening_BRD.md](../brd/58_production_hardening_BRD.md) WS1 · [rbac-dlq-envelope-tenant-id](rbac-dlq-envelope-tenant-id.md)
 
 Filed as a standalone initiative doc rather than appended directly to
@@ -20,6 +20,14 @@ framing). SEC-4 and SEC-5 are two of the four remaining WS1 gaps (SEC-2 and
 SEC-3 are tracked separately, still open).
 
 ### 1b. Technical (audited before any fix, via a dedicated research pass)
+
+**SEC-3:** `ui-web/src/middleware.ts` only sets any security header on the
+`/embed/*` branch (a per-tenant `Content-Security-Policy: frame-ancestors`);
+the main interactive app gets none at all, and middleware's own route
+`matcher` explicitly excludes `/login`, `/api`, and static assets anyway, so
+even adding headers there wouldn't cover every response. `bff-graphql/src/
+index.ts` is a raw `http.createServer` (no Express/helmet/cors) with zero
+CORS handling and no `OPTIONS` preflight response at all.
 
 **SEC-4:** migration `0005` (agent-runtime) converged tenant-isolation
 policies on `(NULLIF(current_setting('app.tenant_id', true), ''))::uuid` — a
@@ -61,6 +69,29 @@ is the complete list — no other migration adds a policy referencing it.
 
 ## 2. Design
 
+- **SEC-3 (ui-web):** static headers via `next.config.mjs`'s `headers()`
+  (applies to every response Next.js serves, unlike middleware's matcher) --
+  `X-Content-Type-Options`, `Strict-Transport-Security`, and for every route
+  EXCEPT `/embed/*`: `X-Frame-Options: DENY` + `Content-Security-Policy:
+  frame-ancestors 'none'`. `/embed/*` is deliberately excluded from that rule
+  because middleware.ts already sets its OWN dynamic per-tenant
+  `frame-ancestors` there -- multiple CSP headers on one response are ANDed
+  per directive by the browser, so a second global `frame-ancestors 'none'`
+  would silently block all legitimate embedding. Scoped deliberately narrower
+  than a full script-src/style-src CSP: this app loads third-party image URLs
+  (tenant logos from MinIO via the branding proxy), SSE (realtime-hub), and
+  various fetches -- a strict content policy is a much larger, higher-
+  regression-risk initiative that needs its own dedicated pass, not squeezed
+  into a security-headers fast-follow. Documented here as a deliberate scope
+  cut, not a silent gap.
+- **SEC-3 (bff-graphql):** a new `corsAllowedOrigins: string[]` config field
+  (`CORS_ALLOWED_ORIGINS` env, comma-separated, defaulting to ui-web's own dev
+  origin) and a small hand-rolled `applySecurityAndCors()` helper (no
+  Express/helmet available) called first in the raw `http.createServer`
+  handler: sets `X-Content-Type-Options`/`X-Frame-Options` on every response;
+  reflects `Access-Control-Allow-Origin` only when the request's `Origin` is
+  on the allowlist (never a wildcard); answers `OPTIONS` with 204 directly,
+  never reaching JWT auth or GraphQL execution.
 - **SEC-4:** pure forward-only SQL migration (`0018`), re-applying 0005's
   exact `NULLIF(...)` policy form to the five regressed tables. No
   application code change — this is policy-only remediation.
@@ -90,6 +121,29 @@ is the complete list — no other migration adds a policy referencing it.
 ---
 
 ## 3. Implementation & Test
+
+**SEC-3** — `services/ui-web/next.config.mjs` (+`headers()`),
+`services/bff-graphql/src/config.ts` (+`corsAllowedOrigins`),
+`services/bff-graphql/src/index.ts` (+`applySecurityAndCors`). **Test:** new
+`services/bff-graphql/tests/integration/corsAndSecurityHeaders.test.ts` boots
+the real BFF HTTP server and drives it over real HTTP (5 cases: allowlisted
+origin reflected + preflight short-circuits before auth, a second configured
+origin also reflected, a non-allowlisted origin gets no CORS header but the
+request still serves normally, never a wildcard, static headers present on
+every response). bff-graphql full suite: 36 unit files/296 tests +
+2 integration files/11 tests, all passing; `tsc --noEmit`/`eslint` clean.
+**Live-verified against the real, restarted stack** (ui-web's Next dev server
+auto-restarted itself on the `next.config.mjs` change; bff-graphql needed a
+manual restart via `restart_bff.sh`, done with explicit user confirmation):
+`curl` against the running services confirmed (a) the main ui-web app serves
+`X-Frame-Options: DENY` + `Content-Security-Policy: frame-ancestors 'none'`
+while `/embed/*` gets neither (only its own dynamic
+`frame-ancestors 'self'`/tenant-origin CSP from middleware), (b) bff-graphql's
+`OPTIONS /graphql` preflight from the allowed origin returns 204 with the
+correct `Access-Control-*` headers, an unlisted origin gets served with zero
+CORS headers, and never a `*`. Reloaded `/admin/tenant` in the browser after
+both restarts: zero console errors, page renders correctly -- confirms the
+change didn't break the real UI→BFF traffic path.
 
 **SEC-4** — `services/agent-runtime/migrations/versions/
 0018_nullif_rls_reremediation.py`. **TDD, bug reproduced first:** stashed the
@@ -143,6 +197,5 @@ negative case proving the PERSON floor is deliberately narrow: a bare
 capitalized name with no honorific is *not* caught). Full suites:
 `agent-runtime` 289 passed, `ai-gateway` 153 passed, 0 fails either.
 
-**Deferred, explicitly:** SEC-2 (audit→WORM delivery reconcile) and SEC-3
-(security headers + CORS allowlist) remain open — tracked directly in BRD 58
-WS1, not duplicated here.
+**Deferred, explicitly:** SEC-2 (audit→WORM delivery reconcile) remains open —
+tracked directly in BRD 58 WS1, not duplicated here.

@@ -47,6 +47,38 @@ function headerVal(v: string | string[] | undefined): string | undefined {
   return Array.isArray(v) ? v[0] : v;
 }
 
+/** A minimal, hand-rolled security-headers + CORS-allowlist pass (BRD 58
+ * SEC-3) -- there's no Express/helmet/cors here, just a raw http.Server, so
+ * this is applied directly rather than pulled in as middleware. Every
+ * response gets the static headers; only a request whose Origin is on the
+ * configured allowlist gets the CORS headers (never a wildcard -- an open
+ * allowlist would let any page drive a signed-in user's browser into calling
+ * the API, even though the Bearer-token auth model already limits the blast
+ * radius of that). A preflight OPTIONS is answered directly, never reaching
+ * GraphQL execution. */
+function applySecurityAndCors(
+  req: http.IncomingMessage,
+  res: http.ServerResponse,
+  allowedOrigins: string[],
+): boolean {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+
+  const origin = headerVal(req.headers["origin"]);
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Vary", "Origin");
+    res.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "content-type, authorization, x-trace-id, traceparent");
+  }
+  if (req.method === "OPTIONS") {
+    res.writeHead(204);
+    res.end();
+    return true;
+  }
+  return false;
+}
+
 export async function main(): Promise<http.Server> {
   // Env-gated OpenTelemetry tracing (see ./tracing.ts). Same contract as the
   // Go/Python services — DATACERN_OTEL_ENABLED / OTEL_EXPORTER_OTLP_ENDPOINT —
@@ -62,6 +94,8 @@ export async function main(): Promise<http.Server> {
   await apollo.start();
 
   const server = http.createServer(async (req, res) => {
+    if (applySecurityAndCors(req, res, cfg.corsAllowedOrigins)) return;
+
     const url = new URL(req.url ?? "/", "http://localhost");
     const path = url.pathname;
 

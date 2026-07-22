@@ -73,6 +73,12 @@ export interface Config {
   introspection: boolean;
   /** Per-downstream request timeout in ms (BFF-FR-032 / BR-4). */
   downstreamTimeoutMs: number;
+  /** Origins allowed to call /graphql cross-origin (BRD 58 SEC-3). Always
+   * includes ui-web's own dev origin as a floor; prod deployments add their
+   * real ui-web origin(s) via CORS_ALLOWED_ORIGINS. Never '*' -- the BFF holds
+   * no cookies itself, but an open allowlist would let any page drive a
+   * signed-in user's browser into calling the API with their bearer token. */
+  corsAllowedOrigins: string[];
   limits: Limits;
 }
 
@@ -145,6 +151,10 @@ export function loadConfig(overrides: Partial<Config> = {}): Config {
     persistedQueriesOnly: bool("PERSISTED_QUERIES_ONLY", isProd),
     introspection: bool("INTROSPECTION", !isProd),
     downstreamTimeoutMs: Number(env("DOWNSTREAM_TIMEOUT_MS", "10000")),
+    corsAllowedOrigins: (env("CORS_ALLOWED_ORIGINS", "http://localhost:3000") ?? "")
+      .split(",")
+      .map((o) => o.trim())
+      .filter(Boolean),
     limits: {
       maxDepth: Number(env("MAX_DEPTH", "10")),
       maxAliases: Number(env("MAX_ALIASES", "20")),
