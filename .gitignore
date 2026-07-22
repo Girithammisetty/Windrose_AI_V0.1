@@ -10,6 +10,7 @@ __pycache__/
 dist/
 bin/
 coverage*
+.coverage
 .DS_Store
 
 # secrets / key material — never commit (dev harness IdP signing keys)

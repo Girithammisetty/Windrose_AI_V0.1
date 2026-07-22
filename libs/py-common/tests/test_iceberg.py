@@ -3,6 +3,9 @@ snapshot-id advance, BR-9 has_snapshot, read-back and drop."""
 
 from __future__ import annotations
 
+import os
+import tracemalloc
+
 import pytest
 
 from datacern_common.iceberg import (
@@ -123,5 +126,61 @@ async def test_commit_empty_ingestion_still_creates_ingestion_id_marker(iceberg,
         ns, name = _split_identifier(table)
         tbl = writer._cat().load_table((ns, name))
         assert len(list(tbl.snapshots())) == 1
+    finally:
+        await catalog.drop_table(table)
+
+
+def _volume_rows() -> int:
+    """WS5 (BRD 58): "a volume load test at 1M rows for WS4 items" (B1).
+    Defaults to a size that completes in a reasonable soak window; override
+    with ICEBERG_VOLUME_ROWS=1000000 for the BRD's literal scale."""
+    try:
+        return int(os.environ.get("ICEBERG_VOLUME_ROWS", "100000"))
+    except ValueError:
+        return 100_000
+
+
+async def test_commit_streams_large_volume_in_bounded_memory(iceberg, unique):
+    """B1 volume/load test: commit() must stay bounded in memory at real scale,
+    not just the tiny fixtures the other tests use. Measures PEAK memory
+    (tracemalloc) during commit() itself and asserts it stays a small fraction
+    of what materializing the whole staged file at once would need -- proving
+    the streaming fix (BRD58 B1) holds at volume, not just in principle."""
+    n = _volume_rows()
+    rows_per_batch = 10_000
+    n_batches = max(1, n // rows_per_batch)
+    table = f"bronze.pyc{unique}.ds_volume"
+    writer = IcebergTableWriter()  # real default commit_chunk_rows (50_000)
+    catalog = IcebergRestCatalog()
+    cols = ["id", "name", "description"]
+
+    try:
+        staged = await writer.stage(
+            table, _batches(rows_per_batch, n_batches, cols),
+            {"ingestion_id": "ing-volume", "source": "upload"},
+        )
+        assert staged.rows == rows_per_batch * n_batches
+
+        tracemalloc.start()
+        result = await writer.commit(staged)
+        _, peak = tracemalloc.get_traced_memory()
+        tracemalloc.stop()
+
+        assert result.rows_appended == staged.rows
+
+        # Each row is ~3 short string fields; a full-file in-memory
+        # materialization (the pre-fix behavior, 3 copies per BRD58's B1 log)
+        # would scale linearly with row count and run into the hundreds of MB
+        # at this volume. Streaming in commit_chunk_rows-sized chunks bounds
+        # peak allocation to roughly one chunk's worth regardless of row
+        # count -- assert peak stays under a fixed ceiling, not a per-row one.
+        peak_mb = peak / (1024 * 1024)
+        assert peak_mb < 200, (
+            f"commit() peak memory {peak_mb:.1f}MB at {staged.rows} rows -- "
+            "expected it to stay bounded by commit_chunk_rows, not grow with row count"
+        )
+
+        df = await catalog.read_snapshot(table, result.snapshot_id)
+        assert len(df) == staged.rows
     finally:
         await catalog.drop_table(table)

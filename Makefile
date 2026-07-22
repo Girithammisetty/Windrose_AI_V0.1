@@ -1,6 +1,6 @@
 SERVICES := $(wildcard services/*)
 
-.PHONY: dev-up dev-down test test-unit lint e2e e2e-keep up up-platform down reset doctor soak \
+.PHONY: dev-up dev-down test test-unit lint e2e e2e-keep up up-platform down reset doctor soak soak-volume \
         demo-list demo-load demo-clean demo-clean-all
 
 # Capstone: provision the WHOLE platform locally and open it in a browser for
@@ -45,6 +45,15 @@ doctor:
 # ephemeral-store / lost-projection regression. Run `make up` first.
 soak:
 	deploy/local/soak.sh
+
+# Volume/load soak (WS5, BRD 58): proves B1 (streaming Iceberg commit) and B5
+# (bulk case-service reindex) hold at real row-count scale, not just their
+# own small unit-test fixtures. Runs go test/pytest directly (testcontainers +
+# the real dev Iceberg/MinIO) — does not need `make up` first.
+#   make soak-volume                     # 100k rows, ~10s
+#   make soak-volume VOLUME_ROWS=1000000 # the BRD's literal 1M-row scale, ~90s
+soak-volume:
+	VOLUME_ROWS=$(VOLUME_ROWS) deploy/local/soak_volume.sh
 
 # ---- Demo pack control -----------------------------------------------------
 # Load ONE vertical pack (+ its demo data + per-role logins) into a throwaway

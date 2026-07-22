@@ -110,7 +110,9 @@ GraphQL schema-snapshot + event-envelope conformance as CI gates; a load/soak ta
 (`make soak` exists for restart; add a volume load test at 1M rows for WS4 items).
 
 ### Implement / Test
-- [ ] coverage thresholds · [ ] schema-snapshot gate · [ ] 1M-row load test harness.
+- [x] coverage thresholds · [x] schema-snapshot gate · [x] event-envelope conformance
+  (shared validator; per-service adoption beyond case-service/agent-runtime is a
+  follow-up) · [x] 1M-row load test harness — see log below.
 
 ---
 
@@ -455,5 +457,103 @@ regression — flagged separately rather than silently left for someone else to
 rediscover. Terraform: `terraform fmt -check`, `terraform init -backend=false`,
 `terraform validate` all pass for the AWS module. Helm: `helm lint` and
 `helm template` pass for the default values and all four cloud overlays.
+
+### WS5 — coverage gates, schema-snapshot, event-envelope conformance, 1M-row volume soak — DONE
+
+**1. Per-language coverage thresholds.** Measured actual coverage across the
+fleet first rather than guessing a floor: Go (`go test ./... -coverprofile`)
+ranges 8.4% (case-service, the low-water mark) to 92% across a 9-service
+sample; Python (`uv run --with pytest-cov ... --cov=app`, no
+pyproject.toml/uv.lock changes needed for any of the 11 services) ranges 27%
+(pack-service, the low-water mark) to 83% across **all 11** services measured;
+Node (`@vitest/coverage-v8`, added as a real devDependency to both
+bff-graphql and ui-web) measured 75.7%/56.0% lines respectively. Set floors
+comfortably below every measured minimum — Go 5%, Python 20%, bff-graphql 40%,
+ui-web 30% — real "start low" bars that catch a genuinely untested new
+package/service, not today's fleet. Wired into `ci.yml`'s `test-go`
+(new `Enforce coverage floor` step), `test-python`/`test-python-libs`
+(`--cov-fail-under`), and `test-node` (`pnpm run test:coverage`, still running
+`test:integration` afterward for bff-graphql). **Verified the gate actually
+enforces, not just reports:** temporarily set an unreachable threshold (99%)
+in bff-graphql's config, confirmed the run fails with a clear error, reverted.
+Ratchet these up over time; never lower without recording why here.
+
+**2. GraphQL schema-snapshot.** bff-graphql had zero snapshot/diff tooling
+(`typeDefs.ts` only ever existed as an in-memory `gql` literal). Added
+`schema:snapshot` (`scripts/print-schema.ts`, `graphql`'s `print()`) writing
+the SDL to a checked-in `schema.graphql`, and a new
+`tests/unit/schema-snapshot.test.ts` that fails if the live schema drifts from
+it. **TDD-verified:** appended a bogus type to the checked-in file, confirmed
+the test fails with a clear message, reverted.
+
+**3. Event-envelope conformance, shared validator.** Found: only 2 of the ~19
+services that emit MASTER-FR-031 envelopes had any conformance test
+(case-service's Go `assertConformsToMaster`, agent-runtime's Python
+`test_envelope.py`) — both duplicated the same field/actor-type checks ad hoc.
+Extracted the shared, single-source-of-truth checks (not the case-service-
+specific extras like uuidv7-version or resource_urn-non-empty, which stay
+local and are a legitimate superset) into `libs/go-common/event.Validate`
+(new, unit-tested: accepts every master actor type, rejects the exact
+`actor.type="system"` regression BRD 58 already fixed once, rejects each
+missing required field, rejects a nil payload) and
+`libs/py-common/datacern_common/events.validate_envelope` (same rules, its
+own unit tests). **Real adoption demonstrated, not just written:**
+agent-runtime's `test_envelope_matches_go_envelope_fields` now calls the
+shared `validate_envelope` against its actual `make_envelope()` output instead
+of its old ad hoc field checks — proves the shared validator accepts a real
+service's real envelope, not just hand-built fixtures. case-service's own
+richer test is intentionally left untouched (it's a superset, not a
+duplicate). **Follow-up, not fabricated as done:** the other 7 Go
+outbox-owning services and 8 Python services with their own `envelope.py`
+copy don't yet call the shared validator in their own test suites — the
+library exists and is proven to work against one real service per language;
+rolling it out to the rest is additive, mechanical, per-service work.
+
+**4. 1M-row volume/load soak (`make soak-volume`).** Targets the two WS4
+fixes that were specifically about unbounded memory/row-count: B5 (case-service
+reindex) and B1 (Iceberg commit). New `TestVolumeReindexAtScale`
+(case-service) seeds real rows via `pgx.CopyFrom` straight into Postgres
+through the harness's RLS-bypassing admin pool — deliberately skipping
+`CreateCases`'s business rules (BR-13's 10,000-open-case-per-workspace limit,
+dedup locking, outbox writes), since this is fixture seeding for the READ path
+(B5's reindex), not a re-check of case-creation rules already covered
+elsewhere — then calls the real `/admin/reindex` HTTP path and asserts the
+OpenSearch alias ends up with the exact row count. New
+`test_commit_streams_large_volume_in_bounded_memory` (libs/py-common) stages
+and commits a real Iceberg append through the real REST catalog + MinIO, using
+`tracemalloc` to assert commit()'s **peak** memory stays under a fixed
+ceiling regardless of row count (not a per-row one) — proving the streaming
+fix holds at volume, not just in principle.
+
+**Measured at the BRD's literal "1M rows," not extrapolated:**
+- B5: seeded 1,000,000 cases in 11.6s, reindexed via `/admin/reindex` in
+  1m15.8s (13,187 cases/sec) — `TestVolumeReindexAtScale` passes end to end
+  (~90s total including container startup).
+- B1: staged + committed 1,000,000 rows; peak memory during `commit()` was
+  **25.0MB** (`tracemalloc`), completing in ~2.7s.
+
+CI default is 100k rows (~10s total, keeps the `e2e-live` job fast); the
+literal 1M scale runs via `make soak-volume VOLUME_ROWS=1000000` (or
+`CASE_VOLUME_ROWS=1000000` / `ICEBERG_VOLUME_ROWS=1000000` directly). New
+`deploy/local/soak_volume.sh` + `make soak-volume` target, wired into
+`ci.yml`'s `e2e-live` job right after the existing `make soak` (same job
+already has real Postgres/Iceberg-REST/MinIO/Docker up; no new application
+service is booted — both legs run through `go test`/`pytest`, not against a
+deployed stack).
+
+**Test:** full regression across everything touched — `libs/go-common`
+(`go test ./...`, incl. new `event` package tests): all packages `ok`.
+`libs/py-common` (`pytest tests/`): 50 passed (was 36 before this entry — 13
+new `events.py` tests + 1 new volume test). `case-service`
+(`CASE_IT=1 go test ./...`, incl. the new volume test at both 100k and literal
+1M scale): all packages `ok`. `agent-runtime` (`pytest tests/unit`): 287
+passed. `bff-graphql`: `test:coverage` + `test:integration` + `typecheck` +
+`lint` all pass. `ui-web`: coverage gate passes (typecheck has one
+**pre-existing, unrelated** failure in `src/app/api/auth/login/route.ts` —
+confirmed via `git stash` on just this change's 2 ui-web files that it fails
+identically without them; not touched, out of scope). `make soak-volume`
+verified end to end at the CI default. Cleaned up stray `.coverage` files
+(`pytest-cov`'s artifact) generated across every Python service measured
+during this work and added `.coverage` to `.gitignore` so it doesn't recur.
 
 _See BRD 59 for feature expansion (5B)._

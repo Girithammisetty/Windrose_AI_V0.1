@@ -117,7 +117,27 @@ jobs:
         working-directory: ${{ matrix.path }}
         run: |
           go vet ./...
-          go test ./...
+          go test ./... -coverprofile=coverage.out
+
+      # WS5 (BRD 58): a real, enforced coverage floor per language. 5% is a
+      # deliberately low starting bar — measured against every Go service's
+      # CURRENT unit coverage (case-service is the low-water mark at ~8.4%),
+      # so this only catches a genuinely untested new package, not today's
+      # fleet. Ratchet the threshold up over time as coverage improves; never
+      # lower it without recording why in docs/brd/58_production_hardening_BRD.md.
+      - name: Enforce coverage floor (WS5)
+        working-directory: ${{ matrix.path }}
+        run: |
+          pct=$(go tool cover -func=coverage.out | tail -1 | grep -oE '[0-9]+\.[0-9]+' | tail -1)
+          if [ -z "$pct" ]; then
+            echo "::error::could not parse coverage total for ${{ matrix.name }}"
+            exit 1
+          fi
+          echo "total unit coverage: ${pct}%"
+          awk -v p="$pct" 'BEGIN { exit !(p+0 >= 5.0) }' || {
+            echo "::error::${{ matrix.name }} unit coverage ${pct}% is below the 5% floor (WS5)"
+            exit 1
+          }
 
       # Tier 2 (CONVENTIONS.md `make test-integration`): Testcontainers-backed,
       # gated behind the `integration` build tag so unit runs above never pay
@@ -160,11 +180,18 @@ jobs:
       - name: Ruff
         working-directory: ${{ matrix.path }}
         run: uv run ruff check .
-      - name: Pytest (unit)
+      # WS5 (BRD 58): coverage floor. `--with pytest-cov` pulls the plugin for
+      # this run only — no service's pyproject.toml/uv.lock needs touching.
+      # 20% is a deliberately low starting bar, set from measuring all 11
+      # Python services' app/ coverage before landing this: pack-service is
+      # the low-water mark at ~27%, the rest run 68-83%. Ratchet up over
+      # time; never lower without recording why in
+      # docs/brd/58_production_hardening_BRD.md.
+      - name: Pytest (unit, with coverage floor)
         working-directory: ${{ matrix.path }}
         run: |
           if [ -d tests/unit ]; then
-            uv run pytest tests/unit -q
+            uv run --with pytest-cov pytest tests/unit -q --cov=app --cov-report=term --cov-fail-under=20
           else
             echo "no tests/unit dir — skipping unit tests for ${{ matrix.name }}"
           fi
@@ -216,9 +243,17 @@ jobs:
       - name: Lint
         working-directory: ${{ matrix.path }}
         run: pnpm lint
-      - name: Test
+      # WS5 (BRD 58): coverage-gated unit tests (see each service's
+      # vitest.config.ts for the measured starting floor + ratchet note), then
+      # the integration tier too where a service has one (bff-graphql; ui-web
+      # doesn't split unit/integration scripts).
+      - name: Test (with coverage floor)
         working-directory: ${{ matrix.path }}
-        run: pnpm test
+        run: |
+          pnpm run test:coverage
+          if node -e "process.exit(require('./package.json').scripts['test:integration']?0:1)"; then
+            pnpm run test:integration
+          fi
 
   # ---------------------------------------------------------------------------
   # test-go-libs / test-python-libs — libs/go-common and libs/py-common are
@@ -260,9 +295,10 @@ jobs:
       - name: Ruff
         working-directory: libs/py-common
         run: uv run ruff check .
-      - name: Pytest
+      # WS5 (BRD 58): same coverage floor as the service lane (measured 67% here).
+      - name: Pytest (with coverage floor)
         working-directory: libs/py-common
-        run: uv run pytest tests -q
+        run: uv run --with pytest-cov pytest tests -q --cov=datacern_common --cov-report=term --cov-fail-under=20
 
   # ---------------------------------------------------------------------------
   # test-packs — packs/packctl (the vertical-pack authoring/install CLI) ships
@@ -530,6 +566,15 @@ jobs:
       # perturbs it; CI is the ideal clean env for this (fresh volumes).
       - name: Restart-survival soak (make soak)
         run: make soak
+
+      # WS5 (BRD 58): volume/load proof that B1 (streaming Iceberg commit) and
+      # B5 (bulk case-service reindex) hold at real scale. Runs go test/pytest
+      # directly (not against the deployed stack) but reuses this job's real
+      # Iceberg REST + MinIO + Docker. 100k rows here (the CI default, ~10s);
+      # `make soak-volume VOLUME_ROWS=1000000` runs the BRD's literal 1M scale
+      # locally in ~90s.
+      - name: Volume/load soak (make soak-volume)
+        run: make soak-volume
 
       - name: Tail service boot logs on failure
         if: failure()

@@ -14,9 +14,11 @@
     "build": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
+    "schema:snapshot": "tsx scripts/print-schema.ts",
     "test": "vitest run",
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run tests/integration",
+    "test:coverage": "vitest run tests/unit --coverage",
     "test:watch": "vitest"
   },
   "dependencies": {
@@ -37,6 +39,7 @@
     "@types/node": "^20.16.11",
     "@typescript-eslint/eslint-plugin": "^8.15.0",
     "@typescript-eslint/parser": "^8.15.0",
+    "@vitest/coverage-v8": "^2.1.8",
     "eslint": "^9.15.0",
     "tsx": "^4.19.2",
     "typescript": "^5.6.3",

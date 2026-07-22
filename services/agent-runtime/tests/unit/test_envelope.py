@@ -17,6 +17,7 @@ from datetime import datetime
 from app.container import build_container
 from app.domain.entities import Run, new_uuid
 from app.events.envelope import make_envelope, payload_of
+from datacern_common.events import validate_envelope
 from tests.conftest import TENANT_A, make_settings
 
 
@@ -33,20 +34,18 @@ def test_envelope_payload_is_an_object_not_a_string():
 
 
 def test_envelope_matches_go_envelope_fields():
-    """Field-for-field conformance with libs/go-common/event/envelope.go +
-    audit-service ValidateEnvelope (event_id/tenant_id parse as UUIDs,
-    occurred_at parses, actor.type in the allowed set)."""
+    """Conformance with libs/go-common/event/envelope.go's Validate +
+    audit-service's ValidateEnvelope, checked against the SAME shared
+    datacern_common.events.validate_envelope both sides use (WS5, BRD 58) —
+    not a duplicated ad hoc field check."""
     env = make_envelope(
         event_type="agent_run.completed", tenant_id=TENANT_A,
         actor={"type": "user", "id": "u-1"}, resource_urn="wr:t:agent:run/r-1",
         payload={"a": 1}, via_agent={"agent_id": "case-triage", "version": "1"})
-    for f in ("event_id", "event_type", "tenant_id", "actor", "via_agent",
-              "resource_urn", "occurred_at", "trace_id", "payload"):
-        assert f in env, f"missing envelope field {f}"
+    validate_envelope(env)
     uuid.UUID(env["event_id"])
     uuid.UUID(env["tenant_id"])
     datetime.fromisoformat(env["occurred_at"])  # RFC3339-parseable
-    assert env["actor"]["type"] in ("user", "service", "agent", "platform")
     assert env["via_agent"] == {"agent_id": "case-triage", "version": "1"}
 
 
