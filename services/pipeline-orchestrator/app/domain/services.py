@@ -492,17 +492,23 @@ class RunService:
                                   "started_at": run.started_at.isoformat()})
             await self._emit_status_changed(uow, ctx, run, prev)
 
+        # BRD 62 inc3: data-prep / feature-engineering / profiling / scheduled runs
+        # execute the operator DAG locally (real pandas) and persist the output via the
+        # warehouse sink (BRD 65) — the classic-pipeline path, distinct from training.
+        ptype = template.pipeline_type if template else None
+        is_dataprep = ptype in (int(PipelineType.data_prep), int(PipelineType.profiling),
+                                int(PipelineType.scheduled))
         try:
             if (self.d.settings.executor_backend == "argo"
                     and self.d.workflow_backend is not None):
                 # INFRA-GATED real path: compile + submit to the Argo server (raises
                 # DependencyUnavailable when no k8s cluster/Argo server is reachable).
                 await self._drive_argo(tenant_id, run, template, version)
-                result = None
+            elif is_dataprep:
+                await self._drive_data_prep(ctx, run, template, version)
             else:
                 spec = await self._build_training_spec(tenant_id, run, template, version)
                 result = await self.d.executor.execute_training(spec)
-            if result is not None:
                 await self._finish_success(ctx, run_id, result)
         except Exception as exc:  # noqa: BLE001 — surface as a failed run
             await self._finish_failure(ctx, run_id, exc)
@@ -524,6 +530,72 @@ class RunService:
             {"mlflow_run_id": run.mlflow_run_id, "current_context": tenant_id})
         # A real informer would now drive status → Kafka; unreachable infra never gets
         # here (submit already raised DependencyUnavailable on the Mac).
+
+    async def _drive_data_prep(self, ctx, run, template, version) -> None:
+        """BRD 62 inc3: run a data-prep DAG locally over real dataset rows and persist
+        the computed output(s) via the BRD 65 warehouse sink. Real end to end (pandas
+        + MinIO/S3) with no Argo; a node/sink failure surfaces as a failed run."""
+        import pandas as pd
+
+        from app.executor.local_pipeline import LocalPipelineExecutor
+        from app.executor.sinks import WAREHOUSE_SINKS
+
+        definition = version.definition or {}
+        tenant_id = run.tenant_id
+        # Pre-read every input dataset's rows (async) into frames the pure executor reads.
+        frames: dict[str, pd.DataFrame] = {}
+        for node in definition.get("nodes", []):
+            if node.get("component") in ("read-from-warehouse", "batch-read-from-warehouse"):
+                ds = (node.get("parameters") or {}).get("dataset")
+                if ds and ds not in frames:
+                    if self.d.dataset_reader is None:
+                        raise CannotCompile("no dataset reader configured for a data-prep run")
+                    rows = await self.d.dataset_reader.read_rows(tenant_id, ds)
+                    frames[ds] = pd.DataFrame([dict(r) for r in rows])
+
+        sink = WAREHOUSE_SINKS.create(self.d.settings.warehouse_sink, self.d.settings)
+        base_name = (template.name if template else "pipeline").replace(" ", "_")
+        written: dict[str, Any] = {}
+
+        def _reader(urn, _params):
+            if urn not in frames:
+                raise CannotCompile(f"input dataset {urn!r} not available")
+            return frames[urn].copy()
+
+        def _writer(frame, alias, params):
+            name = ((params or {}).get("output_dataset_name")
+                    or (params or {}).get("dataset_name") or f"{base_name}_{alias}")
+            res = sink.write_frame(frame, tenant_id=tenant_id, name=name)
+            written[alias] = res
+            return res.ref
+
+        # Pure pandas over an in-memory frame — fast + non-blocking, so run inline
+        # (no thread hand-off; unlike the heavy sklearn/MLflow training path).
+        result = LocalPipelineExecutor(reader=_reader, writer=_writer).run(definition)
+        await self._finish_data_prep_success(ctx, run.id, result, written)
+
+    async def _finish_data_prep_success(self, ctx, run_id, result, written) -> None:
+        async with self.d.uow_factory(ctx.tenant_id) as uow:
+            run = await uow.runs.get(run_id)
+            prev = run.status
+            run.status = int(RunStatus.succeeded)
+            run.finished_at = self.d.clock.now()
+            run.output_dataset_urns = [w.ref for w in written.values()]
+            total_rows = sum(w.rows for w in written.values())
+            run.metrics = {"output_rows": float(total_rows),
+                           "outputs": float(len(written)),
+                           "nodes": float(len(result.statuses))}
+            run.components_status = {
+                s.alias: {"alias": s.alias, "component": s.component, "phase": s.phase,
+                          "rows_out": s.rows_out,
+                          "finished_at": run.finished_at.isoformat()}
+                for s in result.statuses}
+            await uow.runs.update(run)
+            duration = (run.finished_at - (run.started_at or run.finished_at)).total_seconds()
+            await self._emit_run(uow, ctx, "pipeline.run.succeeded", run, {
+                "duration_s": duration, "output_dataset_urns": run.output_dataset_urns,
+                "metrics": run.metrics})
+            await self._emit_status_changed(uow, ctx, run, prev)
 
     async def _build_training_spec(self, tenant_id, run, template, version) -> TrainingSpec:
         params = dict(run.run_parameters or {})

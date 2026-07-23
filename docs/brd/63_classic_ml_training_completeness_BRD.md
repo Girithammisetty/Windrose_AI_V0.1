@@ -1,6 +1,6 @@
 # BRD 63 — Classic-ML training completeness
 
-**Status:** in-progress — 2026-07-23 · part of the [Nemesis→Datacern parity initiative](62_nemesis_parity_index.md)
+**Status:** DONE — 2026-07-23 · part of the [Datacern pipeline/ML parity index](62_pipeline_ml_parity_index.md)
 **Owner:** platform · **Service:** `pipeline-orchestrator` (executor) + `agent-runtime` (agent)
 **Gaps closed:** M1 (hyperparameter tuning), M5 (cross-validation), M6 (in-training
 feature selection), M4 (real LightGBM), M8 (regularized linear regression), M7
@@ -12,22 +12,22 @@ feature selection), M4 (real LightGBM), M8 (regularized linear regression), M7
 
 Datacern's `LocalTrainingExecutor` (`app/executor/local.py`) trains a single
 estimator per run and computes a thin metric set. Six classical-ML capabilities
-Nemesis ships in production are missing or stubbed:
+ ships in production are missing or stubbed:
 
-- **HPO (M1)** — Nemesis runs real grid + random search over per-algorithm ranges
+- **HPO (M1)** —  runs real grid + random search over per-algorithm ranges
   with a time budget, refits + registers the best. Datacern's `hyperparameter-search`
   component exists in the catalog but the executor **pops `n_trials`/`cv_folds` and
   does a single fit** — no optuna/grid/random anywhere.
-- **Cross-validation (M5)** — Nemesis does k-fold / predefined-split CV inside HPO;
+- **Cross-validation (M5)** —  does k-fold / predefined-split CV inside HPO;
   Datacern collapses it with M1.
-- **Feature selection (M6)** — Nemesis has wrapper-method selection (Sequential /
+- **Feature selection (M6)** —  has wrapper-method selection (Sequential /
   Random column subset) bound to training; Datacern only has filter operators as
   standalone pipeline stages, nothing bound to the fit.
 - **Real LightGBM (M4)** — Datacern's `light_gbm` maps to sklearn
   `HistGradientBoostingClassifier`, not the LightGBM library.
-- **Regularized linear (M8)** — Datacern's `linear_regression` is plain OLS; Nemesis
+- **Regularized linear (M8)** — Datacern's `linear_regression` is plain OLS; 
   offers Ridge / Lasso / ElasticNet.
-- **Rich eval metrics (M7)** — Nemesis logs ROC AUC + confusion matrix (classification),
+- **Rich eval metrics (M7)** —  logs ROC AUC + confusion matrix (classification),
   explained_variance + MAE (regression), Davies-Bouldin + Calinski-Harabasz
   (clustering). Datacern logs only accuracy/f1/r2/rmse/silhouette.
 
@@ -37,7 +37,7 @@ and live-verifiable on a Mac via the existing training run path.
 ## Design
 
 1. **`app/executor/tuning.py` (new)** — pure, dependency-injected HPO:
-   `search_space(algorithm)` (per-algorithm grid/distribution matching Nemesis's
+   `search_space(algorithm)` (per-algorithm grid/distribution matching 's
    `DEFAULT_RANGES`), and `run_search(base_estimator, algorithm, X, y, *, kind,
    n_trials, cv_folds, scoring)` returning `(best_estimator, best_params, cv_score)`
    via sklearn `GridSearchCV` / `RandomizedSearchCV` with real k-fold CV. Feature
@@ -71,7 +71,7 @@ extension + live-verify through the real training run path.
 ### inc1 — executor: HPO / CV / feature-selection / LightGBM / regularized-linear / rich-metrics — DONE
 
 - **`app/executor/tuning.py` (new)** — real HPO: `search_space` (per-algorithm
-  grid/dist matching Nemesis DEFAULT_RANGES), `run_search` (sklearn
+  grid/dist matching  DEFAULT_RANGES), `run_search` (sklearn
   `GridSearchCV`/`RandomizedSearchCV` with real k-fold CV → best_estimator +
   best_params + cv_score; honest single-fit fallback when the space is empty or rows
   < folds×2), `wrap_feature_selection` (`SequentialFeatureSelector`/`SelectKBest`

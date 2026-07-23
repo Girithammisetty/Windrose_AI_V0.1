@@ -1,7 +1,6 @@
 """BRD 64 (M2) — REAL time-series forecasting via Nixtla StatsForecast, replacing
 the LinearRegression stub the `stats_forecast` algorithm used to fall back to.
-
-Mirrors Nemesis's forecasting component: AutoARIMA / AutoETS / AutoCES / AutoTheta
+Forecasting component: AutoARIMA / AutoETS / AutoCES / AutoTheta
 model families, configurable season length + horizon + frequency, prediction
 intervals (confidence level), and a holdout backtest for MAE/RMSE. Pure functions —
 the executor calls `run_forecast(rows, params)`; no state, no IO.

@@ -108,7 +108,7 @@ def test_handle_missing_values_all_strategies(strategy):
 
 def test_handle_missing_values_directional_fill():
     # previous_existing = ffill (carries the last seen value forward); next_existing =
-    # bfill (pulls the next value back) — Nemesis semantics (edge gaps may remain).
+    # bfill (pulls the next value back) —  semantics (edge gaps may remain).
     df = pd.DataFrame({"y": [1.0, np.nan, 3.0, np.nan, 5.0]})
     prev = run_operator("handle-missing-values", [df],
                         {"strategy": "previous_existing", "columns": ["y"]})[0]

@@ -109,7 +109,7 @@ def _lightgbm_classifier(p: dict):
 
 def _linear_regressor(params: dict):
     """BRD 63 (M8): plain OLS by default; `regularization` ∈ {ridge,lasso,elasticnet}
-    selects the penalized variant (Nemesis RegularizedLinearRegression parity)."""
+    selects the penalized variant ( RegularizedLinearRegression parity)."""
     from sklearn.linear_model import ElasticNet, Lasso, LinearRegression, Ridge
 
     reg = str((params or {}).get("regularization", "none")).lower()

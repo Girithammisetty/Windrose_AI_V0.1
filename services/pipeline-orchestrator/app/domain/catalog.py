@@ -53,7 +53,7 @@ _OVERRIDES: dict[str, dict] = {
         "min_inputs": 2, "max_inputs": 2,
         "parameters": {
             "join_type": {"type": "string", "format": "enum",
-                          # BRD 62 (P3): 'right' added for Nemesis parity.
+                          # BRD 62 (P3): 'right' added for parity.
                           "enum": ["inner", "left", "outer", "right"],
                           "required": True, "default": "inner"},
             # A column of the input dataset (data-aware: resolved against its schema).
@@ -74,7 +74,7 @@ _OVERRIDES: dict[str, dict] = {
     "handle-missing-values": {
         "parameters": {
             # BRD 62 (P4): linear_interpolation / expression / previous_existing /
-            # next_existing added for Nemesis parity.
+            # next_existing added for  parity.
             "strategy": {"type": "string",
                          "enum": ["mean", "median", "most_frequent", "constant", "drop",
                                   "linear_interpolation", "expression",

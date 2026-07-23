@@ -1,6 +1,6 @@
 # BRD 62 — Local pipeline execution engine + operator parity
 
-**Status:** in-progress — 2026-07-23 · part of the [Nemesis→Datacern parity initiative](62_nemesis_parity_index.md)
+**Status:** DONE — 2026-07-23 · part of the [Datacern pipeline/ML parity index](62_pipeline_ml_parity_index.md)
 **Owner:** platform · **Service:** `pipeline-orchestrator`
 **Gaps closed:** P1 (data-prep operators don't execute without Argo), P3 (right join),
 P4 (missing-value methods), P5 (stratified split).
@@ -18,11 +18,11 @@ only happens inside Argo containers — the inline `LocalTrainingExecutor`
 any deployment without a K8s+Argo cluster (the default Mac/dev deployment, and any
 BYO-infra customer that hasn't wired Argo), a `data_prep` / `feature_engineering` /
 `profiling` pipeline **cannot run end to end** — the whole classic data-pipeline
-surface is dark. Legacy Nemesis runs all of these as first-class pandas components in
+surface is dark. Legacy  runs all of these as first-class pandas components in
 production. This is the single highest-leverage parity gap: it unblocks the entire
 classic-pipeline domain locally and makes it e2e-testable on a Mac with no infra.
 
-Three small operator deltas ride along (same files, same test): Nemesis `join-data`
+Three small operator deltas ride along (same files, same test):  `join-data`
 supports a **right** join, `handle-missing-values` supports **linear_interpolation /
 expression / previous_existing / next_existing** beyond mean/median/most_frequent/
 constant/drop, and `split-data` supports **stratified** splits with a `random_state`.
@@ -147,3 +147,28 @@ merchant" the model composed a governed `pipeline.template.create` proposal with
 valid DAG — `read-from-warehouse → handle-missing-values → filter-data →
 select-columns → one-hot-encoder → write-to-warehouse` (136 tokens). Proposal-mode,
 tier write-proposal.
+
+### inc3 — run-lifecycle execution + durable persistence — DONE
+
+`RunService.drive_run` now branches on pipeline type: `data_prep` / `profiling` /
+`scheduled` runs execute the operator DAG **locally end to end** via
+`LocalPipelineExecutor` (real dataset rows read through the existing
+`dataset_reader`; each `write-to-warehouse` node persists through the BRD 65
+warehouse sink) and finish `succeeded` with real `output_dataset_urns` + per-node
+`components_status` — the classic-pipeline run path, distinct from training, with
+**no Argo**. A node/sink failure surfaces as a `failed` run (never a silent
+success). Persistence is real + durable (parquet to the local object store / MinIO
+via the `objectstore` sink; cloud warehouses config-gated per BRD 65) — closing the
+"computed output has nowhere to land" gap; the pure-pandas DAG runs inline (no
+thread hand-off, unlike the heavy training path).
+
+**Test:** `tests/unit/test_dataprep_run.py` (2) — a `data_prep` run (read → filter →
+select-columns → write) drives to `succeeded` with a persisted `warehouse/…` output
+ref, correct `output_rows`, and all nodes `Succeeded`; a bad-operator run drives to
+`failed` (fail-closed). Full pipeline-orchestrator suite green (**161**).
+
+**Note (authoring follow-up):** the executor honors rich operator params (proven by
+inc1's 27 tests), but the catalog only declares JSON-schema params for a subset of
+operators today, so operators like `group-by` can't yet be authored with params
+through strict validation. Declaring the remaining operator param schemas is a small
+catalog-completeness follow-up (execution is already complete).

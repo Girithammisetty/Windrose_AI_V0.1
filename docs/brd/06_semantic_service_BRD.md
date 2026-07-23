@@ -2,7 +2,7 @@
 
 **Service:** semantic-service · **Language:** Python (FastAPI) · **Phase:** 2
 **Inherits:** `00_MASTER_BRD.md` · **Architecture:** `../../DATACERN_PLATFORM_ARCHITECTURE.md` §5, §6, §8.4
-**V1 sources mined:** `NEMESIS_SERVER_AGGREGATION_SPEC.md` (agg-fn whitelist, per-chart translation, identifier quoting, drilldown), `ido/app/models/{query,saved_query}.rb`, chart `config/meta` conventions (`config.x/y/dataseries`, `meta.ySeries[].aggregateType`, `meta.aggregate.type/checked`)
+**V1 sources mined:** `_SERVER_AGGREGATION_SPEC.md` (agg-fn whitelist, per-chart translation, identifier quoting, drilldown), `ido/app/models/{query,saved_query}.rb`, chart `config/meta` conventions (`config.x/y/dataseries`, `meta.ySeries[].aggregateType`, `meta.aggregate.type/checked`)
 
 ---
 
@@ -10,7 +10,7 @@
 
 **Purpose.** semantic-service owns the governed **semantic layer**: per-workspace **semantic models** (entities bound to datasets, dimensions, measures with aggregation definitions, join paths) and **verified queries** (curated NL↔SQL pairs with an approval workflow). Its core product is the **compile API**: `(metric + dimensions + filters + time grain) → safe SQL`, executed by query-service. **One definition, two consumers:** chart-service renders every aggregating chart through compile, and the analytics agent answers NL questions through the same definitions and MCP read tools — a metric can never mean two different things in a chart and a chat answer.
 
-**Business value.** In V1, aggregation semantics lived in three places at once: browser JavaScript (`aggregateData` in `ui-core/chart.js`), a proposed chart-service `ChartSqlTranslator` (aggregation spec), and ad-hoc saved SQL — with the agg-fn list, identifier quoting, and column allowlisting re-implemented per consumer. The rebuild moves the aggregation SQL translation rules of `NEMESIS_SERVER_AGGREGATION_SPEC.md` **into this service** as the single compiler, adds governance (definitions are reviewed, versioned, approved), and gives agents a grounded, injection-proof way to query metrics.
+**Business value.** In V1, aggregation semantics lived in three places at once: browser JavaScript (`aggregateData` in `ui-core/chart.js`), a proposed chart-service `ChartSqlTranslator` (aggregation spec), and ad-hoc saved SQL — with the agg-fn list, identifier quoting, and column allowlisting re-implemented per consumer. The rebuild moves the aggregation SQL translation rules of `_SERVER_AGGREGATION_SPEC.md` **into this service** as the single compiler, adds governance (definitions are reviewed, versioned, approved), and gives agents a grounded, injection-proof way to query metrics.
 
 **In scope:** semantic model CRUD + versioning + publication; entities/dimensions/measures/join paths; verified queries + approval workflow; compile API with safety rules (agg whitelist, identifier quoting, column allowlisting, injection-proof filters); model bootstrap from existing chart configs and saved queries; MCP read tools; dual-consumer contracts.
 

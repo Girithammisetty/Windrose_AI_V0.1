@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -49,6 +50,12 @@ class Settings(BaseSettings):
     s3_secret_key: str = "datacern_dev"
     s3_region: str = "us-east-1"
     artifacts_bucket: str = "datacern-pipelines"
+    # BRD 65: warehouse write-back sink backend (local | objectstore | athena |
+    # bigquery | synapse). Default `objectstore` (real MinIO/S3 on Mac); cloud
+    # backends read their connection from `warehouse_conn[<name>]` and honestly
+    # raise DependencyUnavailable when unconfigured.
+    warehouse_sink: str = "objectstore"
+    warehouse_conn: dict = Field(default_factory=dict)
     kafka_bootstrap_servers: str = "localhost:9092"
     redis_url: str = "redis://localhost:6379/0"
     opa_url: str = "http://localhost:8281"

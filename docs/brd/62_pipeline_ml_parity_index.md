@@ -1,9 +1,9 @@
-# BRD 62–65 — Nemesis → Datacern Pipeline & ML Parity (initiative index)
+# BRD 62–65 —  → Datacern Pipeline & ML Parity (initiative index)
 
-**Status:** in-progress — 2026-07-23
-**Owner:** platform · **Driver:** cross-verification of legacy Nemesis (Argo + pandas
+**Status:** DONE — 2026-07-23 · all 4 BRDs (62-65) landed; 13/13 gaps closed
+**Owner:** platform · **Driver:** cross-verification of legacy  (Argo + pandas
 component platform, rich classical-ML catalog) against Datacern's rebuilt services
-found real gaps where Nemesis has working production code and Datacern has nothing,
+found real gaps where  has working production code and Datacern has nothing,
 a placeholder, or code gated behind infra it lacks locally.
 
 This index enumerates every gap as a tracked BRD. Each BRD follows the repo
@@ -16,7 +16,7 @@ under the same four-eyes / WORM governance as every other governed write.
 
 ## The parity gaps (source: 2026-07-23 cross-verification)
 
-| ID | Gap | Nemesis today | Datacern today | → BRD |
+| ID | Gap |  today | Datacern today | → BRD |
 |----|-----|---------------|----------------|-------|
 | P1 | Data-prep operators don't execute locally | 34 pandas operators run in prod (Argo) | 31 operators cataloged/validated/compiled, but the inline executor only runs **training**; per-operator transforms execute **only via infra-gated Argo** | **62** |
 | P3 | `right` join | inner/outer/left/right | inner/left/outer | 62 |
@@ -32,7 +32,7 @@ under the same four-eyes / WORM governance as every other governed write.
 | M3 | Statistical (z-score) anomaly engine | 8 metric components + composite score | non-runnable V1 placeholder | 64 |
 | P2 | Warehouse write-back (Athena/BigQuery/Synapse) | production `warehouse_writer_{aws,gcp,azure}` | Iceberg bronze only; warehouse adapter is `ENotImplemented` stub | **65** |
 
-Shared gaps NOT counted as regressions (Nemesis lacks them too): online/real-time
+Shared gaps NOT counted as regressions ( lacks them too): online/real-time
 serving (KServe 501), classic-ML prediction/feature drift. Tracked as future notes
 in the relevant BRD, not built here.
 

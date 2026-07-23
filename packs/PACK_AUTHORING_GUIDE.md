@@ -13,7 +13,7 @@
 > healthcare-provider-rcm, chargeback-representment) are the canonical form.
 
 You are authoring ONE capability pack (a directory under `Datacern-ai/packs/<pack-name>/`)
-plus ONE BRD (`docs/brd/<NN>_<slug>_pack_BRD.md` at the Nemesis repo root). Packs are
+plus ONE BRD (`docs/brd/<NN>_<slug>_pack_BRD.md` at the  repo root). Packs are
 declarative content installed through Core public APIs by packctl — ZERO Core changes.
 
 **Canonical reference pack: `packs/card-disputes/` — read EVERY file in it first and
@@ -163,7 +163,7 @@ unmodified Core, deferred ledgered), §9 Out of scope / future.
 
 ## Self-verification before you finish (MANDATORY)
 
-1. `cd /Users/girithammisetty/Projects/Nemesis/Datacern-ai/packs && ../deploy/e2e/.venv/bin/python -m packctl.cli validate <pack-name>` → must print "manifest ok".
+1. `cd /Users/girithammisetty/Projects//Datacern-ai/packs && ../deploy/e2e/.venv/bin/python -m packctl.cli validate <pack-name>` → must print "manifest ok".
 2. Run a python csv check: FKs resolve, 6 open rows match queue row_pks, open⇒pending,
    closed⇒bucket closed, every charted dimension/filter value has ≥1 row, chargeback-
    style filtered measures non-zero where charted.

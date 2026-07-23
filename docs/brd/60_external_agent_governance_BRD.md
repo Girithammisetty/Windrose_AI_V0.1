@@ -321,6 +321,18 @@ toolset. All the other controls still held (propose-only, four-eyes, the tier
 ceiling). **Follow-up:** register external agents with an explicit toolset so the
 allow-list binds — a WS1/registration concern, tracked for the next increment.
 
+### Follow-up — toolset allow-list closure — DONE (2026-07-23)
+
+The registration gap above is closed. `acme-ext-bot` is now registered with an
+explicit `AgentVersion.toolset` (`[case.apply_disposition]`, `graph_ref=external`,
+published) via the platform store, and the external ingress was hardened to fail
+closed for the strictly-less-trusted external boundary: an external agent with no
+registered, non-empty toolset is refused `403 GUARDRAIL_VIOLATION` before any
+run/proposal exists (internal agents keep their "empty = no write surface"
+semantics). Live-verified through the real `datacern-agent` SDK: an off-allow-list
+propose → `403 GUARDRAIL_VIOLATION` (no row), an on-list propose → `200 pending`.
+See [docs/initiatives/brd60-external-agent-allowlist-closure.md](../initiatives/brd60-external-agent-allowlist-closure.md).
+
 ### WS2 — self-service external-agent credential + token exchange — DONE
 
 Until now a customer's agent could only obtain an `agent_autonomous` token from a

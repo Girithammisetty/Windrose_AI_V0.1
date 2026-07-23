@@ -1,6 +1,6 @@
 # BRD 64 — Time-series forecasting + statistical anomaly detection
 
-**Status:** DONE — 2026-07-23 · part of the [Nemesis→Datacern parity initiative](62_nemesis_parity_index.md)
+**Status:** DONE — 2026-07-23 · part of the [Datacern pipeline/ML parity index](62_pipeline_ml_parity_index.md)
 **Owner:** platform · **Service:** `pipeline-orchestrator` (executor) + `agent-runtime` (agent)
 **Gaps closed:** M2 (real time-series forecasting), M3 (statistical z-score anomaly engine).
 
@@ -11,10 +11,10 @@
 Two of Datacern's catalog algorithms were labeled but not real:
 
 - **`stats_forecast` (M2)** — labeled "StatsForecast" but the local executor mapped it
-  to `LinearRegression`. Nemesis ships real Nixtla StatsForecast: AutoARIMA / AutoETS
+  to `LinearRegression`.  ships real Nixtla StatsForecast: AutoARIMA / AutoETS
   / AutoCES / AutoTheta, season length, horizon, prediction intervals, MSTL.
 - **`z_score_based_anomaly_detection` (M3)** — a `runnable=False` V1 placeholder
-  (BR-14) that fell back to IsolationForest if reached. Nemesis ships a real
+  (BR-14) that fell back to IsolationForest if reached.  ships a real
   statistics engine: per-group metric components (statistic / entropy / ratio /
   unique / simple_value) each z-scored against the population, combined by a weighted
   composite.

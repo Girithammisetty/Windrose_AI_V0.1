@@ -1,5 +1,5 @@
 """BRD 63 — real hyperparameter search + cross-validation + wrapper feature
-selection for the local training executor (closing M1/M5/M6). Nemesis runs grid /
+selection for the local training executor (closing M1/M5/M6).  runs grid /
 random search over per-algorithm ranges with k-fold CV, refits the best, and can
 bind a wrapper feature selector to the fit; this module gives Datacern the same,
 built on scikit-learn's `GridSearchCV` / `RandomizedSearchCV` / `SequentialFeature
@@ -12,7 +12,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Per-algorithm search spaces (mirror Nemesis DEFAULT_RANGES; keys are the sklearn/
+# Per-algorithm search spaces (mirror  DEFAULT_RANGES; keys are the sklearn/
 # xgboost estimator param names so they apply directly to the built estimator).
 _SEARCH_SPACES: dict[str, dict[str, list]] = {
     "xgboost": {"n_estimators": [50, 100, 200], "max_depth": [3, 5, 7],

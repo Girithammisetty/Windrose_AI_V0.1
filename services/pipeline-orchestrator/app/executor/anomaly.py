@@ -1,5 +1,5 @@
 """BRD 64 (M3) — the z-score STATISTICAL anomaly engine, replacing Datacern's
-non-runnable `z_score_based_anomaly_detection` placeholder. Mirrors Nemesis's
+non-runnable `z_score_based_anomaly_detection` placeholder. Mirrors 's
 z_score_based family: per-group metric components, each scored by how many standard
 deviations it sits from the population mean (z-score), combined by a weighted
 composite. Rule/statistics-based (no model fit) — the complement to the sklearn
