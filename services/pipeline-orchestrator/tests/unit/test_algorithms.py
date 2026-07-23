@@ -6,7 +6,7 @@ import pytest
 
 from app.domain.algorithms import instantiate
 from app.domain.catalog import seed_algorithm_templates
-from app.domain.errors import TemplateNotRunnable, ValidationFailed
+from app.domain.errors import ValidationFailed
 
 ALGOS = {a.name: a for a in seed_algorithm_templates()}
 

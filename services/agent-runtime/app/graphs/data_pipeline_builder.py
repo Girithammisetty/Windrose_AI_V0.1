@@ -20,7 +20,6 @@ from __future__ import annotations
 
 import json
 import re
-from typing import Any
 
 from langgraph.graph import END, StateGraph
 
@@ -191,7 +190,8 @@ def _normalise_plan(parsed: dict, catalog: list[str], state: dict) -> dict:
             operators.append({"component": comp,
                               "parameters": params if isinstance(params, dict) else {}})
     name = parsed.get("name")
-    name = str(name).strip()[:80] if isinstance(name, str) and name.strip() else "Data prep pipeline"
+    name = (str(name).strip()[:80] if isinstance(name, str) and name.strip()
+            else "Data prep pipeline")
     rationale = parsed.get("rationale")
     if not isinstance(rationale, str) or not rationale.strip():
         rationale = (f"Composed a {len(operators)}-operator data-prep pipeline from the "

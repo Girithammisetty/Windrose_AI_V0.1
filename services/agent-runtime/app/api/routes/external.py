@@ -71,8 +71,8 @@ async def submit_external_intent(request: Request, body: dict = Body(...)):
 
     try:
         agent_version = int(principal.agent_version)
-    except (TypeError, ValueError):
-        raise PermissionDenied("agent token agent_version must be an integer")
+    except (TypeError, ValueError) as exc:
+        raise PermissionDenied("agent token agent_version must be an integer") from exc
 
     # External agents are strictly LESS trusted than the platform's own graphs,
     # so a declared toolset allow-list is MANDATORY for them: an external agent

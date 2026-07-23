@@ -13,10 +13,10 @@ from __future__ import annotations
 from datetime import UTC
 
 from app.constants import TOPIC_PROPOSAL
+from app.domain import guardrail as guardrail_mod
 from app.domain import policy as policy_mod
 from app.domain.canonical import args_digest as compute_digest
 from app.domain.entities import Proposal, new_uuid, now
-from app.domain import guardrail as guardrail_mod
 from app.domain.errors import (
     Conflict,
     GuardrailViolation,

@@ -141,7 +141,8 @@ def test_scaling_and_pca_and_expr():
     assert abs(z["x"].mean()) < 1e-9
     p = run_operator("pca", [_df()], {"columns": ["x", "id"], "n_components": 1})[0]
     assert "pc_1" in p.columns
-    e = run_operator("python-expression", [_df()], {"expression": "x + id", "output_column": "s"})[0]
+    e = run_operator("python-expression", [_df()],
+                     {"expression": "x + id", "output_column": "s"})[0]
     assert e["s"].tolist() == [11.0, 22.0, 33.0, 44.0]
     lc = run_operator("linear-combination", [_df()],
                       {"weights": {"x": 1.0, "id": 2.0}, "output_column": "lc"})[0]

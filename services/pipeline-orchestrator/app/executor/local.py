@@ -41,7 +41,6 @@ def _build_estimator(algorithm: str, params: dict):
         MeanShift,
     )
     from sklearn.ensemble import (
-        HistGradientBoostingClassifier,
         IsolationForest,
         RandomForestClassifier,
         RandomForestRegressor,

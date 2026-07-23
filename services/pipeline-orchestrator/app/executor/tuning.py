@@ -56,7 +56,6 @@ def run_search(base_estimator, algorithm, X, y, *, kind="grid", n_trials=20,
     """
     from sklearn.model_selection import (
         GridSearchCV,
-        ParameterSampler,
         RandomizedSearchCV,
     )
 

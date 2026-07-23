@@ -10,7 +10,6 @@ import pytest
 
 from app.executor import anomaly, forecasting
 
-
 # ---- M2: forecasting ----
 
 def _seasonal_rows(n=60, period=12):
