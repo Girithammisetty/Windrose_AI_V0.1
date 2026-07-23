@@ -36,6 +36,12 @@ class PipelineOrchestratorClient:
         data = await self._get(f"/api/v1/algorithm-templates/{algorithm}", auth_token)
         return data if isinstance(data, dict) else {}
 
+    async def list_components(self, *, tenant_id: str, auth_token: str) -> list[dict]:
+        """The data-prep operator catalog (BRD 62) — grounding for the
+        data_pipeline_builder agent. ``GET /api/v1/components``."""
+        data = await self._get("/api/v1/components", auth_token)
+        return data if isinstance(data, list) else []
+
     async def get_run(self, *, tenant_id: str, run_id: str, auth_token: str) -> dict:
         """One pipeline run's status/metrics/model refs (``GET /api/v1/runs/{id}``)
         — the ml-engineer agent's poll surface. {} on failure (degrades, never

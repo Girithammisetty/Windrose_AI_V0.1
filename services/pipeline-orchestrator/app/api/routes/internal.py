@@ -48,6 +48,7 @@ class McpInvokeRequest(BaseModel):
 # is not a permission bypass, just a durable record of a human's APPROVE).
 _MCP_TOOL_ACTIONS = {
     "pipeline.template.create_from_algorithm": "pipeline.template.create",
+    "pipeline.template.create": "pipeline.template.create",
 }
 
 
@@ -86,6 +87,13 @@ async def mcp_invoke(request: Request, body: McpInvokeRequest,
                 ctx, algorithm=args["algorithm"], mode=args.get("mode", "train"),
                 dataset_refs=args["dataset_refs"], params=args.get("params", {}),
                 workspace_id=args.get("workspace_id"), name=args.get("name"))
+        elif body.tool_id == "pipeline.template.create":
+            args = body.args
+            out = await c.mcp.template_create(
+                ctx, name=args["name"],
+                pipeline_type=args.get("pipeline_type", "data_prep"),
+                definition=args["definition"], workspace_id=args.get("workspace_id"),
+                model_type=args.get("model_type"))
         else:
             return _mcp_output(404, {"error": f"unknown tool_id {body.tool_id!r}"})
     except AppError as exc:

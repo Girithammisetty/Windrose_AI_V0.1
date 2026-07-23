@@ -252,6 +252,19 @@ class FakePipelineReader:
         self.calls.append({"op": "list_algorithms", "tenant_id": tenant_id})
         return self._algorithms
 
+    async def list_components(self, *, tenant_id, auth_token) -> list[dict]:
+        self.calls.append({"op": "list_components", "tenant_id": tenant_id})
+        return [
+            {"name": "read-from-warehouse", "component_type": 0},
+            {"name": "filter-data", "component_type": 1},
+            {"name": "group-by", "component_type": 1},
+            {"name": "select-columns", "component_type": 1},
+            {"name": "handle-missing-values", "component_type": 1},
+            {"name": "one-hot-encoder", "component_type": 1},
+            {"name": "join-data", "component_type": 1},
+            {"name": "write-to-warehouse", "component_type": 0},
+        ]
+
     async def get_algorithm(self, *, tenant_id, algorithm, auth_token) -> dict:
         self.calls.append({"op": "get_algorithm", "algorithm": algorithm})
         return {**self._algorithm, "name": algorithm}

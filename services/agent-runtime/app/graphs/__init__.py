@@ -3,6 +3,7 @@
 from app.graphs import (  # noqa: F401
     analytics,
     dashboard_designer,
+    data_pipeline_builder,
     governance,
     inference_agent,
     meta_router,
@@ -30,6 +31,8 @@ RUNNERS = {
     "dashboard-designer": ("dashboard_designer.v1",
                            dashboard_designer.run_dashboard_designer),
     "model-training": ("model_training.v1", model_training.run_model_training),
+    "data-pipeline-builder": ("data_pipeline_builder.v1",
+                              data_pipeline_builder.run_data_pipeline_builder),
     "ml-engineer": ("ml_engineer.v1", ml_engineer.run_ml_engineer),
     # BRD 53: the shared graph tenant CUSTOM agents run on. Custom agents get a
     # distinct agent_key but all resolve to this same run function; RUNNERS maps

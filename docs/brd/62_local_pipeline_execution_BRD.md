@@ -105,6 +105,35 @@ runs** (read→filter→group-by→write with injected IO, fan-out split, and no
 surfacing) proving a data-prep pipeline executes with **no Argo/infra**. Full
 pipeline-orchestrator suite green (**125 passed**), no regression.
 
-_inc2 (next): wire `LocalPipelineExecutor` into `drive_run` for the non-training
-pipeline types (real dataset-service reader/writer) + the `data_pipeline_builder`
-agent + a live end-to-end run._
+### inc2 — `data_pipeline_builder` agent + generic pipeline-create tool — DONE
+
+The NEW agent (`agent-runtime/app/graphs/data_pipeline_builder.py`, registered as
+`data_pipeline_builder.v1` + RUNNERS key `data-pipeline-builder`). `model_training`
+builds *training* pipelines; nothing built *data-prep* pipelines — this is the
+genuinely new task type. It grounds on the live operator catalog
+(`PipelineOrchestratorClient.list_components` → `GET /components`, new) + workspace
+memory, has the real model choose an ORDERED operator list (+ params), and **wires
+them into a validated LINEAR DAG deterministically** (`read-from-warehouse → op₁ → …
+→ opₙ → write-to-warehouse`) — so the emitted definition always passes the same DAG
+validator a UI submit runs, and an operator the model hallucinates is dropped (fail
+safe). It PROPOSES the create as a `pipeline.template.create` WriteIntent (proposal-
+mode → four-eyes → WORM).
+
+Governed execution path wired end to end: a NEW generic **`pipeline.template.create`**
+write-proposal tool on the McpFacade (`template_create`, reusing `TemplateService.
+create` so the DAG is validated identically to a UI submit) + the internal MCP-invoke
+handler branch + `_MCP_TOOL_ACTIONS` mapping (the `pipeline.template.create` rbac
+action already exists in the MANIFEST). New prompt `data_pipeline_builder.system.md`
+registered in the prompt registry + agent catalog.
+
+**Test:** `tests/unit/test_data_pipeline_builder_graph.py` (3) — governed create
+intent with a valid linear DAG (read→ops→write, n-1 edges, dataset URN on the read
+node), drops a hallucinated operator, grounds on catalog + memory, degrades to a
+valid read→write proposal on bad model JSON. pipeline-orchestrator suite green
+(**152**, incl. facade/internal changes); agent-runtime graph/roster/prompt tests
+green (**71**). No regression.
+
+_inc3 (deferred, infra): run-lifecycle execution of the compiled data-prep DAG via
+`LocalPipelineExecutor` in `drive_run`, persisting the computed output as a durable
+dataset version — needs the Iceberg-commit write path (ingestion-service), the one
+genuinely infra-heavy leg of this BRD._

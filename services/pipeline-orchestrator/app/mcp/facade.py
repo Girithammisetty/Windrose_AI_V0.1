@@ -15,6 +15,7 @@ class McpFacade:
     READ_TOOLS = ["pipeline.components.list", "pipeline.templates.get",
                   "pipeline.runs.get"]
     WRITE_PROPOSAL_TOOLS = ["pipeline.template.create_from_algorithm",
+                            "pipeline.template.create",
                             "pipeline.run.submit"]
 
     def __init__(self, catalog, templates, runs, instantiation):
@@ -43,6 +44,17 @@ class McpFacade:
         template, version = await self.instantiation.instantiate_pipeline(
             ctx, algorithm, mode=mode, dataset_refs=dataset_refs, params=params,
             workspace_id=workspace_id, name=name)
+        return template_payload(template, version)
+
+    async def template_create(self, ctx, *, name, pipeline_type, definition, workspace_id,
+                              model_type=None) -> dict:
+        """BRD 62: create a GENERIC data-prep / feature-engineering pipeline from a
+        full DAG definition (nodes + edges). Validated identically to a UI submission
+        (TemplateService.create runs the DAG validator) — the data_pipeline_builder
+        agent's proposal, on approval, materializes a real pipeline template."""
+        template, version = await self.templates.create(ctx, {
+            "name": name, "pipeline_type": pipeline_type, "definition": definition,
+            "workspace_id": workspace_id, "model_type": model_type})
         return template_payload(template, version)
 
     async def run_submit(self, ctx, *, template_id, run_parameters) -> dict:

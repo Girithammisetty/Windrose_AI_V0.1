@@ -35,6 +35,7 @@ VERSIONS: dict[str, int] = {
     "onboarding.system": 1,
     "model_training.system": 1,
     "ml_engineer.system": 1,
+    "data_pipeline_builder.system": 1,
 }
 
 # agent catalog key -> its system-prompt id (drives catalog prompt_refs wiring).
@@ -47,6 +48,7 @@ AGENT_SYSTEM_PROMPT: dict[str, str] = {
     "onboarding": "onboarding.system",
     "dashboard-designer": "dashboard_designer.system",
     "model-training": "model_training.system",
+    "data-pipeline-builder": "data_pipeline_builder.system",
     "ml-engineer": "ml_engineer.system",
     "inference": "inference.system",
     "meta-router": "meta_router.system",
