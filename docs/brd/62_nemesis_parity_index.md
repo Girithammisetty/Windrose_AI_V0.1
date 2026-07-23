@@ -76,6 +76,19 @@ registry (real where locally testable; cloud legs honestly infra-gated, never fa
 
 ---
 
+## Status (2026-07-23)
+
+| BRD | Gaps | State |
+|-----|------|-------|
+| **62** local pipeline execution + operator parity | P1, P3, P4, P5 | **inc1 DONE** (operators + local executor + parity params, 27 tests). inc2 (data_pipeline_builder agent + run-lifecycle persistence) pending — persistence needs the Iceberg-commit write path (ingestion-service), flagged infra follow-up. |
+| **63** classic-ML training completeness | M1, M4, M5, M6, M7, M8 | **DONE** (real HPO/CV/feature-selection/LightGBM/regularized-linear/rich-metrics + `model_training` tuning proposals; 16 tests). |
+| **64** forecasting + statistical anomaly | M2, M3 | **DONE** (real StatsForecast + z-score engine + agent hints; 13 tests). |
+| **65** warehouse write-back sinks | P2 | pending — infra-gated (Athena/BigQuery/Synapse); lowest local value. |
+
+**12 of 13 gaps closed at the code+unit-test level.** Remaining: P2 (BRD 65,
+infra-gated), the BRD 62 `data_pipeline_builder` agent + run-lifecycle persistence,
+and live-verification of 62–64 against the running stack.
+
 ## Sequencing
 62 (foundation — everything classic-pipeline depends on it) → 63 (training depth) →
 64 (forecasting/anomaly) → 65 (warehouse sinks, infra-gated, lowest local value).
