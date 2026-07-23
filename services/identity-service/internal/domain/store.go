@@ -78,6 +78,18 @@ type Store interface {
 	UpsertTenantBranding(ctx context.Context, b *TenantBranding) error
 	DeleteTenantBranding(ctx context.Context, tenantID uuid.UUID) error
 
+	// --- self-service external-agent credentials (BRD 60 WS2) ---
+	CreateExternalAgentKey(ctx context.Context, k *ExternalAgentKey) error
+	// GetExternalAgentKey looks up by the credential id parsed from a presented
+	// key — cross-tenant (the id is globally unique); the exchange verifies the
+	// secret before trusting the row.
+	GetExternalAgentKey(ctx context.Context, id uuid.UUID) (*ExternalAgentKey, error)
+	ListExternalAgentKeys(ctx context.Context, tenantID uuid.UUID) ([]*ExternalAgentKey, error)
+	// RevokeExternalAgentKey deactivates a key; tenant-scoped so an admin can
+	// only revoke their own tenant's credentials.
+	RevokeExternalAgentKey(ctx context.Context, tenantID, id uuid.UUID) error
+	TouchExternalAgentKey(ctx context.Context, id uuid.UUID, t time.Time) error
+
 	// --- per-tenant OIDC IdP config (BYO-P4) ---
 	GetTenantIdpConfig(ctx context.Context, tenantID uuid.UUID) (*TenantIdpConfig, error)
 	// GetTenantIdpConfigByIssuer routes an inbound ID token to its tenant by the

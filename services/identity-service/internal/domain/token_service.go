@@ -2,6 +2,7 @@ package domain
 
 import (
 	"context"
+	"strconv"
 	"sync"
 	"time"
 
@@ -170,6 +171,70 @@ func (s *TokenService) AutonomousToken(ctx context.Context, req AutonomousTokenR
 // ExchangeAPIKey turns a tenant API key into a short-lived typ=service JWT
 // (IDN-FR-032). Revoked keys are rejected via the denylist (AC-11); keys of
 // suspended tenants get TENANT_SUSPENDED (AC-10).
+// ExternalAgentExchange (BRD 60 WS2) is the self-service seam: a customer's
+// own agent presents its per-agent API key (wr_xa_<id>.<secret>, minted by a
+// tenant admin) and receives a short-lived agent_autonomous token bound to the
+// credential's agent identity + scopes. The credential IS the authorization —
+// an admin created it — so this mints purely from the stored row, with no
+// dependency on the agent-registry sync. WS1's ingress still forces every
+// external write through propose-only + four-eyes + the write-proposal tier
+// ceiling, so an autonomous external token can never do anything ungoverned.
+//
+// Unauthenticated by design: the api key IS the credential (like /token/embed
+// and /token/apikey), never a bearer.
+func (s *TokenService) ExternalAgentExchange(ctx context.Context, apiKey, traceID string) (*TokenResponse, error) {
+	id, secret, err := ParseExternalAgentKey(apiKey)
+	if err != nil {
+		return nil, err
+	}
+	if s.Denylist != nil && s.Denylist.IsRevoked(id.String()) {
+		return nil, EUnauthenticated("external agent key revoked")
+	}
+	key, err := s.Store.GetExternalAgentKey(ctx, id)
+	if err != nil {
+		return nil, EUnauthenticated("unknown external agent key")
+	}
+	if !key.Active {
+		return nil, EUnauthenticated("external agent key revoked")
+	}
+	if !VerifySecret(secret, key.SecretHash) {
+		return nil, EUnauthenticated("invalid external agent key")
+	}
+	tenant, err := s.Store.GetTenant(ctx, key.TenantID)
+	if err != nil {
+		return nil, EUnauthenticated("unknown external agent key")
+	}
+	if err := tenantIssuable(tenant); err != nil {
+		if de, ok := AsError(err); ok && de.Code == CodeTenantSuspended {
+			ev := NewEvent("security.suspended_tenant_denied", tenant.ID,
+				Actor{Type: "agent", ID: key.AgentID}, "", s.now(),
+				map[string]any{"credential": "external_agent_key"})
+			ev.TraceID = traceID
+			_ = s.Store.AppendOutbox(ctx, ev)
+		}
+		return nil, err
+	}
+	tok, expiresIn, err := s.Issuer.Issue(Claims{
+		Subject:      "agent:" + key.AgentID + "@" + strconv.Itoa(key.AgentVersion),
+		TenantID:     tenant.ID,
+		Typ:          TypAgentAutonomous,
+		AgentID:      key.AgentID,
+		AgentVersion: strconv.Itoa(key.AgentVersion),
+		Scopes:       key.Scopes,
+	})
+	if err != nil {
+		return nil, err
+	}
+	_ = s.Store.TouchExternalAgentKey(ctx, key.ID, s.now())
+	// The exchange is itself an audited event (a governed credential was used).
+	ev := NewEvent("security.external_agent_token_issued", tenant.ID,
+		Actor{Type: "agent", ID: key.AgentID}, "", s.now(),
+		map[string]any{"key_id": key.ID.String(), "agent_version": key.AgentVersion})
+	ev.TraceID = traceID
+	_ = s.Store.AppendOutbox(ctx, ev)
+	return &TokenResponse{AccessToken: tok, TokenType: "Bearer", ExpiresIn: expiresIn}, nil
+}
+
 func (s *TokenService) ExchangeAPIKey(ctx context.Context, apiKey, traceID string) (*TokenResponse, error) {
 	saID, secret, err := ParseAPIKey(apiKey)
 	if err != nil {

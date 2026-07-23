@@ -94,6 +94,10 @@ func (s *Server) Router() http.Handler {
 		r.Post("/token/embed/oidc", s.handleEmbedOIDC)   // embed-federated SSO: user OIDC id_token (task #84)
 		r.Post("/token/oidc", s.handleOIDCLogin)         // external OIDC id_token in body (BYO-P4)
 		r.Post("/token/agent", s.handleAgentToken) // SPIFFE-gated
+		// BRD 60 WS2: a customer's own agent exchanges a tenant-admin-minted
+		// external-agent key (wr_xa_...) for a short-lived agent_autonomous
+		// token. The key IS the credential (like /token/embed); no bearer.
+		r.Post("/token/agent/external", s.handleExternalAgentTokenExchange)
 
 		// Authenticated API.
 		r.Group(func(r chi.Router) {
@@ -145,6 +149,13 @@ func (s *Server) Router() http.Handler {
 			r.With(s.requireScope(ActUserAdmin)).Put("/tenants/self/branding", s.handleSetTenantBranding)
 			r.With(s.requireScope(ActUserAdmin)).Post("/tenants/self/branding/logo", s.handleUploadTenantLogo)
 			r.With(s.requireScope(ActUserAdmin)).Delete("/tenants/self/branding", s.handleDeleteTenantBranding)
+			// BRD 60 WS2: an admin manages the tenant's external-agent
+			// credentials (mint returns the plaintext key once; list is
+			// metadata-only; delete revokes). Self-scoped on the caller's
+			// tenant claim, tenant-admin gated.
+			r.With(s.requireScope(ActUserAdmin)).Get("/tenants/self/external-agents", s.handleListExternalAgentKeys)
+			r.With(s.requireScope(ActUserAdmin)).Post("/tenants/self/external-agents", s.handleCreateExternalAgentKey)
+			r.With(s.requireScope(ActUserAdmin)).Delete("/tenants/self/external-agents/{id}", s.handleRevokeExternalAgentKey)
 			r.Group(func(r chi.Router) {
 				r.Use(s.requireSuperAdmin)
 				r.Post("/tenants", s.handleCreateTenant)

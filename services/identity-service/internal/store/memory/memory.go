@@ -33,6 +33,7 @@ type Store struct {
 	signingKeys  map[string]*domain.SigningKey
 	embedConfigs map[uuid.UUID]*domain.TenantEmbedConfig
 	branding     map[uuid.UUID]*domain.TenantBranding
+	extAgentKeys map[uuid.UUID]*domain.ExternalAgentKey
 	idpConfigs   map[uuid.UUID]*domain.TenantIdpConfig
 	labels       map[uuid.UUID]map[string]*domain.DisplayLabel
 	idempotency  map[string]*domain.IdempotencyRecord
@@ -54,6 +55,7 @@ func New() *Store {
 		signingKeys:  map[string]*domain.SigningKey{},
 		embedConfigs: map[uuid.UUID]*domain.TenantEmbedConfig{},
 		branding:     map[uuid.UUID]*domain.TenantBranding{},
+		extAgentKeys: map[uuid.UUID]*domain.ExternalAgentKey{},
 		idpConfigs:   map[uuid.UUID]*domain.TenantIdpConfig{},
 		labels:       map[uuid.UUID]map[string]*domain.DisplayLabel{},
 		idempotency:  map[string]*domain.IdempotencyRecord{},
@@ -319,6 +321,60 @@ func (s *Store) DeleteTenantBranding(_ context.Context, tenantID uuid.UUID) erro
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	delete(s.branding, tenantID)
+	return nil
+}
+
+// --- self-service external-agent credentials (BRD 60 WS2) ---
+
+func (s *Store) CreateExternalAgentKey(_ context.Context, k *domain.ExternalAgentKey) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	cp := *k
+	s.extAgentKeys[k.ID] = &cp
+	return nil
+}
+
+func (s *Store) GetExternalAgentKey(_ context.Context, id uuid.UUID) (*domain.ExternalAgentKey, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	k, ok := s.extAgentKeys[id]
+	if !ok {
+		return nil, domain.ENotFound("external agent key")
+	}
+	cp := *k
+	return &cp, nil
+}
+
+func (s *Store) ListExternalAgentKeys(_ context.Context, tenantID uuid.UUID) ([]*domain.ExternalAgentKey, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	var out []*domain.ExternalAgentKey
+	for _, k := range s.extAgentKeys {
+		if k.TenantID == tenantID {
+			cp := *k
+			out = append(out, &cp)
+		}
+	}
+	return out, nil
+}
+
+func (s *Store) RevokeExternalAgentKey(_ context.Context, tenantID, id uuid.UUID) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	k, ok := s.extAgentKeys[id]
+	if !ok || k.TenantID != tenantID {
+		return domain.ENotFound("external agent key")
+	}
+	k.Active = false
+	return nil
+}
+
+func (s *Store) TouchExternalAgentKey(_ context.Context, id uuid.UUID, t time.Time) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if k, ok := s.extAgentKeys[id]; ok {
+		k.LastUsedAt = &t
+	}
 	return nil
 }
 

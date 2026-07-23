@@ -318,3 +318,41 @@ skipped. The enforcement code is correct; the agent config just lacked a
 toolset. All the other controls still held (propose-only, four-eyes, the tier
 ceiling). **Follow-up:** register external agents with an explicit toolset so the
 allow-list binds — a WS1/registration concern, tracked for the next increment.
+
+### WS2 — self-service external-agent credential + token exchange — DONE
+
+Until now a customer's agent could only obtain an `agent_autonomous` token from a
+harness-signed credential — fine for a demo, not a self-service product. WS2
+lets a **tenant admin mint the credential itself** and the customer's agent
+exchange it, with no dependency on the agent-registry sync.
+
+**identity-service (backend):**
+- Migration `0009_external_agent_keys` — a platform-scoped table (`external_agent_keys`,
+  no RLS, `tenant_id` column scopes admin list/revoke) modelled on the
+  service-account key: only the argon2 hash is stored, plaintext shown once.
+- Domain `ExternalAgentKey` + `wr_xa_<id>.<secret>` credential format
+  (`Format`/`Parse`/`NewExternalAgentKey`, reusing `NewAPIKeySecret`/`HashSecret`).
+- `Store` port + memory + postgres implementations (create/get/list/revoke/touch).
+- `TokenService.ExternalAgentExchange` — parse → lookup by id → `Active` +
+  `VerifySecret` → tenant issuable → mint an `agent_autonomous` token carrying the
+  key's `agent_id@version` + declared scopes → `TouchExternalAgentKey` → emit a
+  `security.external_agent_token_issued` audit event. A suspended tenant is denied
+  and audited; the exchange fails **closed** on every bad-credential edge.
+- Routes: `POST /token/agent/external` (unauth edge — the key IS the credential,
+  like `/token/embed`); admin CRUD `GET|POST /tenants/self/external-agents` +
+  `DELETE /tenants/self/external-agents/{id}`, all gated on `identity.user.admin`
+  and self-scoped on the caller's tenant claim. Create returns the plaintext once.
+
+The minted token is still just an identity + scopes — WS1's ingress forces every
+external write through propose-only + four-eyes + the write-proposal tier ceiling
+regardless, so a self-minted credential can never bypass the proposal rails.
+
+**Test:** 5 fixture-harness tests (`handlers_external_agent_test.go`) exercise the
+real HTTP handlers + real store + real argon2 + real JWT issuer end-to-end:
+mint-requires-admin-scope (zero-scope member → 403), exchange-mints-a-Bearer-token,
+malformed/unknown keys all fail closed 401 (never 500, never a token),
+revoke-then-exchange-fails (revoked key → 401), and cross-tenant revoke isolation
+(tenant B's admin gets 404 revoking tenant A's key, and A's key keeps working).
+The listing never serializes `secret_hash`. Full identity-service unit suite green,
+`go vet` clean. Postgres store verified by column-alignment inspection (memory tier
+is the tested path; both share the domain contract).

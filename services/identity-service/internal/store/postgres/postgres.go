@@ -202,6 +202,74 @@ func (s *Store) DeleteTenantBranding(ctx context.Context, tenantID uuid.UUID) er
 	return err
 }
 
+// --- self-service external-agent credentials (BRD 60 WS2) ---
+
+const extAgentKeyCols = `id, tenant_id, agent_id, agent_version, scopes, secret_hash, label, active, created_by, created_at, last_used_at`
+
+func scanExtAgentKey(row pgx.Row) (*domain.ExternalAgentKey, error) {
+	var k domain.ExternalAgentKey
+	if err := row.Scan(&k.ID, &k.TenantID, &k.AgentID, &k.AgentVersion, &k.Scopes,
+		&k.SecretHash, &k.Label, &k.Active, &k.CreatedBy, &k.CreatedAt, &k.LastUsedAt); err != nil {
+		return nil, err
+	}
+	return &k, nil
+}
+
+func (s *Store) CreateExternalAgentKey(ctx context.Context, k *domain.ExternalAgentKey) error {
+	_, err := s.pool.Exec(ctx,
+		`INSERT INTO external_agent_keys (id, tenant_id, agent_id, agent_version, scopes, secret_hash, label, active, created_by)
+		 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+		k.ID, k.TenantID, k.AgentID, k.AgentVersion, k.Scopes, k.SecretHash, k.Label, k.Active, k.CreatedBy)
+	return err
+}
+
+func (s *Store) GetExternalAgentKey(ctx context.Context, id uuid.UUID) (*domain.ExternalAgentKey, error) {
+	k, err := scanExtAgentKey(s.pool.QueryRow(ctx,
+		`SELECT `+extAgentKeyCols+` FROM external_agent_keys WHERE id = $1`, id))
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, domain.ENotFound("external agent key")
+		}
+		return nil, err
+	}
+	return k, nil
+}
+
+func (s *Store) ListExternalAgentKeys(ctx context.Context, tenantID uuid.UUID) ([]*domain.ExternalAgentKey, error) {
+	rows, err := s.pool.Query(ctx,
+		`SELECT `+extAgentKeyCols+` FROM external_agent_keys WHERE tenant_id = $1 ORDER BY created_at DESC`, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []*domain.ExternalAgentKey
+	for rows.Next() {
+		k, err := scanExtAgentKey(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, k)
+	}
+	return out, rows.Err()
+}
+
+func (s *Store) RevokeExternalAgentKey(ctx context.Context, tenantID, id uuid.UUID) error {
+	tag, err := s.pool.Exec(ctx,
+		`UPDATE external_agent_keys SET active = false WHERE id = $1 AND tenant_id = $2`, id, tenantID)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return domain.ENotFound("external agent key")
+	}
+	return nil
+}
+
+func (s *Store) TouchExternalAgentKey(ctx context.Context, id uuid.UUID, t time.Time) error {
+	_, err := s.pool.Exec(ctx, `UPDATE external_agent_keys SET last_used_at = $2 WHERE id = $1`, id, t)
+	return err
+}
+
 // --- per-tenant OIDC IdP config (BYO-P4) ---
 
 const idpCols = `tenant_id, issuer, client_id, discovery_url, enabled, created_at, updated_at`
