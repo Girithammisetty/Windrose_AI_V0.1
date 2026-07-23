@@ -1900,10 +1900,17 @@ export interface ConnectionPreview {
 export type PipelineParamType =
   | "string"
   | "integer"
+  // Backend canonical name for a whole number (catalog `_TYPES` uses `int`, not
+  // `integer`); rendered + validated identically to `integer`.
+  | "int"
   | "number"
   | "boolean"
   | "enum"
   | "object"
+  // Backend canonical name for a JSON object with non-string values (e.g. numeric
+  // weights) — distinct from the `key_value` str→str map; edited as raw JSON like
+  // `object`.
+  | "dictionary"
   | "array"
   // A reference to a workspace dataset (URN string). Rendered as a dataset
   // picker in the builder; validated as a non-empty string like `string`.
