@@ -17,6 +17,7 @@ import { buildContext, type IncomingHeaders } from "./context.js";
 import { makeJwks } from "./auth/jwt.js";
 import { loadManifest } from "./plugins/persistedQueries.js";
 import { initTracing, withServerSpan } from "./tracing.js";
+import { isExternalEdgePath, handleExternalEdge } from "./external/edge.js";
 import { GraphQLError } from "graphql";
 
 /** Max accepted request body. This BFF only ingests GraphQL operations and
@@ -109,6 +110,29 @@ export async function main(): Promise<http.Server> {
       res.writeHead(200, { "content-type": "text/plain" });
       return res.end(`# bff-graphql\nbff_up 1\n`);
     }
+
+    // BRD 60 WS3: public governed edge for a customer's own external agent
+    // (propose + list-tools). A thin authenticated forward to the internal
+    // ingress; it needs the raw body, but NOT the GraphQL context/Apollo path.
+    if (isExternalEdgePath(path)) {
+      let edgeBody = "";
+      if (req.method === "POST") {
+        const declaredLen = Number(headerVal(req.headers["content-length"]) ?? "0");
+        if (declaredLen > MAX_BODY_BYTES) {
+          return json(res, 413, { error: { code: "PAYLOAD_TOO_LARGE", message: "Request body too large" } });
+        }
+        try {
+          edgeBody = await readBody(req);
+        } catch (e) {
+          if (e instanceof PayloadTooLargeError) {
+            return json(res, 413, { error: { code: "PAYLOAD_TOO_LARGE", message: "Request body too large" } });
+          }
+          throw e;
+        }
+      }
+      return handleExternalEdge(req, res, path, edgeBody, { cfg, jwks });
+    }
+
     if (path !== "/graphql") {
       return json(res, 404, { error: { code: "NOT_FOUND", message: "no such route" } });
     }

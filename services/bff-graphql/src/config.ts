@@ -37,6 +37,11 @@ export interface ServiceUrls {
   /** pack-service (BRD 23: capability-pack catalog + governed install lifecycle).
    * Default matches the local harness port (deploy/e2e/config.env PORT_PACK=8309). */
   pack: string;
+  /** tool-plane mcp-gateway DATA plane (POST /mcp, JSON-RPC tools/list|call).
+   * This is the mcp-gateway the external governed edge forwards list-tools to
+   * (BRD 60 WS3) — NOT `toolPlane` (the registry admin plane above). Default
+   * matches the local harness port (deploy/e2e/config.env PORT_GATEWAY=8311). */
+  mcpGateway: string;
 }
 
 export interface Limits {
@@ -137,6 +142,10 @@ export function loadConfig(overrides: Partial<Config> = {}): Config {
     // ai-gateway (LLM gateway admin plane). Default matches the local harness
     // port (deploy/e2e/config.env PORT_AIGW=8312).
     aiGateway: env("AI_GATEWAY_URL", "http://localhost:8312")!,
+    // mcp-gateway data plane (POST /mcp). Default matches the local harness
+    // port (deploy/e2e/config.env PORT_GATEWAY=8311); overridden by
+    // MCP_GATEWAY_URL in the harness/prod.
+    mcpGateway: env("MCP_GATEWAY_URL", "http://localhost:8311")!,
   };
 
   const base: Config = {

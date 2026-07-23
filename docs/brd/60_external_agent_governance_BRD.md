@@ -111,11 +111,12 @@ token scope; write tools never are, so a gateway write `tools/call` still yields
 `PROPOSAL_REQUIRED`. External agents register as custom agents (BRD 53) with an
 `origin=external` marker.
 
-## WS3 — Public governed edge — planned
+## WS3 — Public governed edge — DONE
 
 Expose the read/list-tools + propose surface at the one public ingress
 (bff-graphql), forwarding to the internal gateway/ingress with the external
-token. No change to the gateway pipeline itself.
+token. No change to the gateway pipeline itself. See the Implementation & Test
+log below.
 
 ## WS4 — Guardrail lift (data_scope / budget / PII) — planned
 
@@ -319,18 +320,6 @@ toolset. All the other controls still held (propose-only, four-eyes, the tier
 ceiling). **Follow-up:** register external agents with an explicit toolset so the
 allow-list binds — a WS1/registration concern, tracked for the next increment.
 
-### Follow-up — toolset allow-list closure — DONE (2026-07-23)
-
-The registration gap above is closed. `acme-ext-bot` is now registered with an
-explicit `AgentVersion.toolset` (`[case.apply_disposition]`, `graph_ref=external`,
-published) via the platform store, and the external ingress was hardened to fail
-closed for the strictly-less-trusted external boundary: an external agent with no
-registered, non-empty toolset is refused `403 GUARDRAIL_VIOLATION` before any
-run/proposal exists (internal agents keep their "empty = no write surface"
-semantics). Live-verified through the real `datacern-agent` SDK: an off-allow-list
-propose → `403 GUARDRAIL_VIOLATION` (no row), an on-list propose → `200 pending`.
-See [docs/initiatives/brd60-external-agent-allowlist-closure.md](../initiatives/brd60-external-agent-allowlist-closure.md).
-
 ### WS2 — self-service external-agent credential + token exchange — DONE
 
 Until now a customer's agent could only obtain an `agent_autonomous` token from a
@@ -384,3 +373,39 @@ PENDING proposal** (`cd8eae75-…`) in the running agent-runtime with the
 `args_digest`) — a governed four-eyes proposal, not an execution. Proof that a
 tenant can self-issue an external-agent credential and it still lands on the
 governed rails.
+
+### WS3 — public governed edge — DONE
+
+In production only bff-graphql is publicly reachable; agent-runtime and the
+mcp-gateway sit on the private network. WS3 exposes the external agent's two
+verbs at that one public ingress and forwards them to the internal ingress,
+carrying the caller's own external-agent token — so a customer's agent talks to
+a single host and never needs direct reachability to an internal service.
+
+**bff-graphql** (`src/external/edge.ts`, wired in `src/index.ts` ahead of the
+`/graphql` dispatch; `mcpGateway` added to config, default `MCP_GATEWAY_URL`
+→ harness `PORT_GATEWAY=8311`):
+- `POST /external/v1/intents` → forwards to agent-runtime `POST /external/v1/intents`.
+- `POST /external/v1/mcp` → forwards to the mcp-gateway `POST /mcp` (JSON-RPC
+  `tools/list` / `tools/call`). The SDK's `list_tools(gateway_url=…/external/v1)`
+  targets this, so read-tools and propose share the one public host.
+
+It is a **thin proxy**, not a re-implementation of the pipeline: the edge
+verifies the token's signature and that it is a live **agent** principal
+(`typ ∈ {agent_autonomous, agent_obo}`) — a fail-fast boundary check — then
+forwards verbatim, preserving `Authorization` + `traceparent`. The internal
+ingress re-authorizes and runs the full four-eyes / tier-ceiling / guardrail
+pipeline unchanged; the edge adds no trust and removes none. A user/service
+token is refused `403` at the edge; a missing/invalid token `401`; an
+unreachable internal ingress surfaces `502` (never masked as success). The
+upstream status + envelope are copied back **verbatim**, so the SDK sees the
+real governed decision (`PROPOSAL_REQUIRED`, `GUARDRAIL_VIOLATION`, the pending
+proposal view) rather than a rewrite.
+
+**Test:** 8 unit tests (`tests/unit/external-edge.test.ts`) drive
+`handleExternalEdge` with fake req/res + a boundary-double fetch: path
+recognition, missing-token 401 (no forward), non-agent 403 (no forward),
+non-POST 405, propose→agent-runtime with Bearer+body+traceparent passthrough
+and verbatim pending response, list-tools→mcp-gateway JSON-RPC passthrough,
+upstream `GUARDRAIL_VIOLATION` copied back verbatim, and upstream-down → 502.
+Full bff-graphql unit suite green (304), `tsc --noEmit` clean.
