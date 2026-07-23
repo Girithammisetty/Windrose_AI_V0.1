@@ -118,12 +118,13 @@ Expose the read/list-tools + propose surface at the one public ingress
 token. No change to the gateway pipeline itself. See the Implementation & Test
 log below.
 
-## WS4 — Guardrail lift (data_scope / budget / PII) — planned
+## WS4 — Guardrail lift (data_scope / budget / PII) — DONE
 
 Lift the `data_scope refusal / budget cap / PII-egress redaction` envelope out
 of the internal `persona_copilot` graph to a request-scoped enforcement point
 that also covers the external-intent ingress, closing the one control that does
-not automatically transfer to external callers today.
+not automatically transfer to external callers today. See the Implementation &
+Test log below.
 
 ## WS5 — SDK + compliance-evidence export
 
@@ -422,3 +423,42 @@ an agent token, then the `datacern-agent` SDK pointed at the bff edge —
 server-derived `predicted_effect`. Edge auth gates held live: a missing token →
 `401`, a non-agent (user) token → `403`. The proposal still lands on the same
 four-eyes/WORM rails — the public edge changed the ingress, not the governance.
+
+### WS4 — guardrail lift (data-scope + PII) — DONE
+
+The per-agent security envelope (`TenantAgentConfig.guardrail_policy`, BRD 53
+inc2) was enforced INLINE in the persona_copilot graph, so it covered internal
+copilot runs but NOT the external-intent ingress — which mints a proposal
+directly via `ProposalService.create_from_intent`, never touching a graph. WS4
+lifts the two write-relevant slices to the ONE proposal-minting chokepoint so
+they bind to every write regardless of origin.
+
+**New shared module** `app/domain/guardrail.py` (pure, unit-tested): `allowed_
+workspaces` / `workspace_in_scope` / `enforce_data_scope` (fail-closed
+`GuardrailViolation`) + `pii_redaction_on` / `redact_effect` (reusing the
+existing `redact_text`). **`ProposalService.create_from_intent`** now, right
+after the toolset/tier `_enforce_guardrail`, resolves the agent's guardrail
+policy from the tenant config and (a) fails closed on an out-of-scope **declared
+workspace** before any proposal row exists, and (b) scrubs PII from the
+`rationale` + `predicted_effect` the agent submitted when the policy requires it
+— so the approver-facing proposal, and the WORM record, carry redacted text.
+**`persona_copilot`** was refactored to call the same shared helpers (the data-
+scope read-time refusal and the PII emit-time redaction), so there is now ONE
+implementation, not two. Budget stays graph-local on purpose: it is a per-LLM-
+run output-token ceiling, and a bare external `propose` spends no model tokens,
+so there is nothing to cap at the chokepoint (documented in the module).
+
+Design stance: absence is permissive (no `data_scope` → RLS remains the only
+wall; no `pii` flag → no redaction), and a declared scope is additive to RLS —
+it can only DENY, never widen. For an obo external agent the per-URN RBAC caller-
+gate already binds workspace containment; the declared-workspace data-scope check
+adds the wall for an AUTONOMOUS external agent (no obo user, so the caller-gate is
+skipped).
+
+**Test:** 12 tests (`tests/unit/test_guardrail_lift.py`) — pure module (permissive
+default, declared-scope denies outside + null workspace, PII flag detection,
+effect redaction leaves non-PII server summaries intact) + chokepoint tests
+driving the real `create_from_intent` with a tenant policy set: out-of-scope
+workspace → `GuardrailViolation` (no proposal), in-scope → pending, PII policy →
+stored `rationale`/`predicted_effect` scrubbed, no policy → no-op. Full agent-
+runtime suite green (320 passed, 13 skipped).

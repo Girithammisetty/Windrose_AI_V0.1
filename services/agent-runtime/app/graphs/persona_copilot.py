@@ -31,6 +31,7 @@ from typing import Any
 from langgraph.graph import END, StateGraph
 
 from app.adapters.memory import GroundingDegraded
+from app.domain import guardrail as guardrail_mod
 from app.domain.redact import redact_text
 from app.domain.urn import case_urn
 from app.graphs.base import GraphDeps, GraphOutcome, WriteIntent, register
@@ -62,9 +63,12 @@ def build_persona_copilot_graph(deps: GraphDeps):
     propose_tool = cfg.get("propose_tool")
     # BRD 53 inc2 (PA-FR-001): the machine-enforced security envelope, applied
     # here independent of the prompt.
+    # BRD 60 WS4: the data-scope + PII slices of the envelope are now the shared
+    # guardrail module (also enforced at the proposal chokepoint so external
+    # agents are covered); the graph applies data-scope at READ time (no LLM spend
+    # on an out-of-scope case) and PII at emit time. Budget stays graph-local — it
+    # is a per-LLM-run output ceiling with no meaning outside a model call.
     policy = deps.guardrail_policy or {}
-    data_scope = policy.get("data_scope") or {}
-    allowed_workspaces = {str(w) for w in (data_scope.get("workspaces") or [])}
     budget = policy.get("budget") or {}
 
     async def ground(state: dict) -> dict:
@@ -79,14 +83,14 @@ def build_persona_copilot_graph(deps: GraphDeps):
             # human could — data_scope is additive to RLS, never a relaxation
             # (BR-7). An out-of-scope read returns empty + a logged refusal; the
             # graph then produces an out-of-scope advisory with no write intent.
-            if allowed_workspaces and str((case or {}).get("workspace_id") or "") not in allowed_workspaces:  # noqa: E501
+            if not guardrail_mod.workspace_in_scope(policy, (case or {}).get("workspace_id")):
                 state["out_of_scope"] = True
                 state["case"] = {}
                 state["dispositions"] = []
                 state.setdefault("trace", []).append(
                     {"event": "data_scope_refusal", "case_id": state.get("case_id"),
                      "case_workspace": (case or {}).get("workspace_id"),
-                     "allowed_workspaces": sorted(allowed_workspaces)})
+                     "allowed_workspaces": sorted(guardrail_mod.allowed_workspaces(policy))})
                 return state
             if hasattr(deps.case_reader, "list_dispositions"):
                 dispositions = await deps.case_reader.list_dispositions(
@@ -234,22 +238,18 @@ async def run_persona_copilot(deps: GraphDeps, inputs: dict) -> GraphOutcome:
     # scrub common direct identifiers from everything the agent emits — the answer
     # text and the proposal's human-facing rationale/summary — before it leaves the
     # graph. Deterministic, independent of the model's cooperation.
-    pii = (deps.guardrail_policy or {}).get("pii") or {}
-    if pii.get("block_pii_egress") or pii.get("redact"):
+    if guardrail_mod.pii_redaction_on(deps.guardrail_policy):
+        # Scrub the graph-local answer text + disposition rationale here (they
+        # never reach the chokepoint), and the proposal's rationale/effect via the
+        # shared redactor — the same one the chokepoint re-applies, so an external
+        # agent's submitted rationale/effect are scrubbed identically.
         text = redact_text(text)
         if d.get("rationale"):
             d = {**d, "rationale": redact_text(str(d["rationale"]))}
         if write_intent is not None:
             write_intent.rationale = redact_text(write_intent.rationale or "")
-            pe = dict(write_intent.predicted_effect or {})
-            if pe.get("summary"):
-                pe["summary"] = redact_text(str(pe["summary"]))
-            if pe.get("citations"):
-                # Citation details are quoted straight from evidence — scrub any
-                # direct identifiers they carry before the proposal is shown.
-                pe["citations"] = [{**c, "detail": redact_text(str(c.get("detail", "")))}
-                                   for c in pe["citations"]]
-            write_intent.predicted_effect = pe
+            write_intent.predicted_effect = guardrail_mod.redact_effect(
+                write_intent.predicted_effect) or {}
 
     return GraphOutcome(
         final_text=text,

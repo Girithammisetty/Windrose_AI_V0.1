@@ -16,6 +16,7 @@ from app.constants import TOPIC_PROPOSAL
 from app.domain import policy as policy_mod
 from app.domain.canonical import args_digest as compute_digest
 from app.domain.entities import Proposal, new_uuid, now
+from app.domain import guardrail as guardrail_mod
 from app.domain.errors import (
     Conflict,
     GuardrailViolation,
@@ -73,6 +74,19 @@ class ProposalService:
         # tenant custom agent's allow-list real. Fail closed BEFORE any proposal
         # row exists; defense-in-depth with tool-plane's tenant-enablement gate.
         await self._enforce_guardrail(run, intent)
+        # BRD 60 WS4: the agent's data-scope + PII envelope, lifted out of the
+        # persona_copilot graph so it binds at the ONE proposal-minting chokepoint
+        # and therefore covers the external-intent ingress too (which never runs a
+        # graph). Fail closed on an out-of-scope declared workspace BEFORE any
+        # proposal row exists; scrub PII from the human-facing rationale/effect the
+        # agent submitted when the agent's policy requires it.
+        policy = await self._guardrail_policy(run)
+        guardrail_mod.enforce_data_scope(
+            policy, intent.workspace_id or intent.args.get("workspace_id"),
+            agent_key=run.agent_key)
+        if guardrail_mod.pii_redaction_on(policy):
+            intent.rationale = guardrail_mod.redact_text(intent.rationale or "")
+            intent.predicted_effect = guardrail_mod.redact_effect(intent.predicted_effect) or {}
         # Anti "description-laundering" (P0 approval hardening): compute the
         # approver-facing effect from GROUND TRUTH (tool/tier/side-effects/args/
         # affected URNs) server-side, overriding any model-authored summary/blast.
@@ -135,6 +149,17 @@ class ProposalService:
                 await self._emit(decided, "proposal.approved", decision=decided.decision)
                 return decided, True
         return prop, False
+
+    async def _guardrail_policy(self, run) -> dict:
+        """Resolve the per-agent security envelope (data_scope/budget/pii) from the
+        tenant's config for this agent. Absent config → empty policy (permissive:
+        RLS + toolset + tier + four-eyes still apply). Never raises for a missing
+        row — the enforcement below is deny-only, so an absent policy is a no-op."""
+        try:
+            cfg = await self._store.get_tenant_config(run.tenant_id, run.agent_key)
+        except Exception:
+            cfg = None
+        return (cfg.guardrail_policy if cfg else {}) or {}
 
     async def _enforce_guardrail(self, run, intent: WriteIntent) -> None:
         """Reject a WriteIntent whose tool is not on the agent version's declared
