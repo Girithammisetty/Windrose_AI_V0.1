@@ -135,7 +135,8 @@ a thin client SDK (the customer's agent calls "propose(tool, args)").
   log; live-verified through the real OPA auth path against the running WORM store.
 - [x] BFF query + ui-web "view/download evidence pack" on the decision detail —
   live-verified in the browser end to end.
-- [ ] thin client SDK (propose/list-tools helpers).
+- [x] thin client SDK (propose/list-tools helpers) — `sdk/agent-python`,
+  live-verified against the running ingress.
 
 ---
 
@@ -281,3 +282,39 @@ day rather than faking a verification. Zero console errors. The same query
 through the BFF directly returns the mapped camelCase pack with the real
 `chainSeq: 407`. The four-eyes/sealed happy path stays covered by the
 audit-service integration test (a real sealed, approved decision).
+
+### WS5 — thin client SDK — DONE
+
+`sdk/agent-python/` — a **dependency-free (stdlib-only) Python SDK** a customer
+drops into their own agent. Rule-7 thin: one `DatacernAgentClient` with
+`propose(...)` (wraps `POST /external/v1/intents`) and `list_tools(gateway_url)`
+(real MCP `tools/list`), a `Proposal` dataclass, and a typed `DatacernAgentError`
+carrying the platform error envelope (`code`/`message`/`trace_id`). The HTTP
+transport is injectable so the request-building + response-parsing are
+contract-testable without a socket. Includes a `pyproject.toml` (zero runtime
+deps) and a customer-facing README.
+
+**Test:** 7 contract tests (`tests/test_client.py`) with a recording in-process
+transport — request URL/method/auth-header/body shape, propose-only defaults
+(`tier=write-proposal`, `side_effects=reversible`), optional-field passthrough,
+client-side fail-fast validation (empty `affected_urns` never hits the wire),
+the typed error-envelope path, and `list_tools` MCP JSON-RPC. All pass.
+
+**Live-verified against the running agent-runtime:** `agent.propose(...)`
+created a **real** governed pending proposal (`98a8d192-…`) with the
+**server-derived** `predicted_effect` (anti-laundering `authoritative_summary` +
+`args_digest`) — proof the write went through the real `ProposalService`, not a
+stub. Proposing above the tier ceiling (`tier=write-direct`) was refused with a
+real `403 GUARDRAIL_VIOLATION` surfaced as a `DatacernAgentError` — the SDK's
+error path works against the live enforcement, and the tier ceiling genuinely
+binds an external agent.
+
+**Honest finding (registration gap, not an SDK/enforcement bug):** proposing a
+tool NOT on the agent's allow-list was *accepted* live, because the WS1 demo
+agent `acme-ext-bot` was registered with an EMPTY declared toolset —
+`_enforce_guardrail`'s allow-list check is `if allowed and tool not in allowed`,
+so an empty toolset legitimately means "no allow-list declared" and the check is
+skipped. The enforcement code is correct; the agent config just lacked a
+toolset. All the other controls still held (propose-only, four-eyes, the tier
+ceiling). **Follow-up:** register external agents with an explicit toolset so the
+allow-list binds — a WS1/registration concern, tracked for the next increment.

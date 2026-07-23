@@ -1,0 +1,19 @@
+[project]
+name = "datacern-agent"
+version = "0.1.0"
+description = "Datacern external-agent SDK — route your own agent's writes through governed four-eyes proposals + a tamper-evident audit chain."
+readme = "README.md"
+requires-python = ">=3.10"
+# Intentionally ZERO runtime dependencies (stdlib urllib only) so the package
+# vendors cleanly into any customer project.
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["datacern_agent"]
