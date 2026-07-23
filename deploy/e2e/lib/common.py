@@ -71,7 +71,32 @@ AGENT_ID = "case-triage"
 AGENT_VERSION = "1.0.0"
 
 
+def _ensure_keys() -> None:
+    """Generate the harness IdP RSA keypair on first use. The pems are
+    gitignored (never committed), so a fresh checkout — CI's e2e-live job,
+    a new laptop — has no keys; without this, `common.py jwks` wrote an
+    EMPTY jwks.json (stdout redirect creates the file even on crash) and
+    identity never trusted harness tokens (tenant provisioning returned no
+    id). Local keys, once generated, are stable across runs."""
+    if os.path.exists(PRIV_PEM_PATH):
+        return
+    from cryptography.hazmat.primitives.asymmetric import rsa
+
+    os.makedirs(KEY_DIR, exist_ok=True)
+    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    with open(PRIV_PEM_PATH, "wb") as f:
+        f.write(key.private_bytes(
+            serialization.Encoding.PEM,
+            serialization.PrivateFormat.PKCS8,
+            serialization.NoEncryption()))
+    with open(PUB_PEM_PATH, "wb") as f:
+        f.write(key.public_key().public_bytes(
+            serialization.Encoding.PEM,
+            serialization.PublicFormat.SubjectPublicKeyInfo))
+
+
 def _load_private():
+    _ensure_keys()
     with open(PRIV_PEM_PATH, "rb") as f:
         return serialization.load_pem_private_key(f.read(), password=None)
 
@@ -88,6 +113,7 @@ def jwks_document() -> dict:
 
 
 def public_pem() -> str:
+    _ensure_keys()
     with open(PUB_PEM_PATH) as f:
         return f.read()
 
