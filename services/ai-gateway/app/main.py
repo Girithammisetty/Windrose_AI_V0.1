@@ -16,8 +16,8 @@ import asyncio
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
 from datacern_common.logging import configure_json_logging
+from fastapi import FastAPI
 
 from app.api.errors import TraceMiddleware, install_error_handlers
 from app.api.middleware import AuthMiddleware
@@ -101,9 +101,9 @@ def build_runtime_container(settings: Settings | None = None) -> Container:
     if not settings.use_real_adapters:
         return build_container(settings)
 
-    from sqlalchemy.ext.asyncio import async_sessionmaker
     from datacern_common.otelx import configure_tracing
     from datacern_common.redisx import build_redis
+    from sqlalchemy.ext.asyncio import async_sessionmaker
 
     from app.store.sql import make_engine
 

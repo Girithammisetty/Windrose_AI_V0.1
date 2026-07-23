@@ -14,10 +14,11 @@ import json
 import uuid
 from datetime import datetime
 
+from datacern_common.events import validate_envelope
+
 from app.container import build_container
 from app.domain.entities import Run, new_uuid
 from app.events.envelope import make_envelope, payload_of
-from datacern_common.events import validate_envelope
 from tests.conftest import TENANT_A, make_settings
 
 

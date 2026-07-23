@@ -10,8 +10,9 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from app.events.envelope import make_envelope
 from datacern_common.events import validate_envelope
+
+from app.events.envelope import make_envelope
 from tests.conftest import TENANT_A
 
 

@@ -19,8 +19,8 @@ import logging
 import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
 from datacern_common.logging import configure_json_logging
+from fastapi import FastAPI
 
 from app.agents.catalog import seed_catalog
 from app.api.errors import TraceMiddleware, install_error_handlers

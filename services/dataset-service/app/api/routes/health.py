@@ -35,7 +35,7 @@ async def readyz(request: Request):
 async def metrics():
     # Real Prometheus RED exposition (MASTER-FR-050) via the shared dependency-
     # free registry fed by RedMiddleware.
-    from fastapi.responses import PlainTextResponse
     from datacern_common.metricsx import REGISTRY
+    from fastapi.responses import PlainTextResponse
 
     return PlainTextResponse(REGISTRY.render(), media_type="text/plain; version=0.0.4")

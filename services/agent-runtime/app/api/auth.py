@@ -4,8 +4,8 @@ never authorizes (BR-11) — the tenant always comes from the verified token."""
 
 from __future__ import annotations
 
-from fastapi import Request
 from datacern_common.authjwt import InvalidTokenError, Principal
+from fastapi import Request
 
 from app.domain.errors import Unauthorized
 

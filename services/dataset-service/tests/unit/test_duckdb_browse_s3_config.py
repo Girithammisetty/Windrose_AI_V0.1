@@ -35,8 +35,10 @@ def test_quote_in_credentials_round_trips_safely():
         "access_key": "ak'; DROP TABLE foo; --",
         "secret_key": "sk' OR '1'='1",
     })
-    assert con.execute("SELECT current_setting('s3_access_key_id')").fetchone()[0] == "ak'; DROP TABLE foo; --"
-    assert con.execute("SELECT current_setting('s3_secret_access_key')").fetchone()[0] == "sk' OR '1'='1"
+    ak = con.execute("SELECT current_setting('s3_access_key_id')").fetchone()[0]
+    sk = con.execute("SELECT current_setting('s3_secret_access_key')").fetchone()[0]
+    assert ak == "ak'; DROP TABLE foo; --"
+    assert sk == "sk' OR '1'='1"
 
 
 def test_endpoint_with_quote_is_escaped():

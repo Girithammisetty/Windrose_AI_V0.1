@@ -101,9 +101,23 @@ jobs:
           # passes once it can actually run.
           TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db:2
           TRIVY_JAVA_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-java-db:1
+        # The vuln-DB download is the flaky part (registry rate limits) — retry
+        # it up to 3x before letting the scan verdict decide the job.
         run: |
-          trivy fs --scanners vuln --severity HIGH,CRITICAL --exit-code 1 \
-            --format sarif --output trivy.sarif .
+          for i in 1 2 3; do
+            if trivy fs --scanners vuln --severity HIGH,CRITICAL --exit-code 1 \
+                 --format sarif --output trivy.sarif .; then
+              exit 0
+            fi
+            rc=$?
+            # exit 1 with a produced SARIF = real findings; anything else = infra
+            if [ -s trivy.sarif ] && [ "$rc" = "1" ]; then
+              exit 1
+            fi
+            echo "trivy attempt $i failed (rc=$rc, likely DB download) — retrying in 20s"
+            sleep 20
+          done
+          exit 1
       - uses: github/codeql-action/upload-sarif@v3
         if: always()
         with: { sarif_file: trivy.sarif, category: trivy }

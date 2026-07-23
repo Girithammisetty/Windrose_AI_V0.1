@@ -151,7 +151,10 @@ async def _decode(
     try:
         _reject_dtd(path)  # billion-laughs guard BEFORE parsing content (reused)
         try:
-            tree = ET.parse(str(path))
+            # Safe post-guard: _reject_dtd bails on any DOCTYPE (the only place
+            # internal entities can be defined) and stdlib expat never resolves
+            # external entities — same reviewed posture as decode.py.
+            tree = ET.parse(str(path))  # nosemgrep: python.lang.security.use-defused-xml-parse.use-defused-xml-parse  # noqa: E501
         except ET.ParseError as e:
             raise _fail(f"{kind}: not well-formed XML ({e})") from e
         root = tree.getroot()

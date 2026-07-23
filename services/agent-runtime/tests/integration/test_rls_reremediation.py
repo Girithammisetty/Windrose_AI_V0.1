@@ -55,7 +55,8 @@ async def test_reused_connection_survives_guc_revert(pg):
 
         # Same pool, same underlying connection, no GUC set this time.
         async with factory() as s:
-            rows = (await s.execute(text("SELECT count(*) c FROM agent_transcripts"))).mappings().first()
+            res = await s.execute(text("SELECT count(*) c FROM agent_transcripts"))
+            rows = res.mappings().first()
             assert rows["c"] == 0  # fail-closed: NULLIF(...)::uuid is NULL, not an error
     finally:
         await engine.dispose()

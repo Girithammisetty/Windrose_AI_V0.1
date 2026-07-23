@@ -12,8 +12,8 @@ import asyncio
 import contextlib
 import logging
 
-from fastapi import FastAPI
 from datacern_common.logging import configure_json_logging
+from fastapi import FastAPI
 
 from app.api.errors import TraceMiddleware, install_error_handlers
 from app.api.middleware import AuthMiddleware

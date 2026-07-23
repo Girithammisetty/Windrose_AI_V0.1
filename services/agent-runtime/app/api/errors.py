@@ -5,8 +5,8 @@ from __future__ import annotations
 import uuid
 from contextvars import ContextVar
 
-from starlette.middleware.base import BaseHTTPMiddleware
 from datacern_common.web import register_error_handlers
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.domain.errors import AppError
 

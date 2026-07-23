@@ -12,8 +12,8 @@ async def healthz():
 
 @router.get("/metrics")
 async def metrics():
-    from fastapi.responses import PlainTextResponse
     from datacern_common.metricsx import REGISTRY
+    from fastapi.responses import PlainTextResponse
     return PlainTextResponse(REGISTRY.render(), media_type="text/plain; version=0.0.4")
 
 

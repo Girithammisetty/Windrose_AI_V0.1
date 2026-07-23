@@ -71,7 +71,11 @@ export async function POST(req: NextRequest) {
   res.cookies.set(SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    // The guard above already 403s in production, so TS narrows NODE_ENV and
+    // flags this comparison as always-false (TS2367). Keep the defensive
+    // check anyway (cast defeats the narrowing) so `secure` stays correct if
+    // the guard ever changes.
+    secure: (process.env.NODE_ENV as string) === "production",
     path: "/",
     maxAge: 60 * 60 * 8,
   });

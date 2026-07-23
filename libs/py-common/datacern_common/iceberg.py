@@ -230,7 +230,8 @@ class IcebergTableWriter(_CatalogHolder):
             string_schema = pa.schema(
                 [pa.field(c, pa.large_string()) for c in staged.columns]
             )
-            tbl.append(string_schema.empty_table().cast(target_schema), snapshot_properties=snapshot_props)
+            tbl.append(string_schema.empty_table().cast(target_schema),
+                       snapshot_properties=snapshot_props)
         tbl.refresh()
         snap = tbl.current_snapshot()
         Path(staged.path).unlink(missing_ok=True)
