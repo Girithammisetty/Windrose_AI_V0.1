@@ -1,0 +1,23 @@
+denial_id,claim_id,carc_code,rarc_code,denial_reason_text,denial_category,cpt_code,service_line,payer_name,denial_month,denied_amount,appeal_status,appeal_deadline_days
+DN-3001,CLM-2118,CO-197,N386,Precertification/authorization absent for chemotherapy administration,administrative,96413,oncology,Georgia Medicaid CMO,2026-06,18450.00,not_appealed,12
+DN-3002,CLM-2120,CO-197,M127,Authorization number invalid for total knee arthroplasty,administrative,22551,orthopedics,Peachtree Commercial Health,2026-03,9800.00,not_appealed,48
+DN-3003,CLM-2119,CO-16,N290,Claim lacks required documentation - operative note missing,documentation,92928,cardiology,SummitCare HMO,2026-07,2300.00,not_appealed,61
+DN-3004,CLM-2125,CO-45,,Charge exceeds fee schedule - residual balance,eligibility,92928,cardiology,Peachtree Commercial Health,2026-03,85.00,not_appealed,55
+DN-3005,CLM-2131,CO-97,N4,Payment bundled into primary procedure (NCCI edit),bundling,92928,cardiology,BlueRidge BCBS of Georgia,2026-04,410.00,not_appealed,40
+DN-3006,CLM-2137,CO-50,N115,Service not medically necessary per LCD L34567 criteria,coverage,92928,cardiology,Everline Medicare Advantage,2026-05,6200.00,not_appealed,52
+DN-3101,CLM-2101,CO-197,N386,Auth absent - overturned with auth record,administrative,92928,cardiology,BlueRidge BCBS of Georgia,2026-04,12400.00,overturned,0
+DN-3102,CLM-2102,CO-16,N290,Missing op note - overturned on resubmission,documentation,22551,orthopedics,Everline Medicare Advantage,2026-05,4150.00,overturned,0
+DN-3103,CLM-2103,CO-197,M127,Invalid auth number - overturned,administrative,99285,emergency,Georgia Medicaid CMO,2026-06,8900.00,overturned,0
+DN-3104,CLM-2104,CO-50,N115,Medical necessity - overturned after peer review,coverage,74177,imaging,SummitCare HMO,2026-07,9300.00,overturned,0
+DN-3105,CLM-2105,CO-16,,Documentation defect - overturned,documentation,49505,general_surgery,Peachtree Commercial Health,2026-03,3200.00,overturned,0
+DN-3106,CLM-2106,CO-197,N386,Auth absent - overturned,administrative,96413,oncology,BlueRidge BCBS of Georgia,2026-04,5350.00,overturned,0
+DN-3201,CLM-2108,CO-50,N115,Medical necessity - appeal upheld,coverage,22551,orthopedics,Georgia Medicaid CMO,2026-06,7100.00,upheld,0
+DN-3202,CLM-2109,CO-97,N4,Bundling edit - appeal upheld,bundling,99285,emergency,SummitCare HMO,2026-07,480.00,upheld,0
+DN-3203,CLM-2110,CO-45,,Fee schedule - appeal upheld,eligibility,74177,imaging,Peachtree Commercial Health,2026-03,220.00,upheld,0
+DN-3204,CLM-2111,CO-16,N290,Documentation - appeal upheld,documentation,49505,general_surgery,BlueRidge BCBS of Georgia,2026-04,1900.00,upheld,0
+DN-3301,CLM-2112,CO-197,N386,Auth absent - appeal pending with payer,administrative,96413,oncology,Everline Medicare Advantage,2026-05,11250.00,appealed,33
+DN-3302,CLM-2114,CO-50,N115,Medical necessity - appeal pending,coverage,22551,orthopedics,SummitCare HMO,2026-07,5600.00,appealed,27
+DN-3303,CLM-2115,CO-16,,Documentation - appeal pending,documentation,99285,emergency,Peachtree Commercial Health,2026-03,2750.00,appealed,41
+DN-3901,CLM-2143,CO-197,N386,Precertification absent for cardiac catheterization,administrative,92928,cardiology,Georgia Medicaid CMO,2026-06,14200.00,not_appealed,9
+DN-3902,CLM-2144,CO-197,N386,Precertification absent for spinal fusion,administrative,22551,orthopedics,SummitCare HMO,2026-07,21800.00,not_appealed,15
+DN-3903,CLM-2140,CO-197,M127,Authorization mismatch for imaging series,administrative,74177,imaging,Peachtree Commercial Health,2026-03,7650.00,not_appealed,11

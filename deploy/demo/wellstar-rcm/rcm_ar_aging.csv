@@ -1,0 +1,29 @@
+ar_id,claim_id,patient_account_id,payer_name,payer_type,service_line,aging_bucket,over_90,balance_type,balance_amount,days_outstanding,followup_priority_score,last_action,as_of_month
+AR-6601,CLM-2101,PAT-5001,BlueRidge BCBS of Georgia,commercial,cardiology,31_60,no,insurance,4331.38,45,0.92,called_payer,2026-07
+AR-6602,CLM-2102,PAT-5002,Everline Medicare Advantage,medicare_advantage,orthopedics,61_90,no,insurance,14108.12,77,0.88,appeal_filed,2026-07
+AR-6603,CLM-2103,PAT-5003,Georgia Medicaid CMO,medicaid,emergency,91_120,yes,patient,5988.09,107,0.32,statement_sent,2026-07
+AR-6604,CLM-2104,PAT-5004,SummitCare HMO,managed_care,imaging,over_120,yes,insurance,13359.87,160,0.74,escalated,2026-07
+AR-6605,CLM-2105,PAT-5005,Peachtree Commercial Health,commercial,general_surgery,0_30,no,insurance,9833.44,23,0.96,none,2026-07
+AR-6606,CLM-2106,PAT-5006,BlueRidge BCBS of Georgia,commercial,oncology,31_60,no,patient,10505.14,50,0.21,called_payer,2026-07
+AR-6607,CLM-2107,PAT-5007,Everline Medicare Advantage,medicare_advantage,cardiology,61_90,no,insurance,13095.61,82,0.43,appeal_filed,2026-07
+AR-6608,CLM-2108,PAT-5008,Georgia Medicaid CMO,medicaid,orthopedics,91_120,yes,insurance,10654.61,112,0.92,statement_sent,2026-07
+AR-6609,CLM-2109,PAT-5009,SummitCare HMO,managed_care,emergency,over_120,yes,patient,2252.54,156,0.29,escalated,2026-07
+AR-6610,CLM-2110,PAT-5010,Peachtree Commercial Health,commercial,imaging,0_30,no,insurance,1819.73,19,0.63,none,2026-07
+AR-6611,CLM-2111,PAT-5011,BlueRidge BCBS of Georgia,commercial,general_surgery,31_60,no,insurance,4444.89,46,0.67,called_payer,2026-07
+AR-6612,CLM-2112,PAT-5012,Everline Medicare Advantage,medicare_advantage,oncology,61_90,no,patient,11515.68,78,0.36,appeal_filed,2026-07
+AR-6613,CLM-2113,PAT-5013,Georgia Medicaid CMO,medicaid,cardiology,91_120,yes,insurance,10191.70,108,0.40,statement_sent,2026-07
+AR-6614,CLM-2114,PAT-5014,SummitCare HMO,managed_care,orthopedics,over_120,yes,insurance,7877.89,161,0.90,escalated,2026-07
+AR-6615,CLM-2115,PAT-5015,Peachtree Commercial Health,commercial,emergency,0_30,no,patient,13556.13,24,0.27,none,2026-07
+AR-6616,CLM-2116,PAT-5016,BlueRidge BCBS of Georgia,commercial,imaging,31_60,no,insurance,6846.38,51,0.41,called_payer,2026-07
+AR-6617,CLM-2117,PAT-5017,Everline Medicare Advantage,medicare_advantage,general_surgery,61_90,no,insurance,176.31,83,0.79,appeal_filed,2026-07
+AR-6618,CLM-2118,PAT-5018,Georgia Medicaid CMO,medicaid,oncology,91_120,yes,patient,10237.36,104,0.40,statement_sent,2026-07
+AR-6619,CLM-2119,PAT-5019,SummitCare HMO,managed_care,cardiology,over_120,yes,insurance,11890.75,157,0.62,escalated,2026-07
+AR-6620,CLM-2120,PAT-5020,Peachtree Commercial Health,commercial,orthopedics,0_30,no,insurance,6911.67,20,0.21,none,2026-07
+AR-6621,CLM-2121,PAT-5021,BlueRidge BCBS of Georgia,commercial,emergency,31_60,no,patient,1314.87,47,0.88,called_payer,2026-07
+AR-6622,CLM-2122,PAT-5022,Everline Medicare Advantage,medicare_advantage,imaging,61_90,no,insurance,14474.39,79,0.62,appeal_filed,2026-07
+AR-6623,CLM-2123,PAT-5023,Georgia Medicaid CMO,medicaid,general_surgery,91_120,yes,insurance,13373.37,109,0.65,statement_sent,2026-07
+AR-6624,CLM-2124,PAT-5024,SummitCare HMO,managed_care,oncology,over_120,yes,patient,2471.73,162,0.30,escalated,2026-07
+AR-6625,CLM-2125,PAT-5025,Peachtree Commercial Health,commercial,cardiology,0_30,no,insurance,5015.14,25,0.89,none,2026-07
+AR-6626,CLM-2126,PAT-5026,BlueRidge BCBS of Georgia,commercial,orthopedics,31_60,no,insurance,12762.42,52,0.86,called_payer,2026-07
+AR-6627,CLM-2127,PAT-5027,Everline Medicare Advantage,medicare_advantage,emergency,61_90,no,patient,14394.92,75,0.36,appeal_filed,2026-07
+AR-6628,CLM-2128,PAT-5028,Georgia Medicaid CMO,medicaid,imaging,91_120,yes,insurance,4082.53,105,0.28,statement_sent,2026-07
