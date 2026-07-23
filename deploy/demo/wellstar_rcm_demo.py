@@ -44,23 +44,28 @@ import common as c  # noqa: E402
 import install_packs_multitenant as ipm  # noqa: E402
 from packctl.client import Endpoints, PlatformClient  # noqa: E402
 
-TENANT_NAME = "wellstar-demo"
-DISPLAY = "Wellstar Demo — Provider Revenue Cycle"
+# DEMO_TENANT_SLUG picks the tenant name AND the persona emails/subs (all
+# derived from it) — set it to run a second, independent demo tenant (e.g. a
+# from-scratch live-provisioning walkthrough) without touching the rehearsed
+# "wellstar-demo" tenant. Defaults preserve the original single-tenant demo.
+DEMO_SLUG = os.environ.get("DEMO_TENANT_SLUG", "wellstar-demo")
+TENANT_NAME = DEMO_SLUG
+DISPLAY = os.environ.get("DEMO_TENANT_DISPLAY", "Wellstar Demo — Provider Revenue Cycle")
 PACK = "healthcare-provider-rcm"
 PACK_SVC = os.environ.get("PACK_URL", "http://localhost:8309")
 
-ADMIN_SUB = str(uuid.uuid5(uuid.NAMESPACE_DNS, "wellstar-demo-admin"))
-DIRECTOR_SUB = str(uuid.uuid5(uuid.NAMESPACE_DNS, "wellstar-demo-director"))
-SPECIALIST_SUB = str(uuid.uuid5(uuid.NAMESPACE_DNS, "wellstar-demo-specialist"))
+ADMIN_SUB = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"{DEMO_SLUG}-admin"))
+DIRECTOR_SUB = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"{DEMO_SLUG}-director"))
+SPECIALIST_SUB = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"{DEMO_SLUG}-specialist"))
 
 # System-role memberships (real grants; the projector materializes both
 # projections from these): admin runs the demo, director APPROVES + applies
 # (Case Manager holds tool.tool.execute + case.disposition.approve),
 # specialist works the queue.
 USERS = {
-    "admin@wellstar-demo": (ADMIN_SUB, ["Admin", "Use case Admin"]),
-    "director@wellstar-demo": (DIRECTOR_SUB, ["Case Manager", "Use case Admin"]),
-    "specialist@wellstar-demo": (SPECIALIST_SUB, ["Case Analyst"]),
+    f"admin@{DEMO_SLUG}": (ADMIN_SUB, ["Admin", "Use case Admin"]),
+    f"director@{DEMO_SLUG}": (DIRECTOR_SUB, ["Case Manager", "Use case Admin"]),
+    f"specialist@{DEMO_SLUG}": (SPECIALIST_SUB, ["Case Analyst"]),
 }
 
 say, ok, warn, die = ipm.say, ipm.ok, ipm.warn, ipm.die
@@ -95,7 +100,7 @@ def build_client(tid: str, ws: str) -> PlatformClient:
 
 
 def onboard() -> tuple[str, str]:
-    tid = ipm.ensure_tenant(TENANT_NAME, DISPLAY, "admin@wellstar-demo")
+    tid = ipm.ensure_tenant(TENANT_NAME, DISPLAY, f"admin@{DEMO_SLUG}")
     ws = ipm.ensure_rbac_seeded(tid)
     ipm.bootstrap_admins(tid, [ADMIN_SUB, DIRECTOR_SUB])
 
@@ -119,12 +124,63 @@ def onboard() -> tuple[str, str]:
                     "ON CONFLICT (group_id, user_id) DO NOTHING",
                     (str(uuid.uuid4()), tid, row[0], sub))
     ipm.rebuild_projection(tid)
+    provision_identity_users(tid)
     tok = c.user_token(ADMIN_SUB, tid, ["*"], workspace_id=ws)
     caps, _, admin = ipm.poll_caps(tok)
     if not (admin or caps):
         die("admin capabilities never materialized")
     ok(f"tenant ready: {tid} ws={ws}")
     return tid, ws
+
+
+FULL_NAMES = {
+    f"admin@{DEMO_SLUG}": "Demo Admin",
+    f"director@{DEMO_SLUG}": "Revenue Cycle Director",
+    f"specialist@{DEMO_SLUG}": "Denials Specialist",
+}
+
+
+def provision_identity_users(tid: str) -> None:
+    """ACTIVE identity users whose id == the sub dev-login sessions carry.
+
+    Production linking is invite -> accept(idp_subject) -> active, and the
+    session subject IS the identity user id (token_oidc.go). Dev-login mints
+    subs from personas.json, so the identity rows must carry those same ids or
+    the assignable-user directory, assignment grants, and approvals key on
+    different identifiers. Same durable-row bootstrap pattern (and rationale)
+    as bootstrap_admins above. Idempotent; re-keys the provisioning-created
+    owner row (invited, generated id) to the persona sub."""
+    import psycopg
+    dsn = os.environ.get("IDENTITY_DATABASE_URL",
+                         "postgres://datacern:datacern_dev@localhost:5432/identity")
+    with psycopg.connect(dsn, autocommit=True) as conn:
+        conn.execute("SELECT set_config('app.tenant_id', %s, false)", (tid,))
+        for email, (sub, _groups) in USERS.items():
+            row = conn.execute(
+                "SELECT id, status FROM users WHERE tenant_id = %s "
+                "AND lower(email) = lower(%s)", (tid, email)).fetchone()
+            if row and str(row[0]) != sub:
+                # provisioning created this row with a generated id; re-key it
+                conn.execute("DELETE FROM invitations WHERE tenant_id = %s "
+                             "AND user_id = %s", (tid, row[0]))
+                conn.execute("DELETE FROM users WHERE tenant_id = %s AND id = %s",
+                             (tid, row[0]))
+                row = None
+            if row is None:
+                conn.execute(
+                    "INSERT INTO users (id, tenant_id, email, full_name, status, "
+                    "idp_subject, created_at, updated_at) "
+                    "VALUES (%s,%s,%s,%s,'active',%s,now(),now()) "
+                    "ON CONFLICT (id) DO NOTHING",
+                    (sub, tid, email, FULL_NAMES[email], sub))
+            else:
+                conn.execute(
+                    "UPDATE users SET status = 'active', full_name = %s, "
+                    "idp_subject = %s, updated_at = now() "
+                    "WHERE tenant_id = %s AND id = %s",
+                    (FULL_NAMES[email], sub, tid, sub))
+    ok("identity users active (id == session sub): "
+       + ", ".join(f"{e} ({FULL_NAMES[e]})" for e in USERS))
 
 
 def upload_data(client: PlatformClient) -> None:
@@ -208,7 +264,17 @@ def create_worklist(tid: str, ws: str, client: PlatformClient) -> dict[str, str]
 def enable_tools(tid: str, ws: str) -> None:
     """Per-tenant tool enablement (a real governance gate: tools are opt-in
     per tenant). Without this the approved disposition apply is denied with
-    TOOL_DISABLED. Must run under a token whose tenant == this tenant."""
+    TOOL_DISABLED. Must run under a token whose tenant == this tenant.
+
+    Registers the tool in tool-plane's GLOBAL catalog first (idempotent —
+    CreateTool/publish both no-op on conflict, see driver.py's docstring):
+    on a from-scratch stack (fresh tool_plane db) the catalog is empty and the
+    per-tenant enable PUT 404s until something registers case.apply_disposition
+    once. Normally the e2e suite does this; the demo must be able to stand
+    alone on a freshly wiped platform, so do it here too."""
+    import driver  # noqa: PLC0415 (deploy/e2e on sys.path — see header)
+    driver.register_apply_tool()
+
     tok = c.user_token(ADMIN_SUB, tid, ["*"], workspace_id=ws)
     for tool in ("case.apply_disposition",):
         r = http(f"/api/v1/tenants/self/tools/{tool}", tok, {"enabled": True}, "PUT",
