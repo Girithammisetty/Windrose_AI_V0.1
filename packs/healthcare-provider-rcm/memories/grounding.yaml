@@ -73,10 +73,13 @@
 - content: >-
     E/M office-visit leveling (99213 / 99214 / 99215) follows the 2021 CPT
     E/M guidelines by default: level is selected by medical decision-making
-    OR total time on the date of the encounter (BRD 26 BR-2). Downcoding or
-    diagnosis-mismatch denials (CARC CO-11) on E/M visits are contested with
-    MDM evidence: number/complexity of problems addressed, data reviewed, and
-    risk.
+    OR total time on the date of the encounter (BRD 26 BR-2). CARC CO-11
+    means "the diagnosis is inconsistent with the procedure" — a
+    diagnosis-mismatch denial, not a downcoding action; payer downcoding of
+    an E/M level instead arrives as CO-150 ("payer deems the information
+    submitted does not support this level of service") or a
+    payer-proprietary code. Both classes are contested with MDM evidence:
+    number/complexity of problems addressed, data reviewed, and risk.
   tags: [coding, em_leveling, cpt]
   confidence: 0.9
 - content: >-

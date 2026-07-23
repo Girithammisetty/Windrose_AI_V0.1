@@ -16,7 +16,7 @@
   tags: [benefits, network, integrity, pack]
 - identity: gb_deadline_critical_open
   name: "Benefits: deadline-critical open determinations"
-  description: "Open determinations ranked by deadline runway — the examiner ranked-queue seed (deadline x severity x due-process exposure, not FIFO)."
+  description: "Open determinations ranked by deadline runway — the examiner's ranked queue (deadline x severity x due-process exposure, not FIFO)."
   sql: >-
     SELECT determination_id, claimant_id, program, determination_type,
            issue_type, severity, benefit_amount_band,

@@ -1,4 +1,4 @@
-# Pipeline seeds (expressed against the real pipeline-orchestrator algorithm
+# Pipeline templates (expressed against the real pipeline-orchestrator algorithm
 # catalog): an unsupervised account-anomaly detector (registration gaps,
 # filing-history outliers, jurisdictions drifting toward nexus exposure) and
 # a supervised notice-outcome scorer trained on human dispositions (the

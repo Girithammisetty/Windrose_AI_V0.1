@@ -16,7 +16,7 @@
   name: "Care mgmt: TCM discharges not yet contacted"
   description: >-
     Recently discharged patients missing the 2-business-day CMS contact
-    (CMM-FR-090/092) — the TCM prioritizer's daily worklist seed.
+    (CMM-FR-090/092) — the TCM prioritizer's daily worklist query.
   sql: >-
     SELECT patient_id, discharge_month, tcm_contact_2bd, readmitted_30d,
            care_manager_id

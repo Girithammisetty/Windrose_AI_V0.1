@@ -17,8 +17,24 @@
      sale_month, service_visits_band]
 - identity: wa_claims
   name: wa-claims
+  # value domain: disposition holds cases/dispositions.yaml catalog codes —
+  #   approve_pay_claim | deny_policy_exclusion | adjust_partial_pay |
+  #   escalate_dealer_audit | close_supplier_recovery | escalate_claim_review |
+  #   route_safety_campaign | route_quality_engineering |
+  #   refer_repurchase_review (semantic measure filters and verified SQL
+  #   compare against these literals)
+  # value domain: status = open | closed
+  # value domain: claim_type = repair | replacement | goodwill | recall_related
+  # value domain: in_warranty = yes | no (literal strings)
+  # value domain: labor_op_band = single_op | two_ops | three_plus_ops
+  # value domain: usage_band — usage-at-failure bands; the UNIT FLAVOR varies
+  #   by industry (equipment hours vs vehicle miles), and the tenant's band
+  #   literals must match its bound data (the pack's decision rules compare
+  #   against under_250_hrs / over_limit)
+  # value domain: repeat_repair_flag = yes | no (literal strings — same-defect
+  #   repeat-repair marker rolled up from the unit's service history)
   required_columns:
     [claim_id, unit_id, dealer_id, claim_type, component_system, failure_mode,
      labor_op_band, usage_band, in_warranty, severity, status, disposition,
      deadline_bucket, filed_month, age_days, days_to_deadline, claim_amount,
-     adjusted_amount, recovery_amount]
+     adjusted_amount, recovery_amount, repeat_repair_flag]

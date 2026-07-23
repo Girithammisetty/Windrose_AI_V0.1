@@ -16,10 +16,12 @@
   sql_text: >-
     SELECT cpt_code,
            count(*) AS appeals,
-           sum(CASE WHEN status = 'overturned' THEN 1 ELSE 0 END) AS overturned
+           sum(CASE WHEN status = 'overturned' THEN 1 ELSE 0 END) AS overturned,
+           round(sum(CASE WHEN status = 'overturned' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS overturn_rate
     FROM {{dataset('payer-appeals')}}
     GROUP BY cpt_code
-    ORDER BY overturned DESC
+    ORDER BY overturn_rate DESC
   model: payer_claims
   tags: [appeals, overturns, pack]
 - nl_text: "Top denial reason codes by count"
@@ -39,6 +41,36 @@
     GROUP BY urgency
   model: payer_utilization
   tags: [prior-auth, sla, pack]
+- nl_text: "Which pending PAs are at risk against the regulatory clock?"
+  sql_text: >-
+    SELECT par_id, urgency, requested_service, cpt_code,
+           round(cast(turnaround_hours AS double), 1) AS hours_elapsed,
+           round((CASE WHEN urgency = 'urgent' THEN 72 ELSE 168 END)
+                 - cast(turnaround_hours AS double), 1) AS hours_remaining,
+           CASE
+             WHEN cast(turnaround_hours AS double)
+                  >= (CASE WHEN urgency = 'urgent' THEN 72 ELSE 168 END)
+               THEN 'overdue'
+             WHEN cast(turnaround_hours AS double)
+                  >= (CASE WHEN urgency = 'urgent' THEN 24 ELSE 120 END)
+               THEN 'at_risk'
+             ELSE 'on_track'
+           END AS clock_bucket
+    FROM {{dataset('payer-prior-auth-requests')}}
+    WHERE status = 'pending'
+    ORDER BY hours_remaining ASC
+  model: payer_utilization
+  tags: [prior-auth, sla, at-risk, pack]
+- nl_text: "Denial volume and reason-code spread by reviewing decision-maker (QA)"
+  sql_text: >-
+    SELECT decision_by,
+           count(*) AS denials,
+           count(DISTINCT denial_reason_code) AS distinct_reason_codes
+    FROM {{dataset('payer-denials')}}
+    GROUP BY decision_by
+    ORDER BY denials DESC
+  model: payer_claims
+  tags: [denials, qa, reviewers, pack]
 - nl_text: "Members with denied claims by state"
   sql_text: >-
     SELECT member_state, count(*) AS denied_claims

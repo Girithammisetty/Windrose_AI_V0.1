@@ -5,11 +5,18 @@
 # verify_accurate_as_reported closes the reinvestigation with the reporting
 # unchanged; delete_unverifiable covers both unverifiable and obsolete items
 # (suppress from the file); escalate_identity_theft_review hands off to the
-# 605B block track; close_frivolous_documented is the FCRA-permitted
+# 605B block track; expedite_priority_review is the neutral routing outcome
+# for disputes that need the priority reinvestigation docket (overdue clock,
+# litigation-channel intake, obsolescence dating) without prejudging the
+# determination; reinsertion_review covers a furnisher recertifying a
+# previously deleted item (611(a)(5)(B) — reinsertion notice owed to the
+# consumer); close_frivolous_documented is the FCRA-permitted
 # frivolous/irrelevant determination — requires_note captures the notice
 # with reasons the consumer must receive.
 - { code: correct_tradeline,               label: "Correct tradeline — furnish correction to all CRAs",        category: true_positive,  requires_note: true }
 - { code: verify_accurate_as_reported,     label: "Verify accurate as reported — reporting unchanged",         category: false_positive, requires_note: true }
 - { code: delete_unverifiable,             label: "Delete tradeline — unverifiable or obsolete",               category: other,          requires_note: true }
 - { code: escalate_identity_theft_review,  label: "Escalate to identity-theft review (605B block track)",      category: inconclusive,   requires_note: true }
+- { code: expedite_priority_review,        label: "Expedite — priority reinvestigation docket",                category: inconclusive,   requires_note: true }
+- { code: reinsertion_review,              label: "Reinsertion review — furnisher recertified, notice owed",   category: inconclusive,   requires_note: true }
 - { code: close_frivolous_documented,      label: "Close frivolous/irrelevant — documented notice with reasons", category: benign,         requires_note: true }

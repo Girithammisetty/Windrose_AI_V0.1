@@ -60,3 +60,19 @@ charts:
       - { measure: avg_agent_confidence }
     w: 12
     h: 4
+  - name: "SLA breach watch"
+    chart_type: grid_chart
+    description: "Pending PAs past their CMS Part D window (24h expedited / 72h standard) per urgency tier"
+    config:
+      columns: [urgency, pa_pending_count, expedited_sla_breach_count, standard_sla_breach_count]
+      x: { dimension: urgency }
+      y:
+        - { measure: pa_pending_count, agg_fn: count }
+        - { measure: expedited_sla_breach_count, agg_fn: count }
+        - { measure: standard_sla_breach_count, agg_fn: count }
+    sources:
+      - { measure: pa_pending_count }
+      - { measure: expedited_sla_breach_count }
+      - { measure: standard_sla_breach_count }
+    w: 12
+    h: 4

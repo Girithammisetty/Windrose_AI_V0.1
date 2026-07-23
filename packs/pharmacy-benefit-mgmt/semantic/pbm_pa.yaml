@@ -49,6 +49,12 @@ definition:
     - { name: agent_auto_approve_count, entity: pa_requests, agg: count,
         filters: "agent_recommendation = 'approve'",
         description: "PAs the copilot recommended for one-click approval" }
+    - { name: expedited_sla_breach_count, entity: pa_requests, agg: count,
+        filters: "status = 'pending' and urgency = 'expedited' and cast(turnaround_hours as double) >= 24",
+        description: "Pending expedited PAs past the 24-hour CMS Part D window (SLA breach)" }
+    - { name: standard_sla_breach_count, entity: pa_requests, agg: count,
+        filters: "status = 'pending' and urgency = 'standard' and cast(turnaround_hours as double) >= 72",
+        description: "Pending standard PAs past the 72-hour CMS Part D window (SLA breach)" }
     - { name: avg_pa_turnaround_hours, entity: pa_requests, agg: avg,
         expr: "cast(turnaround_hours as double)", format: decimal,
         description: "RX-FR-020 pa_turnaround: mean hours to decision (elapsed for pending)" }

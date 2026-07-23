@@ -63,3 +63,12 @@
     ORDER BY arrearage_exposure DESC
   model: lossmit_core
   tags: [loss_mitigation, dual_tracking, arrearage, exposure, pack]
+- nl_text: "Borrower contact staleness — outreach recency across the delinquent book (early-intervention watch)"
+  sql_text: >-
+    SELECT contact_recency, prior_lossmit_band,
+           count(*) AS borrowers
+    FROM {{dataset('lm-borrowers')}}
+    GROUP BY contact_recency, prior_lossmit_band
+    ORDER BY borrowers DESC
+  model: lossmit_core
+  tags: [loss_mitigation, spoc, early_intervention, contact_staleness, pack]

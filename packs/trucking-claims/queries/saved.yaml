@@ -16,7 +16,7 @@
   tags: [claims, network, carriers, lanes, pack]
 - identity: high_exposure_open_claims
   name: "Claims: high-exposure open queue"
-  description: "Open claims and reviews ranked by dollar exposure — the analyst ranked-queue seed (deadline x dollar x severity, not FIFO)."
+  description: "Open claims and reviews ranked by dollar exposure — the analyst's default ranked queue (deadline x dollar x severity, not FIFO)."
   sql: >-
     SELECT claim_id, shipment_id, claim_kind, claim_type, commodity_event,
            liability_band, severity,

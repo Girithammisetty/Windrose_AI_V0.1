@@ -22,7 +22,7 @@ charts:
     h: 4
   - name: "Schedule-impact mix"
     chart_type: pie_chart
-    description: "Claims asserting no impact vs up-to-15 vs 30+ days on the critical path"
+    description: "Claims asserting no impact vs 1-15 vs 16-29 vs 30+ days on the critical path"
     config:
       x: { dimension: schedule_impact }
       y: [ { measure: claim_count, agg_fn: count } ]
@@ -45,6 +45,15 @@ charts:
       x: { dimension: filed_month }
       y: [ { measure: delay_claim_count, agg_fn: count } ]
     sources: [ { measure: delay_claim_count } ]
+    w: 6
+    h: 4
+  - name: "Disputed-notice claims by type"
+    chart_type: vertical_bar_chart
+    description: "Claims where notice timeliness itself is disputed, by claim type (condition-precedent watch)"
+    config:
+      x: { dimension: claim_type }
+      y: [ { measure: disputed_notice_count, agg_fn: count } ]
+    sources: [ { measure: disputed_notice_count } ]
     w: 6
     h: 4
   - name: "Entitlement basis grid"

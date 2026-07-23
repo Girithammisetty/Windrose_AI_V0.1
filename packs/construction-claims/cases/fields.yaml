@@ -33,7 +33,15 @@
   purpose: both
   field_meta:
     label: "Asserted schedule impact"
-    options: [none, days_15, days_30_plus]
+    options: [none, days_1_15, days_16_29, days_30_plus]
+    required: false
+- name: concurrent_delay
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Concurrent delay asserted"
+    # quoted so YAML keeps the literal yes/no strings, not booleans
+    options: ["yes", "no", disputed]
     required: false
 - name: claimed_amount
   data_type: float

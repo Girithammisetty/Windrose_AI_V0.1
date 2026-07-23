@@ -16,6 +16,16 @@
 - identity: icsr_intake_triage
   name: "ICSR intake triage routing"
   rules:
+    # Reporting clock ALREADY breached — negative runway would silently
+    # fall through the [0,7] band below, so it gets its own leading rule.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: days_to_deadline, op: lt, value: 0 }
+      then: { disposition_code: escalate_medical_review, severity: critical }
+      note: >-
+        Regulatory reporting clock already breached (negative runway) —
+        overdue cases lead the queue; the late-submission handling and any
+        regulator notification remain human decisions (QPPV).
     # Fatal-outcome case — leads the queue, always.
     - when:
         - { column: status, op: eq, value: open }
@@ -46,6 +56,18 @@
         Serious case with little regulatory reporting-clock runway left —
         expedite-band threshold is institution-configured over the
         tenant's own days_to_deadline column, not a regulatory day-count.
+    # Serious literature case — the regulatory clock started when the
+    # article was first screened, so day zero is already spent by the time
+    # the case reaches intake.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: case_type, op: eq, value: literature }
+        - { column: serious, op: eq, value: "yes" }
+      then: { disposition_code: escalate_medical_review, severity: high }
+      note: >-
+        Serious literature case — literature cases arrive with day zero
+        already elapsed at screening, so the effective runway is shorter
+        than the clock column suggests; expedite medical review.
     # Serious + recorded-unlisted profile: expedited-report CANDIDATE —
     # the candidacy prioritizes review; the reportability call stays human.
     - when:

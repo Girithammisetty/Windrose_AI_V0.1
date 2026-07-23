@@ -1,4 +1,4 @@
-# Pipeline seeds (expressed against the real pipeline-orchestrator algorithm
+# Pipeline templates (expressed against the real pipeline-orchestrator algorithm
 # catalog): an unsupervised lot-anomaly detector (which supplier/part-family/
 # program lots look unlike the rest of the book — the containment-sweep and
 # incoming-inspection targeting surface) and a supervised disposition-outcome

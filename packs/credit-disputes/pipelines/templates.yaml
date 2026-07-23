@@ -1,4 +1,4 @@
-# Pipeline seeds (expressed against the real pipeline-orchestrator algorithm
+# Pipeline templates (expressed against the real pipeline-orchestrator algorithm
 # catalog): an unsupervised tradeline-anomaly detector (duplicate-tradeline /
 # re-aged-delinquency / mixed-file surface scan over the furnished book) and
 # a supervised dispute-outcome scorer trained on human determinations (the

@@ -20,12 +20,14 @@
         - { column: fda_cleared_flag, op: eq, value: "no" }
       then: { disposition_code: bill_held, severity: high }
       note: "Device not marked cleared in the registry — hold the cycle pending plan-configured device criteria"
-    # Reading-day adherence below the program-configured supply-day threshold
-    # for the cycle — hold and run adherence outreach.
+    # Reading-day adherence below the 99454 16-day supply threshold — since
+    # the 2026 code set CPT/CMS provide lower-threshold RPM pathways for
+    # 2-15-day periods, so this routes to code-selection review, not an
+    # automatic hold.
     - when:
         - { column: meets_16day_flag, op: eq, value: "no" }
-      then: { disposition_code: bill_held, severity: medium }
-      note: "Cycle reading-day threshold not met (program-configured supply-day rule) — hold and pursue adherence outreach"
+      then: { disposition_code: escalate_md, severity: medium }
+      note: "Cycle under the 16-day supply threshold — route to code-selection review (lower-threshold RPM pathways exist for 2-15-day periods since the 2026 code set), with adherence outreach; not an automatic hold"
     # Data-review note still unsigned — route to the clinician reviewer
     # worklist for sign-off.
     - when:

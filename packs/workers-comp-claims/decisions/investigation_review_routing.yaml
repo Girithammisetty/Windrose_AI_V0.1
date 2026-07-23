@@ -1,7 +1,8 @@
 # Second governed decision table (BRD 54): deterministic, allegation-neutral
 # routing of pattern-flagged claims to the investigation queue and of
 # outsized medical-only spend to utilization/bill review. Operates ONLY on
-# wc_claims binding-contract columns (siu_flag, claim_type, paid_to_date).
+# wc_claims binding-contract columns (siu_flag, claim_type, paid_to_date,
+# rtw_status).
 # Routing, never adjudication: a pattern flag is a risk signal, not a
 # finding — benefits and jurisdiction-configured deadlines continue during
 # any investigation, and the table NEVER proposes a compensability
@@ -26,6 +27,15 @@
         - { column: paid_to_date, op: gte, value: 5000 }
       then: { disposition_code: refer_utilization_review, severity: medium }
       note: "Medical-only claim with paid-to-date ≥ $5k — utilization/bill-review audit of treatment and fee-schedule variance"
+    # Medical-only conversion watch: heavy medical spend with the claimant
+    # still not at full duty is the classic indemnity-conversion pattern —
+    # adjuster review before it converts, not after.
+    - when:
+        - { column: claim_type, op: eq, value: medical_only }
+        - { column: paid_to_date, op: gte, value: 10000 }
+        - { column: rtw_status, op: ne, value: full_duty }
+      then: { disposition_code: escalate_senior_adjuster, severity: medium }
+      note: "Medical-only claim with paid-to-date ≥ $10k and claimant not at full duty — adjuster review for indemnity-conversion risk and reserve adequacy"
   # default_outcome deliberately OMITTED: an unmatched claim stays in the
   # standard queue. There is no neutral "no-action" disposition, and this
   # routing table must never fall through to a determination-shaped outcome.

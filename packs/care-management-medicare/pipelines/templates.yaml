@@ -1,4 +1,4 @@
-# Pipeline seeds (CMM-FR-033 enrollment propensity, expressed against the real
+# Pipeline templates (CMM-FR-033 enrollment propensity, expressed against the real
 # pipeline-orchestrator algorithm catalog): an enrollment-propensity classifier
 # trained on the Medicare panel's consent-vs-offered outcomes — the ranking
 # input for the Enrollment Eligibility Scanner (CMM-FR-030). The nightly

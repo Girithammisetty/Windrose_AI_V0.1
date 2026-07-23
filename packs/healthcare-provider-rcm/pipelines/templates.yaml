@@ -1,4 +1,4 @@
-# Pipeline seeds (BRD 26 §4, expressed against the real pipeline-orchestrator
+# Pipeline templates (BRD 26 §4, expressed against the real pipeline-orchestrator
 # algorithm catalog): a supervised denial-prediction classifier over the bound
 # claims table (payer, service line, CPT, amounts, clean/first-pass flags ->
 # denied outcome) and an unsupervised underpayment surface scan over the bound

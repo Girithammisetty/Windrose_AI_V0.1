@@ -115,6 +115,10 @@ definition:
     - { name: avg_claim_age_days, entity: claims, agg: avg,
         expr: "cast(age_days as double)", format: decimal,
         description: "Average claim age in days (cycle time / backlog aging)" }
+    - { name: avg_days_to_decision, entity: claims, agg: avg,
+        expr: "cast(age_days as double)", filters: "status = 'closed'",
+        format: decimal,
+        description: "Average age at final disposition for closed claims (time to decision)" }
     - { name: total_claim_amount, entity: claims, agg: sum,
         expr: "cast(claim_amount as double)", format: decimal,
         description: "Total dollars claimed by the dealer network" }
@@ -124,6 +128,10 @@ definition:
     - { name: total_adjusted_amount, entity: claims, agg: sum,
         expr: "cast(adjusted_amount as double)", format: decimal,
         description: "Total dollars actually approved for payment after adjudication" }
+    - { name: goodwill_dollars, entity: claims, agg: sum,
+        expr: "cast(adjusted_amount as double)", filters: "claim_type = 'goodwill'",
+        format: decimal,
+        description: "Dollars approved for payment on goodwill assistance requests (program goodwill spend)" }
     - { name: total_recovered_amount, entity: claims, agg: sum,
         expr: "cast(recovery_amount as double)", format: decimal,
         description: "Total dollars recovered from suppliers via warranty chargebacks" }

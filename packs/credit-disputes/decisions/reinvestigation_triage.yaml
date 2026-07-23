@@ -1,23 +1,18 @@
 # Governed decision table (BRD 54) — a deterministic, explainable, no-LLM
 # first-cut ROUTING pass over the reinvestigation worklist, on columns the
 # cr-disputes binding contract guarantees (fcra_flag, dispute_reason,
-# deadline_bucket, status). It EXECUTES to the same governed four-eyes
-# proposal an agent produces: every matched case becomes a
-# case.apply_disposition proposal the Dispute Operations Manager must
-# approve. The table ONLY routes to the human identity-theft review track
-# (escalate_identity_theft_review, category inconclusive) — it NEVER
-# proposes an investigation outcome (correct/verify/delete/frivolous):
-# under FCRA those are human determinations with documented findings.
-# Outcome disposition_codes are validated against this workspace's
-# disposition catalog at install, so `dispositions` installs first.
+# deadline_bucket, days_to_deadline, channel, status). It EXECUTES to the
+# same governed four-eyes proposal an agent produces: every matched case
+# becomes a case.apply_disposition proposal the Dispute Operations Manager
+# must approve. The table ONLY routes — to the identity-theft review track
+# (escalate_identity_theft_review) or to the priority reinvestigation docket
+# (expedite_priority_review), both category inconclusive — it NEVER proposes
+# an investigation outcome (correct/verify/delete/frivolous): under FCRA
+# those are human determinations with documented findings. Outcome
+# disposition_codes are validated against this workspace's disposition
+# catalog at install, so `dispositions` installs first.
 #
-# Deliberately NOT expressed as rules, because the disposition catalog has
-# no allegation-neutral "expedite/human-review" routing code and inventing
-# one is out of scope:
-#   * generic clock-expiry expedite (non-identity-theft disputes in the
-#     0_5_days bucket) — handled by the deadline-ranked open-docket saved
-#     query (queries/saved.yaml), which orders the investigator worklist by
-#     statutory-clock runway;
+# Still deliberately NOT expressed as rules:
 #   * repeat/frivolous-pattern flags — repeat rounds are a cross-row count
 #     the single-case projection cannot carry; the repeat-disputes verified
 #     query surfaces them for supervisor review, and any frivolous
@@ -25,6 +20,14 @@
 - identity: reinvestigation_triage
   name: "FCRA reinvestigation triage routing"
   rules:
+    # OVERDUE: the statutory reinvestigation clock has already run out —
+    # the most escalation-worthy posture in the workflow; the file is out
+    # of compliance until a human completes the determination.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: days_to_deadline, op: lt, value: 0 }
+      then: { disposition_code: expedite_priority_review, severity: critical }
+      note: "Statutory reinvestigation clock ALREADY BREACHED — overdue posture; route to the priority docket for immediate human completion"
     # A completed identity-theft block request whose statutory block clock
     # is nearly exhausted — the tightest clock in the workflow.
     - when:
@@ -45,7 +48,24 @@
         - { column: status, op: eq, value: open }
       then: { disposition_code: escalate_identity_theft_review, severity: high }
       note: "Identity-theft allegation — priority investigation on the specialist track; substantiation is the human investigator's determination"
-  # default_outcome deliberately OMITTED: the catalog has no neutral
-  # human-review code, and every remaining code is an investigation outcome
-  # this table must never propose. Unmatched disputes simply stay on the
-  # deadline-ranked investigator worklist.
+    # Litigation-channel intake: a dispute arriving as a court or attorney
+    # document carries suit risk (FCRA 616/617 willful/negligent
+    # noncompliance exposure) — front of the docket.
+    - when:
+        - { column: channel, op: eq, value: court_document }
+        - { column: status, op: eq, value: open }
+      then: { disposition_code: expedite_priority_review, severity: high }
+      note: "Litigation-channel intake carries suit risk (FCRA 616/617 exposure) — priority reinvestigation docket"
+    # Obsolescence claims are semi-deterministic against the FCRA 605
+    # reporting-period dates (7-year adverse-item / 10-year bankruptcy
+    # limits) — route to the docket that verifies the
+    # delinquency-commencement dating.
+    - when:
+        - { column: dispute_reason, op: eq, value: obsolete_info }
+        - { column: status, op: eq, value: open }
+      then: { disposition_code: expedite_priority_review, severity: medium }
+      note: "Obsolescence check is semi-deterministic against 605 dates (7-year/10-year) — route to the docket that verifies delinquency-commencement dating"
+  # default_outcome deliberately OMITTED: the routing codes above are for
+  # flagged postures only, and every remaining code is an investigation
+  # outcome this table must never propose. Unmatched disputes simply stay
+  # on the deadline-ranked investigator worklist.

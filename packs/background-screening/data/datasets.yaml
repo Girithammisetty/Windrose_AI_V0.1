@@ -10,16 +10,47 @@
 - identity: bs_applicants
   name: bs-applicants
   required_columns:
-    [applicant_id, applicant_name, state, prior_orders_band, dispute_history,
+    [applicant_id, applicant_name, state, prior_orders_band,
+     # value domain: yes | no
+     dispute_history,
+     # value domain: yes | no
      common_name]
 - identity: bs_orders
   name: bs-orders
   required_columns:
     [order_id, applicant_id, employer_name, employer_industry,
-     position_category, package, order_month, turnaround_days, turnaround_band]
+     # value domain: driver | healthcare | finance | admin | hospitality | retail | warehouse
+     position_category,
+     # value domain: tenant-configured package tiers; 'premium' is the value the premium_package_count measure matches
+     package,
+     order_month, turnaround_days,
+     # value domain: tenant-configured turnaround bands; 'over_5_days' is the value the delayed_order_count measure matches
+     turnaround_band]
 - identity: bs_reviews
   name: bs-reviews
+  # Columns the decision tables and semantic/query filters compare to
+  # literals carry their value domains below, so bound tenant data can be
+  # checked against what the rules actually match.
   required_columns:
-    [review_id, order_id, check_type, hit_type, record_age_band, relevance,
-     identity_confidence, severity, status, disposition, deadline_bucket,
+    [review_id, order_id,
+     # value domain: criminal | mvr | employment_verification | education | credit_header
+     check_type,
+     # value domain: felony | misdemeanor | pending_charge | record_mismatch | discrepancy
+     hit_type,
+     # value domain: under_3_years | 3_7_years | over_7_years
+     record_age_band,
+     # value domain: job_related | not_job_related | pending
+     relevance,
+     # value domain: low | medium | high
+     identity_confidence,
+     # value domain: yes | no
+     common_name_flag,
+     # value domain: program severity tiers; 'high' is the value the clock-escalation table matches
+     severity,
+     # value domain: open | closed
+     status,
+     # value domain: the codes in cases/dispositions.yaml
+     disposition,
+     # value domain: tenant-configured runway buckets; '0_3_days' and '4_10_days' are the values the clock-escalation table matches
+     deadline_bucket,
      filed_month, age_days, days_to_deadline]

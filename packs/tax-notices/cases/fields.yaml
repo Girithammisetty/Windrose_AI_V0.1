@@ -4,13 +4,20 @@
 # data_type is IMMUTABLE after creation (case-service) — chosen deliberately.
 # Enum options mirror the tx-notices binding-contract column values so field
 # data and the bound dataset agree.
+# notice_type includes the IRS collection-stream sequence (extending the enum
+# BEFORE install is safe — data_type stays immutable): CP14 balance due ->
+# CP501 reminder -> CP504 intent to levy (which authorizes only a STATE-REFUND
+# levy) -> LT11/L1058, the final notice that opens the 30-day Collection Due
+# Process window. Triage urgency turns on which rung the notice sits on.
 - name: notice_type
   data_type: enum
   purpose: both
   field_meta:
     label: "Notice type"
     options: [sales_use_assessment, penalty_interest, income_franchise,
-              information_mismatch, exemption_cert_audit, payroll_withholding]
+              information_mismatch, exemption_cert_audit, payroll_withholding,
+              cp14_balance_due, cp501_reminder,
+              cp504_intent_levy_state_refund, lt11_final_intent_levy]
     required: false
 - name: jurisdiction_level
   data_type: enum

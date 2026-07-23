@@ -81,16 +81,16 @@ definition:
         filters: "disposition = 'rework_to_spec'",
         description: "NCs dispositioned rework-to-spec (re-verification required)" }
     - { name: use_as_is_count, entity: nonconformances, agg: count,
-        filters: "disposition = 'use_as_is'",
+        filters: "disposition = 'use_as_is_engineering_disposition'",
         description: "NCs accepted use-as-is under engineering disposition/concession" }
     - { name: scrap_count, entity: nonconformances, agg: count,
-        filters: "disposition = 'scrap'",
+        filters: "disposition = 'scrap_disposition'",
         description: "NCs dispositioned scrap (nonrecoverable material loss)" }
     - { name: supplier_return_count, entity: nonconformances, agg: count,
-        filters: "disposition = 'return_to_supplier'",
+        filters: "disposition = 'return_to_supplier_scar'",
         description: "NCs returned to the supplier (SCAR path)" }
     - { name: no_defect_found_count, entity: nonconformances, agg: count,
-        filters: "disposition = 'no_defect_found'",
+        filters: "disposition = 'no_defect_found_release'",
         description: "NCs closed no-defect-found — parts conform, report withdrawn" }
     - { name: critical_char_count, entity: nonconformances, agg: count,
         filters: "spec_class = 'critical_characteristic'",

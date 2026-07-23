@@ -1,6 +1,7 @@
 # device-complaints capability pack — Core-neutral edition: medical-device
-# complaint handling and MDR reportability (21 CFR 803 / 820.198, EU MDR
-# vigilance parallel) for device manufacturers, combination-product makers,
+# complaint handling and MDR reportability (21 CFR 803, QMSR complaint
+# files, EU MDR vigilance parallel) for device manufacturers,
+# combination-product makers,
 # and contract manufacturers. The medical-device sibling of the
 # pharmacovigilance pack (BRD 33): complaint handling + MDR reportability
 # instead of ICSR processing. Installable TODAY against Datacern Core's
@@ -13,18 +14,19 @@
 # are curated by the tenant from its own adjudicated complaint history.
 pack_manifest: 1
 name: device-complaints
-version: 2.0.0
+version: 2.1.0
 publisher: { id: pub-datacern, name: "Datacern Inc." }
 description: >-
   AI-assisted medical-device complaint handling and MDR reportability for
   manufacturers: complaint intake triage with regulatory-clock awareness
   (21 CFR 803 30-calendar-day and 5-work-day reports, becoming-aware day
   zero), death reportability presumption handling, malfunction
-  could-recur assessment, 820.100 CAPA trend escalation, returned-device
+  could-recur assessment, CAPA trend escalation under ISO 13485
+  §8.5.2/8.5.3 (as incorporated by the QMSR), returned-device
   and duplicate workflows, complaint-quality KPI semantic model and
   dashboards (MDR filing rate, not-reportable rate, CAPA-open share,
   deadline runway, device-problem and harm mix), device-problem network
-  analytics, Part 803/820 + EU MDR vigilance grounding memories, and
+  analytics, Part 803/QMSR + EU MDR vigilance grounding memories, and
   device-fleet anomaly + reportability-scoring training pipelines.
 categories: [medtech, medical_devices, complaints, mdr, quality, post_market_surveillance]
 regulatory: [fda_21_cfr_803, fda_21_cfr_820, eu_mdr, iso_13485]

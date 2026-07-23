@@ -1,8 +1,8 @@
-# Pipeline seeds (BRD 30 §4 pipeline templates + model archetypes, expressed
-# against the real pipeline-orchestrator algorithm catalog): an unsupervised
-# transaction-anomaly detector (the nightly peer-anomaly scan seed,
-# AML-FR-090) and a supervised alert-disposition scorer trained on human
-# dispositions (the alert_disposition_confidence archetype seed, AML-FR-030
+# Pipeline templates (BRD 30 §4 pipeline templates + model archetypes,
+# expressed against the real pipeline-orchestrator algorithm catalog): an
+# unsupervised transaction-anomaly detector (the nightly peer-anomaly scan
+# template, AML-FR-090) and a supervised alert-disposition scorer trained on
+# human dispositions (the alert_disposition_confidence archetype, AML-FR-030
 # deterministic-first pre-router). The Argo scan-cadence workflows and
 # quarterly distillation runs are deferred — they require pack-service /
 # BRD 12 distillation endpoints not yet shipped in Core. Per BR-8 (SR 26-2, supersedes SR 11-7 as of 2026-04-17),

@@ -60,6 +60,7 @@ definition:
     - { name: denial_payer, entity: denials, type: categorical, column: payer_name }
     - { name: denial_month, entity: denials, type: categorical, column: denial_month }
     - { name: appeal_status, entity: denials, type: categorical, column: appeal_status }
+    - { name: appeal_deadline_days, entity: denials, type: categorical, column: appeal_deadline_days }
     - { name: remit_month, entity: remits, type: categorical, column: remit_month }
     - { name: remit_carc_code, entity: remits, type: categorical, column: carc_code }
     - { name: underpayment_flag, entity: remits, type: categorical, column: underpayment_flag }
@@ -101,6 +102,10 @@ definition:
     - { name: total_denied_amount, entity: denials, agg: sum,
         expr: "cast(denied_amount as double)", format: decimal,
         description: "Dollars denied (net charge value of denied lines)" }
+    - { name: unappealed_denied_amount, entity: denials, agg: sum,
+        expr: "cast(denied_amount as double)",
+        filters: "appeal_status = 'not_appealed'", format: decimal,
+        description: "Denied dollars with no appeal on file (appeal-deadline clock exposure)" }
     - { name: remit_line_count, entity: remits, agg: count,
         description: "835 remittance lines received" }
     - { name: underpaid_line_count, entity: remits, agg: count,

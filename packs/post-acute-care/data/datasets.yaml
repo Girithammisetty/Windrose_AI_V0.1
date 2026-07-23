@@ -8,12 +8,17 @@
 # from the operator's post-acute EHR / referral-network extracts.
 - identity: pac_episodes
   name: pac-episodes
+  # value domain: episode_status = 'active'|...; care_setting = HHA|SNF|HOSPICE;
+  #   payment_model = PDGM|PDPM|HOSPICE_PER_DIEM; comorbidity_adjusted /
+  #   readmitted_30d = 'yes'|'no'; visit_count / lupa_threshold = integers
+  #   (the LUPA threshold is per-HHRG); lupa_risk = yes|no|na — computed
+  #   upstream as visits-trending-under-threshold for the open period
   required_columns:
     [episode_id, patient_id, referral_id, care_setting, facility, admit_month,
      primary_dx_code, primary_dx_desc, payment_model, case_mix_group,
      functional_level, comorbidity_adjusted, los_days, episode_status,
      discharge_disposition, readmitted_30d, readmission_risk_score,
-     expected_reimbursement]
+     expected_reimbursement, visit_count, lupa_threshold, lupa_risk]
 - identity: pac_referrals
   name: pac-referrals
   required_columns:
@@ -23,7 +28,11 @@
      decline_reason]
 - identity: pac_assessments
   name: pac-assessments
+  # value domain: drafted_by_copilot = 'yes'|'no'; audit_result = 'pass'|...;
+  #   days_overdue = integer days past the OASIS 30-day lock / MDS 14-day
+  #   iQIES submission SLA (0 or negative = inside SLA)
   required_columns:
     [assessment_id, episode_id, assessment_type, assessment_month,
      completion_minutes, drafted_by_copilot, reviewer_role,
-     missed_comorbidity_count, revenue_impact, status, audit_result]
+     missed_comorbidity_count, revenue_impact, status, audit_result,
+     days_overdue]

@@ -33,8 +33,12 @@
   confidence: 0.97
 - content: >-
     RPM rules: CPT 99454 (device supply/transmission) requires >= 16 days
-    with at least one device reading in the 30-day period — fewer days blocks
-    99454. CPT 99457 (>= 20 minutes/month of clinician review with interactive
+    with at least one device reading in the 30-day period. A sub-16-day
+    cycle no longer means the period is automatically unbillable: beginning
+    with the 2026 code set, CPT/CMS added lower-threshold RPM pathways for
+    shorter data periods (2-15 days), so a cycle under 16 days is a
+    code-selection question for the reviewer, not an automatic hold. CPT
+    99457 (>= 20 minutes/month of clinician review with interactive
     communication) is billable INDEPENDENTLY of the 16-day rule when its time
     threshold is met; 99458 covers additional 20-minute blocks; 99453 covers
     initial setup and patient education.
@@ -50,19 +54,24 @@
   tags: [cms, consent, compliance]
   confidence: 0.98
 - content: >-
-    FQHC/RHC billing: Federally Qualified Health Centers and Rural Health
-    Clinics bill HCPCS G0511 (general care management) in place of the
-    standard CCM and BHI CPT codes, per CMS FQHC rules. When the billing
-    provider carries the fqhc_rhc flag, code selection must override 99490/
-    99484-family proposals to G0511.
+    FQHC/RHC billing: the CY2025 PFS unbundled HCPCS G0511 — Federally
+    Qualified Health Centers and Rural Health Clinics now bill the individual
+    care-management CPT/HCPCS codes (the 99490 family, 99484, 99457, etc.)
+    rather than the single G0511 bundle, after billing under G0511 was
+    permitted only through the 2025 transition window CMS provided. When the
+    billing provider carries the fqhc_rhc flag, code selection needs an
+    FQHC/RHC-specific review of the individual-code proposal — not a
+    collapse to G0511.
   tags: [cms, fqhc, g0511]
   confidence: 0.95
 - content: >-
-    APCM (2025): HCPCS G0556 (level 1 — one chronic condition), G0557 (level
-    2 — two or more chronic conditions), G0558 (level 3 — QMB beneficiary
-    with two or more chronic conditions). APCM is a BUNDLED monthly code with
-    no time threshold: when a practice opts into APCM, it replaces standard
-    CCM/PCM/TCM billing for those patients that month. Enrollment is
+    APCM (2025): HCPCS G0556 (level 1 — patients with one chronic condition
+    or fewer), G0557 (level 2 — two or more chronic conditions), G0558
+    (level 3 — QMB beneficiary with two or more chronic conditions). APCM is
+    a BUNDLED monthly code with no time threshold: same-month CCM/PCM
+    concurrency with APCM is prohibited for the same patient; whether TCM
+    sits on the concurrent-exclusion list should be confirmed against
+    current CMS guidance before holding a TCM claim. Enrollment is
     per-practice; pre-opt-in CCM/PCM enrollments are grandfathered.
   tags: [cms, apcm, "2025", tiers]
   confidence: 0.95
@@ -76,11 +85,14 @@
   confidence: 0.96
 - content: >-
     RTM (98975-98981) covers musculoskeletal, respiratory, and CBT device
-    families and, unlike CCM/RPM (which require physician or NP/PA
-    supervision), may be billed by PT/OT/SLP under general supervision.
-    Device data must originate from an FDA-cleared device on the vendor
-    whitelist — readings from non-cleared devices do not count toward the
-    16-day requirement.
+    families; its distinctive feature is WHO may bill — PT/OT/SLP and other
+    qualified professionals who cannot bill RPM's E/M-based codes. The
+    supervision contrast with CCM/RPM is narrower than often stated: RPM
+    99457/99458 clinical-staff time may itself be furnished under GENERAL
+    supervision (since CY2020), so supervision level does not distinguish
+    RTM from RPM. Device data must originate from an FDA-cleared device on
+    the vendor whitelist — readings from non-cleared devices do not count
+    toward the 16-day requirement.
   tags: [cms, rtm, supervision, fda_whitelist]
   confidence: 0.93
 - content: >-

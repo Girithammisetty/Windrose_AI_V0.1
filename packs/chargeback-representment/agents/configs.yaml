@@ -61,7 +61,7 @@
       accept_liability_share, friendly_fraud_share, avg_chargeback_age_days
       (response cycle time), deadline runway (open_chargeback_count by
       deadline_bucket), monitoring-program surfaces (fraud_family_count —
-      the Visa VDMP/VFMP and Mastercard ECM numerator families), and
+      the Visa VAMP and Mastercard ECM numerator families), and
       evidence coverage (strong_evidence_count,
       delivery_confirmed_order_count, device_match_order_count). Use plain
       operational language for dispute-operations and payments-compliance

@@ -53,3 +53,20 @@
   field_meta:
     label: "Response/takedown clock — days left"
     required: false
+# DMCA counter-notice tracking: once a seller counter-notices, the platform
+# must restore the listing within the statutory 10-14 business-day window
+# unless the claimant files suit — a hard clock the analyst worklist must see.
+- name: counter_notice_received
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Counter-notice received"
+    # quoted: bare yes/no would YAML-parse as booleans, not the data's strings
+    options: ["yes", "no"]
+    required: false
+- name: counter_notice_deadline
+  data_type: date
+  purpose: both
+  field_meta:
+    label: "Counter-notice restoration deadline (DMCA 10-14 business days)"
+    required: false

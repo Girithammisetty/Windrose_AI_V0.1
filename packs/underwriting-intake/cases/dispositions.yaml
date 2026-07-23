@@ -20,3 +20,8 @@
 # four-eyes human underwriting authority under the carrier-configured
 # authority limits.
 - { code: escalate_referral_review,     label: "Escalate to underwriting referral review (human)",        category: inconclusive,   requires_note: true }
+# blocked_duplicate_submission records the clearance outcome: the same risk
+# already cleared through an earlier broker (first-in-time holds the market),
+# so the later duplicate is blocked pending broker-of-record resolution — the
+# note names the earlier-cleared submission the block rests on.
+- { code: blocked_duplicate_submission, label: "Blocked — duplicate of earlier-cleared submission",       category: benign,         requires_note: true }

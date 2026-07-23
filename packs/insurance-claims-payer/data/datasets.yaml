@@ -11,7 +11,10 @@
   required_columns:
     [claim_id, member_id, provider_npi, provider_specialty, plan_year,
      product_type, service_month, place_of_service, cpt_code, icd10_code,
-     service_line, billed_amount, allowed_amount, paid_amount, status,
+     service_line, billed_amount, allowed_amount, paid_amount,
+     # value domain: status — 'denied' and 'paid' are matched literally by
+     # semantic filters and verified queries
+     status,
      network_status, member_state]
 - identity: payer_denials
   name: payer-denials
@@ -23,11 +26,33 @@
   name: payer-appeals
   required_columns:
     [appeal_id, denial_id, claim_id, level, submitted_by, submitted_month,
-     status, verdict_by, member_state, denial_reason_code, cpt_code,
-     potential_value]
+     # value domain: status — 'pending' and 'overturned' are matched literally
+     # by the appeal-routing table, semantic filters, and verified queries
+     status,
+     verdict_by, member_state,
+     # value domain: denial_reason_code = CARC codes in CO-50/CO-197/CO-151/
+     # PR-204 form — matched literally by the appeal-routing table
+     denial_reason_code,
+     cpt_code, potential_value]
 - identity: prior_auth_requests
   name: payer-prior-auth-requests
   required_columns:
     [par_id, member_id, provider_npi, requested_service, cpt_code, icd10_code,
-     urgency, submitted_month, status, turnaround_hours, product_type,
-     member_state, agent_recommendation, agent_confidence]
+     # value domain: urgency = urgent|standard — matched literally by the
+     # PA-triage table and verified queries
+     urgency,
+     submitted_month,
+     # value domain: status = pending|approved|denied — matched literally by
+     # the PA-triage table and semantic filters
+     status,
+     turnaround_hours, product_type, member_state,
+     # value domain: specialty_drug_flag = yes|no — specialty-drug routing
+     # signal read literally by the PA-triage table
+     specialty_drug_flag,
+     # value domain: clinical_info_status = complete|incomplete — matched
+     # literally by the PA-triage table's missing-info deferral rule
+     clinical_info_status,
+     # value domain: agent_recommendation = approve|escalate_md — matched
+     # literally by the PA-triage table
+     agent_recommendation,
+     agent_confidence]

@@ -33,6 +33,12 @@
         - { column: claim_type, op: eq, value: differing_site_conditions }
       then: { disposition_code: request_substantiation, severity: medium }
       note: "Differing-site-conditions claim — collect boring logs / geotech baseline and the encountered-condition record for the indicated-conditions comparison"
+    # Payment disputes turn on the payment clause's condition-precedent
+    # language — collect the clause and the pay-application record first.
+    - when:
+        - { column: claim_type, op: eq, value: payment_dispute }
+      then: { disposition_code: request_substantiation, severity: medium }
+      note: "Payment dispute — produce the payment clause and pay applications for the pay-if-paid/pay-when-paid condition-precedent read before any position is taken"
   # default_outcome deliberately OMITTED: a claim with no documentation gap
   # matched here stays on the standard worklist for human triage — the table
   # routes, it never adjudicates.

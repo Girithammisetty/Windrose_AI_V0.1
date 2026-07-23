@@ -47,6 +47,7 @@ definition:
     - { name: episode_status, entity: episodes, type: categorical, column: episode_status }
     - { name: discharge_disposition, entity: episodes, type: categorical, column: discharge_disposition }
     - { name: readmitted_30d, entity: episodes, type: categorical, column: readmitted_30d }
+    - { name: lupa_risk, entity: episodes, type: categorical, column: lupa_risk }
     - { name: assessment_type, entity: assessments, type: categorical, column: assessment_type }
     - { name: assessment_month, entity: assessments, type: categorical, column: assessment_month }
     - { name: drafted_by_copilot, entity: assessments, type: categorical, column: drafted_by_copilot }
@@ -64,6 +65,9 @@ definition:
     - { name: active_episode_count, entity: episodes, agg: count,
         filters: "episode_status = 'active'",
         description: "Episodes currently on service" }
+    - { name: lupa_risk_count, entity: episodes, agg: count,
+        filters: "lupa_risk = 'yes'",
+        description: "Periods trending under their LUPA visit threshold (lupa_risk column: yes|no|na, computed upstream)" }
     - { name: avg_los_days, entity: episodes, agg: avg,
         expr: "cast(los_days as double)", format: decimal,
         description: "Average length of stay in days" }

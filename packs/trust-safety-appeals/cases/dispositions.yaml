@@ -17,3 +17,10 @@
 # determinations with documented policy grounds.
 - { code: escalate_senior_review, label: "Escalate to senior review queue (priority / specialist routing)", category: inconclusive,  requires_note: true }
 - { code: close_duplicate_appeal, label: "Close — duplicate of an existing appeal on this decision",       category: benign,         requires_note: true }
+# route_specialist_review is the restricted-queue routing code (child-safety
+# and other regulated content): it parks the appeal with the specialist team
+# under strict access controls without any merits call — never a restore.
+# restore_and_secure is the compromised-account remediation determination
+# (owner verified, credentials reset, compromise-window strikes expunged).
+- { code: route_specialist_review, label: "Route to specialist review (child-safety/regulated content)",    category: inconclusive,   requires_note: true }
+- { code: restore_and_secure,      label: "Restore — compromised account secured, strikes expunged",        category: benign,         requires_note: true }

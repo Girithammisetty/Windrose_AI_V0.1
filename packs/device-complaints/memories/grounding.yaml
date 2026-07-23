@@ -1,5 +1,6 @@
 # Tenant-scope RAG grounding records (memory-service). This is the 21 CFR
-# 803 / 820 / EU MDR vigilance domain knowledge the triage copilot retrieves
+# 803 / QMSR (21 CFR 820) / EU MDR vigilance domain knowledge the triage
+# copilot retrieves
 # when reasoning about a complaint. Every record is factual regulatory or
 # methodological reference material; where an exact figure is not certain it
 # is stated qualitatively.
@@ -35,16 +36,19 @@
   tags: [mdr, becoming_aware, day_zero, intake]
   confidence: 0.92
 - content: >-
-    Complaint files (21 CFR 820.198): complaints must be received, reviewed,
-    and evaluated by a formally designated unit; EVERY complaint must be
-    evaluated to determine whether it represents an event that must be
-    reported under Part 803, and MDR-related complaints get a prompt review
-    and investigation. When no investigation is made, the file must record
-    the reason and the name of the individual responsible for that decision.
-    Investigation records must include the device, the dates, the results,
-    and any reply to the complainant.
-  tags: [part_820, complaint_files, reportability_evaluation, records]
-  confidence: 0.95
+    Complaint files under the QMSR: effective February 2, 2026, FDA's
+    Quality Management System Regulation amended 21 CFR 820 to incorporate
+    ISO 13485:2016 by reference — complaint-handling duties now flow from
+    ISO 13485 clause 8.2.2 (complaint handling), with 21 CFR 820.35 adding
+    records requirements that include documenting the determination of
+    whether an event must be reported under Part 803. As amended by the
+    QMSR, the substance survives: EVERY complaint is evaluated for
+    reportability, complaints are handled by procedure in a timely manner,
+    a decision not to investigate carries the documented reason and the
+    responsible individual, and investigation records cover the device, the
+    dates, the results, and any reply to the complainant.
+  tags: [qmsr, iso_13485, complaint_files, reportability_evaluation, records]
+  confidence: 0.93
 - content: >-
     Death reportability presumption: FDA's MDR decision-tree guidance treats
     reported deaths with a presumption toward reportability — if the
@@ -58,17 +62,18 @@
   tags: [mdr, death, presumption, decision_tree, causality]
   confidence: 0.9
 - content: >-
-    CAPA linkage (21 CFR 820.100): corrective and preventive action
-    procedures must analyze quality data sources — including complaints,
-    service records, and returned product — to identify existing and
-    potential causes of nonconforming product, applying appropriate
-    statistical methodology where needed. Complaint TRENDS (repeat
-    device-problem codes on one product, a cluster after a design, software,
-    or supplier change) trigger CAPA even when each individual complaint is
-    closed; opening a CAPA never substitutes for, or delays, an MDR
-    reportability decision on the individual events.
-  tags: [part_820, capa, trending, quality_data]
-  confidence: 0.94
+    CAPA linkage under the QMSR (ISO 13485:2016 §8.5.2 corrective action /
+    §8.5.3 preventive action, as incorporated by 21 CFR 820): corrective
+    and preventive action must analyze quality data sources — including
+    complaints, service records, and returned product — to identify
+    existing and potential causes of nonconforming product, applying
+    appropriate statistical methodology where needed. Complaint TRENDS
+    (repeat device-problem codes on one product, a cluster after a design,
+    software, or supplier change) trigger CAPA even when each individual
+    complaint is closed; opening a CAPA never substitutes for, or delays,
+    an MDR reportability decision on the individual events.
+  tags: [qmsr, iso_13485, capa, trending, quality_data]
+  confidence: 0.93
 - content: >-
     UDI (unique device identification): marketed devices carry a UDI with a
     device identifier (model/version level) and production identifiers (lot,
@@ -82,15 +87,29 @@
 - content: >-
     EU MDR vigilance parallel (Regulation (EU) 2017/745): manufacturers
     report serious incidents to the competent authority no later than 15
-    days after awareness, with shorter windows for deaths or serious
-    deteriorations in health and for serious public-health threats. Field
-    safety corrective actions require a field safety notice to users, and
-    trend reporting obligations cover statistically significant increases in
+    days after awareness, tightening to 2 days for a serious public-health
+    threat and 10 days in the event of death or an unanticipated serious
+    deterioration in a person's state of health; member-state submission
+    specifics vary and are handled per jurisdiction. Field safety
+    corrective actions require a field safety notice to users, and trend
+    reporting obligations cover statistically significant increases in
     non-serious incidents. A complaint-handling unit serving both markets
     must run the FDA and EU clocks in parallel from the same
     becoming-aware date.
   tags: [eu_mdr, vigilance, serious_incident, fsca, deadlines]
   confidence: 0.9
+- content: >-
+    eMDR electronic submission and MDR procedures (21 CFR 803): manufacturer
+    MDRs are submitted electronically via the eMDR system through the FDA
+    Electronic Submissions Gateway (ESG). A supplemental report is required
+    when the manufacturer obtains information it did not provide in the
+    initial report (803.56). Written MDR procedures are required (803.17)
+    covering timely identification, evaluation, and submission of
+    reportable events, and MDR files must be retained for two years from
+    the date of the event or a period equivalent to the expected life of
+    the device, whichever is greater.
+  tags: [mdr, emdr, esg, supplemental_reports, procedures, retention]
+  confidence: 0.92
 - content: >-
     Trending and signal detection on device-problem codes: post-market
     surveillance codes complaints against a harmonized device-problem

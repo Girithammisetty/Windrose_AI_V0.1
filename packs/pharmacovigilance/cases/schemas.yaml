@@ -19,3 +19,5 @@
     - { name: causality,            data_type: enum,    label: "Causality assessment",                      required: false }
     - { name: report_country,       data_type: string,  label: "Report country",                            required: false }
     - { name: days_to_deadline,     data_type: integer, label: "Regulatory reporting clock — days left",    required: false }
+    - { name: qppv_approver,        data_type: string,  label: "QPPV / safety officer approver",            required: false }
+    - { name: submission_reference, data_type: string,  label: "Submission reference (gateway ACK / report number)", required: false }

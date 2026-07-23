@@ -17,5 +17,6 @@
     - { name: decision_id,           data_type: string,  label: "Contested enforcement decision id", required: true }
     - { name: enforcement_source,    data_type: enum,    label: "Enforcement source",                required: false }
     - { name: user_standing,         data_type: enum,    label: "Appellant enforcement standing",    required: false }
+    - { name: appeal_origin,         data_type: enum,    label: "Appeal origin (enforced user vs notice submitter)", required: false }
     - { name: days_to_deadline,      data_type: integer, label: "Complaint-handling clock — days left", required: false }
     - { name: classifier_score_band, data_type: enum,    label: "Classifier confidence band at enforcement", required: false }

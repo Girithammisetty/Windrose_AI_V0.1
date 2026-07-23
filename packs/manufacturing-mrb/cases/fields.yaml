@@ -53,3 +53,15 @@
   field_meta:
     label: "Disposition deadline — days left"
     required: false
+# Whose authority the closure needs — the distinction an AS9100 auditor
+# samples MRB records for: internal board vs customer concession vs
+# design-authority approval (repair, use-as-is on customer-designed or
+# critical characteristics).
+- name: disposition_authority
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Disposition authority required"
+    options: [internal_mrb, customer_concession_required,
+              design_authority_required]
+    required: false

@@ -78,10 +78,10 @@ definition:
         filters: "status = 'closed'",
         description: "Disputes closed with a final outcome" }
     - { name: cardholder_favor_count, entity: disputes, agg: count,
-        filters: "disposition = 'cardholder_favor'",
+        filters: "disposition = 'resolve_cardholder_favor'",
         description: "Disputes resolved in the cardholder's favor (non-chargeback)" }
     - { name: denied_count, entity: disputes, agg: count,
-        filters: "disposition = 'denied_no_error'",
+        filters: "disposition = 'deny_no_error_found'",
         description: "Disputes denied — investigation found no error" }
     - { name: chargeback_won_count, entity: disputes, agg: count,
         filters: "disposition = 'chargeback_won'",

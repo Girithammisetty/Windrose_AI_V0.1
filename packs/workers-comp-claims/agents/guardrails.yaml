@@ -7,7 +7,9 @@
 # that must not leave in agent output.
 - agent_key: case-triage
   budget: { max_tokens_per_session: 60000 }
-  pii: { block_pii_egress: false, redact: true }
+  # claimant MEDICAL data flows through triage — strictest posture: block PII
+  # egress outright, and redact anything that still surfaces
+  pii: { block_pii_egress: true, redact: true }
   bind_workspace: true
 - agent_key: analytics
   budget: { max_tokens_per_session: 40000 }

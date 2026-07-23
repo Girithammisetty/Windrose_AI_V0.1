@@ -9,6 +9,18 @@
 # (contract book) -> cc_parties (subcontractor/supplier/GC/owner-rep register).
 - identity: cc_claims
   name: cc-claims
+  # value domain: disposition holds cases/dispositions.yaml catalog codes —
+  #   approve_change_order | reject_no_entitlement | negotiate_partial_merit |
+  #   request_substantiation | close_withdrawn_resolved | escalate_review_board |
+  #   refer_dispute_resolution (semantic measure filters and verified SQL
+  #   compare against these literals)
+  # value domain: status = open | closed
+  # value domain: claim_type = acceleration | change_order_request |
+  #   defect_backcharge | delay_claim | differing_site_conditions | payment_dispute
+  # value domain: notice_timely = yes | no | disputed
+  # value domain: schedule_impact = none | days_1_15 | days_16_29 | days_30_plus
+  # value domain: days_to_deadline = int days remaining in the contract-configured
+  #   response window (negative = window already lapsed)
   required_columns:
     [claim_id, contract_id, claim_type, entitlement_basis, notice_timely,
      schedule_impact, severity, status, disposition, deadline_bucket,

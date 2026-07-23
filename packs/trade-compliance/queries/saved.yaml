@@ -17,7 +17,7 @@
   tags: [trade, network, lanes, sourcing, pack]
 - identity: high_priority_open_reviews
   name: "Trade: high-priority open review queue"
-  description: "Open review items ranked by deadline runway — the analyst ranked-queue seed (deadline x duty risk x severity, not FIFO)."
+  description: "Open review items ranked by deadline runway — the analyst ranked queue (deadline x duty risk x severity, not FIFO)."
   sql: >-
     SELECT review_id, shipment_id, item_type, product_category,
            declared_hs_chapter, origin_country, screening_list,

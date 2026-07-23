@@ -7,3 +7,5 @@
 - { code: appeal_overturned,  label: "Appeal overturned — approve claim", category: false_positive, requires_note: true }
 - { code: denial_notice_approved, label: "Denial notice approved for send", category: false_positive, requires_note: false }
 - { code: escalate_md,        label: "Escalate to medical director",   category: inconclusive,   requires_note: false }
+- { code: appeal_dismissed_untimely, label: "Appeal dismissed — untimely/withdrawn", category: other, requires_note: true }
+- { code: pa_partially_approved, label: "PA partially approved — modified scope", category: other, requires_note: true }

@@ -1,7 +1,9 @@
 # Second governed decision table (BRD 54): deterministic episode-escalation
 # routing over care-transition review cases, on columns the pac_episodes
 # binding contract guarantees (episode_status, care_setting, payment_model,
-# comorbidity_adjusted, readmission_risk_score, los_days). Executes to the
+# comorbidity_adjusted, readmission_risk_score, los_days, lupa_risk) plus
+# the pac_assessments timeliness column (days_overdue) for
+# assessment-review cases. Executes to the
 # same governed four-eyes proposal path: the table proposes, a clinician or
 # care manager decides. Risk thresholds and LOS outlier bounds are
 # program-configured operational values — not CMS timeframes — and risk
@@ -34,6 +36,21 @@
         - { column: comorbidity_adjusted, op: eq, value: "no" }
       then: { disposition_code: escalate_medical_director, severity: medium }
       note: "PDGM episode without comorbidity adjustment — clinical coding review; codes accepted only with source-documentation evidence (BR-3)"
+    # LUPA runway: the grammar can't compare visit_count against the
+    # per-HHRG lupa_threshold cross-column, so the upstream-computed
+    # lupa_risk flag (yes|no|na) carries the visits-trending-under-threshold
+    # signal.
+    - when:
+        - { column: episode_status, op: eq, value: active }
+        - { column: lupa_risk, op: eq, value: "yes" }
+      then: { disposition_code: escalate_medical_director, severity: high }
+      note: "Period trending under its LUPA visit threshold — visit-completion review before the period closes (payment cliff)"
+    # Assessment-timeliness breach (assessment-review cases): the OASIS
+    # 30-day lock / MDS 14-day iQIES submission SLA has already passed.
+    - when:
+        - { column: days_overdue, op: gt, value: 0 }
+      then: { disposition_code: escalate_medical_director, severity: high }
+      note: "OASIS 30-day lock / MDS 14-day submission SLA breached — clinician completes and submits the assessment now"
     # LOS outlier in HHA/SNF — utilization review by a clinician; never an
     # automated discharge posture.
     - when:

@@ -1,5 +1,5 @@
 # Pack dataset BINDING CONTRACTS (no-dummy-data rule): the pack ships ZERO
-# seed data. Each entry declares the dataset the MRB workflow needs and the
+# bundled data. Each entry declares the dataset the MRB workflow needs and the
 # exact landing-shape columns it requires; at install the tenant binds it to a
 # REAL dataset (explicit dataset_bindings on the install request, or same-name
 # reuse), and pack-service validates the bound dataset exposes every required
@@ -8,17 +8,27 @@
 # inspection-report SFTP drop and the QMS/MES extract bucket) or file upload.
 - identity: nc_nonconformances
   name: nc-nonconformances
+  # value domain: disposition = this workspace's disposition catalog
+  #   (cases/dispositions.yaml): rework_to_spec | no_defect_found_release |
+  #   use_as_is_engineering_disposition | quarantine_pending_analysis |
+  #   return_to_supplier_scar | scrap_disposition | repair_with_approval
+  # value domain: status = open | closed
+  # value domain: nc_type / detection_point / spec_class / quantity_band /
+  #   containment = the matching enum option sets in cases/fields.yaml
   required_columns:
     [nc_id, lot_id, nc_type, detection_point, spec_class, quantity_band,
      severity, status, disposition, containment, filed_month, age_days,
      days_to_deadline, deadline_bucket, est_cost_impact]
 - identity: nc_lots
   name: nc-lots
+  # value domain: serialized = yes | no (unit-level traceability)
   required_columns:
     [lot_id, supplier_id, part_family, program, lot_size_band, mfg_month,
      serialized]
 - identity: nc_suppliers
   name: nc-suppliers
+  # value domain: scorecard = green | yellow | red; prior_scars = none | 1_2
+  #   | 3_plus; approved = yes | no (see ontology/entities.yaml)
   required_columns:
     [supplier_id, supplier_name, tier, certification, scorecard, prior_scars,
      approved]

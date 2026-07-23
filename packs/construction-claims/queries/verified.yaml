@@ -5,8 +5,8 @@
   sql_text: >-
     SELECT claim_type,
            count(*) AS closed_claims,
-           sum(CASE WHEN disposition = 'approved' THEN 1 ELSE 0 END) AS approved,
-           round(sum(CASE WHEN disposition = 'approved' THEN 1 ELSE 0 END) * 1.0
+           sum(CASE WHEN disposition = 'approve_change_order' THEN 1 ELSE 0 END) AS approved,
+           round(sum(CASE WHEN disposition = 'approve_change_order' THEN 1 ELSE 0 END) * 1.0
                  / nullif(count(*), 0), 4) AS approval_rate
     FROM {{dataset('cc-claims')}}
     WHERE status = 'closed'
@@ -30,7 +30,7 @@
   sql_text: >-
     SELECT contract_id,
            count(*) AS claim_count,
-           sum(CASE WHEN disposition = 'rejected_no_entitlement' THEN 1 ELSE 0 END) AS prior_rejections,
+           sum(CASE WHEN disposition = 'reject_no_entitlement' THEN 1 ELSE 0 END) AS prior_rejections,
            sum(cast(claimed_amount AS double)) AS total_claimed
     FROM {{dataset('cc-claims')}}
     GROUP BY contract_id

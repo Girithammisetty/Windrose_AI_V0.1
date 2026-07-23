@@ -8,11 +8,30 @@
 # submission drop and policy-admin extracts — or file upload.
 - identity: uw_submissions
   name: uw-submissions
+  # Columns the decision tables and semantic/query filters compare to
+  # literals carry their value domains below, so bound tenant data can be
+  # checked against what the rules actually match.
   required_columns:
-    [submission_id, account_id, broker_name, broker_tier, line_of_business,
-     segment, appetite_fit, completeness, priority_band, severity, status,
-     disposition, filed_month, age_days, days_to_deadline, deadline_bucket,
-     premium_band]
+    [submission_id, account_id, broker_name, broker_tier,
+     # value domain: commercial_auto | cyber | general_liability | professional | property | workers_comp
+     line_of_business,
+     segment,
+     # value domain: in_appetite | marginal | out_of_appetite | pending
+     appetite_fit,
+     # value domain: complete | missing_apps | missing_loss_runs | missing_sov
+     completeness,
+     # value domain: urgent | standard priority bands (only 'urgent' is matched by rule)
+     priority_band,
+     severity,
+     # value domain: open | closed
+     status,
+     # value domain: the codes in cases/dispositions.yaml
+     disposition,
+     filed_month, age_days, days_to_deadline, deadline_bucket,
+     # value domain: premium bands (program-configured); 'over_500k' is the band the referral table matches
+     premium_band,
+     # value domain: cleared | duplicate_pending | bor_contested
+     clearance_status]
 - identity: uw_accounts
   name: uw-accounts
   required_columns:

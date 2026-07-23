@@ -2,7 +2,8 @@
 # real adjudication attributes, typed so the case form validates them and
 # decision surfaces can read them structurally instead of parsing notes.
 # data_type is IMMUTABLE after creation (case-service) — chosen deliberately.
-# Values mirror the cd_disputes seed columns so field data and dataset agree.
+# Values mirror the cd_disputes binding-contract columns so field data and
+# the bound dataset agree.
 - name: network
   data_type: enum
   purpose: both

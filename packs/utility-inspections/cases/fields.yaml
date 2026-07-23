@@ -59,3 +59,14 @@
   field_meta:
     label: "Repair/decision clock — days left"
     required: false
+# Whether the finding is tied to a wildfire-mitigation-plan commitment
+# (audited against the WMP) vs an internal program item — the regulator
+# audits WMP-committed work separately.
+- name: wmp_commitment
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "WMP commitment"
+    # quoted: bare yes/no would YAML-parse as booleans, not the data's strings
+    options: ["yes", "no", na]
+    required: false

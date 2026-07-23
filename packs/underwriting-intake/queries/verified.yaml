@@ -62,3 +62,15 @@
     ORDER BY open_submissions DESC
   model: underwriting_core
   tags: [underwriting, completeness, loss_runs, sov, pack]
+- nl_text: "Speed to first touch — average age at disposition by broker tier and line"
+  sql_text: >-
+    SELECT broker_tier, line_of_business,
+           count(*) AS dispositioned_submissions,
+           round(avg(cast(age_days AS double)), 1) AS avg_age_at_disposition,
+           round(avg(cast(days_to_deadline AS double)), 1) AS avg_runway_remaining
+    FROM {{dataset('uw-submissions')}}
+    WHERE status = 'closed'
+    GROUP BY broker_tier, line_of_business
+    ORDER BY avg_age_at_disposition DESC
+  model: underwriting_core
+  tags: [underwriting, speed_to_first_touch, broker_tiering, hit_ratio, pack]

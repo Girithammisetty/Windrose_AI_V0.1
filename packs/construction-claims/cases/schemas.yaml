@@ -16,6 +16,7 @@
     - { name: entitlement_basis, data_type: enum,    label: "Asserted entitlement basis",                    required: false }
     - { name: notice_timely,     data_type: enum,    label: "Notice timeliness (per contract)",              required: false }
     - { name: schedule_impact,   data_type: enum,    label: "Asserted schedule impact",                      required: false }
+    - { name: concurrent_delay,  data_type: enum,    label: "Concurrent delay asserted",                     required: false }
     - { name: claimed_amount,    data_type: float,   label: "Claimed amount (USD)",                          required: true }
     - { name: approved_amount,   data_type: float,   label: "Approved amount (USD)",                         required: false }
     - { name: days_to_deadline,  data_type: integer, label: "Contract-configured response window — days left", required: false }

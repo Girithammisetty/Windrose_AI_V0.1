@@ -12,6 +12,22 @@
 - identity: pa_review_triage
   name: "Prior-auth review triage table"
   rules:
+    # OVERDUE first: the regulatory clock has already run out. turnaround_hours
+    # counts up from submission, so "overdue" is the elapsed clock past the
+    # window this pack's grounding documents (CMS-4201-F: 72h expedited /
+    # 7 calendar days standard).
+    - when:
+        - { column: urgency, op: eq, value: urgent }
+        - { column: status, op: eq, value: pending }
+        - { column: turnaround_hours, op: gte, value: 72 }
+      then: { disposition_code: escalate_md, severity: critical }
+      note: "OVERDUE — urgent PA past the 72-hour expedited window (CMS-4201-F); SLA breach is a compliance reportable, medical director immediately"
+    - when:
+        - { column: urgency, op: eq, value: standard }
+        - { column: status, op: eq, value: pending }
+        - { column: turnaround_hours, op: gte, value: 168 }
+      then: { disposition_code: escalate_md, severity: critical }
+      note: "OVERDUE — standard PA past the 7-calendar-day window (CMS-4201-F); SLA breach is a compliance reportable, medical director immediately"
     # Urgent PA burning its expedited regulatory window — this pack's
     # grounding treats a pending urgent PA older than ~a day as at-risk.
     - when:
@@ -29,12 +45,22 @@
       then: { disposition_code: escalate_md, severity: high }
       note: "Standard PA has consumed most of its regulatory window (plan-configured runway threshold) — expedite review"
     # Specialty-drug PAs — highest appeal exposure per this pack's grounding;
-    # route to the medical director rather than deciding at nurse level.
+    # route to the medical director rather than deciding at nurse level. The
+    # contract's specialty_drug_flag carries the plan's own specialty
+    # designation, so the rule covers the whole class instead of a hardcoded
+    # CPT sample.
     - when:
         - { column: status, op: eq, value: pending }
-        - { column: cpt_code, op: in, value: [J1745, "96413"] }
+        - { column: specialty_drug_flag, op: eq, value: "yes" }
       then: { disposition_code: escalate_md, severity: high }
       note: "Specialty-drug PA (elevated overturn exposure) — medical-director review per pack grounding"
+    # Clinical file incomplete — the request is not decidable yet; defer for a
+    # records request rather than letting it age toward the window.
+    - when:
+        - { column: status, op: eq, value: pending }
+        - { column: clinical_info_status, op: eq, value: incomplete }
+      then: { disposition_code: pa_deferred, severity: medium }
+      note: "Clinical information incomplete — defer with a records request to the provider; the regulatory clock keeps running, so request now"
     # The PA agent itself flagged low confidence — honor its escalation.
     - when:
         - { column: status, op: eq, value: pending }

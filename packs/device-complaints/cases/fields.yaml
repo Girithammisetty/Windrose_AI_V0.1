@@ -47,6 +47,19 @@
     label: "Investigation status"
     options: [not_started, in_progress, complete, no_investigation_justified]
     required: false
+- name: becoming_aware_date
+  data_type: date
+  purpose: both
+  field_meta:
+    label: "Becoming-aware date (MDR clock day zero)"
+    required: false
+- name: regulatory_clock
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Regulatory reporting clock in effect"
+    options: [fda_30_day, fda_5_day, eu_15_day, eu_10_day, eu_2_day, none]
+    required: false
 - name: days_to_deadline
   data_type: integer
   purpose: both

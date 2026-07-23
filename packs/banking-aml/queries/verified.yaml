@@ -5,8 +5,8 @@
   sql_text: >-
     SELECT typology,
            count(*) AS closed_alerts,
-           sum(CASE WHEN disposition = 'false_positive' THEN 1 ELSE 0 END) AS false_positives,
-           round(sum(CASE WHEN disposition = 'false_positive' THEN 1 ELSE 0 END) * 1.0
+           sum(CASE WHEN disposition = 'clear_false_positive' THEN 1 ELSE 0 END) AS false_positives,
+           round(sum(CASE WHEN disposition = 'clear_false_positive' THEN 1 ELSE 0 END) * 1.0
                  / nullif(count(*), 0), 4) AS false_positive_rate
     FROM {{dataset('aml-alerts')}}
     WHERE status = 'closed'
@@ -14,12 +14,12 @@
     ORDER BY false_positive_rate DESC
   model: aml_core
   tags: [aml, false-positives, typology, pack]
-- nl_text: "SAR conversion rate by month — how many closed alerts became SARs?"
+- nl_text: "SAR conversion rate by month — how many closed alerts became SAR recommendations?"
   sql_text: >-
     SELECT alert_month,
            count(*) AS closed_alerts,
-           sum(CASE WHEN disposition = 'sar_filed' THEN 1 ELSE 0 END) AS sars_filed,
-           round(sum(CASE WHEN disposition = 'sar_filed' THEN 1 ELSE 0 END) * 1.0
+           sum(CASE WHEN disposition = 'recommend_sar' THEN 1 ELSE 0 END) AS sar_recommendations,
+           round(sum(CASE WHEN disposition = 'recommend_sar' THEN 1 ELSE 0 END) * 1.0
                  / nullif(count(*), 0), 4) AS sar_conversion_rate
     FROM {{dataset('aml-alerts')}}
     WHERE status = 'closed'
@@ -65,3 +65,16 @@
     ORDER BY avg_age_days DESC
   model: aml_core
   tags: [aml, backlog, cycle-time, pack]
+# The SAR filing clock anchors on the date of initial detection (30 calendar
+# days, extendable to 60 when no suspect was identified — see
+# memories/grounding.yaml, 31 CFR 1020.320(b)(3)). This ranks SAR-recommended
+# alerts by elapsed days since initial detection so the MLRO sees the runway.
+- nl_text: "recommend_sar cases by days since initial detection"
+  sql_text: >-
+    SELECT alert_id, party_id, typology, status, initial_detection_date,
+           date_diff('day', cast(initial_detection_date AS date), current_date) AS days_since_detection
+    FROM {{dataset('aml-alerts')}}
+    WHERE disposition = 'recommend_sar'
+    ORDER BY days_since_detection DESC
+  model: aml_core
+  tags: [aml, sar, deadlines, mlro, pack]

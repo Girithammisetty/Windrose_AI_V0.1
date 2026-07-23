@@ -23,6 +23,16 @@
         - { column: evidence_strength, op: in, value: [weak, partial] }
       then: { disposition_code: accept_liability_refund, severity: low }
       note: "Below the merchant-configured economics floor with a weak/partial package — fees and effort exceed expected recovery"
+    # True third-party fraud with a weak package: without a CE 3.0 remedy
+    # (qualifying prior undisputed transactions), a 10.4/4837 fight is
+    # rarely winnable — fighting spends fees on a likely loss.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: reason_family, op: eq, value: fraud }
+        - { column: first_party_suspect, op: eq, value: "no" }
+        - { column: evidence_strength, op: eq, value: weak }
+      then: { disposition_code: accept_liability_refund, severity: medium }
+      note: "True third-party fraud without a CE 3.0 remedy package is rarely winnable — accept rather than spend fees on a likely loss"
     # First-party (friendly-fraud) suspect with a strong contradicting
     # package: fight AND feed the prevention loop; each claim still stands on
     # its own evidence, and block-listing is a separate human decision.

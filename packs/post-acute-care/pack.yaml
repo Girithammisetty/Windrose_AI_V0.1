@@ -9,7 +9,7 @@
 # curated by the tenant from its own adjudicated history.
 pack_manifest: 1
 name: post-acute-care
-version: 2.0.0
+version: 2.1.0
 publisher: { id: pub-datacern, name: "Datacern Inc." }
 description: >-
   Post-acute care AI for home health, SNF, and hospice operators (BRD 29):

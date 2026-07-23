@@ -62,3 +62,16 @@
     ORDER BY mdr_reportable DESC, complaints DESC
   model: complaints_core
   tags: [complaints, reportability, device_problem, signal, pack]
+- nl_text: "How many MDR filings went out past their deadline, by month? (late-filing compliance rate)"
+  sql_text: >-
+    SELECT filed_month,
+           count(*) AS mdr_filed,
+           sum(CASE WHEN filed_late = 'yes' THEN 1 ELSE 0 END) AS late_filings,
+           round(1.0 - sum(CASE WHEN filed_late = 'yes' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS on_time_rate
+    FROM {{dataset('dc-complaints')}}
+    WHERE disposition = 'file_mdr_report'
+    GROUP BY filed_month
+    ORDER BY filed_month
+  model: complaints_core
+  tags: [complaints, mdr, deadlines, late_filings, compliance, pack]

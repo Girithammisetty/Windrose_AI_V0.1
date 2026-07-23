@@ -7,7 +7,8 @@
     Device -> device-problem edge list (parent/child/n) from the complaint
     book — network-chart source for spotting repeat-offender devices (one
     device, many problem codes) and clustered problem codes (one code, many
-    devices) that should trip trending review under 820.100.
+    devices) that should trip CAPA trending review under ISO 13485
+    §8.5.2/8.5.3 (as incorporated by the QMSR).
   sql: >-
     SELECT device_id AS parent, device_problem AS child,
            count(*) AS n
@@ -16,7 +17,7 @@
   tags: [complaints, network, device_problem, trending, pack]
 - identity: dc_mdr_clock_open_queue
   name: "Complaints: MDR-clock open queue"
-  description: "Open complaints ranked by deadline runway — the reportability-decision worklist seed (clock x harm x severity, never FIFO)."
+  description: "Open complaints ranked by deadline runway — the reportability-decision ranked worklist (clock x harm x severity, never FIFO)."
   sql: >-
     SELECT complaint_id, device_id, complaint_source, event_type,
            device_problem, patient_harm, severity, investigation_status,

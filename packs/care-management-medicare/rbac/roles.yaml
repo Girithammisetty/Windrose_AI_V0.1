@@ -1,7 +1,7 @@
 # Care-management role catalog (CMM-FR-140) as tenant CUSTOM roles composing
 # the Core's closed action catalog (rbac never mints new verbs; packctl also
 # creates a same-named permission group and binds the role so it's
-# assignable). Six of the BRD's ten persona seeds — the ones today's Core
+# assignable). Six of the BRD's ten personas ship — the ones today's Core
 # action catalog can express: care_manager_rn, care_manager_lpn, clinician_md,
 # director_care_coordination, practice_cfo, compliance_officer.
 - name: "Care Manager RN"

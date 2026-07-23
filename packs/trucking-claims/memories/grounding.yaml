@@ -30,10 +30,13 @@
   tags: [carmack, deadlines, filing_window, bill_of_lading]
   confidence: 0.95
 - content: >-
-    Claims-processing regulations (49 CFR Part 370) for carriers and
-    brokers handling loss-and-damage claims: a proper claim must be in
-    writing (or electronic), identify the shipment, assert carrier
-    liability, and claim a specified or determinable amount. The carrier
+    Claims-processing regulations (49 CFR Part 370) govern loss-and-damage
+    claims handled by carriers and freight forwarders subject to 49 U.S.C.
+    14706; brokers are not directly regulated parties under Part 370 but
+    commonly follow its procedures contractually or as market practice. A
+    proper claim must be in writing (or electronic), identify the shipment,
+    assert carrier liability, and claim a specified or determinable amount.
+    The carrier
     must acknowledge receipt of a claim within 30 days and must pay,
     decline, or make a firm compromise settlement offer within 120 days of
     receipt; if it cannot dispose of the claim within 120 days it must tell
@@ -78,7 +81,9 @@
     the carrier's safety measurement. Internal fleet practice mirrors this:
     each recorded crash or camera event gets a documented preventability
     determination based on the actual evidence, separate from fault or
-    liability.
+    liability. Currency note: FMCSA has proposed reorganizing the SMS/CSA
+    BASICs into revised safety categories — confirm the agency's current
+    methodology before citing specific BASIC names in a determination.
   tags: [fmcsa, csa, basics, preventability, safety]
   confidence: 0.92
 - content: >-

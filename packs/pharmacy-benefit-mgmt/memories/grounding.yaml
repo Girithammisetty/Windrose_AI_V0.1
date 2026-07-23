@@ -23,11 +23,14 @@
   tags: [ncpdp, dur, duplication]
   confidence: 0.95
 - content: >-
-    NCPDP DUR conflict codes HD ("high dose") and ER ("early refill"): HD on
-    opioids fires when cumulative morphine milligram equivalents exceed 90
-    MME/day across claims — CDC opioid guideline threshold; never override HD
-    opioid alerts without prescriber confirmation. ER fires when a refill is
-    attempted before ~75-80% of days supply has elapsed; repeated ER on
+    NCPDP DUR conflict codes HD ("high dose") and ER ("early refill"): HD
+    conflicts fire from dosing-database maximums for the drug generally. For
+    opioids specifically, the 2022 CDC guideline removed hard MME thresholds
+    from clinical practice; 90 MME/day survives as the CMS Part D
+    opioid-safety (OMS) care-coordination edit criterion, so cumulative-MME
+    alerts at that level route to care coordination review. Never override
+    HD opioid alerts without prescriber confirmation. ER fires when a refill
+    is attempted before ~75-80% of days supply has elapsed; repeated ER on
     Schedule II opioids is a diversion signal and routes to pharmacist
     intervention rather than override.
   tags: [ncpdp, dur, opioids, safety]
@@ -72,10 +75,12 @@
     Manufacturer rebates are contractually owed on rebate-eligible brand
     claims (rebate_expected) and invoiced quarterly; capture below ~95% of
     expected signals invoice disputes, missed NDC-level terms, or claims
-    excluded by the manufacturer. Under rebate-delinking rules and
-    transparency requirements, rebates must be reported at point of sale or
-    passed through per contract — rebate retention cannot depend on formulary
-    placement decisions that disadvantage lower-net-cost alternatives.
+    excluded by the manufacturer. On "delinking": no federal rebate-delinking
+    statute is in force — point-of-sale passthrough duties are state-law and
+    contract-specific, and the federal change to the rebate safe harbor was
+    deferred — so passthrough and transparency obligations are read from the
+    tenant's own PBM contracts and applicable state law, not a federal
+    delinking mandate.
   tags: [rebates, delinking, transparency]
   confidence: 0.85
 - content: >-
@@ -88,7 +93,35 @@
   tags: [cms, mtm, part_d, star_ratings]
   confidence: 0.9
 - content: >-
-    Step therapy on GLP-1 receptor agonists (GPI class 272700): plan UM
+    DIR restructuring: since CY2024 CMS requires all pharmacy price
+    concessions to be reflected in the point-of-sale negotiated price,
+    ending retroactive DIR clawbacks on Part D claims. Interpret plan_paid
+    and ingredient_cost accordingly: the negotiated price at adjudication
+    already carries the concession, so retrospective DIR adjustments should
+    not be expected against CY2024+ claims when reconciling cost or rebate
+    figures.
+  tags: [dir, part_d, point_of_sale, cost]
+  confidence: 0.9
+- content: >-
+    340B duplicate-discount exclusion: manufacturer rebates must not be
+    invoiced on 340B-purchased fills — claiming both the 340B discount and a
+    rebate on the same claim is a duplicate discount. Rebate-eligibility
+    logic therefore excludes claims flagged as 340B; by convention,
+    submission clarification code 20 and claim-level 340B identifiers flag
+    those fills in adjudication data.
+  tags: [340b, rebates, duplicate_discount]
+  confidence: 0.9
+- content: >-
+    CMS Part D redetermination clocks (42 CFR 423.590): after a coverage
+    determination denies an Rx, the member or prescriber may request a
+    redetermination, which the plan must decide within 7 calendar days
+    (standard) or 72 hours (expedited). These are separate from — and follow
+    — the coverage-determination windows (72h standard / 24h expedited), so
+    a denied PA carries its own downstream appeal clock.
+  tags: [cms, part_d, redetermination, appeals]
+  confidence: 0.95
+- content: >-
+    Step therapy on the GLP-1 receptor agonist GPI class: plan UM
     criteria require documented trial of metformin (and typically one
     additional oral agent) before a GLP-1 is approved for type 2 diabetes;
     a PA with step_therapy_met = no is denied for step_therapy_not_met

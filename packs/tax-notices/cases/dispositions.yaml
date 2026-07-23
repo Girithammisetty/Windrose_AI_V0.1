@@ -16,3 +16,11 @@
 - { code: request_agency_clarification,  label: "Request agency clarification — facts unresolved",          category: inconclusive,   requires_note: true }
 - { code: close_duplicate_notice,        label: "Close — duplicate of an already-resolved liability",       category: benign,         requires_note: true }
 - { code: escalate_notice_review,        label: "Escalate for priority human review (expedited docket / senior review)", category: inconclusive, requires_note: false }
+# Resolution paths beyond pay/abate/amend: pursuing a collection alternative
+# (installment agreement / offer in compromise / currently-not-collectible)
+# when the liability is valid but not payable in full, and filing an
+# administrative protest or appeal when the assessment is contested — both
+# are human four-eyes determinations whose note records the option chosen,
+# the disclosure/filing posture, and the deadline it was filed against.
+- { code: pursue_collection_alternative, label: "Pursue collection alternative (IA / OIC / CNC)",           category: other,          requires_note: true }
+- { code: file_administrative_protest,   label: "File administrative protest / appeal",                     category: other,          requires_note: true }

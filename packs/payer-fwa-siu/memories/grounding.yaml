@@ -93,6 +93,36 @@
   tags: [recovery, workflow, escalation]
   confidence: 0.9
 - content: >-
+    Anti-Kickback Statute (42 USC 1320a-7b): knowingly and willfully offering,
+    paying, soliciting, or receiving remuneration to induce referrals of
+    federal-health-program business is a criminal offense. Remuneration is
+    read broadly — cash, waived copays, sham medical-directorships, free rent
+    or staff. AKS violations are also False Claims Act predicates: claims
+    resulting from a kickback are false claims, so a kickback lead carries
+    both criminal and treble-damage civil exposure in the referral packet.
+  tags: [regulatory, anti_kickback, kickback_referral_scheme]
+  confidence: 0.95
+- content: >-
+    Stark law / physician self-referral (42 USC 1395nn): a strict-liability
+    prohibition — no intent required — on a physician referring designated
+    health services (DHS) payable by Medicare to an entity with which the
+    physician (or an immediate family member) has a financial relationship,
+    unless a statutory or regulatory exception is met. Because liability is
+    strict, the SIU analysis is structural: map the financial relationship
+    and test it against an exception, rather than proving intent.
+  tags: [regulatory, stark, self_referral]
+  confidence: 0.95
+- content: >-
+    The 60-day overpayment rule (ACA 6402(a), 42 CFR 401.305): an identified
+    Medicare/Medicaid overpayment must be reported and returned within 60
+    days of identification (or the corresponding cost-report date); retaining
+    it past the deadline converts the overpayment into a reverse false claim
+    under the FCA. "Identified" runs from when the overpayment is quantified
+    with reasonable diligence — so recovery work items must track days since
+    identification against the 60-day clock.
+  tags: [regulatory, overpayment_60_day, reverse_false_claims]
+  confidence: 0.95
+- content: >-
     Governance constraints on FWA scoring (BRD 27): FWA scores are exposed
     to human review only and must never auto-deny or auto-recoup a claim
     (BR-5 — auto-denial is pre-payment territory and a regulator risk).

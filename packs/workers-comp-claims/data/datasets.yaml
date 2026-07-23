@@ -7,6 +7,20 @@
 # pack's governed source connectors (connections/sources.yaml) or file upload.
 - identity: wc_claims
   name: wc-claims
+  # value domain: disposition holds cases/dispositions.yaml catalog codes —
+  #   accept_compensable | deny_not_compensable | refer_utilization_review |
+  #   escalate_siu_fraud | close_return_to_work | escalate_senior_adjuster |
+  #   issue_delay_notice | close_settled_msa (semantic measure filters and
+  #   verified SQL compare against these literals)
+  # value domain: status = open | closed
+  # value domain: claim_type = medical_only | indemnity
+  # value domain: injury_type = strain_sprain | fracture | laceration | burn |
+  #   contusion | crush_injury | concussion | repetitive_stress
+  # value domain: rtw_status = full_duty | modified_duty | not_released |
+  #   not_applicable
+  # value domain: siu_flag / litigation_flag = yes | no (literal strings)
+  # value domain: days_to_deadline = int days remaining in the
+  #   jurisdiction-configured decision window (negative = window lapsed)
   required_columns:
     [claim_id, employer_id, claimant_name, jurisdiction_state, injury_type,
      body_part, cause_code, claim_type, severity, status, disposition,
@@ -14,11 +28,16 @@
      days_to_deadline, deadline_bucket, incurred_reserve, paid_to_date]
 - identity: wc_medical_bills
   name: wc-medical-bills
+  # value domain: fee_schedule_flag — 'above' is the literal semantic measure
+  #   filters and verified SQL compare against (bill billed above the state
+  #   fee schedule); the bound dataset must carry that literal
   required_columns:
     [bill_id, claim_id, provider_name, provider_type, service_category,
      billed_amount, paid_amount, bill_month, fee_schedule_flag]
 - identity: wc_employers
   name: wc-employers
+  # value domain: safety_program = yes | no (literal strings; semantic
+  #   measure filters compare against 'yes')
   required_columns:
     [employer_id, employer_name, industry, class_code_group, state,
      safety_program, experience_mod_tier]

@@ -7,17 +7,44 @@
 # pack's governed source connectors (connections/sources.yaml) or file upload.
 - identity: ts_appeals
   name: ts-appeals
+  # Columns the decision tables and semantic/query filters compare to
+  # literals carry their value domains below, so bound tenant data can be
+  # checked against what the rules actually match.
   required_columns:
-    [appeal_id, decision_id, appeal_type, policy_area, enforcement_source,
-     user_standing, severity, status, disposition, filed_month, age_days,
-     days_to_deadline, deadline_bucket]
+    [appeal_id, decision_id,
+     # value domain: content_removal | account_suspension | demonetization | ranking_restriction
+     appeal_type,
+     # value domain: adult | child_safety | counterfeit | harassment | hate_speech | misinformation | spam | terrorist_content | violence
+     policy_area,
+     # value domain: automated_classifier | moderator | user_report
+     enforcement_source,
+     # value domain: first_strike | repeat | power_user
+     user_standing,
+     severity,
+     # value domain: open | closed
+     status,
+     # value domain: the codes in cases/dispositions.yaml
+     disposition,
+     # value domain: yes | no
+     ods_referred,
+     filed_month, age_days, days_to_deadline, deadline_bucket]
 - identity: ts_enforcements
   name: ts-enforcements
   required_columns:
-    [decision_id, account_id, content_type, classifier_score_band,
-     policy_version, action, enforce_month, geography, report_count]
+    [decision_id, account_id, content_type,
+     # value domain: none | low | medium | high
+     classifier_score_band,
+     policy_version,
+     # value domain: tenant enforcement actions; 'suspend_account' is the value the suspension_enforcement_count measure matches
+     action,
+     enforce_month, geography, report_count]
 - identity: ts_accounts
   name: ts-accounts
   required_columns:
     [account_id, account_handle, account_type, account_age_bucket,
-     audience_tier, prior_violations, verified, monetized]
+     audience_tier,
+     # value domain: violation-count bands; '3_plus' is the value the repeat_violator_account_count measure matches
+     prior_violations,
+     verified,
+     # value domain: yes | no
+     monetized]

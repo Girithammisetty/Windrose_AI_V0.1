@@ -31,6 +31,21 @@
   tags: [appetite, declination, documentation, market_conduct]
   confidence: 0.9
 - content: >-
+    Appetite-fit classification practice: carrier appetite statements are
+    conventionally keyed to industry classification codes — NAICS class
+    codes in particular — rather than to free-text industry descriptions.
+    Submissions arrive with the industry described inconsistently (broker
+    prose, legacy SIC codes, the insured's own wording), so intake practice
+    is to normalize the described operations to a NAICS classification
+    first and evaluate appetite fit against the coded appetite statement.
+    A free-text industry string matched loosely against appetite prose is a
+    recurring source of both false declinations and out-of-appetite
+    leakage; classification disagreements (a risk that straddles classes,
+    or operations broader than the stated code) are surfaced to the
+    underwriter rather than resolved silently at intake.
+  tags: [appetite, naics, classification, normalization, intake]
+  confidence: 0.88
+- content: >-
     Quote-to-bind funnel economics: industry studies of commercial-lines
     distribution consistently find that speed to first touch is a leading
     driver of quote and bind ratios — brokers place business with the

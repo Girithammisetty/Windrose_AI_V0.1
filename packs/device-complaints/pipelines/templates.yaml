@@ -1,4 +1,4 @@
-# Pipeline seeds (expressed against the real pipeline-orchestrator algorithm
+# Pipeline templates (expressed against the real pipeline-orchestrator algorithm
 # catalog): an unsupervised device-fleet anomaly detector (repeat-repair /
 # lot / software-version outlier scan feeding trending review) and a
 # supervised reportability scorer trained on human dispositions (the

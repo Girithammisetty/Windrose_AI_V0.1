@@ -11,7 +11,8 @@
 name: complaints_core
 description: >-
   Medical-device manufacturer complaint-handling KPI model (21 CFR 803 MDR /
-  21 CFR 820.198 complaint files / EU MDR vigilance): complaint volumes by
+  QMSR complaint files (ISO 13485 §8.2.2) / EU MDR vigilance): complaint
+  volumes by
   source and event type, MDR reportability decision mix, filing and
   not-reportable rates, CAPA-open share, regulatory deadline runway, backlog
   aging, and device-problem signal surfaces — complaints joined to the
@@ -94,7 +95,7 @@ definition:
         description: "Complaints closed not-reportable with documented rationale" }
     - { name: capa_opened_count, entity: complaints, agg: count,
         filters: "disposition = 'open_capa_investigation'",
-        description: "Complaints closed into a CAPA investigation (820.100 trend trigger)" }
+        description: "Complaints closed into a CAPA investigation (ISO 13485 §8.5.2/8.5.3 trend trigger)" }
     - { name: return_info_requested_count, entity: complaints, agg: count,
         filters: "disposition = 'request_device_return_info'",
         description: "Complaints closed pending returned-device analysis / added information" }

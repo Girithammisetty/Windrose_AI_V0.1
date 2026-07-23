@@ -18,3 +18,9 @@
 - { code: refer_foreclosure_alternatives, label: "Refer to foreclosure alternatives (short sale / DIL)",       category: other,          requires_note: true }
 - { code: close_reinstated,               label: "Close — loan reinstated by borrower",                        category: benign,         requires_note: true }
 - { code: escalate_underwriting_review,   label: "Escalate for priority human review (underwriting / SPOC outreach)", category: inconclusive, requires_note: false }
+# 1024.41(h) appeal outcomes: a denied borrower's timely appeal is decided by
+# personnel different from and not subordinate to the original decision-makers;
+# these two codes record that independent review's result — the note carries
+# the appeal findings (including any new evidence weighed).
+- { code: appeal_upheld,                  label: "Appeal upheld — original determination stands",              category: other,          requires_note: true }
+- { code: appeal_overturned,              label: "Appeal overturned — re-evaluation ordered",                  category: other,          requires_note: true }

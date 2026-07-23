@@ -17,7 +17,7 @@
   tags: [underwriting, network, brokers, pack]
 - identity: priority_open_submissions
   name: "Underwriting: priority open triage queue"
-  description: "Open submissions ranked by deadline runway then priority — the intake analyst ranked-queue seed (needed-by date x priority x premium band, not FIFO)."
+  description: "Open submissions ranked by deadline runway then priority — the intake analyst ranked queue (needed-by date x priority x premium band, not FIFO)."
   sql: >-
     SELECT submission_id, account_id, broker_name, broker_tier,
            line_of_business, segment, appetite_fit, completeness,

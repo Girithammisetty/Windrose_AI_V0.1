@@ -24,6 +24,21 @@
     ORDER BY received_month
   model: pv_core
   tags: [pv, expedited, kpi, pack]
+# On-time submission compliance — the rate regulators score in inspections.
+# submitted_late is computed vs the applicable expedited clock (yes|no|na);
+# the denominator is the expedited-filed book in SoR vocabulary.
+- nl_text: "Late expedited submissions by month — what's our on-time compliance rate?"
+  sql_text: >-
+    SELECT received_month,
+           sum(CASE WHEN disposition = 'expedited_report_filed' THEN 1 ELSE 0 END) AS expedited_filed,
+           sum(CASE WHEN submitted_late = 'yes' THEN 1 ELSE 0 END) AS submitted_late,
+           round(1.0 - sum(CASE WHEN submitted_late = 'yes' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(sum(CASE WHEN disposition = 'expedited_report_filed' THEN 1 ELSE 0 END), 0), 4) AS on_time_rate
+    FROM {{dataset('pv-cases')}}
+    GROUP BY received_month
+    ORDER BY received_month
+  model: pv_core
+  tags: [pv, expedited, timeliness, compliance, pack]
 - nl_text: "Top unlisted event terms — where is signal pressure building?"
   sql_text: >-
     SELECT product_id, event_pt, soc,

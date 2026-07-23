@@ -1,7 +1,8 @@
 # Second governed decision table (BRD 54): deterministic incomplete-case
 # routing — the data-quality complement to icsr_intake_triage. Operates ONLY
 # on pv_cases binding-contract columns (status, patient_age_group,
-# patient_sex, serious, outcome, causality, case_type). It routes cases with
+# patient_sex, serious, outcome, causality, case_type,
+# special_situation). It routes cases with
 # missing minimum information to the follow-up / data-entry queue
 # (request_followup_info) and cases awaiting a human assessment to medical
 # review — it NEVER proposes the assessment itself, and never proposes
@@ -34,6 +35,18 @@
         Serious case with an unknown event outcome — request targeted
         outcome follow-up from the reporter so the human assessment works
         from a complete picture.
+    # Pregnancy-exposure case — routes to the intensive-follow-up queue:
+    # pregnancy-registry practice follows the exposure prospectively
+    # (outcome of the pregnancy, neonatal follow-up), which is structured
+    # reporter outreach on a schedule, not a one-shot information request.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: special_situation, op: eq, value: pregnancy_exposure }
+      then: { disposition_code: request_followup_info, severity: medium }
+      note: >-
+        Pregnancy exposure — enroll in the pregnancy-registry /
+        intensive-follow-up workflow: scheduled reporter outreach through
+        pregnancy outcome and neonatal follow-up; assessments stay human.
     # Solicited report still awaiting its causality assessment — that
     # assessment is a medical-review task, not reporter outreach.
     - when:

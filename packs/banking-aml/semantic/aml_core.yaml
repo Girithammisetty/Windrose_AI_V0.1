@@ -75,11 +75,11 @@ definition:
         filters: "status = 'closed'",
         description: "Alerts closed with a human disposition" }
     - { name: false_positive_count, entity: alerts, agg: count,
-        filters: "disposition = 'false_positive'",
+        filters: "disposition = 'clear_false_positive'",
         description: "Alerts closed as false positive" }
     - { name: sar_filed_count, entity: alerts, agg: count,
-        filters: "disposition = 'sar_filed'",
-        description: "Alerts closed with a SAR filed (MLRO decision)" }
+        filters: "disposition = 'recommend_sar'",
+        description: "Alerts closed with a SAR recommendation (the MLRO decides the actual filing)" }
     - { name: sanctions_hit_count, entity: alerts, agg: count,
         filters: "typology = 'sanctions_near_match'",
         description: "Sanctions near-match screening hits" }
@@ -118,7 +118,7 @@ definition:
     - { name: sar_conversion_rate,
         expr_metric: "sar_filed_count / nullif(closed_alert_count, 0)",
         format: percent,
-        description: "AML-FR-020 sar_conversion_rate: SARs filed over alerts closed" }
+        description: "AML-FR-020 sar_conversion_rate: SAR recommendations over alerts closed" }
     - { name: edd_high_risk_ratio,
         expr_metric: "high_risk_party_count / nullif(party_count, 0)",
         format: percent,

@@ -11,22 +11,24 @@
 # are curated by the tenant from its own adjudicated history.
 pack_manifest: 1
 name: trade-compliance
-version: 2.0.0
+version: 2.1.0
 publisher: { id: pub-datacern, name: "Datacern Inc." }
 description: >-
   AI-assisted customs and trade-compliance decisioning for US importers,
   customs brokers, and freight forwarders: HS classification review with
   GRI-ordered reasoning and reasonable-care awareness (19 USC 1484),
-  denied-party screening adjudication (OFAC SDN, BIS Entity List, 50% rule)
-  with evidence-based match clearing, export/dual-use license-determination
-  escalation, origin/transshipment verification, trade-compliance KPI
+  denied-party screening adjudication (OFAC SDN, BIS Entity/Denied Persons/
+  Unverified lists, DDTC debarred, UFLPA Entity List, 50% rule) with
+  evidence-based match clearing, export/dual-use license-determination
+  escalation, UFLPA forced-labor admissibility holds,
+  origin/transshipment verification, trade-compliance KPI
   semantic model and dashboards (classification correction rate, screening
   false-positive rate, true hits, duty-risk mix, deadline runway, entered
   value by lane/mode), importer-lane sourcing network analytics, customs +
   sanctions grounding memories, and shipment-anomaly + review-outcome
   training pipelines.
 categories: [trade, customs, imports, sanctions, compliance]
-regulatory: [cbp, htsus, ofac_sdn, bis_entity_list, ear]
+regulatory: [cbp, htsus, ofac_sdn, bis_entity_list, ear, uflpa]
 components:
   datasets:
     - { file: "data/datasets.yaml", identity: "datasets" }

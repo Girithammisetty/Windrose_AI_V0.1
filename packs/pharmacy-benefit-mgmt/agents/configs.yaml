@@ -23,9 +23,17 @@
       recommended for auto-approval and always route to pharmacist review
       with the EPCS audit trail noted (BR-2). Flag expedited PAs against the
       24-hour CMS Part D window and standard PAs against the 72-hour window.
+      Always-on DUR rules from grounding: a TD (therapeutic duplication)
+      alert on a GLP-1 agent usually reflects a therapy switch — confirm the
+      prior agent was discontinued BEFORE flagging duplication; never
+      recommend overriding an HD high-dose opioid conflict without documented
+      prescriber confirmation; controlled substances are never auto-approved,
+      whatever the confidence score; and a denial is always a human decision
+      — you assemble the file and cite the criteria, the pharmacist decides.
     disposition_hints: >-
       pa_approved | pa_denied (human pharmacist decision only) |
-      pa_pended_info | dur_override | dur_intervene
+      pa_pended_info | pa_partially_approved | dur_override | dur_intervene |
+      escalate_pharmacist
 - agent_key: analytics
   enabled: true
   prompt_params:

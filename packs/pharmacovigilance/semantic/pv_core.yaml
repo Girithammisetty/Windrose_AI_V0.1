@@ -7,6 +7,14 @@
 # entity.table is main.<safe_relation(dataset name)>; `dataset:` refs are
 # rebound to live dataset URNs by packctl at install. Numeric columns ingest
 # as bronze strings, so numeric measures cast(... as double).
+#
+# Vocabulary note (BY DESIGN, not drift): disposition-filtered measures test
+# the safety SYSTEM-OF-RECORD's closure values (expedited_report_filed,
+# periodic_report, non_reportable, nullified_duplicate) — the vocabulary the
+# bound pv-cases dataset lands from the safety database — while the case
+# catalog (cases/dispositions.yaml) uses the platform's review-queue codes
+# (submit_expedited_report, etc.). The two vocabularies deliberately fork:
+# dataset filters speak SoR; case workflows speak the catalog.
 name: pv_core
 description: >-
   Pharmacovigilance ICSR operations KPI model (FDA 21 CFR 314.80 / ICH E2A /
@@ -59,6 +67,7 @@ definition:
     - { name: patient_age_group, entity: cases, type: categorical, column: patient_age_group }
     - { name: patient_sex, entity: cases, type: categorical, column: patient_sex }
     - { name: case_outcome, entity: cases, type: categorical, column: outcome }
+    - { name: submitted_late, entity: cases, type: categorical, column: submitted_late }
     - { name: event_pt, entity: events, type: categorical, column: event_pt }
     - { name: soc, entity: events, type: categorical, column: soc }
     - { name: event_listed, entity: events, type: categorical, column: listed }
@@ -99,6 +108,9 @@ definition:
     - { name: nullified_count, entity: cases, agg: count,
         filters: "disposition = 'nullified_duplicate'",
         description: "Cases nullified as duplicates of already-processed ICSRs" }
+    - { name: submitted_late_count, entity: cases, agg: count,
+        filters: "submitted_late = 'yes'",
+        description: "Expedited submissions made after the applicable clock (submitted_late: yes|no|na) — the regulator-reported compliance surface" }
     - { name: avg_case_age_days, entity: cases, agg: avg,
         expr: "cast(age_days as double)", format: decimal,
         description: "Average case age in days (cycle time / backlog aging)" }

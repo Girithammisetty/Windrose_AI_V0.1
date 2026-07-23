@@ -9,16 +9,32 @@
 # feeds — or file upload.
 - identity: gb_claimants
   name: gb-claimants
+  # value domain: prior_claims_band = none|1_2|3_plus; identity_verified /
+  #   vulnerable_population = 'yes'|'no'
   required_columns:
     [claimant_id, claimant_name, county, prior_claims_band,
      identity_verified, vulnerable_population, language]
 - identity: gb_claims
   name: gb-claims
+  # value domain: claim_context values include employer_contested and
+  #   shared_address (semantic measures filter on both);
+  #   verification_docs = complete|partial|missing
   required_columns:
     [claim_id, claimant_id, program, filing_month, weekly_amount_band,
      claim_context, verification_docs]
 - identity: gb_determinations
   name: gb-determinations
+  # value domain: status = 'open'|'closed'; disposition = the case-catalog
+  #   codes (approve_benefits|deny_with_findings|request_verification_documents|
+  #   refer_fraud_investigation|close_withdrawn|escalate_expedited_docket);
+  #   determination_type = initial_eligibility|redetermination|overpayment|
+  #   appeal_hearing_prep; issue_type = income_verification|separation_reason|
+  #   identity|household_composition|work_search; appeal_outcome =
+  #   not_applicable|pending|upheld|overturned; deadline_bucket = the
+  #   agency's runway buckets, tightest first — '0_7_days' is the value the
+  #   routing table tests, so this bucketing vocabulary is part of the
+  #   binding contract; benefit_amount_band = agency-configured amount
+  #   banding whose TOP band is 'high' (the routing table tests it)
   required_columns:
     [determination_id, claim_id, claimant_id, program, determination_type,
      issue_type, severity, status, disposition, appeal_outcome, filed_month,

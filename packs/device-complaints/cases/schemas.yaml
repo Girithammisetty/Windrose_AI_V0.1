@@ -7,8 +7,9 @@
 - schema_key: device_complaint
   name: "Device complaint (MDR reportability)"
   description: >-
-    A medical-device complaint under 21 CFR 820.198 (complaint files) carrying
-    the 21 CFR 803 MDR reportability evaluation — event and harm
+    A medical-device complaint file under the QMSR (21 CFR 820 incorporating
+    ISO 13485:2016 §8.2.2, with 820.35 records requirements) carrying the
+    21 CFR 803 MDR reportability evaluation — event and harm
     classification, device-problem coding, investigation state, and the
     regulatory reporting clock — with EU MDR vigilance as the parallel regime.
   fields:
@@ -18,4 +19,6 @@
     - { name: patient_harm,         data_type: enum,    label: "Patient harm",                         required: true }
     - { name: reportability,        data_type: enum,    label: "Reportability assessment",             required: false }
     - { name: investigation_status, data_type: enum,    label: "Investigation status",                 required: false }
+    - { name: becoming_aware_date,  data_type: date,    label: "Becoming-aware date (MDR clock day zero)", required: false }
+    - { name: regulatory_clock,     data_type: enum,    label: "Regulatory reporting clock in effect", required: false }
     - { name: days_to_deadline,     data_type: integer, label: "Regulatory reporting clock — days left", required: false }

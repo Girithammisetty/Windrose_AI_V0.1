@@ -18,7 +18,7 @@
   tags: [mrb, network, suppliers, part_families, pack]
 - identity: high_cost_open_ncs
   name: "MRB: high-cost open nonconformance queue"
-  description: "Open nonconformances ranked by estimated cost-of-quality exposure — the MRB ranked-queue seed (deadline x cost x spec class, not FIFO)."
+  description: "Open nonconformances ranked by estimated cost-of-quality exposure — the MRB ranked-queue ordering (deadline x cost x spec class, not FIFO)."
   sql: >-
     SELECT nc_id, lot_id, nc_type, detection_point, spec_class, severity,
            containment,

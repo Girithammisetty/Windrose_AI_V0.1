@@ -11,16 +11,38 @@
   name: mr-customers
   required_columns:
     [customer_id, customer_name, tenure_band, order_count_band,
+     # value domain: prior_chargebacks_band — semantic measures compare against '3_plus'
      prior_chargebacks_band, loyalty_tier]
 - identity: mr_orders
   name: mr-orders
   required_columns:
     [order_id, customer_id, product_category, channel, avs_cvv_match,
-     delivery_confirmation, device_match, order_month, ltv_band, amount]
+     # value domain: delivery_confirmation — yes | no (measures compare 'yes')
+     delivery_confirmation,
+     # value domain: device_match — yes | no (measures compare 'yes')
+     device_match, order_month, ltv_band, amount]
 - identity: mr_chargebacks
   name: mr-chargebacks
   required_columns:
-    [chargeback_id, order_id, network, reason_code, reason_family,
-     evidence_strength, fight_economics, first_party_suspect, severity,
-     status, disposition, represented, outcome, filed_month, age_days,
-     days_to_deadline, deadline_bucket, amount, recovered_amount]
+    [chargeback_id, order_id, network, reason_code,
+     # value domain: reason_family — fraud | consumer_dispute | processing_error
+     reason_family,
+     # value domain: evidence_strength — strong | partial | weak | pending
+     evidence_strength,
+     # value domain: fight_economics — above_threshold | below_threshold
+     fight_economics,
+     # value domain: first_party_suspect — yes | no
+     first_party_suspect, severity,
+     # value domain: status — open | closed
+     status,
+     # value domain: disposition — codes from cases/dispositions.yaml
+     #   (represent_with_evidence, accept_liability_refund,
+     #    pre_arbitration_escalate, flag_friendly_fraud_pattern,
+     #    close_duplicate_or_resolved)
+     disposition,
+     # value domain: represented — yes | no (measures/queries compare 'yes')
+     represented,
+     # value domain: outcome — won | lost (measures/queries compare both)
+     outcome, filed_month, age_days, days_to_deadline,
+     # value domain: deadline_bucket — decision rules compare against '0_7_days'
+     deadline_bucket, amount, recovered_amount]

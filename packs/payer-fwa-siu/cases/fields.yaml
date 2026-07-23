@@ -15,7 +15,8 @@
   purpose: both
   field_meta:
     label: "FWA typology"
-    options: [upcoding, unbundling, phantom_billing, impossible_day]
+    options: [upcoding, unbundling, phantom_billing, impossible_day,
+              kickback_referral_scheme, medical_necessity_abuse]
     required: false
 - name: lead_source
   data_type: enum

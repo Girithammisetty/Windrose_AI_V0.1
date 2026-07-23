@@ -79,6 +79,22 @@
   tags: [reg_x, spoc, early_intervention, borrower_contact]
   confidence: 0.94
 - content: >-
+    Successors in interest (12 CFR 1024.30(d), 1024.38(b)(1)(vi)): a
+    confirmed successor in interest — someone who received an ownership
+    interest in the property from a borrower through events like death,
+    divorce, or certain family transfers — is treated as a borrower for the
+    RESPA/Reg X servicing protections, including the loss-mitigation
+    procedures, whether or not they assumed the loan obligation. Servicers
+    must maintain policies and procedures reasonably designed to promptly
+    identify potential successors, tell them what documents establish their
+    status, and communicate with confirmed successors about the account. In
+    practice a workout inquiry from a non-obligor family member after a
+    borrower's death is a successor-identification trigger, not a reason to
+    refuse engagement — stonewalling a potential successor while the
+    delinquency deepens is a recurring examination finding pattern.
+  tags: [reg_x, successor_in_interest, servicing_policies, borrower_contact]
+  confidence: 0.92
+- content: >-
     Investor waterfalls: each investor prescribes the order in which workout
     options must be evaluated, and servicers must follow that order rather
     than steering the borrower to an option convenient for the servicer.

@@ -4,6 +4,10 @@
 # four-eyes proposal path: the table proposes, a human decides. It NEVER
 # proposes appeal_upheld — sustaining a denial is an adverse determination
 # that always carries documented human clinical findings.
+# NOTE (untimely-appeal rule deliberately absent): the payer-appeals binding
+# contract carries no filed-date-vs-appeal-window column, so timeliness cannot
+# be screened deterministically here; untimely dismissals are proposed by the
+# reviewing analyst using the appeal_dismissed_untimely disposition.
 - identity: appeal_expedite_routing
   name: "Appeal expedite routing table"
   rules:
@@ -22,6 +26,21 @@
         - { column: denial_reason_code, op: eq, value: CO-50 }
       then: { disposition_code: escalate_md, severity: high }
       note: "Medical-necessity denial under appeal — clinical criteria review by the medical director, not an analyst call"
+    # Frequency-limit denials (CARC CO-151) turn on interval clinical change —
+    # a clinical read, and upheld without documented change (pack grounding).
+    - when:
+        - { column: status, op: eq, value: pending }
+        - { column: denial_reason_code, op: eq, value: CO-151 }
+      then: { disposition_code: escalate_md, severity: high }
+      note: "Frequency-limit denial under appeal — clinical review for documented interval change since the prior service; without it the denial stands"
+    # Benefit-exclusion denials (CARC PR-204) are benefit-language questions
+    # that rarely overturn at level 1 (pack grounding) — standard analyst
+    # queue, no expedite.
+    - when:
+        - { column: status, op: eq, value: pending }
+        - { column: denial_reason_code, op: eq, value: PR-204 }
+      then: { disposition_code: escalate_md, severity: low }
+      note: "Benefit-exclusion denial (PR-204) — benefit language rarely overturns at level 1; standard analyst queue, no expedite"
     # Administrative precert-absent denials (CARC CO-197) are routinely
     # overturned at level 1 when a retro-authorization is permitted (this
     # pack's grounding precedent). Propose the member-favorable outcome; the

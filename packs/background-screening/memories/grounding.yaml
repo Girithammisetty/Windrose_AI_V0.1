@@ -119,3 +119,42 @@
     compliance obligations to the CRA before receiving reports.
   tags: [governance, provenance, adjudication_matrix, disparate_impact, permissible_purpose]
   confidence: 0.9
+- content: >-
+    Disclosure and authorization (FCRA 604(b)(2)): before procuring a
+    consumer report for employment purposes, the employer must give the
+    applicant a clear and conspicuous disclosure that a consumer report may
+    be obtained, in a document that consists SOLELY of the disclosure (the
+    standalone-document requirement — no liability waivers, extraneous
+    notices, or embedded application text), and obtain the applicant's
+    written authorization. Defective standalone disclosures are the largest
+    FCRA class-action driver in employment screening. The employer's
+    certification of permissible purpose and compliance obligations to the
+    CRA accompanies the order — a report must never be procured before
+    disclosure and authorization are in hand.
+  tags: [fcra, section_604, disclosure, authorization, standalone_document]
+  confidence: 0.95
+- content: >-
+    Investigative consumer reports (FCRA 606): reports based on personal
+    interviews about a consumer's character, general reputation, personal
+    characteristics, or mode of living — interview-based reference and
+    character checks — carry ADDITIONAL duties beyond a standard consumer
+    report: the consumer must be told within three days of the request that
+    an investigative report may be made and of the right to request a
+    complete and accurate disclosure of the nature and scope of the
+    investigation, which must be provided on request. Treat
+    reference-interview products as a distinct compliance class, not a
+    variant of a records search.
+  tags: [fcra, section_606, investigative_report, reference_checks, disclosure]
+  confidence: 0.9
+- content: >-
+    State clean-slate laws and sealed records: a growing number of states
+    automatically seal or expunge qualifying criminal records after
+    statutory waiting periods. Re-reporting a sealed or expunged record
+    violates the FCRA 607(b) maximum-possible-accuracy duty — the screening
+    pipeline must consume current-disposition data and sealing feeds, not
+    archival database snapshots, and a hit sourced from a stale aggregator
+    copy must be reverified at the source before it is ever reported. Which
+    records qualify, and when, varies by state; the accuracy obligation to
+    reflect the CURRENT status of the record does not.
+  tags: [clean_slate, sealed_records, expungement, accuracy, state_law]
+  confidence: 0.9

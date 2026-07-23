@@ -1,0 +1,38 @@
+{
+  "pack": "card-disputes",
+  "version": "2.1.0",
+  "workspace_id": "019f90e7-c9fa-76e5-8ba7-a232d6780bc1",
+  "tenant_id": "019f90e7-c5b6-7dea-b842-0c2207e6a0e3",
+  "started_at": "2026-07-23T21:35:38Z",
+  "finished_at": "2026-07-23T21:35:38Z",
+  "actions": [
+    {
+      "kind": "datasets",
+      "identity": "cd_cardholders",
+      "action": "failed",
+      "urn": null,
+      "detail": "requires_binding: no dataset bound for 'cd_cardholders' and no tenant dataset named 'cd-cardholders' exists (required columns: cardholder_id, cardholder_name, segment, card_product, home_state, tenure_months, risk_tier, prior_dispute_count, account_age_bucket)"
+    },
+    {
+      "kind": "datasets",
+      "identity": "cd_transactions",
+      "action": "failed",
+      "urn": null,
+      "detail": "requires_binding: no dataset bound for 'cd_transactions' and no tenant dataset named 'cd-transactions' exists (required columns: txn_id, cardholder_id, account_id, txn_date, txn_month, mcc, merchant_name, merchant_country, channel, entry_mode, amount)"
+    },
+    {
+      "kind": "datasets",
+      "identity": "cd_disputes",
+      "action": "failed",
+      "urn": null,
+      "detail": "requires_binding: no dataset bound for 'cd_disputes' and no tenant dataset named 'cd-disputes' exists (required columns: dispute_id, cardholder_id, account_id, txn_id, network, card_product, dispute_type, reason_code, reg_flag, severity, status, disposition, provisional_credit, chargeback_filed, deadline_bucket, assigned_tier, filed_month, age_days, deadline_days_left, amount, recovery_amount)"
+    }
+  ],
+  "deferred": [
+    {
+      "kind": "agent_recipes",
+      "reason": "Bespoke LangGraph recipes (Dispute Intake Copilot, Chargeback Representment Builder, First-Party Fraud Scorer, Provisional Credit Clock Sentinel) require agent-runtime graph-module registration (BRD 23 BR-12). This pack specializes the existing case-triage + analytics agents via TenantAgentConfig prompt_params + tenant-scope RAG grounding instead."
+    }
+  ],
+  "result": "failed"
+}

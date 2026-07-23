@@ -13,6 +13,8 @@
   fields:
     - { name: request_type,       data_type: enum,    label: "Workout requested",                required: true }
     - { name: doc_status,         data_type: enum,    label: "Application completeness",         required: true }
+    - { name: hardship_reason,    data_type: string,  label: "Hardship reason",                  required: false }
+    - { name: appeal_status,      data_type: enum,    label: "Denial-appeal status (1024.41(h))", required: false }
     - { name: delinquency_bucket, data_type: enum,    label: "Delinquency bucket (days past due)", required: false }
     - { name: investor,           data_type: enum,    label: "Investor (waterfall owner)",       required: false }
     - { name: dual_track_hold,    data_type: enum,    label: "Foreclosure-path hold in effect",  required: false }

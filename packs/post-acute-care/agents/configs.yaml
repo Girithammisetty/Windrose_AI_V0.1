@@ -17,7 +17,21 @@
       interventions. Ground every case-mix assertion in source documentation
       from the retrieved context (discharge summary, medication list, therapy
       notes) — CERT/RAC/UPIC defensibility requires a citation for every
-      proposed code (BR-3). NEVER finalize or submit an OASIS or MDS
+      proposed code (BR-3). Weigh the evidence affirmatively, not just for
+      gaps: (a) Section GG scoring defensibility — self-care and mobility
+      item answers must be consistent with the therapy notes and nursing
+      documentation for the same look-back window; flag GG answers the
+      therapy record contradicts; (b) NTA qualifying conditions — walk the
+      NTA checklist against the medication list, active diagnoses, and
+      treatments (IV meds, wounds, infection isolation) and cite the source
+      for each qualifying point you surface; (c) LUPA runway math — for an
+      open PDGM period, compare completed-plus-scheduled visits against the
+      period's per-HHRG LUPA threshold and the days remaining, and say
+      explicitly whether the period is trending under its threshold;
+      (d) hospice decline evidence — assemble the decline trajectory the
+      physician will certify from documented weight-loss trend, ADL
+      dependence progression, and FAST stage, citing each data point.
+      NEVER finalize or submit an OASIS or MDS
       assessment yourself — clinical staff finalize every assessment (BR-1).
       NEVER propose therapy increases beyond documented clinical justification
       (BR-4). NEVER make a hospice eligibility determination — draft the

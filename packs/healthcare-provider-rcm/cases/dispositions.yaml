@@ -8,3 +8,5 @@
 - { code: escalate_payer,          label: "Escalate to payer relations",          category: inconclusive,   requires_note: false }
 - { code: underpayment_recovered,  label: "Underpayment recovered from payer",    category: true_positive,  requires_note: true }
 - { code: balance_verified_correct, label: "Payment verified correct — no action", category: benign,        requires_note: false }
+- { code: appeal_upheld_final,     label: "Appeal upheld — denial final after appeal", category: false_positive, requires_note: true }
+- { code: transfer_patient_balance, label: "Transfer verified balance to patient responsibility", category: other, requires_note: true }

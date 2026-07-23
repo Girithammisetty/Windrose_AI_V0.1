@@ -21,3 +21,4 @@
     - { name: detection_confidence, data_type: float,   label: "Detection confidence (0-1)",        required: false }
     - { name: est_repair_cost,      data_type: float,   label: "Estimated repair cost (USD)",       required: false }
     - { name: days_to_deadline,     data_type: integer, label: "Repair/decision clock — days left", required: false }
+    - { name: wmp_commitment,       data_type: enum,    label: "WMP commitment",                    required: false }

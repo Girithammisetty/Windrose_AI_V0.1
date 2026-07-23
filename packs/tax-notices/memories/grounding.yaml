@@ -17,6 +17,36 @@
   tags: [deadlines, appeal_rights, response_windows, notice_management]
   confidence: 0.92
 - content: >-
+    Collection Due Process (CDP): IRC sections 6320 and 6330 give the
+    taxpayer 30 days from the FINAL notice of intent to levy (the LT11 or
+    L1058) — or from the notice of a federal tax lien filing — to request a
+    CDP hearing with IRS Appeals. A timely CDP request suspends levy action
+    while the hearing is pending and preserves the right to Tax Court
+    review of the determination; a late request generally gets only an
+    "equivalent hearing" without those protections. Triage accordingly: the
+    CP504 is NOT the final CDP notice — it authorizes levy only against
+    state tax refunds — so the LT11/L1058 is the docket item whose 30-day
+    clock must never be missed, and it outranks earlier collection-stream
+    reminders at the same dollar amount.
+  tags: [irs, cdp, levy, lt11, cp504, appeal_rights]
+  confidence: 0.93
+- content: >-
+    Collection alternatives — the alternatives docket: when a liability is
+    valid but cannot be paid in full, the working options are an
+    installment agreement (pay over time), an offer in compromise (settle
+    for less than the full liability where doubt as to collectibility or
+    effective-tax-administration grounds support it), and currently-not-
+    collectible status (collection paused for financial hardship, with the
+    liability and interest still standing). Each generally carries
+    financial-disclosure prerequisites — collection information statements
+    and supporting documentation scaled to the option sought — and filing
+    compliance is a practical precondition. Proposing a collection
+    alternative is also a standard resolution path inside a CDP hearing;
+    the note on any alternatives disposition records which option, the
+    disclosure package status, and the compliance posture.
+  tags: [collection_alternatives, installment_agreement, oic, cnc, financial_disclosure]
+  confidence: 0.9
+- content: >-
     IRS first-time abatement (FTA) is an administrative penalty waiver for
     failure-to-file, failure-to-pay, and failure-to-deposit penalties,
     generally available when the taxpayer has a clean penalty history for

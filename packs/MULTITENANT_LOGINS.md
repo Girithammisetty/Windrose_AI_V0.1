@@ -437,3 +437,18 @@ Each tenant is a fully isolated (RLS) vertical with its own users.
 | mlro@bankingaml.datacern | MLRO |
 | sanctions-analyst@bankingaml.datacern | Sanctions Analyst |
 | model-risk-validator@bankingaml.datacern | Model Risk Validator |
+
+## Depth Verify Card Ops  (`depth-verify`)
+- tenant id: `019f90e7-c5b6-7dea-b842-0c2207e6a0e3`
+- workspace: `019f90e7-c9fa-76e5-8ba7-a232d6780bc1`
+- packs: card-disputes
+
+| login email | role |
+|---|---|
+| admin@verify.datacern | Tenant Admin (author) |
+| approver@verify.datacern | Tenant Admin (four-eyes approver) |
+| dispute-intake-analyst@verify.datacern | Dispute Intake Analyst |
+| fraud-investigator@verify.datacern | Fraud Investigator |
+| chargeback-specialist@verify.datacern | Chargeback Specialist |
+| dispute-operations-manager@verify.datacern | Dispute Operations Manager |
+| dispute-compliance-auditor@verify.datacern | Dispute Compliance Auditor |

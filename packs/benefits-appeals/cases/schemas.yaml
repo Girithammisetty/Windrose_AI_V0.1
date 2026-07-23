@@ -33,3 +33,5 @@
     - { name: appeal_outcome,      data_type: enum,    label: "Appeal outcome",               required: false }
     - { name: verification_docs,   data_type: enum,    label: "Record completeness",          required: false }
     - { name: days_to_deadline,    data_type: integer, label: "Hearing clock — days left",    required: true }
+    - { name: aid_paid_pending,    data_type: enum,    label: "Aid paid pending appeal",      required: false }
+    - { name: notice_language,     data_type: string,  label: "Notice language",              required: false }

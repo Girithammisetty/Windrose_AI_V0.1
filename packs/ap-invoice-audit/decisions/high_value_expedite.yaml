@@ -8,6 +8,14 @@
 - identity: high_value_expedite
   name: "High-value and deadline expedite"
   rules:
+    # Payment-run deadline already PASSED — an already-lapsed window inverts
+    # the posture: the payment has likely already executed, so this is no
+    # longer pre-disbursement review but post-payment recovery.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: days_to_deadline, op: lt, value: 0 }
+      then: { disposition_code: escalate_recovery_review, severity: critical }
+      note: "Payment-run window already lapsed — the payment has likely already executed; posture flips from pre-disbursement hold to post-payment recovery (confirm disbursement status, then pursue the recovery path)"
     # Exception still open with the payment run at most 2 days out — a human
     # must look before the money moves.
     - when:

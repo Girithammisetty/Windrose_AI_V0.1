@@ -33,6 +33,14 @@
         - { column: appetite_fit, op: eq, value: marginal }
       then: { disposition_code: escalate_referral_review, severity: medium }
       note: "Marginal appetite fit — human referral review (specialty/E&S suitability is a human placement decision)"
+    # Large property placements: cat-exposed large property schedules near
+    # treaty capacity are referral territory by construction — the bands are
+    # program-configured, the table only routes.
+    - when:
+        - { column: line_of_business, op: eq, value: property }
+        - { column: premium_band, op: eq, value: over_500k }
+      then: { disposition_code: escalate_referral_review, severity: high }
+      note: "Large property placement (top premium band) — cat-exposed large property near treaty capacity is referral territory; capacity, attachment, and facultative needs are a human referral-underwriter call (bands are program-configured)"
     # Largest-premium files still pending an appetite call get senior eyes
     # before the runway erodes.
     - when:

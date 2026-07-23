@@ -46,6 +46,25 @@
     label: "Prior loss-mitigation history"
     options: ["yes", "no"]
     required: false
+# hardship_reason mirrors the lm-applications binding-contract column; the
+# hardship taxonomy is institution-configured (datasets.yaml documents no
+# closed value set), so the field is a free string rather than an enum —
+# 'disaster' is the one value the triage table matches deterministically.
+- name: hardship_reason
+  data_type: string
+  purpose: both
+  field_meta:
+    label: "Hardship reason"
+    required: false
+# 1024.41(h) appeal lifecycle on the case itself, so the appeal clock and its
+# independent-review outcome are structural, not prose.
+- name: appeal_status
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Denial-appeal status (1024.41(h))"
+    options: [none, filed, upheld, overturned]
+    required: false
 - name: arrearage_amount
   data_type: float
   purpose: both

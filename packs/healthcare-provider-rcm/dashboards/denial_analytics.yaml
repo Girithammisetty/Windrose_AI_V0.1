@@ -54,3 +54,12 @@ charts:
       - { measure: overturned_appeal_count }
     w: 12
     h: 4
+  - name: "Appeal-deadline clock"
+    chart_type: vertical_bar_chart
+    description: "Unappealed denied dollars by days remaining in the payer appeal window (negative = window lapsed)"
+    config:
+      x: { dimension: appeal_deadline_days }
+      y: [ { measure: unappealed_denied_amount, agg_fn: sum } ]
+    sources: [ { measure: unappealed_denied_amount } ]
+    w: 12
+    h: 4

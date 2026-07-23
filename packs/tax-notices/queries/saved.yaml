@@ -18,7 +18,7 @@
   tags: [tax_notices, nexus, network, jurisdictions, pack]
 - identity: tx_high_exposure_open_notices
   name: "Tax notices: high-exposure open queue"
-  description: "Open notices ranked by assessed-dollar exposure — the analyst ranked-queue seed (deadline x dollar x severity, not FIFO)."
+  description: "Open notices ranked by assessed-dollar exposure — the analyst ranked queue (deadline x dollar x severity, not FIFO)."
   sql: >-
     SELECT notice_id, account_id, notice_type, jurisdiction_level, tax_type,
            root_cause, severity,

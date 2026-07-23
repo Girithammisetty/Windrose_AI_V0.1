@@ -19,3 +19,8 @@
 - { code: partial_credit_recovery,        label: "Close on partial vendor credit — recovery negotiated", category: other,        requires_note: true }
 - { code: escalate_fraud_investigation,   label: "Escalate to fraud investigation",                    category: inconclusive,   requires_note: true }
 - { code: escalate_recovery_review,       label: "Escalate to recovery review — human investigation required", category: inconclusive, requires_note: true }
+# release_banking_verified closes a banking-change exception the RIGHT way:
+# payment released only after the new banking details were verified
+# out-of-band against a known-good number — the note records who verified,
+# how, and against which known-good contact.
+- { code: release_banking_verified,       label: "Release — banking change verified out-of-band",      category: benign,         requires_note: true }

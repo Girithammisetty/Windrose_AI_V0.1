@@ -1,7 +1,8 @@
 # Domain ontology (dataset-service inc11): the entity TYPES this vertical
 # operates on and their typed relationships — the type-level model behind the
 # cd_cardholders / cd_transactions / cd_disputes datasets. Attribute names match
-# the seed CSV columns so the ontology describes data that actually exists.
+# the binding-contract columns so the ontology describes the data shape the
+# tenant actually binds.
 - entity_key: cardholder
   name: Cardholder
   description: "The disputing account holder (consumer or business debit/credit)."

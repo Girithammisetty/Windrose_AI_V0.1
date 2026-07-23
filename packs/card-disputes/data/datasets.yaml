@@ -9,16 +9,37 @@
   name: cd-cardholders
   required_columns:
     [cardholder_id, cardholder_name, segment, card_product, home_state,
-     tenure_months, risk_tier, prior_dispute_count, account_age_bucket]
+     tenure_months,
+     # value domain: risk_tier — semantic measures compare against 'high'
+     risk_tier, prior_dispute_count, account_age_bucket]
 - identity: cd_transactions
   name: cd-transactions
   required_columns:
     [txn_id, cardholder_id, account_id, txn_date, txn_month, mcc,
-     merchant_name, merchant_country, channel, entry_mode, amount]
+     merchant_name, merchant_country,
+     # value domain: channel — semantic measures compare against 'card_not_present'
+     channel,
+     # value domain: entry_mode — semantic measures compare against 'recurring'
+     entry_mode, amount]
 - identity: cd_disputes
   name: cd-disputes
   required_columns:
     [dispute_id, cardholder_id, account_id, txn_id, network, card_product,
-     dispute_type, reason_code, reg_flag, severity, status, disposition,
-     provisional_credit, chargeback_filed, deadline_bucket, assigned_tier,
+     # value domain: dispute_type — decision rules/measures compare against
+     #   fraud_unauthorized | cancelled_recurring | not_received |
+     #   duplicate_charge | credit_not_processed | atm_shortfall | quality_defective
+     dispute_type, reason_code,
+     # value domain: reg_flag — reg_e | reg_z (decision rules compare 'reg_e')
+     reg_flag, severity,
+     # value domain: status — open | closed (measures/queries compare both)
+     status,
+     # value domain: disposition — codes from cases/dispositions.yaml
+     #   (resolve_cardholder_favor, deny_no_error_found, file_chargeback,
+     #    chargeback_won, chargeback_lost, escalate_fraud_review,
+     #    route_investigation_review, close_merchant_credited)
+     disposition,
+     # value domain: provisional_credit — not_required | due | issued | reversed
+     provisional_credit,
+     # value domain: chargeback_filed — yes | no (queries compare 'yes')
+     chargeback_filed, deadline_bucket, assigned_tier,
      filed_month, age_days, deadline_days_left, amount, recovery_amount]

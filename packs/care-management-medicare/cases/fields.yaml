@@ -58,3 +58,58 @@
     label: "FQHC/RHC billing provider"
     options: ["no", "yes"]
     required: false
+- name: consent_date
+  data_type: date
+  purpose: both
+  field_meta:
+    label: "Program consent date"
+    required: false
+- name: consent_source
+  data_type: string
+  purpose: both
+  field_meta:
+    label: "Consent source document"
+    required: false
+- name: reading_days
+  data_type: integer
+  purpose: both
+  field_meta:
+    label: "Device reading days this cycle"
+    required: false
+- name: anomaly_count
+  data_type: integer
+  purpose: both
+  field_meta:
+    label: "Anomalous readings this cycle"
+    required: false
+- name: review_minutes
+  data_type: integer
+  purpose: both
+  field_meta:
+    label: "Clinician data-review minutes"
+    required: false
+- name: discharge_date
+  data_type: date
+  purpose: both
+  field_meta:
+    label: "Hospital discharge date"
+    required: false
+- name: contact_deadline
+  data_type: date
+  purpose: both
+  field_meta:
+    label: "Interactive contact deadline (2 business days)"
+    required: false
+- name: f2f_deadline
+  data_type: date
+  purpose: both
+  field_meta:
+    label: "Face-to-face deadline (7/14 days by complexity)"
+    required: false
+- name: med_rec_done
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Medication reconciliation documented"
+    options: ["no", "yes"]
+    required: false

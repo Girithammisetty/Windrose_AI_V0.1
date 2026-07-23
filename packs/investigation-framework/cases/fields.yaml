@@ -1,0 +1,32 @@
+# Shared investigation case fields — the base pack's structured enforcement
+# surface for the methodology corpus (memories/methodology.yaml): the
+# chain-of-custody digest, the two-signature referral discipline, and the
+# bounded evidence-gathering loop become typed case attributes consumer
+# packs inherit instead of prose conventions. Deliberately minimal — no case
+# schema and no datasets, because a library pack ships no user-facing
+# surface of its own; consumer packs bind these fields into their vertical
+# case schemas.
+- name: evidence_hash
+  data_type: string
+  purpose: both
+  field_meta:
+    label: "Evidence bundle hash (SHA-256 chain-of-custody digest)"
+    required: false
+- name: referral_signatory_1
+  data_type: string
+  purpose: both
+  field_meta:
+    label: "Referral signatory 1 (senior investigator)"
+    required: false
+- name: referral_signatory_2
+  data_type: string
+  purpose: both
+  field_meta:
+    label: "Referral signatory 2 (compliance/legal — two-signature discipline)"
+    required: false
+- name: evidence_loop_count
+  data_type: integer
+  purpose: both
+  field_meta:
+    label: "Evidence-gathering loops used (bounded — at most two before a human decision)"
+    required: false

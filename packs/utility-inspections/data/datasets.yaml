@@ -1,5 +1,5 @@
 # Pack dataset BINDING CONTRACTS (no-dummy-data rule): the pack ships ZERO
-# seed data. Each entry declares the dataset the workflow needs and the exact
+# bundled data. Each entry declares the dataset the workflow needs and the exact
 # landing-shape columns it requires; at install the tenant binds it to a REAL
 # dataset (explicit dataset_bindings on the install request, or same-name
 # reuse), and pack-service validates the bound dataset exposes every required
@@ -7,16 +7,27 @@
 # pack's governed source connectors (connections/sources.yaml) or file upload.
 - identity: ui_circuits
   name: ui-circuits
+  # value domain: psps_history = yes | no (see ontology/entities.yaml)
   required_columns:
     [circuit_id, circuit_name, service_type, region, customers_served,
      wildfire_risk, psps_history, reliability_tier]
 - identity: ui_assets
   name: ui-assets
+  # value domain: last_inspection = under_1yr | 1_3yr | over_3yr;
+  #   criticality = critical | high | standard (see ontology/entities.yaml)
   required_columns:
     [asset_id, circuit_id, asset_class, install_decade, material,
      last_inspection, criticality]
 - identity: ui_findings
   name: ui-findings
+  # value domain: disposition = this workspace's disposition catalog
+  #   (cases/dispositions.yaml): dispatch_immediate_repair |
+  #   close_false_detection | schedule_planned_work |
+  #   request_field_verification | close_monitored_stable |
+  #   made_safe_repair_pending
+  # value domain: status = open | closed
+  # value domain: finding_type / detection_source / risk_zone / asset_class /
+  #   priority = the matching enum option sets in cases/fields.yaml
   required_columns:
     [finding_id, asset_id, finding_type, asset_class, detection_source,
      risk_zone, priority, severity, status, disposition, filed_month,

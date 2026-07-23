@@ -40,6 +40,20 @@
     ORDER BY total_minutes DESC
   model: care_mgmt_core
   tags: [throughput, care-managers, pack]
+# End-of-month time-gap chase: candidates within minutes of their code's
+# billing threshold. The 15-19 band below targets the 20-minute code
+# families (99490/99484/99457); thresholds vary per CPT code family
+# (99487 = 60 min, 99424 = 30 min), so adjust the band per family.
+- nl_text: "Which held billing candidates are within a few minutes of their code's time threshold this month?"
+  sql_text: >-
+    SELECT candidate_id, patient_id, program_code, cpt_code, service_month,
+           cast(total_time_min AS double) AS total_time_min
+    FROM {{dataset('care-billing-candidates')}}
+    WHERE decision = 'hold'
+      AND cast(total_time_min AS double) BETWEEN 15 AND 19
+    ORDER BY service_month DESC, total_time_min DESC
+  model: care_mgmt_core
+  tags: [time-gap, month-end, billing, pack]
 - nl_text: "APCM tier distribution — how many patients qualify for G0556 vs G0557 vs G0558?"
   sql_text: >-
     SELECT apcm_tier, count(*) AS patients

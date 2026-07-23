@@ -19,3 +19,5 @@
     - { name: days_to_deadline, data_type: integer, label: "Statutory investigation clock — days left", required: false }
     - { name: deadline_bucket,  data_type: enum,    label: "Deadline runway bucket",                  required: false }
     - { name: age_days,         data_type: integer, label: "Dispute age (days)",                      required: false }
+    - { name: extension_invoked, data_type: enum,   label: "45-day extension invoked (FCRA 611(a)(1)(B))", required: false }
+    - { name: acdv_response_due, data_type: date,   label: "e-OSCAR ACDV response due date",          required: false }

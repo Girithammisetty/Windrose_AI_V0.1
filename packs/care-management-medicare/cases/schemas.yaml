@@ -19,6 +19,8 @@
     - { name: total_time_min,         data_type: integer, label: "Time-tracked minutes this month", required: false }
     - { name: audit_package_status,   data_type: enum,    label: "Audit package status",           required: false }
     - { name: fqhc_flag,              data_type: enum,    label: "FQHC/RHC billing provider",      required: false }
+    - { name: consent_date,           data_type: date,    label: "Program consent date",           required: false }
+    - { name: consent_source,         data_type: string,  label: "Consent source document",        required: false }
 - schema_key: rpm_cycle_review
   name: "RPM cycle review"
   description: >-
@@ -32,3 +34,18 @@
     - { name: hold_reason,          data_type: enum,    label: "Documentation hold reason",       required: false }
     - { name: total_time_min,       data_type: integer, label: "Time-tracked minutes this month", required: false }
     - { name: audit_package_status, data_type: enum,    label: "Audit package status",            required: false }
+    - { name: reading_days,         data_type: integer, label: "Device reading days this cycle",  required: false }
+    - { name: anomaly_count,        data_type: integer, label: "Anomalous readings this cycle",   required: false }
+    - { name: review_minutes,       data_type: integer, label: "Clinician data-review minutes",   required: false }
+- schema_key: tcm_window_review
+  name: "TCM window review"
+  description: >-
+    A post-discharge transitional-care work item tracking the TCM clocks:
+    the 2-business-day interactive contact, the complexity-driven 7/14-day
+    face-to-face visit, and documented medication reconciliation. The 30-day
+    TCM period counts from the discharge date.
+  fields:
+    - { name: discharge_date,   data_type: date, label: "Hospital discharge date",                          required: true }
+    - { name: contact_deadline, data_type: date, label: "Interactive contact deadline (2 business days)",   required: false }
+    - { name: f2f_deadline,     data_type: date, label: "Face-to-face deadline (7/14 days by complexity)",  required: false }
+    - { name: med_rec_done,     data_type: enum, label: "Medication reconciliation documented",             required: false }

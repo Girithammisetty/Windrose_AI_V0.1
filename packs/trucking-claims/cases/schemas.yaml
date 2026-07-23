@@ -21,3 +21,5 @@
     - { name: claim_amount,     data_type: float,   label: "Claimed amount (USD)",                        required: true }
     - { name: recovery_amount,  data_type: float,   label: "Recovered from responsible carrier (USD)",    required: false }
     - { name: days_to_deadline, data_type: integer, label: "Contract clock — days to response/filing deadline", required: false }
+    - { name: carrier_id,       data_type: string,  label: "Carrier ID",                                  required: false }
+    - { name: acknowledgment_sent_date, data_type: date, label: "Claim acknowledgment sent (date)",       required: false }

@@ -52,3 +52,16 @@
   field_meta:
     label: "Dispute age (days)"
     required: false
+- name: extension_invoked
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "45-day extension invoked (FCRA 611(a)(1)(B))"
+    options: ["yes", "no"]
+    required: false
+- name: acdv_response_due
+  data_type: date
+  purpose: both
+  field_meta:
+    label: "e-OSCAR ACDV response due date"
+    required: false

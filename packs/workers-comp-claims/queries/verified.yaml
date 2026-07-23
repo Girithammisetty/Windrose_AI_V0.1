@@ -67,3 +67,16 @@
     ORDER BY red_flagged DESC, incurred_exposure DESC
   model: wc_claims_core
   tags: [workers_comp, siu, fraud, employers, pack]
+- nl_text: "What share of decided claims were decided within the compensability decision window, by month?"
+  sql_text: >-
+    SELECT filed_month,
+           count(*) AS decided_claims,
+           sum(CASE WHEN cast(days_to_deadline AS double) >= 0 THEN 1 ELSE 0 END) AS decided_in_window,
+           round(sum(CASE WHEN cast(days_to_deadline AS double) >= 0 THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS in_window_rate
+    FROM {{dataset('wc-claims')}}
+    WHERE status = 'closed'
+    GROUP BY filed_month
+    ORDER BY filed_month
+  model: wc_claims_core
+  tags: [workers_comp, deadlines, compliance, compensability_clock, kpi, pack]

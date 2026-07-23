@@ -60,3 +60,15 @@
     ORDER BY avg_turnaround_days DESC
   model: screening_core
   tags: [screening, turnaround, sla, operations, pack]
+- nl_text: "Pre-adverse notices aged past the response window, by month"
+  sql_text: >-
+    SELECT filed_month,
+           count(*) AS overdue_reviews,
+           sum(CASE WHEN severity = 'high' THEN 1 ELSE 0 END) AS high_severity,
+           round(avg(cast(age_days AS double)), 1) AS avg_age_days
+    FROM {{dataset('bs-reviews')}}
+    WHERE status = 'open' AND cast(days_to_deadline AS double) < 0
+    GROUP BY filed_month
+    ORDER BY filed_month
+  model: screening_core
+  tags: [screening, adverse_action, overdue, deadlines, pack]

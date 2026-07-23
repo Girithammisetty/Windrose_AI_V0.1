@@ -1,4 +1,4 @@
-# Pipeline seeds (expressed against the real pipeline-orchestrator algorithm
+# Pipeline templates (expressed against the real pipeline-orchestrator algorithm
 # catalog): an unsupervised invoice-anomaly detector (duplicate / threshold-
 # clustering / shell-vendor surface scan over the invoice register) and a
 # supervised exception-outcome scorer trained on human dispositions (the

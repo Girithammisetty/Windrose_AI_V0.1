@@ -63,3 +63,15 @@
     ORDER BY review_items DESC
   model: trade_core
   tags: [duty_risk, classification, origin, pack]
+- nl_text: "Screening adjudication cycle time by outcome — how fast do true hits reach a hold?"
+  sql_text: >-
+    SELECT disposition,
+           count(*) AS closed_alerts,
+           round(avg(cast(age_days AS double)), 1) AS avg_adjudication_days,
+           round(avg(cast(match_score AS double)), 3) AS avg_match_score
+    FROM {{dataset('tc-review-items')}}
+    WHERE status = 'closed' AND item_type = 'screening_alert'
+    GROUP BY disposition
+    ORDER BY avg_adjudication_days ASC
+  model: trade_core
+  tags: [screening, cycle_time, true_hits, kpi, pack]

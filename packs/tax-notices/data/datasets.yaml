@@ -7,20 +7,42 @@
 # pack's governed source connectors (connections/sources.yaml) or file upload:
 # agency correspondence scan/extract drops, ERP tax-engine extracts, and
 # certificate-management feeds.
+# Columns the decision tables and semantic/query filters compare to literals
+# carry their value domains below, so bound tenant data can be checked
+# against what the rules actually match.
 - identity: tx_entities
   name: tx-entities
   required_columns:
-    [entity_id, business_unit, industry, nexus_footprint, erp_system,
+    [entity_id, business_unit, industry,
+     # value domain: nexus-footprint bands; 'national' is the value the semantic model matches
+     nexus_footprint,
+     erp_system,
+     # value domain: yes | no
      voluntary_disclosure_history]
 - identity: tx_accounts
   name: tx-accounts
   required_columns:
-    [account_id, entity_id, jurisdiction, registration_status,
+    [account_id, entity_id, jurisdiction,
+     # value domain: registered | unregistered
+     registration_status,
      filing_frequency, account_month, filing_history]
 - identity: tx_notices
   name: tx-notices
   required_columns:
-    [notice_id, account_id, notice_type, jurisdiction_level, tax_type,
-     root_cause, amount_band, severity, status, disposition, filed_month,
+    [notice_id, account_id,
+     # value domain: sales_use_assessment | penalty_interest | income_franchise | information_mismatch | exemption_cert_audit | payroll_withholding | cp14_balance_due | cp501_reminder | cp504_intent_levy_state_refund | lt11_final_intent_levy
+     notice_type,
+     # value domain: irs | state | county_city
+     jurisdiction_level,
+     # value domain: sales_use | payroll | income | franchise | property
+     tax_type,
+     root_cause, amount_band,
+     # value domain: severity bands; 'high' is the value the semantic model matches
+     severity,
+     # value domain: open | closed
+     status,
+     # value domain: the codes in cases/dispositions.yaml
+     disposition,
+     filed_month,
      age_days, days_to_deadline, deadline_bucket, assessed_amount,
-     abated_amount]
+     abated_amount, penalty_amount, interest_amount]

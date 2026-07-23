@@ -21,6 +21,17 @@
 #     material exits our MRB workflow without internal material action — the
 #     closest fit in the closed set to "resolved outside our process"
 #     (mirrors card-disputes' close_merchant_credited).
+#   - scrap_disposition -> other: the defect is real and the material is
+#     nonrecoverable — destroyed or permanently segregated so it cannot
+#     re-enter the supply chain; a final material action rather than a
+#     corrected-to-spec closure, so it is its own governed outcome ("other").
+#   - repair_with_approval -> other: repair restores FUNCTION but not full
+#     drawing conformance — the deviation remains in the delivered article —
+#     so it requires design-authority approval and, on customer-designed
+#     product, customer concession; a governed acceptance outcome ("other").
+# Use-as-is, rework, repair, scrap, and return-to-supplier are the five
+# canonical MRB outcomes; rework restores full conformance, repair does not
+# — the distinction drives who may approve.
 # requires_note on every code: MRB minutes, justifications, re-verification
 # plans and SCAR references are the audit record an AS9100 / ISO 13485
 # examiner reads.
@@ -29,3 +40,5 @@
 - { code: use_as_is_engineering_disposition, label: "Use as is — engineering disposition / customer concession",   category: other,          requires_note: true }
 - { code: quarantine_pending_analysis,       label: "Quarantine — containment pending root-cause / escape analysis", category: inconclusive,   requires_note: true }
 - { code: return_to_supplier_scar,           label: "Return to supplier — issue SCAR",                             category: benign,         requires_note: true }
+- { code: scrap_disposition,                 label: "Scrap — nonconforming material destroyed/segregated",         category: other,          requires_note: true }
+- { code: repair_with_approval,              label: "Repair — design-authority approved deviation from drawing",   category: other,          requires_note: true }

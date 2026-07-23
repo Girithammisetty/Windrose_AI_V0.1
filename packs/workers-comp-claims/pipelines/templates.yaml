@@ -1,4 +1,4 @@
-# Pipeline seeds (expressed against the real pipeline-orchestrator algorithm
+# Pipeline templates (expressed against the real pipeline-orchestrator algorithm
 # catalog): an unsupervised medical-bill anomaly detector (fee-schedule
 # outlier / provider-cluster surface scan) and a supervised compensability-
 # outcome scorer trained on human dispositions (the deterministic-first

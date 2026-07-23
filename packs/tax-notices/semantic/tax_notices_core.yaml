@@ -118,6 +118,12 @@ definition:
     - { name: total_abated_amount, entity: notices, agg: sum,
         expr: "cast(abated_amount as double)", format: decimal,
         description: "Total dollars abated, withdrawn, or reduced via amendment" }
+    - { name: total_penalty_amount, entity: notices, agg: sum,
+        expr: "cast(penalty_amount as double)", format: decimal,
+        description: "Total penalty dollars across notices (the generally-abatable component)" }
+    - { name: total_interest_amount, entity: notices, agg: sum,
+        expr: "cast(interest_amount as double)", format: decimal,
+        description: "Total interest dollars across notices (statutory — generally not abatable)" }
     - { name: account_count, entity: accounts, agg: count,
         description: "Number of registered tax accounts" }
     - { name: registered_account_count, entity: accounts, agg: count,
@@ -135,6 +141,10 @@ definition:
         expr_metric: "abated_count / nullif(closed_notice_count, 0)",
         format: percent,
         description: "Notices won via abatement/withdrawal over all closures" }
+    - { name: penalty_share_of_assessed,
+        expr_metric: "total_penalty_amount / nullif(total_assessed_amount, 0)",
+        format: percent,
+        description: "Penalty dollars as a share of total assessed — the abatable slice of the exposure (interest is statutory and generally stands)" }
     - { name: pay_valid_share,
         expr_metric: "pay_valid_count / nullif(closed_notice_count, 0)",
         format: percent,

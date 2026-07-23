@@ -8,15 +8,28 @@
 # subledger extract and the invoice-capture feed — or file upload.
 - identity: ap_exceptions
   name: ap-exceptions
+  # Columns the decision tables and semantic/query filters compare to
+  # literals carry their value domains below, so bound tenant data can be
+  # checked against what the rules actually match.
   required_columns:
-    [exception_id, invoice_id, exception_type, three_way_match,
-     fraud_indicator, severity, status, disposition, filed_month, age_days,
+    [exception_id, invoice_id,
+     # value domain: duplicate_invoice | missing_po | missing_receipt | price_variance | quantity_mismatch | suspicious_banking_change | vendor_master_change | weekend_submission
+     exception_type,
+     three_way_match,
+     # value domain: none | bec_suspect | shell_vendor_suspect | split_invoicing
+     fraud_indicator,
+     severity,
+     # value domain: open | closed
+     status,
+     # value domain: the codes in cases/dispositions.yaml
+     disposition,
+     filed_month, age_days,
      days_to_deadline, deadline_bucket, invoice_amount, recovered_amount]
 - identity: ap_invoices
   name: ap-invoices
   required_columns:
     [invoice_id, vendor_id, vendor_invoice_no, category, po_flag,
-     payment_terms, invoice_month, approval_route, currency]
+     payment_terms, invoice_month, approval_route, currency, invoice_amount]
 - identity: ap_vendors
   name: ap-vendors
   required_columns:

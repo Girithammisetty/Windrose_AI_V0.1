@@ -12,6 +12,14 @@
 - identity: denial_triage
   name: "Denial worklist triage"
   rules:
+    # OVERDUE first: the payer appeal window has already lapsed — negative
+    # days remaining. Escalate for salvage review (proof-of-timely-filing,
+    # payer-relations exception) before the write-off waterfall runs.
+    - when:
+        - { column: appeal_status, op: eq, value: not_appealed }
+        - { column: appeal_deadline_days, op: lt, value: 0 }
+      then: { disposition_code: escalate_payer, severity: critical }
+      note: "OVERDUE — payer appeal window already lapsed with no appeal on file; salvage review (timely-filing proof / payer-relations exception) before any write-off"
     # Appeal window nearly closed with no appeal on file — timely-filing risk.
     - when:
         - { column: appeal_status, op: eq, value: not_appealed }
@@ -42,6 +50,20 @@
         - { column: denial_category, op: eq, value: coverage }
       then: { disposition_code: escalate_payer, severity: medium }
       note: "Coverage (LCD/NCD) denial — clinical review decides appeal vs write-off; the table never makes that call"
+    # Medical-necessity denials mirror coverage: a clinical case must exist
+    # before any appeal, so a clinician reviews first (BR-4).
+    - when:
+        - { column: denial_category, op: eq, value: medical_necessity }
+      then: { disposition_code: escalate_payer, severity: medium }
+      note: "Medical-necessity denial — clinical review against the chart decides appeal vs write-off; the table never makes that call"
+    # Timely-filing denials are a two-path review the contract cannot see
+    # (no submission-proof column): WITH clearinghouse acceptance or 837
+    # transmission proof the appeal route wins; WITHOUT proof the path is
+    # write-off plus upstream-lag remediation. A specialist checks the proof.
+    - when:
+        - { column: denial_category, op: eq, value: timely_filing }
+      then: { disposition_code: escalate_payer, severity: medium }
+      note: "Timely-filing denial — two-path review: with clearinghouse acceptance / 837 transmission proof, appeal; without proof, write-off and fix the upstream submission lag"
   # Nothing matched deterministically -> a human reviews; the table proposes,
   # a human decides.
   default_outcome: { disposition_code: escalate_payer, severity: medium }

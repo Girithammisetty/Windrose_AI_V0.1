@@ -5,13 +5,14 @@
 # packctl/pack-service; the manifest envelope follows BRD 23 (PKG-FR-001/003).
 # Components the current Core cannot materialize are declared under
 # `deferred` — recorded in the install ledger, never faked.
-# v2.0.0 (no-dummy-data rule): the pack ships ZERO seed data — datasets are
+# v2 (no-dummy-data rule): the pack ships ZERO bundled data — datasets are
 # binding CONTRACTS resolved to the tenant's REAL data at install; cases
-# arrive from real rows via case triggers/intake, not seeds; eval golden sets
-# are curated by the tenant from its own adjudicated review history.
+# arrive from real rows via case triggers/intake, not bundled fixtures; eval
+# golden sets are curated by the tenant from its own adjudicated review
+# history.
 pack_manifest: 1
 name: seller-vetting
-version: 2.0.0
+version: 2.1.0
 publisher: { id: pub-datacern, name: "Datacern Inc." }
 description: >-
   AI-assisted marketplace seller vetting and counterfeit/IP-enforcement

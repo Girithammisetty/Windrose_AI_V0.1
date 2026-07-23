@@ -8,9 +8,13 @@
 # binding CONTRACTS resolved to the tenant's REAL data at install; cases
 # arrive from real rows via case triggers/intake, not seeds; eval golden sets
 # are curated by the tenant from its own investigated history.
+# v2.1.0 (audited depth rework): AKS / Stark / 60-day-overpayment grounding,
+# kickback and medical-necessity typologies, service_date + identified-date
+# contract columns, impossible-day and 60-day-clock verified queries, a third
+# Recovery Operations dashboard, and a payment-suspension referral disposition.
 pack_manifest: 1
 name: payer-fwa-siu
-version: 2.0.0
+version: 2.1.0
 publisher: { id: pub-datacern, name: "Datacern Inc." }
 description: >-
   Payer-side FWA detection and SIU investigation workflow (BRD 27):
@@ -38,6 +42,7 @@ components:
   dashboards:
     - { file: "dashboards/siu_command_center.yaml", identity: "siu_command_center" }
     - { file: "dashboards/provider_outliers.yaml", identity: "provider_outliers" }
+    - { file: "dashboards/recovery_operations.yaml", identity: "recovery_operations" }
   dispositions:
     - { file: "cases/dispositions.yaml", identity: "dispositions" }
   case_fields:

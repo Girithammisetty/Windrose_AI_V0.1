@@ -12,9 +12,16 @@
   name: pbm-rx-claims
   required_columns:
     [rx_claim_id, member_id, pharmacy_npi, prescriber_npi, ndc, drug_name,
-     gpi_class, brand_generic, formulary_tier, daw_code, fill_month,
+     gpi_class,
+     # value domain: brand_generic = brand|generic — matched literally by
+     # semantic filters and verified queries
+     brand_generic,
+     formulary_tier, daw_code, fill_month,
      days_supply, quantity, ingredient_cost, dispensing_fee, plan_paid,
-     member_copay, rebate_expected, rebate_collected, claim_status,
+     member_copay, rebate_expected, rebate_collected,
+     # value domain: claim_status — 'paid' and 'rejected' are matched
+     # literally by semantic filters and verified queries
+     claim_status,
      reject_code, channel, member_state]
 - identity: pbm_formulary
   name: pbm-formulary
@@ -25,13 +32,38 @@
 - identity: pbm_pa_requests
   name: pbm-pa-requests
   required_columns:
-    [pa_id, member_id, prescriber_npi, ndc, drug_name, gpi_class, urgency,
-     submitted_month, status, turnaround_hours, controlled_substance,
-     cs_schedule, formulary_tier, step_therapy_met, agent_recommendation,
+    [pa_id, member_id, prescriber_npi, ndc, drug_name, gpi_class,
+     # value domain: urgency = expedited|standard — matched literally by the
+     # PA-triage table and semantic filters
+     urgency,
+     submitted_month,
+     # value domain: status = pending|approved|denied — matched literally by
+     # the PA-triage table and semantic filters
+     status,
+     turnaround_hours,
+     # value domain: controlled_substance = yes|no — matched literally by the
+     # PA-triage table and semantic filters
+     controlled_substance,
+     cs_schedule, formulary_tier,
+     # value domain: step_therapy_met = yes|no — matched literally by the
+     # PA-triage table
+     step_therapy_met,
+     # value domain: agent_recommendation = approve|escalate_pharmacist —
+     # matched literally by the PA-triage table and semantic filters
+     agent_recommendation,
      agent_confidence, denial_reason, member_state]
 - identity: pbm_dur_alerts
   name: pbm-dur-alerts
   required_columns:
-    [dur_id, rx_claim_id, member_id, ndc, drug_name, conflict_code,
-     severity_level, conflict_description, alert_month, status,
+    [dur_id, rx_claim_id, member_id, ndc, drug_name,
+     # value domain: conflict_code = DD|TD|HD|ER|LR — matched literally by the
+     # DUR-routing table
+     conflict_code,
+     # value domain: severity_level = "1"|"2"|"3" (1 = clinical-critical) —
+     # matched literally by the DUR-routing table and semantic filters
+     severity_level,
+     conflict_description, alert_month,
+     # value domain: status — 'open' is matched literally by the DUR-routing
+     # table, semantic filters, and verified queries
+     status,
      pharmacist_action, member_state]

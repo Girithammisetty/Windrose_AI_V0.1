@@ -28,3 +28,4 @@
     - { name: cpt_code,           data_type: string, label: "Procedure code (CPT/HCPCS)",  required: false }
     - { name: potential_value,    data_type: float,  label: "Appeal value at stake (USD)", required: true }
     - { name: product_type,       data_type: enum,   label: "Product type",                required: false }
+    - { name: appeal_deadline_days, data_type: integer, label: "Appeal window — days remaining", required: false }

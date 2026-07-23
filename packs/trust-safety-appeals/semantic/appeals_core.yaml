@@ -103,9 +103,17 @@ definition:
     - { name: suspension_appeal_count, entity: appeals, agg: count,
         filters: "appeal_type = 'account_suspension'",
         description: "Account-suspension appeals (highest-impact enforcement type)" }
+    # DSA Art. 24 transparency reporting requires the MEDIAN time needed to
+    # decide complaints; the Core agg whitelist (sum/avg/min/max/count/
+    # count_distinct/first) has no median/percentile agg, so the platform
+    # computes the reportable median downstream from the same rows — the avg
+    # below is the operational proxy, never the reportable statistic.
     - { name: avg_appeal_age_days, entity: appeals, agg: avg,
         expr: "cast(age_days as double)", format: decimal,
-        description: "Average appeal age in days (cycle time / backlog aging)" }
+        description: "Average appeal age in days (cycle time / backlog aging; DSA Art. 24 reports the median, computed downstream)" }
+    - { name: ods_referred_count, entity: appeals, agg: count,
+        filters: "ods_referred = 'yes'",
+        description: "Appeals referred onward to a certified out-of-court dispute settlement body (DSA Art. 21)" }
     - { name: avg_deadline_runway_days, entity: appeals, agg: avg,
         expr: "cast(days_to_deadline as double)", format: decimal,
         description: "Average days remaining to the complaint-handling deadline (slice by deadline_bucket or appeal_status to avoid closed-row dilution)" }

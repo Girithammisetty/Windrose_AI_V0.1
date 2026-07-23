@@ -16,6 +16,13 @@
 - identity: expedited_docket_routing
   name: "Expedited docket routing (deadline runway)"
   rules:
+    # Clock ALREADY breached — negative runway would silently fall through
+    # the [0,n] buckets below, so it gets its own leading rule.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: days_to_deadline, op: lt, value: 0 }
+      then: { disposition_code: escalate_expedited_docket, severity: critical }
+      note: "Processing/hearing clock already breached (negative runway) — overdue items lead the expedited docket; a breach is a due-process exposure, not just a queue position"
     # Clock nearly exhausted on any open item — front of the docket now.
     - when:
         - { column: status, op: eq, value: open }
@@ -29,12 +36,24 @@
         - { column: days_to_deadline, op: between, value: [0, 7] }
       then: { disposition_code: escalate_expedited_docket, severity: high }
       note: "Hearing-packet deadline inside 7 days — expedite packet assembly; the hearing officer decides the appeal"
-    # Anything else already in the agency's tightest deadline bucket.
+    # Anything else already in the agency's tightest deadline bucket. The
+    # deadline_bucket value domain ('0_7_days', '8_30_days', ...) is part of
+    # the gb-determinations binding contract (see data/datasets.yaml) — the
+    # literal here must match the bound dataset's bucketing vocabulary.
     - when:
         - { column: status, op: eq, value: open }
         - { column: deadline_bucket, op: eq, value: "0_7_days" }
       then: { disposition_code: escalate_expedited_docket, severity: high }
       note: "Open item in the 0-7 day deadline bucket — expedite ahead of standard-runway work"
+    # Top-band overpayment docket: large-dollar overpayments age worst and
+    # drive hearings, so they expedite. The band cut-points are
+    # agency-configured; 'high' is the contract's top band.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: determination_type, op: eq, value: overpayment }
+        - { column: benefit_amount_band, op: eq, value: high }
+      then: { disposition_code: escalate_expedited_docket, severity: high }
+      note: "Top-band overpayment — large-dollar overpayments age worst and drive hearings (band is agency-configured); expedite establishment/waiver review, no eligibility outcome proposed"
   # No default_outcome ON PURPOSE: items with adequate runway proceed through
   # the standard docket untouched — this table stays silent on them rather
   # than proposing any eligibility outcome (grant/deny/dismiss are NEVER

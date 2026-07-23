@@ -26,12 +26,16 @@
     label: "Serious case"
     options: ["yes", "no"]
     required: false
+# The six ICH E2A seriousness criteria plus an explicit non-serious value —
+# congenital_anomaly and other_medically_important are E2A criteria in their
+# own right, not subsumed by the first four.
 - name: seriousness_criteria
   data_type: enum
   purpose: both
   field_meta:
     label: "Seriousness criterion"
-    options: [death, life_threatening, hospitalization, disability, non_serious]
+    options: [death, life_threatening, hospitalization, disability,
+              congenital_anomaly, other_medically_important, non_serious]
     required: false
 - name: expectedness
   data_type: enum
@@ -45,7 +49,7 @@
   purpose: both
   field_meta:
     label: "Causality assessment"
-    options: [probable, possible, unlikely, unassessable, pending]
+    options: [certain, probable, possible, unlikely, unassessable, pending]
     required: false
 - name: report_country
   data_type: string
@@ -58,4 +62,16 @@
   purpose: both
   field_meta:
     label: "Regulatory reporting clock — days left"
+    required: false
+- name: qppv_approver
+  data_type: string
+  purpose: both
+  field_meta:
+    label: "QPPV / safety officer approver"
+    required: false
+- name: submission_reference
+  data_type: string
+  purpose: both
+  field_meta:
+    label: "Submission reference (gateway ACK / report number)"
     required: false

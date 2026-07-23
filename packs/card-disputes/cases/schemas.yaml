@@ -2,7 +2,7 @@
 # as a named case TYPE binding the adjudication field set, so intake creates a
 # structurally-complete dispute case (not a generic case with prose notes).
 # Embedded field defs use {name, data_type, label, required}; names align with
-# cases/fields.yaml and the cd_disputes seed columns.
+# cases/fields.yaml and the cd_disputes binding-contract columns.
 - schema_key: card_dispute
   name: "Card dispute (Reg E / Reg Z)"
   description: >-

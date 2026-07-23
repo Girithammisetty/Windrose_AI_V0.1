@@ -1,4 +1,4 @@
-# Pipeline seeds (expressed against the real pipeline-orchestrator algorithm
+# Pipeline templates (expressed against the real pipeline-orchestrator algorithm
 # catalog): an unsupervised order-anomaly detector (friendly-fraud /
 # chargeback-prone order surface scan over AVS, delivery, device and channel
 # signals) and a supervised win-likelihood scorer trained on human

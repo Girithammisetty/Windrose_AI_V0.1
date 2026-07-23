@@ -24,6 +24,41 @@
         - { column: hold_reason, op: eq, value: code_mutual_exclusion }
       then: { disposition_code: escalate_md, severity: medium }
       note: "Same-month code-combination conflict — clinician reviewer selects the defensible code"
+    # CMS code time minimums checked directly against the candidate's own
+    # tracked minutes (not just the upstream hold_reason passthrough): an
+    # under-threshold month is held, not billed. One rule per code family.
+    - when:
+        - { column: cpt_code, op: eq, value: "99490" }
+        - { column: total_time_min, op: lt, value: 20 }
+      then: { disposition_code: bill_held, severity: medium }
+      note: "99490 requires >= 20 clinical-staff minutes in the calendar month — tracked time is under threshold; hold, not bill"
+    - when:
+        - { column: cpt_code, op: eq, value: "99487" }
+        - { column: total_time_min, op: lt, value: 60 }
+      then: { disposition_code: bill_held, severity: medium }
+      note: "99487 complex CCM requires >= 60 clinical-staff minutes — tracked time is under threshold; hold, not bill"
+    - when:
+        - { column: cpt_code, op: eq, value: "99424" }
+        - { column: total_time_min, op: lt, value: 30 }
+      then: { disposition_code: bill_held, severity: medium }
+      note: "99424 PCM requires >= 30 minutes — tracked time is under threshold; hold, not bill"
+    - when:
+        - { column: cpt_code, op: eq, value: "99484" }
+        - { column: total_time_min, op: lt, value: 20 }
+      then: { disposition_code: bill_held, severity: medium }
+      note: "99484 general BHI requires >= 20 BH care-manager minutes — tracked time is under threshold; hold, not bill"
+    - when:
+        - { column: cpt_code, op: eq, value: "99457" }
+        - { column: total_time_min, op: lt, value: 20 }
+      then: { disposition_code: bill_held, severity: medium }
+      note: "99457 RPM treatment management requires >= 20 minutes with interactive communication — tracked time is under threshold; hold, not bill"
+    # FQHC/RHC billing provider — the CY2025 PFS unbundled G0511, so these
+    # candidates get a code-selection review of the individual-code proposal
+    # (the bill_adjusted route) rather than a G0511 collapse.
+    - when:
+        - { column: fqhc_flag, op: eq, value: "yes" }
+      then: { disposition_code: bill_adjusted, severity: low }
+      note: "FQHC/RHC provider — code-selection review post-G0511-unbundling: confirm the individual care-management code before billing"
     # A program-configured documentation/threshold artifact is missing — hold
     # and pursue completion; under-documented months are held, not billed.
     - when:

@@ -52,6 +52,41 @@
     ORDER BY level5_share DESC
   model: fwa_claims
   tags: [upcoding, em-coding, providers, pack]
+# Impossible-day screen: `units` is the contract's generic service-unit count —
+# for one-hour time-based codes (e.g. 90837) more than 24 units on one
+# service_date is per se impossible; plans tune the HAVING floor per code
+# family, and group practices billing under one NPI are ruled out before a
+# lead opens.
+- nl_text: "Which providers billed an impossible day (billed units exceed 24 hours)?"
+  sql_text: >-
+    SELECT provider_npi, provider_specialty, service_date,
+           count(*) AS lines,
+           sum(cast(units AS double)) AS units_billed,
+           sum(cast(paid_amount AS double)) AS paid
+    FROM {{dataset('fwa-claim-lines')}}
+    GROUP BY provider_npi, provider_specialty, service_date
+    HAVING sum(cast(units AS double)) > 24
+    ORDER BY units_billed DESC
+  model: fwa_claims
+  tags: [impossible-day, time-based-codes, providers, pack]
+- nl_text: "Which open recoveries are aging against the 60-day overpayment clock?"
+  sql_text: >-
+    SELECT recovery_id, provider_npi, recovery_method, status,
+           overpayment_identified_date,
+           date_diff('day', cast(overpayment_identified_date AS date),
+                     current_date) AS days_since_identified,
+           CASE
+             WHEN date_diff('day', cast(overpayment_identified_date AS date),
+                            current_date) > 60
+               THEN 'past_60_day_clock'
+             ELSE 'within_clock'
+           END AS clock_bucket,
+           cast(demanded_amount AS double) AS demanded,
+           cast(recovered_amount AS double) AS recovered
+    FROM {{dataset('fwa-recoveries')}}
+    ORDER BY days_since_identified DESC
+  model: siu_operations
+  tags: [recoveries, overpayment-60-day, aging, pack]
 - nl_text: "What is the paid exposure on unbundled claim lines by provider?"
   sql_text: >-
     SELECT provider_npi, provider_specialty,

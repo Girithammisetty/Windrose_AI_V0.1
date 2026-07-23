@@ -7,7 +7,8 @@ name: "Complaint Handling Center"
 module: insights
 semantic_model: complaints_core
 description: >-
-  Top-line complaint-handling KPIs (21 CFR 820.198): complaint volumes by
+  Top-line complaint-handling KPIs (QMSR complaint files — ISO 13485
+  §8.2.2): complaint volumes by
   event type, investigation backlog aging by severity, human disposition
   outcome mix, monthly intake trend, and intake quality by complaint source.
 tags: [medtech, complaints, quality, pack]

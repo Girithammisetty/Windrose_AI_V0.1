@@ -5,8 +5,8 @@
   sql_text: >-
     SELECT dispute_type,
            count(*) AS closed_disputes,
-           sum(CASE WHEN disposition = 'cardholder_favor' THEN 1 ELSE 0 END) AS cardholder_favor,
-           round(sum(CASE WHEN disposition = 'cardholder_favor' THEN 1 ELSE 0 END) * 1.0
+           sum(CASE WHEN disposition = 'resolve_cardholder_favor' THEN 1 ELSE 0 END) AS cardholder_favor,
+           round(sum(CASE WHEN disposition = 'resolve_cardholder_favor' THEN 1 ELSE 0 END) * 1.0
                  / nullif(count(*), 0), 4) AS cardholder_favor_rate
     FROM {{dataset('cd-disputes')}}
     WHERE status = 'closed'
@@ -30,7 +30,7 @@
   sql_text: >-
     SELECT cardholder_id,
            count(*) AS dispute_count,
-           sum(CASE WHEN disposition = 'denied_no_error' THEN 1 ELSE 0 END) AS prior_denials,
+           sum(CASE WHEN disposition = 'deny_no_error_found' THEN 1 ELSE 0 END) AS prior_denials,
            sum(cast(amount AS double)) AS total_disputed
     FROM {{dataset('cd-disputes')}}
     GROUP BY cardholder_id
@@ -64,3 +64,17 @@
     ORDER BY exposure DESC
   model: disputes_core
   tags: [reg_e, provisional_credit, exposure, pack]
+# Network filing/response windows are network-rule dependent (many reason
+# codes allow on the order of 120 calendar days from processing or expected
+# delivery, some shorter) — the runway lives in the bound data
+# (deadline_days_left); the query asserts no day-count of its own.
+- nl_text: "Which filed chargebacks are approaching the network filing window?"
+  sql_text: >-
+    SELECT dispute_id, network, reason_code, status,
+           cast(deadline_days_left AS double) AS deadline_days_left,
+           cast(amount AS double) AS amount
+    FROM {{dataset('cd-disputes')}}
+    WHERE chargeback_filed = 'yes' AND status = 'open'
+    ORDER BY deadline_days_left ASC
+  model: disputes_core
+  tags: [chargebacks, deadlines, network_windows, pack]

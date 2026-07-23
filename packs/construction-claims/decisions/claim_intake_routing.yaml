@@ -11,6 +11,12 @@
 - identity: claim_intake_routing
   name: "Claim intake routing — deadline and exposure"
   rules:
+    # Response window ALREADY LAPSED — days_to_deadline has gone negative;
+    # silence past the deadline can itself become a deemed determination.
+    - when:
+        - { column: days_to_deadline, op: lt, value: 0 }
+      then: { disposition_code: escalate_review_board, severity: critical }
+      note: "Contract-configured response window already lapsed — overdue determination; immediate review-board attention to cure or document the missed response"
     # Contract-configured response window nearly exhausted — a determination
     # window can lapse by silence; move the claim to the front of the board.
     - when:
@@ -30,6 +36,13 @@
         - { column: schedule_impact, op: eq, value: days_30_plus }
       then: { disposition_code: escalate_review_board, severity: high }
       note: "Major asserted schedule impact — route to scheduling & delay specialist for critical-path method review"
+    # Defect backcharges sit on the default/surety fault line: skipping the
+    # contract's notice-and-cure sequence risks a wrongful default and surety
+    # discharge — never a queue-order item.
+    - when:
+        - { column: claim_type, op: eq, value: defect_backcharge }
+      then: { disposition_code: escalate_review_board, severity: high }
+      note: "Defect backcharge — verify the notice-and-cure sequence before any default or surety step; a wrongful default risks discharging the surety"
   # default_outcome deliberately OMITTED: an unmatched claim simply stays on
   # the standard analyst worklist — this table routes, it never adjudicates,
   # so there is no honest deterministic default disposition.

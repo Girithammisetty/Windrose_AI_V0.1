@@ -1,0 +1,479 @@
+{
+  "pack": "card-disputes",
+  "version": "2.1.0",
+  "workspace_id": "019f90e7-c9fa-76e5-8ba7-a232d6780bc1",
+  "tenant_id": "019f90e7-c5b6-7dea-b842-0c2207e6a0e3",
+  "started_at": "2026-07-23T21:39:36Z",
+  "finished_at": "2026-07-23T21:39:45Z",
+  "actions": [
+    {
+      "kind": "datasets",
+      "identity": "cd_cardholders",
+      "action": "reuse",
+      "urn": "wr:019f90e7-c5b6-7dea-b842-0c2207e6a0e3:dataset:dataset/019f90eb-05a1-7bd1-af25-94b7c235cd47",
+      "detail": "bound to tenant dataset 'cd-cardholders'"
+    },
+    {
+      "kind": "datasets",
+      "identity": "cd_transactions",
+      "action": "reuse",
+      "urn": "wr:019f90e7-c5b6-7dea-b842-0c2207e6a0e3:dataset:dataset/019f90eb-0757-75fc-8567-68da34386fa7",
+      "detail": "bound to tenant dataset 'cd-transactions'"
+    },
+    {
+      "kind": "datasets",
+      "identity": "cd_disputes",
+      "action": "reuse",
+      "urn": "wr:019f90e7-c5b6-7dea-b842-0c2207e6a0e3:dataset:dataset/019f90eb-07e4-71aa-a4b1-7cff103c4a67",
+      "detail": "bound to tenant dataset 'cd-disputes'"
+    },
+    {
+      "kind": "semantic_models",
+      "identity": "disputes_core",
+      "action": "create",
+      "urn": "wr:019f90e7-c5b6-7dea-b842-0c2207e6a0e3:semantic:model/019f90eb-73b5-7b84-bd28-8f0ed309c5b6",
+      "detail": "'disputes_core' published"
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_0",
+      "action": "create",
+      "urn": "wr:019f90e7-c5b6-7dea-b842-0c2207e6a0e3:semantic:verified_query/019f90eb-778c-70c7-9168-0136cfe5e6f4",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_1",
+      "action": "create",
+      "urn": "wr:019f90e7-c5b6-7dea-b842-0c2207e6a0e3:semantic:verified_query/019f90eb-789d-7ad9-b773-cdb2f545ca1b",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_2",
+      "action": "create",
+      "urn": "wr:019f90e7-c5b6-7dea-b842-0c2207e6a0e3:semantic:verified_query/019f90eb-798e-7bce-a216-e27e881f112b",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_3",
+      "action": "create",
+      "urn": "wr:019f90e7-c5b6-7dea-b842-0c2207e6a0e3:semantic:verified_query/019f90eb-7a74-7ca0-9f87-65caba8cb2ae",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_4",
+      "action": "create",
+      "urn": "wr:019f90e7-c5b6-7dea-b842-0c2207e6a0e3:semantic:verified_query/019f90eb-7bab-768b-b91a-f33976d24c84",
+      "detail": ""
+    },
+    {
+      "kind": "verified_queries",
+      "identity": "canonical_questions_5",
+      "action": "create",
+      "urn": "wr:019f90e7-c5b6-7dea-b842-0c2207e6a0e3:semantic:verified_query/019f90eb-7c9d-7685-8755-a7ff539aa10e",
+      "detail": ""
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "dispute_merchant_edges",
+      "action": "create",
+      "urn": "wr:019f90e7-c5b6-7dea-b842-0c2207e6a0e3:query:query/019f90eb-7d80-775e-a1e2-4d088ff41d28",
+      "detail": "Disputes: cardholder-merchant network edges"
+    },
+    {
+      "kind": "saved_queries",
+      "identity": "high_value_open_disputes",
+      "action": "create",
+      "urn": "wr:019f90e7-c5b6-7dea-b842-0c2207e6a0e3:query:query/019f90eb-7dd1-7639-8537-0621c7c71d23",
+      "detail": "Disputes: high-value open queue"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "dispute_command_center",
+      "action": "create",
+      "urn": "wr:019f90e7-c5b6-7dea-b842-0c2207e6a0e3:chart:dashboard/019f90eb-7e4c-762a-9fe5-644a3e552c20",
+      "detail": "Dispute Command Center"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "dispute_command_center",
+      "action": "warn",
+      "urn": null,
+      "detail": "chart 'Disputes by type' data 502: {\"error\":{\"code\":\"UPSTREAM_QUERY_FAILED\",\"message\":\"query results status 403: {\\\"error\\\":{\\\"code\\\":\\\"PERMISSION_DENIED\\\",\\\"message\\\":\\\"not allowed: qu"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "dispute_command_center",
+      "action": "warn",
+      "urn": null,
+      "detail": "chart 'Backlog aging by severity' data 502: {\"error\":{\"code\":\"UPSTREAM_QUERY_FAILED\",\"message\":\"query results status 403: {\\\"error\\\":{\\\"code\\\":\\\"PERMISSION_DENIED\\\",\\\"message\\\":\\\"not allowed: qu"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "dispute_command_center",
+      "action": "warn",
+      "urn": null,
+      "detail": "chart 'Disposition outcome mix' data 502: {\"error\":{\"code\":\"UPSTREAM_QUERY_FAILED\",\"message\":\"query results status 403: {\\\"error\\\":{\\\"code\\\":\\\"PERMISSION_DENIED\\\",\\\"message\\\":\\\"not allowed: qu"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "dispute_command_center",
+      "action": "warn",
+      "urn": null,
+      "detail": "chart 'Dispute intake by month' data 502: {\"error\":{\"code\":\"UPSTREAM_QUERY_FAILED\",\"message\":\"query results status 403: {\\\"error\\\":{\\\"code\\\":\\\"PERMISSION_DENIED\\\",\\\"message\\\":\\\"not allowed: qu"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "dispute_command_center",
+      "action": "warn",
+      "urn": null,
+      "detail": "chart 'Dispute-type worklist grid' data 502: {\"error\":{\"code\":\"UPSTREAM_QUERY_FAILED\",\"message\":\"query results status 403: {\\\"error\\\":{\\\"code\\\":\\\"PERMISSION_DENIED\\\",\\\"message\\\":\\\"not allowed: qu"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "dispute_command_center",
+      "action": "verify",
+      "urn": "wr:019f90e7-c5b6-7dea-b842-0c2207e6a0e3:chart:dashboard/019f90eb-7e4c-762a-9fe5-644a3e552c20",
+      "detail": "0/5 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "regulatory_clock",
+      "action": "create",
+      "urn": "wr:019f90e7-c5b6-7dea-b842-0c2207e6a0e3:chart:dashboard/019f90eb-80a8-79a0-951e-70e67126d785",
+      "detail": "Regulatory Clock & Provisional Credit"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "regulatory_clock",
+      "action": "warn",
+      "urn": null,
+      "detail": "chart 'Open disputes by regulatory regime' data 502: {\"error\":{\"code\":\"UPSTREAM_QUERY_FAILED\",\"message\":\"query results status 403: {\\\"error\\\":{\\\"code\\\":\\\"PERMISSION_DENIED\\\",\\\"message\\\":\\\"not allowed: qu"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "regulatory_clock",
+      "action": "warn",
+      "urn": null,
+      "detail": "chart 'Provisional credit status mix' data 502: {\"error\":{\"code\":\"UPSTREAM_QUERY_FAILED\",\"message\":\"query results status 403: {\\\"error\\\":{\\\"code\\\":\\\"PERMISSION_DENIED\\\",\\\"message\\\":\\\"not allowed: qu"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "regulatory_clock",
+      "action": "warn",
+      "urn": null,
+      "detail": "chart 'Deadline runway (open book)' data 502: {\"error\":{\"code\":\"UPSTREAM_QUERY_FAILED\",\"message\":\"query results status 403: {\\\"error\\\":{\\\"code\\\":\\\"PERMISSION_DENIED\\\",\\\"message\\\":\\\"not allowed: qu"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "regulatory_clock",
+      "action": "warn",
+      "urn": null,
+      "detail": "chart 'Fraud-claim intake trend' data 502: {\"error\":{\"code\":\"UPSTREAM_QUERY_FAILED\",\"message\":\"query results status 403: {\\\"error\\\":{\\\"code\\\":\\\"PERMISSION_DENIED\\\",\\\"message\\\":\\\"not allowed: qu"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "regulatory_clock",
+      "action": "warn",
+      "urn": null,
+      "detail": "chart 'Regulatory regime grid' data 502: {\"error\":{\"code\":\"UPSTREAM_QUERY_FAILED\",\"message\":\"query results status 403: {\\\"error\\\":{\\\"code\\\":\\\"PERMISSION_DENIED\\\",\\\"message\\\":\\\"not allowed: qu"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "regulatory_clock",
+      "action": "verify",
+      "urn": "wr:019f90e7-c5b6-7dea-b842-0c2207e6a0e3:chart:dashboard/019f90eb-80a8-79a0-951e-70e67126d785",
+      "detail": "0/5 charts resolve data"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "chargeback_recovery",
+      "action": "create",
+      "urn": "wr:019f90e7-c5b6-7dea-b842-0c2207e6a0e3:chart:dashboard/019f90eb-8284-7449-9dad-6c0a663ec0a7",
+      "detail": "Chargeback Recovery"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "chargeback_recovery",
+      "action": "warn",
+      "urn": null,
+      "detail": "chart 'Recovered dollars by network' data 502: {\"error\":{\"code\":\"UPSTREAM_QUERY_FAILED\",\"message\":\"query results status 403: {\\\"error\\\":{\\\"code\\\":\\\"PERMISSION_DENIED\\\",\\\"message\\\":\\\"not allowed: qu"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "chargeback_recovery",
+      "action": "warn",
+      "urn": null,
+      "detail": "chart 'Chargeback filing mix' data 502: {\"error\":{\"code\":\"UPSTREAM_QUERY_FAILED\",\"message\":\"query results status 403: {\\\"error\\\":{\\\"code\\\":\\\"PERMISSION_DENIED\\\",\\\"message\\\":\\\"not allowed: qu"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "chargeback_recovery",
+      "action": "warn",
+      "urn": null,
+      "detail": "chart 'Chargebacks won by reason code' data 502: {\"error\":{\"code\":\"UPSTREAM_QUERY_FAILED\",\"message\":\"query results status 403: {\\\"error\\\":{\\\"code\\\":\\\"PERMISSION_DENIED\\\",\\\"message\\\":\\\"not allowed: qu"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "chargeback_recovery",
+      "action": "warn",
+      "urn": null,
+      "detail": "chart 'Transaction entry-mode mix' data 502: {\"error\":{\"code\":\"UPSTREAM_QUERY_FAILED\",\"message\":\"query results status 403: {\\\"error\\\":{\\\"code\\\":\\\"PERMISSION_DENIED\\\",\\\"message\\\":\\\"not allowed: qu"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "chargeback_recovery",
+      "action": "warn",
+      "urn": null,
+      "detail": "chart 'Network recovery grid' data 502: {\"error\":{\"code\":\"UPSTREAM_QUERY_FAILED\",\"message\":\"query results status 403: {\\\"error\\\":{\\\"code\\\":\\\"PERMISSION_DENIED\\\",\\\"message\\\":\\\"not allowed: qu"
+    },
+    {
+      "kind": "dashboards",
+      "identity": "chargeback_recovery",
+      "action": "verify",
+      "urn": "wr:019f90e7-c5b6-7dea-b842-0c2207e6a0e3:chart:dashboard/019f90eb-8284-7449-9dad-6c0a663ec0a7",
+      "detail": "0/5 charts resolve data"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "resolve_cardholder_favor"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "deny_no_error_found"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "file_chargeback"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "chargeback_won"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "chargeback_lost"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "escalate_fraud_review"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "route_investigation_review"
+    },
+    {
+      "kind": "dispositions",
+      "identity": "dispositions",
+      "action": "create",
+      "urn": null,
+      "detail": "close_merchant_credited"
+    },
+    {
+      "kind": "ontology",
+      "identity": "dispute_ontology",
+      "action": "create",
+      "urn": null,
+      "detail": "cardholder"
+    },
+    {
+      "kind": "ontology",
+      "identity": "dispute_ontology",
+      "action": "create",
+      "urn": null,
+      "detail": "transaction"
+    },
+    {
+      "kind": "ontology",
+      "identity": "dispute_ontology",
+      "action": "create",
+      "urn": null,
+      "detail": "dispute"
+    },
+    {
+      "kind": "ontology",
+      "identity": "dispute_ontology",
+      "action": "create",
+      "urn": null,
+      "detail": "chargeback"
+    },
+    {
+      "kind": "decision_models",
+      "identity": "reg_e_triage",
+      "action": "create",
+      "urn": null,
+      "detail": "'Reg E dispute triage table' (7 rule(s))"
+    },
+    {
+      "kind": "decision_models",
+      "identity": "merchant_error_recovery",
+      "action": "create",
+      "urn": null,
+      "detail": "'Merchant error recovery routing' (5 rule(s))"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Dispute Intake Analyst'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Dispute Intake Analyst' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Fraud Investigator'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Fraud Investigator' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Chargeback Specialist'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Chargeback Specialist' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Dispute Operations Manager'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Dispute Operations Manager' bound to permission group"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "create",
+      "urn": null,
+      "detail": "role 'Dispute Compliance Auditor'"
+    },
+    {
+      "kind": "roles",
+      "identity": "roles",
+      "action": "verify",
+      "urn": null,
+      "detail": "role 'Dispute Compliance Auditor' bound to permission group"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "case-triage prompt_params set"
+    },
+    {
+      "kind": "agent_configs",
+      "identity": "agent_configs",
+      "action": "create",
+      "urn": null,
+      "detail": "analytics prompt_params set"
+    },
+    {
+      "kind": "memories",
+      "identity": "grounding",
+      "action": "create",
+      "urn": null,
+      "detail": "9 grounding records written, 0 already present"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "create",
+      "urn": null,
+      "detail": "'Card transaction anomaly detector (isolation forest)' (isolation_forest, train)"
+    },
+    {
+      "kind": "pipelines",
+      "identity": "pipelines",
+      "action": "create",
+      "urn": null,
+      "detail": "'Dispute outcome scorer (xgboost)' (xgboost, train)"
+    },
+    {
+      "kind": "write_adapters",
+      "identity": "sor_writeback",
+      "action": "create",
+      "urn": null,
+      "detail": "Core processor dispute status sync"
+    },
+    {
+      "kind": "write_adapters",
+      "identity": "sor_writeback",
+      "action": "create",
+      "urn": null,
+      "detail": "Issuer dispute ledger upsert"
+    },
+    {
+      "kind": "connection_templates",
+      "identity": "source_feeds",
+      "action": "create",
+      "urn": null,
+      "detail": "Network chargeback report drop (SFTP)"
+    },
+    {
+      "kind": "connection_templates",
+      "identity": "source_feeds",
+      "action": "create",
+      "urn": null,
+      "detail": "Processor dispute batch files (S3)"
+    }
+  ],
+  "deferred": [
+    {
+      "kind": "agent_recipes",
+      "reason": "Bespoke LangGraph recipes (Dispute Intake Copilot, Chargeback Representment Builder, First-Party Fraud Scorer, Provisional Credit Clock Sentinel) require agent-runtime graph-module registration (BRD 23 BR-12). This pack specializes the existing case-triage + analytics agents via TenantAgentConfig prompt_params + tenant-scope RAG grounding instead."
+    }
+  ],
+  "result": "installed"
+}

@@ -27,7 +27,7 @@
     - when:
         - { column: lead_source, op: in, value: [member_complaint, hotline] }
       then: { disposition_code: open_investigation, severity: high }
-      note: "Human allegation (complaint/hotline) — investigator review, never score-filtered"
+      note: "Human allegation (complaint/hotline) — investigator review, never score-filtered; a credible allegation of fraud can trigger state Medicaid payment suspension, so route with two-signature discipline"
     # An exclusion-list refresh hit warrants review of pending and recently
     # paid claims on that provider.
     - when:
@@ -56,6 +56,10 @@
         - { column: exposure_amount, op: lt, value: 5000 }
       then: { disposition_code: pend_evidence, severity: low }
       note: "Below plan-configured exposure/score floor — data-mining watch pending corroboration"
+  # NOTE (lead-aging rule deliberately absent): the fwa_leads binding contract
+  # carries only opened_month, no lead-age / open-days column, so a
+  # program-configured aging escalation cannot be screened deterministically
+  # here; stale leads surface through the worklist's own aging views.
   # Nothing matched deterministically -> neutral pend for human triage; the
   # table never closes a lead or proposes a determination.
   default_outcome: { disposition_code: pend_evidence, severity: medium }

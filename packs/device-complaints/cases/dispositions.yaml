@@ -3,13 +3,20 @@
 # false_positive,benign,inconclusive,other} (CASE-FR-020). file_mdr_report is
 # the 21 CFR 803 regulatory action (requires_note captures the reportability
 # rationale the eMDR narrative will cite); close_not_reportable notes carry
-# the documented not-reportable rationale 820.198 requires;
-# open_capa_investigation is the 820.100 trend escalation;
+# the documented not-reportable rationale the QMSR complaint-file records
+# (ISO 13485 §8.2.2 / 21 CFR 820.35) require;
+# open_capa_investigation is the ISO 13485 §8.5.2/8.5.3 CAPA trend
+# escalation;
 # request_device_return_info documents the follow-up/return attempts behind
 # an inconclusive file; close_duplicate_complaint records the linkage to the
-# already-processed complaint.
+# already-processed complaint; refer_health_hazard_eval routes a confirmed
+# patient-risk signal to health-hazard evaluation / field-action review
+# without a merits call (inconclusive); file_eu_vigilance_report is the
+# EU-market regulatory action parallel to file_mdr_report (other).
 - { code: file_mdr_report,            label: "File MDR report — reportable event confirmed",           category: true_positive,  requires_note: true }
 - { code: close_not_reportable,       label: "Close — not MDR-reportable, rationale documented",       category: false_positive, requires_note: true }
 - { code: open_capa_investigation,    label: "Open CAPA investigation — trend / systemic signal",      category: other,          requires_note: true }
 - { code: request_device_return_info, label: "Request device return / additional information",         category: inconclusive,   requires_note: true }
 - { code: close_duplicate_complaint,  label: "Close — duplicate of an already-processed complaint",    category: benign,         requires_note: true }
+- { code: refer_health_hazard_eval,   label: "Refer to health-hazard evaluation / field-action review", category: inconclusive,   requires_note: true }
+- { code: file_eu_vigilance_report,   label: "File EU MDR vigilance report",                            category: other,          requires_note: true }

@@ -8,9 +8,13 @@
 # binding CONTRACTS resolved to the tenant's REAL data at install; cases
 # arrive from real rows via case triggers/intake, not seeds; eval golden sets
 # are curated by the tenant from its own adjudicated history.
+# v2.1.0 (audited depth rework): CO-11 vs CO-150 downcoding grounding fixed,
+# medical_necessity denial category, timely-filing / medical-necessity /
+# overdue-deadline triage rules, bundling routed to coder review, SME-depth
+# triage instructions, appeal-deadline queries and dashboard clock chart.
 pack_manifest: 1
 name: healthcare-provider-rcm
-version: 2.0.0
+version: 2.1.0
 publisher: { id: pub-datacern, name: "Datacern Inc." }
 description: >-
   Provider-side revenue cycle management for medical groups, hospitals, and

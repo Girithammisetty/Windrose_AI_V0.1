@@ -11,3 +11,5 @@
 - { code: referral_accept_confirmed,   label: "Referral accepted — intake confirmed",     category: benign,         requires_note: false }
 - { code: referral_decline_confirmed,  label: "Referral declined (rationale required)",   category: other,          requires_note: true }
 - { code: escalate_medical_director,   label: "Escalate to medical director",             category: inconclusive,   requires_note: false }
+- { code: assessment_finalized,        label: "Assessment finalized — submitted to iQIES", category: benign,        requires_note: true }
+- { code: assessment_returned_evidence, label: "Assessment returned — evidence gaps for clinician", category: inconclusive, requires_note: true }

@@ -46,6 +46,13 @@
     label: "Position category"
     options: [driver, healthcare, finance, admin, hospitality, retail, warehouse]
     required: false
+- name: dispute_status
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "611 dispute / reinvestigation status"
+    options: [none, open, closed_deleted, closed_verified, closed_corrected]
+    required: false
 - name: days_to_deadline
   data_type: integer
   purpose: both

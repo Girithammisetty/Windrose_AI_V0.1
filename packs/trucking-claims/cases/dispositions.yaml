@@ -18,3 +18,9 @@
 # review and asserts NOTHING about liability, payment, or settlement — those
 # remain four-eyes human decisions recorded under the codes above.
 - { code: route_senior_adjuster,        label: "Route to senior adjuster — expedited human review",       category: inconclusive,   requires_note: true }
+# request_documentation is the evidence-collection outcome (no position
+# taken); deny_time_barred records a denial on the contractual filing bar —
+# its note must confirm the governing bill of lading's claim window before
+# the declination letter issues.
+- { code: request_documentation,        label: "Request substantiation (POD, seal record, reefer download)", category: inconclusive, requires_note: true }
+- { code: deny_time_barred,             label: "Deny — filed outside the 9-month claim window",           category: false_positive, requires_note: true }

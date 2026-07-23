@@ -54,6 +54,42 @@
     ORDER BY overturn_share DESC
   model: benefits_core
   tags: [benefits, appeals, due_process, quality, pack]
+# Achieved timeliness — the promptness share the agency actually reports.
+# The 30-day cut below is a stand-in: the promptness window is
+# program-configured (SNAP 7-day expedited / 30-day standard, UI
+# first-payment promptness, fair-hearing schedules), so tenants adjust the
+# threshold to their program's clock.
+- nl_text: "What share of closed determinations were decided within the promptness window, by program and month?"
+  sql_text: >-
+    SELECT program, filed_month,
+           count(*) AS closed_determinations,
+           sum(CASE WHEN cast(age_days AS double) <= 30 THEN 1 ELSE 0 END) AS within_window,
+           round(sum(CASE WHEN cast(age_days AS double) <= 30 THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS timeliness_rate
+    FROM {{dataset('gb-determinations')}}
+    WHERE status = 'closed'
+    GROUP BY program, filed_month
+    ORDER BY program, filed_month
+  model: benefits_core
+  tags: [benefits, timeliness, promptness, kpi, pack]
+# Disparate-impact monitor: county x language is where blunt automated
+# filters have historically concentrated harm. gb-claimants is the only
+# dataset carrying county/language, so this single-dataset surface monitors
+# the identity-flag rate (the input that feeds fraud referrals); the
+# referral/denial shares themselves need the claimant join and live in the
+# benefits_core semantic model.
+- nl_text: "Identity-flag rate by county and language — are flags concentrating on any community?"
+  sql_text: >-
+    SELECT county, language,
+           count(*) AS claimants,
+           sum(CASE WHEN identity_verified = 'no' THEN 1 ELSE 0 END) AS identity_flagged,
+           round(sum(CASE WHEN identity_verified = 'no' THEN 1 ELSE 0 END) * 1.0
+                 / nullif(count(*), 0), 4) AS flag_rate
+    FROM {{dataset('gb-claimants')}}
+    GROUP BY county, language
+    ORDER BY flag_rate DESC, claimants DESC
+  model: benefits_core
+  tags: [benefits, disparate_impact, equity, integrity, pack]
 - nl_text: "Repeat filers — claimants with multiple determinations (program-integrity watch)"
   sql_text: >-
     SELECT claimant_id,

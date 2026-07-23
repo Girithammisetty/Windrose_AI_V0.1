@@ -1,4 +1,4 @@
-# Pipeline seeds (expressed against the real pipeline-orchestrator algorithm
+# Pipeline templates (expressed against the real pipeline-orchestrator algorithm
 # catalog): an unsupervised contract-book anomaly detector (unusual
 # claim-frequency / value-band / retention combinations that flag
 # claim-prone contracts) and a supervised claim-outcome scorer trained on

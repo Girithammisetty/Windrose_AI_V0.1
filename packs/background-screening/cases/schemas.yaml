@@ -19,4 +19,5 @@
     - { name: relevance,            data_type: enum,    label: "Job-relatedness analysis",                required: false }
     - { name: identity_confidence,  data_type: enum,    label: "Identity-match confidence",               required: false }
     - { name: position_category,    data_type: enum,    label: "Position category",                       required: false }
+    - { name: dispute_status,       data_type: enum,    label: "611 dispute / reinvestigation status",    required: false }
     - { name: days_to_deadline,     data_type: integer, label: "Adverse-action / dispute clock — days left", required: false }

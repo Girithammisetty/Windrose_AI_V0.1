@@ -10,20 +10,40 @@
   name: aml-parties
   required_columns:
     [party_id, party_name, party_type, sic_code, declared_business,
-     party_jurisdiction, risk_rating, kyc_status, pep_flag, onboard_month,
+     party_jurisdiction,
+     # value domain: risk_rating — semantic measures compare against 'high'
+     risk_rating, kyc_status, pep_flag, onboard_month,
      expected_monthly_volume]
 - identity: aml_transactions
   name: aml-transactions
   required_columns:
-    [txn_id, party_id, account_id, txn_date, txn_month, channel, direction,
+    [txn_id, party_id, account_id, txn_date, txn_month,
+     # value domain: channel — measures/queries compare against cash | wire
+     channel,
+     # value domain: direction — queries compare against 'credit'
+     direction,
      amount, counterparty_id, counterparty_jurisdiction, branch_id,
      cross_border]
 - identity: aml_alerts
   name: aml-alerts
   required_columns:
-    [alert_id, party_id, account_id, typology, scenario_rule, severity,
-     status, disposition, assigned_tier, alert_month, age_days,
-     amount_involved, match_score]
+    [alert_id, party_id, account_id,
+     # value domain: typology — decision rules compare against
+     #   sanctions_near_match | layering | funnel_account | structuring |
+     #   dormant_activity | peer_anomaly
+     typology, scenario_rule, severity,
+     # value domain: status — open | closed
+     status,
+     # value domain: disposition — codes from cases/dispositions.yaml
+     #   (clear_false_positive, escalate_l2, recommend_sar, recommend_ctr,
+     #    sanctions_true_hit, edd_required)
+     disposition,
+     # value domain: assigned_tier — decision rules compare against 'l1'
+     assigned_tier, alert_month, age_days,
+     amount_involved, match_score,
+     # value domain: ISO date (YYYY-MM-DD) — the date of initial detection
+     # that anchors the SAR filing clock (30/60 calendar days)
+     initial_detection_date]
 - identity: aml_relationship_edges
   name: aml-relationship-edges
   required_columns:

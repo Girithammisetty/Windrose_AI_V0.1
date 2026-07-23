@@ -16,7 +16,7 @@
   tags: [loss_mitigation, network, investor, pack]
 - identity: lm_high_arrearage_open_queue
   name: "Loss mit: high-arrearage open queue"
-  description: "Open applications ranked by arrearage exposure — the specialist ranked-queue seed (deadline x arrearage x severity, not FIFO)."
+  description: "Open applications ranked by arrearage exposure — the specialist ranked queue (deadline x arrearage x severity, not FIFO)."
   sql: >-
     SELECT app_id, loan_id, request_type, hardship_reason, severity,
            investor, doc_status, dual_track_hold,

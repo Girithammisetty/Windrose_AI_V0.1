@@ -49,3 +49,17 @@ charts:
       - { measure: avg_agent_confidence }
     w: 6
     h: 4
+  - name: "Pending PA aging / at-risk"
+    chart_type: grid_chart
+    description: "Pending PA count and mean elapsed clock hours per urgency tier against the CMS windows (72h expedited / 7-day standard)"
+    config:
+      columns: [urgency, pa_pending_count, avg_turnaround_hours]
+      x: { dimension: urgency }
+      y:
+        - { measure: pa_pending_count, agg_fn: count }
+        - { measure: avg_turnaround_hours, agg_fn: avg }
+    sources:
+      - { measure: pa_pending_count }
+      - { measure: avg_turnaround_hours }
+    w: 12
+    h: 4

@@ -56,3 +56,35 @@
   field_meta:
     label: "Compensability decision clock — days left (jurisdiction-configured)"
     required: false
+- name: body_part
+  data_type: string
+  purpose: both
+  field_meta:
+    label: "Body part"   # string — mirrors the wc_claims dataset column
+    required: false
+- name: mmi_status
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Maximum medical improvement status"
+    options: [not_reached, reached, disputed]
+    required: false
+- name: avg_weekly_wage
+  data_type: float
+  purpose: both
+  field_meta:
+    label: "Average weekly wage (USD)"
+    required: false
+- name: report_lag_days
+  data_type: integer
+  purpose: both
+  field_meta:
+    label: "Injury-to-report lag (days)"   # late reporting is a classic fraud/severity signal
+    required: false
+- name: attorney_represented
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Attorney represented"
+    options: ["yes", "no"]   # quoted — literal yes/no strings, not booleans
+    required: false

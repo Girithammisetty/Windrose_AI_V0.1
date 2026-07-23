@@ -11,6 +11,18 @@
 - identity: adverse_action_clock_escalation
   name: "Adverse-action clock escalation"
   rules:
+    # Clock already LAPSED — the response window has passed; overdue
+    # outranks every still-open runway band.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: days_to_deadline, op: lt, value: 0 }
+      then: { disposition_code: escalate_adjudication_review, severity: critical }
+      note: >-
+        Pre-adverse response window (or dispute clock) already lapsed —
+        hold any final adverse action and re-verify the record's current
+        status before acting; an overdue file leads the queue ahead of
+        every still-open runway. What happens next on the file is the human
+        adjudicator's decision, never this table's.
     # Tightest process-configured runway band — leads the queue, always.
     - when:
         - { column: status, op: eq, value: open }

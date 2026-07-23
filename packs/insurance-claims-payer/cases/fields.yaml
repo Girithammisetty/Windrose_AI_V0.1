@@ -55,3 +55,9 @@
   field_meta:
     label: "Appeal value at stake (USD)"
     required: false
+- name: appeal_deadline_days
+  data_type: integer
+  purpose: both
+  field_meta:
+    label: "Appeal window — days remaining"
+    required: false

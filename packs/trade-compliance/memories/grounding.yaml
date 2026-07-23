@@ -137,3 +137,39 @@
     sanctions-compliance program deficiency.
   tags: [screening, adjudication, evidence, ai_governance, provenance]
   confidence: 0.9
+- content: >-
+    UFLPA forced-labor screening: under the Uyghur Forced Labor Prevention
+    Act there is a rebuttable presumption that goods mined, produced, or
+    manufactured wholly or in part in the Xinjiang Uyghur Autonomous Region,
+    or by entities on the UFLPA Entity List, are made with forced labor and
+    are barred from entry into the United States (enforced through 19 USC
+    1307). Importers respond to CBP detentions with supply-chain tracing
+    evidence — mapped suppliers, purchase orders, production and raw-material
+    records — to rebut the presumption, or re-export the goods; CBP publishes
+    region- and entity-based detention statistics. Forced-labor screening of
+    suppliers and inputs is co-equal with OFAC/BIS denied-party screening in
+    a 2026 trade-compliance program, not an afterthought.
+  tags: [uflpa, forced_labor, xinjiang, entity_list, detention, admissibility]
+  confidence: 0.92
+- content: >-
+    OFAC blocked-property reporting: when property is blocked (an SDN true
+    hit), the holder must file a blocking report with OFAC within 10
+    business days of the blocking, and blocked property must also be
+    reported annually to OFAC on the annual report of blocked property. The
+    reporting duty is separate from, and in addition to, the obligation to
+    block — confirming a true hit therefore starts a regulatory reporting
+    clock, which is why confirmed SDN hits lead the adjudication queue.
+  tags: [ofac, blocking, reporting, ten_business_days, annual_report]
+  confidence: 0.92
+- content: >-
+    EAR vs ITAR jurisdiction: export-control jurisdiction is determined
+    before classification — whether an article is on the US Munitions List
+    (ITAR, administered by DDTC) precedes any EAR/CCL classification, and
+    defense articles must never be self-classified onto the Commerce Control
+    List. When jurisdiction is genuinely in doubt, a commodity-jurisdiction
+    (CJ) request to the State Department resolves it; military-heritage,
+    specially-designed, and dual-use borderline items are the classic cases
+    where the jurisdictional analysis, not the classification analysis,
+    is the real question.
+  tags: [itar, ddtc, usml, ear, commodity_jurisdiction, classification]
+  confidence: 0.9

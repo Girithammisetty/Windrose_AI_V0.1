@@ -16,7 +16,7 @@
   tags: [ap, network, vendors, pack]
 - identity: high_value_open_exceptions
   name: "AP: high-value open exception queue"
-  description: "Open exceptions ranked by dollar exposure — the analyst ranked-queue seed (deadline runway x dollar x severity, not FIFO)."
+  description: "Open exceptions ranked by dollar exposure — the analyst ranked queue (deadline runway x dollar x severity, not FIFO)."
   sql: >-
     SELECT exception_id, invoice_id, exception_type, three_way_match,
            fraud_indicator, severity,

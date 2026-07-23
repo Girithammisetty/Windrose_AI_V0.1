@@ -20,3 +20,4 @@
     - { name: quantity_band,     data_type: enum,    label: "Affected quantity band",          required: false }
     - { name: est_cost_impact,   data_type: float,   label: "Estimated cost impact (USD)",     required: false }
     - { name: days_to_deadline,  data_type: integer, label: "Disposition deadline — days left", required: false }
+    - { name: disposition_authority, data_type: enum, label: "Disposition authority required",  required: false }

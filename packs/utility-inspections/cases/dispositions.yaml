@@ -6,9 +6,14 @@
 # governed deferral (requires_note captures the engineering rationale and the
 # program window a deferral will be judged against later);
 # request_field_verification routes inconclusive detections to a crew;
-# close_monitored_stable documents the re-check basis for a monitor decision.
+# close_monitored_stable documents the re-check basis for a monitor decision;
+# made_safe_repair_pending records a temporary make-safe action whose
+# permanent repair is still owed — the follow-up finding must not exit the
+# queue on the temporary fix (requires_note captures the make-safe action
+# and the permanent-repair basis).
 - { code: dispatch_immediate_repair,   label: "Dispatch immediate repair — confirmed hazard",              category: true_positive,  requires_note: true }
 - { code: close_false_detection,       label: "Close — false detection (AI/detection artifact)",           category: false_positive, requires_note: true }
 - { code: schedule_planned_work,       label: "Schedule planned work — repair within program window",      category: other,          requires_note: true }
 - { code: request_field_verification,  label: "Request field verification — evidence inconclusive",        category: inconclusive,   requires_note: true }
 - { code: close_monitored_stable,      label: "Close — monitored, condition stable",                       category: benign,         requires_note: true }
+- { code: made_safe_repair_pending,    label: "Made safe — permanent repair pending (follow-up finding)",  category: inconclusive,   requires_note: true }

@@ -10,16 +10,41 @@
 - identity: cr_consumers
   name: cr-consumers
   required_columns:
-    [consumer_id, consumer_name, state, prior_disputes,
-     identity_theft_report, credit_monitoring, litigation_history]
+    [consumer_id, consumer_name, state,
+     # value domain: prior_disputes — semantic measures compare against 'over_5'
+     prior_disputes,
+     # value domain: identity_theft_report — yes | no (measures compare 'yes')
+     identity_theft_report, credit_monitoring,
+     # value domain: litigation_history — yes | no (measures compare 'yes')
+     litigation_history]
 - identity: cr_tradelines
   name: cr-tradelines
   required_columns:
-    [tradeline_id, consumer_id, creditor_name, account_status, balance_band,
+    [tradeline_id, consumer_id, creditor_name,
+     # value domain: account_status — measures compare against
+     #   in_collection | charged_off
+     account_status, balance_band,
+     # value domain: delinquency_history — measures compare against 'late_90_plus'
      delinquency_history, opened_year, furnisher_system]
 - identity: cr_disputes
   name: cr-disputes
   required_columns:
-    [dispute_id, tradeline_id, channel, dispute_reason, tradeline_type,
-     fcra_flag, severity, status, disposition, filed_month, age_days,
-     days_to_deadline, deadline_bucket]
+    [dispute_id, tradeline_id,
+     # value domain: channel — direct | e_oscar_acdv | court_document
+     channel,
+     # value domain: dispute_reason — wrong_balance | not_mine | identity_theft |
+     #   duplicate_tradeline | obsolete_info | paid_in_full
+     dispute_reason, tradeline_type,
+     # value domain: fcra_flag — standard | identity_theft_block
+     fcra_flag,
+     # value domain: severity — measures compare against 'high'
+     severity,
+     # value domain: status — open | closed
+     status,
+     # value domain: disposition — codes from cases/dispositions.yaml
+     #   (correct_tradeline, verify_accurate_as_reported, delete_unverifiable,
+     #    escalate_identity_theft_review, expedite_priority_review,
+     #    reinsertion_review, close_frivolous_documented)
+     disposition, filed_month, age_days, days_to_deadline,
+     # value domain: deadline_bucket — 0_5_days | 6_15_days | over_15_days | closed
+     deadline_bucket]

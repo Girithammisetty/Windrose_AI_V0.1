@@ -1,4 +1,4 @@
-# Pipeline seeds (expressed against the real pipeline-orchestrator algorithm
+# Pipeline templates (expressed against the real pipeline-orchestrator algorithm
 # catalog): an unsupervised claim-anomaly detector (identity-ring /
 # out-of-pattern filing surface scan over the claim book) and a supervised
 # determination-outcome scorer trained on human dispositions (the

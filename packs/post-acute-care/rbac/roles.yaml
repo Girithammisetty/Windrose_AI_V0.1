@@ -1,7 +1,7 @@
 # Post-acute role catalog (PAC-FR-110) as tenant CUSTOM roles composing the
 # Core's closed action catalog (rbac never mints new verbs; packctl also
 # creates a same-named permission group and binds the role so it's
-# assignable). Five of the BRD's ten role seeds ship in 1.0.0 — the clinical
+# assignable). Five of the BRD's ten roles ship — the clinical
 # reviewer pair, intake, the network manager, and compliance.
 - name: "HHA Clinical Nurse"
   actions:

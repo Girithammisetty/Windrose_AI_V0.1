@@ -1,10 +1,14 @@
 # Disposition taxonomy for the AML alert-triage workflow (AML-FR-120 case
 # state machines expressed in today's case-service disposition catalog).
-# recommend_sar is a RECOMMENDATION disposition — per BRD 30 BR-1 the actual
-# SAR filing decision belongs to the MLRO/BSA officer (requires_note captures
-# the typology evidence the SAR narrative will cite).
+# recommend_sar and recommend_ctr are RECOMMENDATION dispositions — per
+# BRD 30 BR-1 the actual SAR filing decision belongs to the MLRO/BSA officer
+# (requires_note captures the typology evidence the SAR narrative will cite),
+# and a CTR is a routine BSA currency report, NOT an accusation — recording a
+# CTR recommendation is how triage says "reportable cash activity, not
+# necessarily suspicious" (CTR ≠ SAR).
 - { code: clear_false_positive, label: "Clear as false positive",              category: false_positive, requires_note: true }
 - { code: escalate_l2,          label: "Escalate to L2 investigation",         category: inconclusive,   requires_note: true }
 - { code: recommend_sar,        label: "Recommend SAR (MLRO decides filing)",  category: true_positive,  requires_note: true }
+- { code: recommend_ctr,        label: "Recommend CTR filing (BSA currency transaction report)", category: other, requires_note: true }
 - { code: sanctions_true_hit,   label: "Sanctions true hit — block & report",  category: true_positive,  requires_note: true }
 - { code: edd_required,         label: "EDD required — enhanced due diligence", category: other,          requires_note: true }

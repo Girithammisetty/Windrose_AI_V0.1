@@ -11,12 +11,14 @@
   tags: [investigation, chain_of_custody, evidence]
   confidence: 0.98
 - content: >-
-    Tipping-off prohibition (generic): never notify, hint to, or take action
-    visible to a subject under investigation before the investigation
+    Subject-disclosure prohibition (generic): never notify, hint to, or take
+    action visible to a subject under investigation before the investigation
     concludes. All investigation cases, notes, and proposals are internal;
     member/customer-facing communications must never reference an open
-    investigation. Consumer regulations add criminal penalties (e.g. BSA
-    tipping-off in banking).
+    investigation. Jurisdictions attach criminal penalties: in US law the
+    operative prohibition is SAR-disclosure confidentiality (31 USC
+    5318(g)(2)); "tipping-off" as a named offense is UK/EU terminology
+    (POCA / the EU AML directives) for the equivalent prohibition.
   tags: [investigation, tipping_off, confidentiality]
   confidence: 0.98
 - content: >-

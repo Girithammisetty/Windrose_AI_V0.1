@@ -2,7 +2,7 @@
 # catalog (clear rate, adverse-finding rate, suppression rate,
 # identity-escalation share, adjudication aging, deadline runway, check-type
 # mix, order turnaround), expressed in the Core semantic grammar (agg
-# whitelist, equality measure filters, derived expr_metric with nullif;
+# whitelist, condition measure filters, derived expr_metric with nullif;
 # join_paths left/many_to_one, acyclic chain).
 #
 # entity.table is main.<safe_relation(dataset name)>; `dataset:` refs are
@@ -109,6 +109,9 @@ definition:
     - { name: avg_deadline_runway_days, entity: reviews, agg: avg,
         expr: "cast(days_to_deadline as double)", format: decimal,
         description: "Average days remaining to the next adverse-action or dispute deadline" }
+    - { name: preadverse_overdue_count, entity: reviews, agg: count,
+        filters: "status = 'open' AND cast(days_to_deadline as double) < 0",
+        description: "Open reviews whose pre-adverse/dispute response window has already lapsed (hold final action, re-verify before acting)" }
     - { name: order_count, entity: orders, agg: count,
         description: "Number of screening orders" }
     - { name: driver_order_count, entity: orders, agg: count,

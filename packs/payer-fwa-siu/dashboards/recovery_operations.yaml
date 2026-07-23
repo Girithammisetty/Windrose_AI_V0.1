@@ -1,0 +1,58 @@
+# Recovery Operations (BRD 27 FWA-FR-020 recovery KPIs): demanded vs recovered
+# dollars by method, cycle-time trend, and open-recovery mix — the recovery
+# supervisor's working view. Chart families restricted to the render-verified
+# set (vertical_bar / grid / pie / line); expr_metric measures
+# (recovery_realization_rate) are served by verified queries, never charted.
+name: "Recovery Operations"
+module: insights
+semantic_model: siu_operations
+description: >-
+  Overpayment-recovery operations (BRD 27): dollars demanded vs recovered by
+  recovery method (realization visible side-by-side; the realization-rate
+  metric itself is served by verified queries), recovery cycle-days trend,
+  and the open-vs-closed recovery pipeline mix.
+tags: [insurance, payer, fwa, siu, recoveries, pack]
+charts:
+  - name: "Demanded vs recovered by method"
+    chart_type: grid_chart
+    description: "Per-method recovery actions with demanded and recovered dollars"
+    config:
+      columns: [recovery_method, recovery_count, total_demanded, total_recovered]
+      x: { dimension: recovery_method }
+      y:
+        - { measure: recovery_count, agg_fn: count }
+        - { measure: total_demanded, agg_fn: sum }
+        - { measure: total_recovered, agg_fn: sum }
+    sources:
+      - { measure: recovery_count }
+      - { measure: total_demanded }
+      - { measure: total_recovered }
+    w: 12
+    h: 4
+  - name: "Recovered dollars by method"
+    chart_type: vertical_bar_chart
+    description: "FWA-FR-020 fwa_recovery_$ split by recovery method"
+    config:
+      x: { dimension: recovery_method }
+      y: [ { measure: total_recovered, agg_fn: sum } ]
+    sources: [ { measure: total_recovered } ]
+    w: 6
+    h: 4
+  - name: "Recovery cycle days by month"
+    chart_type: line_chart
+    description: "FWA-FR-020 avg_case_cycle_days trend (intake to action)"
+    config:
+      x: { dimension: recovery_month }
+      y: [ { measure: avg_cycle_days, agg_fn: avg } ]
+    sources: [ { measure: avg_cycle_days } ]
+    w: 6
+    h: 4
+  - name: "Recovery pipeline status"
+    chart_type: pie_chart
+    description: "Open vs closed recovery-action mix (aging watch on the open slice)"
+    config:
+      x: { dimension: recovery_status }
+      y: [ { measure: recovery_count, agg_fn: count } ]
+    sources: [ { measure: recovery_count } ]
+    w: 6
+    h: 4

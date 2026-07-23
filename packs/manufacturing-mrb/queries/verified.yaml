@@ -41,8 +41,8 @@
   sql_text: >-
     SELECT spec_class,
            count(*) AS closed_ncs,
-           sum(CASE WHEN disposition = 'use_as_is' THEN 1 ELSE 0 END) AS use_as_is,
-           round(sum(CASE WHEN disposition = 'use_as_is' THEN 1 ELSE 0 END) * 1.0
+           sum(CASE WHEN disposition = 'use_as_is_engineering_disposition' THEN 1 ELSE 0 END) AS use_as_is,
+           round(sum(CASE WHEN disposition = 'use_as_is_engineering_disposition' THEN 1 ELSE 0 END) * 1.0
                  / nullif(count(*), 0), 4) AS use_as_is_share
     FROM {{dataset('nc-nonconformances')}}
     WHERE status = 'closed'

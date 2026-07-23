@@ -4,20 +4,37 @@
 # and settlement remains a four-eyes human decision. The table EXECUTES to the
 # same governed proposal an agent produces: each matched case becomes a
 # case.apply_disposition proposal the Claims & Safety Manager must approve.
-# Columns are tl-claims binding-contract columns (days_to_deadline, amount,
-# liability_band); deadline runways are contract-configured on the tenant's
-# own bill-of-lading / carrier-agreement terms — the table reads the runway
-# the tenant's data carries, it asserts no statutory window of its own.
+# Columns are tl-claims binding-contract columns (days_to_deadline,
+# filing_window_days_left, amount, liability_band); deadline runways are
+# contract-configured on the tenant's own bill-of-lading / carrier-agreement
+# terms — the table reads the runway the tenant's data carries, it asserts no
+# statutory window of its own. One deliberate exception to routing-only: the
+# time-bar rule proposes deny_time_barred, still a four-eyes proposal whose
+# note demands bill-of-lading verification before any declination issues.
 # Outcome disposition_codes are validated against this workspace's disposition
 # catalog at install (dispositions install first).
 - identity: claim_exposure_routing
   name: "High-exposure and deadline claim routing"
   rules:
+    # OUR response clock (Part 370-style acknowledge/dispose obligations on
+    # the claims WE are answering) has ALREADY LAPSED — distinct from the
+    # recovery filing bar below, which is about claims WE file upstream.
+    - when:
+        - { column: days_to_deadline, op: lt, value: 0 }
+      then: { disposition_code: route_senior_adjuster, severity: critical }
+      note: "Response/disposition clock already lapsed — our own Part 370-style acknowledgment/disposition obligation, not the claimant's filing bar; senior adjuster cures or documents the overdue response today"
     # Contract clock nearly exhausted — expedite to a senior adjuster now.
     - when:
         - { column: days_to_deadline, op: between, value: [0, 7] }
       then: { disposition_code: route_senior_adjuster, severity: critical }
       note: "Contract-configured response/filing runway ≤ 7 days — expedited senior-adjuster review; routing only, no outcome implied"
+    # Claim filed after the contractual filing window closed — the one
+    # substantive proposal this table makes; the note forces the
+    # bill-of-lading check before any declination letter issues.
+    - when:
+        - { column: filing_window_days_left, op: lt, value: 0 }
+      then: { disposition_code: deny_time_barred, severity: low }
+      note: "Filed outside the contractual claim window (Carmack minimum is 9 months) — verify the governing bill of lading's window before denial"
     # High dollar exposure — senior adjuster owns the review from the start.
     - when:
         - { column: amount, op: gte, value: 25000 }

@@ -32,20 +32,21 @@
   tags: [visa, ce30, compelling_evidence, cnp, fraud]
   confidence: 0.9
 - content: >-
-    Visa merchant monitoring programs: VDMP (Visa Dispute Monitoring
-    Program) tracks each merchant's monthly dispute count and
-    dispute-to-sales-transaction ratio, and VFMP (Visa Fraud Monitoring
-    Program) tracks reported fraud dollars against sales volume. Standard
-    identification thresholds are on the order of a 0.9% ratio with minimum
-    monthly counts, with lower "early warning" tiers (fraud-ratio early
-    warning around the 0.65% range) and stricter "excessive" tiers;
-    enrollment brings remediation plans, escalating non-compliance
-    assessments, and ultimately termination risk. Winning representments
-    does NOT reduce these ratios — disputes count when received — so
-    program headroom is managed by PREVENTION (alerts, CE 3.0 pre-dispute
-    data sharing, descriptor clarity, friendly-fraud block-lists), not by
-    fighting harder.
-  tags: [visa, vdmp, vfmp, monitoring_programs, thresholds]
+    Visa Acquirer Monitoring Program (VAMP): in 2025 Visa consolidated the
+    former VDMP (dispute) and VFMP (fraud) merchant programs into VAMP, a
+    single program measured at BOTH the acquirer and the merchant level.
+    The core metric is a combined fraud-plus-dispute ratio against settled
+    transaction volume, complemented by an enumeration (card-testing)
+    metric; identification thresholds and enforcement tiers are
+    program-defined and Visa revises them on a published schedule — confirm
+    the current levels and effective dates with the acquirer rather than
+    assuming any specific percentage. Enrollment brings remediation plans,
+    escalating non-compliance assessments, and ultimately termination risk.
+    Winning representments does NOT reduce the ratio — disputes count when
+    received — so program headroom is managed by PREVENTION (alerts, CE 3.0
+    pre-dispute data sharing, descriptor clarity, friendly-fraud
+    block-lists), not by fighting harder.
+  tags: [visa, vamp, monitoring_programs, thresholds]
   confidence: 0.85
 - content: >-
     Mastercard Excessive Chargeback Program: acquirers must monitor

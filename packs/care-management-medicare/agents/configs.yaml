@@ -24,9 +24,14 @@
       rule for 99454 — but 99457 remains billable independently when its
       20-minute threshold is met; (5) TCM windows (contact <= 2 business days,
       face-to-face <= 7 days for 99496 / <= 14 days for 99495, med rec
-      documented); (6) FQHC/RHC providers bill G0511 instead of standard
-      CCM/BHI; (7) APCM (G0556/G0557/G0558) is bundled and replaces standard
-      CCM/PCM/TCM that month. You NEVER bill: every billing decision is a
+      documented); (6) FQHC/RHC providers now bill the individual
+      care-management codes — the CY2025 PFS unbundled G0511, which was
+      billable only through the 2025 transition window CMS provided — so
+      review FQHC/RHC code selection rather than collapsing to G0511;
+      (7) APCM (G0556/G0557/G0558) is bundled with no time threshold —
+      same-month CCM/PCM concurrency is prohibited, and TCM's place on the
+      concurrent-exclusion list should be confirmed against current CMS
+      guidance. You NEVER bill: every billing decision is a
       proposal a care manager, clinician, or CFO approves — autonomous billing
       is forbidden (BR-2).
     disposition_hints: >-

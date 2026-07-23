@@ -8,10 +8,27 @@
 # extract drop and the claim-document SFTP feed — or file upload.
 - identity: tl_claims
   name: tl-claims
+  # value domain: disposition holds cases/dispositions.yaml catalog codes —
+  #   accept_pay_claim | deny_claim_documented | file_carrier_recovery |
+  #   escalate_fraud_investigation | close_coaching_completed |
+  #   route_senior_adjuster | request_documentation | deny_time_barred
+  #   (semantic measure filters and verified SQL compare against these)
+  # value domain: status = open | closed
+  # value domain: claim_kind = cargo_osd | safety_event | carrier_vetting
+  # value domain: claim_type = damage | shortage | overage | reefer_breakdown |
+  #   theft | harsh_event | following_distance | carrier_fraud_check
+  # value domain: liability_band = carrier_liable | shipper_fault |
+  #   undetermined | released_value_cap | not_applicable
+  # value domain: days_to_deadline = int days left on OUR contract-configured
+  #   response/disposition clock (negative = lapsed)
+  # value domain: filing_window_days_left = int days left in the claimant's
+  #   contractual claim-filing window per the governing bill of lading
+  #   (negative = filed/aged past the window)
   required_columns:
     [claim_id, shipment_id, claim_kind, claim_type, commodity_event,
      liability_band, severity, status, disposition, deadline_bucket,
-     filed_month, age_days, days_to_deadline, amount, recovery_amount]
+     filed_month, age_days, days_to_deadline, filing_window_days_left,
+     amount, recovery_amount]
 - identity: tl_shipments
   name: tl-shipments
   required_columns:

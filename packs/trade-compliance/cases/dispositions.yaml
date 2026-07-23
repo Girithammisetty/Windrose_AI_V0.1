@@ -12,10 +12,14 @@
 # escalate_compliance_review is the NEUTRAL routing outcome (inconclusive) —
 # it moves an item to the expedited human review queue without any merits
 # call, and is the only code the pack's routing-only decision tables use as
-# a default (the tables never propose a hold, release, or determination).
+# a default (the tables never propose a hold, release, or determination);
+# hold_uflpa_review parks a UFLPA Entity List match in the forced-labor
+# admissibility-review queue pending supply-chain tracing evidence
+# (inconclusive — the admissibility outcome stays human).
 - { code: confirm_classification,     label: "Confirm — declared classification/origin verified correct",        category: true_positive,  requires_note: true }
 - { code: reclassify_correct_entry,   label: "Reclassify — declared code wrong, file corrected entry",           category: false_positive, requires_note: true }
 - { code: sanctions_true_hit_hold,    label: "True hit — hold shipment, block and report (sanctions/denied party)", category: other,          requires_note: true }
 - { code: escalate_licensing_review,  label: "Escalate to export/dual-use licensing review",                     category: inconclusive,   requires_note: true }
 - { code: release_false_positive,     label: "Release — screening match cleared as false positive",              category: benign,         requires_note: true }
 - { code: escalate_compliance_review, label: "Escalate — route to expedited trade-compliance review",            category: inconclusive,   requires_note: true }
+- { code: hold_uflpa_review,          label: "Hold — UFLPA/forced-labor admissibility review",                   category: inconclusive,   requires_note: true }

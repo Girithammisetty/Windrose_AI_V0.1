@@ -1,23 +1,23 @@
 # Tenant-scope RAG grounding records (memory-service). This is the payer
 # domain knowledge the triage copilot retrieves when reasoning about a case —
-# CARC code semantics, CMS turnaround rules, appeal precedents from the seed
-# data. Every record is factual domain reference material.
+# CARC code semantics, CMS turnaround rules, and appeal-review practice.
+# Every record is factual domain reference material.
 - content: >-
     CARC CO-50 means "non-covered service: not deemed a medical necessity by
-    the payer." Appeals against CO-50 denials succeed when the provider
-    supplies clinical evidence matching plan medical-necessity criteria
-    (InterQual/MCG). In this plan's history, imaging CO-50 denials (brain MRI
-    CPT 70553) have been overturned on appeal when migraine history was
-    documented.
+    the payer." CO-50 medical-necessity denials are the highest-yield appeal
+    class when the clinical evidence matches the plan's medical-necessity
+    criteria set (InterQual/MCG-style). Reviewers verify three things BEFORE
+    the level-1 verdict: the criteria match itself, documented
+    conservative-therapy history, and interval clinical change since any
+    prior determination.
   tags: [carc, denials, medical_necessity]
   confidence: 0.95
 - content: >-
     CARC CO-197 means "precertification/authorization/notification absent."
-    These denials are administrative: if the service was medically necessary
-    and a retro-authorization is permitted by the plan, level-1 provider
-    appeals routinely overturn CO-197 (see appeal APL-5002: knee replacement
-    CPT 27447, overturned). Check whether the provider initiated PA before the
-    service date.
+    These denials are administrative: when the service was medically
+    necessary, the plan permits retro-authorization, and the provider
+    documents grounds for one, level-1 appeals frequently overturn CO-197.
+    Check whether the provider initiated PA before the service date.
   tags: [carc, denials, prior_auth]
   confidence: 0.95
 - content: >-
@@ -35,10 +35,16 @@
   tags: [carc, denials, network]
   confidence: 0.9
 - content: >-
-    CMS-4201-F prior-authorization turnaround requirements: expedited/urgent
-    requests must be decided within 72 hours, standard requests within 7
-    calendar days. A pending urgent PA older than 24 hours should be treated
-    as at-risk and escalated; SLA breach is a compliance reportable.
+    CMS-4201-F set the Medicare Advantage organization-determination clocks:
+    expedited/urgent requests must be decided within 72 hours, standard
+    requests within 7 calendar days. A pending urgent PA older than 24 hours
+    should be treated as at-risk and escalated; SLA breach is a compliance
+    reportable. CMS-0057-F (Interoperability and Prior Authorization) extends
+    the same 72-hour-expedited / 7-day-standard prior-auth decision windows to
+    Medicaid, CHIP, and Federally-facilitated Exchange QHP issuers, with
+    compliance beginning January 1, 2026; it also requires a specific reason
+    with every prior-auth denial and phases in a Prior Authorization API on a
+    phased 2026-2027 schedule.
   tags: [cms, prior_auth, sla]
   confidence: 0.98
 - content: >-
@@ -48,13 +54,6 @@
     record; AI systems draft rationale but never decide denials.
   tags: [cms, ai_governance, denials]
   confidence: 0.98
-- content: >-
-    Appeal precedent (this plan): spinal fusion CPT 22551 medical-necessity
-    denial (DEN-3004) was UPHELD at level 1 but OVERTURNED at level 2 external
-    review (APL-5008) — conservative-therapy documentation submitted late.
-    Lesson: verify conservative-therapy history BEFORE the level-1 verdict.
-  tags: [appeals, precedent, spine]
-  confidence: 0.85
 - content: >-
     Specialty-drug PAs (e.g. infliximab J1745, chemotherapy 96413) carry the
     highest appeal exposure: administrative denials on these codes have an

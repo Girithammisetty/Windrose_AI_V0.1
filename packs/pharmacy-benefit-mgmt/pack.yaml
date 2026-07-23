@@ -8,9 +8,17 @@
 # binding CONTRACTS resolved to the tenant's REAL data at install; cases arrive
 # from real rows via case triggers/intake, not seeds; eval golden sets are
 # curated by the tenant from its own adjudicated history.
+# v2.1.0 (audited depth rework): grounding corrected (MME/OMS attribution,
+# rebate-delinking status, GPI class kept qualitative) and extended (DIR
+# restructuring, 340B duplicate-discount exclusion, Part D redetermination
+# clocks); neutral escalate_pharmacist review code + partial-approval code;
+# PA triage gains Part D overdue escalations and a real default route;
+# SLA-breach measures with a PA-Operations breach-watch tile.
+# categories note: `mtm` is backed by the MTM-eligibility grounding record and
+# `adherence` by the DUR late-refill (LR) outreach routing rule — both stay.
 pack_manifest: 1
 name: pharmacy-benefit-mgmt
-version: 2.0.0
+version: 2.1.0
 publisher: { id: pub-datacern, name: "Datacern Inc." }
 description: >-
   AI-assisted pharmacy benefit management for PBMs, health plans, and

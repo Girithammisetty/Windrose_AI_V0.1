@@ -77,16 +77,16 @@ definition:
         filters: "status = 'closed'",
         description: "Claims closed with a final determination" }
     - { name: approved_count, entity: claims, agg: count,
-        filters: "disposition = 'approved'",
+        filters: "disposition = 'approve_change_order'",
         description: "Claims approved — entitlement and quantum substantiated" }
     - { name: rejected_count, entity: claims, agg: count,
-        filters: "disposition = 'rejected_no_entitlement'",
+        filters: "disposition = 'reject_no_entitlement'",
         description: "Claims rejected — no contractual entitlement established" }
     - { name: negotiated_count, entity: claims, agg: count,
-        filters: "disposition = 'negotiated_partial'",
+        filters: "disposition = 'negotiate_partial_merit'",
         description: "Claims settled at a negotiated partial-merit amount" }
     - { name: withdrawn_count, entity: claims, agg: count,
-        filters: "disposition = 'withdrawn'",
+        filters: "disposition = 'close_withdrawn_resolved'",
         description: "Claims withdrawn or otherwise resolved by the claimant" }
     - { name: delay_claim_count, entity: claims, agg: count,
         filters: "claim_type = 'delay_claim'",
@@ -103,9 +103,16 @@ definition:
     - { name: late_notice_count, entity: claims, agg: count,
         filters: "notice_timely = 'no'",
         description: "Claims filed outside the contractual notice window" }
+    - { name: disputed_notice_count, entity: claims, agg: count,
+        filters: "notice_timely = 'disputed'",
+        description: "Claims where notice timeliness itself is disputed (condition-precedent watch)" }
     - { name: avg_claim_age_days, entity: claims, agg: avg,
         expr: "cast(age_days as double)", format: decimal,
         description: "Average claim age in days (cycle time / backlog aging)" }
+    - { name: avg_days_to_determination, entity: claims, agg: avg,
+        expr: "cast(age_days as double)", filters: "status = 'closed'",
+        format: decimal,
+        description: "Average age at final determination for closed claims (cycle time to determination)" }
     - { name: total_claimed_amount, entity: claims, agg: sum,
         expr: "cast(claimed_amount as double)", format: decimal,
         description: "Total dollars claimed against the program" }

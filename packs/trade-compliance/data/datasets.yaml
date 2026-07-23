@@ -10,8 +10,12 @@
 - identity: tc_trading_partners
   name: tc-trading-partners
   required_columns:
-    [partner_id, partner_name, partner_type, country, denied_party_risk,
-     ctpat_flag, industry]
+    [partner_id, partner_name, partner_type, country,
+     # value domain: low | medium | high
+     denied_party_risk,
+     # value domain: yes | no
+     ctpat_flag,
+     industry]
 - identity: tc_shipments
   name: tc-shipments
   required_columns:
@@ -19,8 +23,28 @@
      entry_month, broker]
 - identity: tc_review_items
   name: tc-review-items
+  # Columns the decision tables and semantic/query filters compare to
+  # literals carry their value domains below, so bound tenant data can be
+  # checked against what the rules actually match.
   required_columns:
-    [review_id, shipment_id, item_type, product_category,
-     declared_hs_chapter, origin_country, destination, valuation_band,
-     screening_list, match_score, duty_risk, severity, status, disposition,
+    [review_id, shipment_id,
+     # value domain: hs_classification | screening_alert
+     item_type,
+     product_category,
+     # value domain: 2-digit HTS chapter strings ("73", "76", "84", "85", ...)
+     declared_hs_chapter,
+     origin_country, destination,
+     # value domain: under_10k | 10k_50k | 50k_250k | over_250k
+     valuation_band,
+     # value domain: sdn | entity_list | denied_persons | unverified_list | ddtc_debarred | uflpa_entity_list | unlisted
+     screening_list,
+     match_score,
+     # value domain: low | medium | high
+     duty_risk,
+     # value domain: program severity tiers; 'high' is the value the routing table matches
+     severity,
+     # value domain: open | closed
+     status,
+     # value domain: the codes in cases/dispositions.yaml
+     disposition,
      filed_month, age_days, days_to_deadline, deadline_bucket]

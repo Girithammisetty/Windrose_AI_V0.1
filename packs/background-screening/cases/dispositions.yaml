@@ -11,7 +11,10 @@
 # adjudicator's priority queue without asserting any determination — it and
 # the identity/assessment routing codes are the only codes the pack's
 # decision tables use; the reportability, relevance, and adverse-action
-# determinations are exclusively human. Notes on every code feed the
+# determinations are exclusively human. reinvestigation_opened parks the
+# review while a 611 consumer dispute is reinvestigated (inconclusive);
+# reinvestigation_closed records the 611 outcome — deleted, verified, or
+# corrected (other). Notes on every code feed the
 # exam-ready adjudication file (adjudication-matrix step, evidence,
 # jurisdiction rules applied).
 - { code: clear_report_eligible,             label: "Clear — no reportable adverse information",                      category: benign,         requires_note: true }
@@ -20,3 +23,5 @@
 - { code: request_identity_verification,     label: "Request identity verification — insufficient identity match",    category: inconclusive,   requires_note: true }
 - { code: individualized_assessment_review,  label: "Route to individualized assessment (EEOC Green factors)",        category: other,          requires_note: true }
 - { code: escalate_adjudication_review,      label: "Escalate to priority adjudication review — human decision",      category: inconclusive,   requires_note: true }
+- { code: reinvestigation_opened,            label: "611 reinvestigation opened (consumer dispute)",                  category: inconclusive,   requires_note: true }
+- { code: reinvestigation_closed,            label: "611 reinvestigation closed (deleted/verified/corrected)",        category: other,          requires_note: true }

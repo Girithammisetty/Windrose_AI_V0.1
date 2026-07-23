@@ -51,3 +51,15 @@
   field_meta:
     label: "Contract clock — days to response/filing deadline"
     required: false
+- name: carrier_id
+  data_type: string
+  purpose: both
+  field_meta:
+    label: "Carrier ID"   # string — mirrors the tl-shipments/tl-carriers key
+    required: false
+- name: acknowledgment_sent_date
+  data_type: date
+  purpose: both
+  field_meta:
+    label: "Claim acknowledgment sent (date)"   # Part 370 30-day acknowledgment compliance evidence
+    required: false

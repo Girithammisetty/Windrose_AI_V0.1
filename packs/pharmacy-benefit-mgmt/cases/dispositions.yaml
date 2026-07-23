@@ -6,3 +6,5 @@
 - { code: pa_pended_info,  label: "Rx PA pended — prescriber info needed",   category: inconclusive,   requires_note: true }
 - { code: dur_override,    label: "DUR alert overridden — documented",       category: benign,         requires_note: true }
 - { code: dur_intervene,   label: "DUR intervention — contact prescriber",   category: true_positive,  requires_note: true }
+- { code: escalate_pharmacist, label: "Escalate to pharmacist review",       category: inconclusive,   requires_note: true }
+- { code: pa_partially_approved, label: "PA partially approved — modified quantity/duration", category: other, requires_note: true }

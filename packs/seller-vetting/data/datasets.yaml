@@ -1,5 +1,5 @@
 # Pack dataset BINDING CONTRACTS (no-dummy-data rule): the pack ships ZERO
-# seed data. Each entry declares the dataset the workflow needs and the exact
+# bundled data. Each entry declares the dataset the workflow needs and the exact
 # landing-shape columns it requires; at install the tenant binds it to a REAL
 # dataset (explicit dataset_bindings on the install request, or same-name
 # reuse), and pack-service validates the bound dataset exposes every required
@@ -7,17 +7,34 @@
 # pack's governed source connectors (connections/sources.yaml) or file upload.
 - identity: sv_sellers
   name: sv-sellers
+  # value domain: kyb_verified = yes | no | mismatch; linked_accounts =
+  #   yes | no (see ontology/entities.yaml)
   required_columns:
     [seller_id, seller_name, country, account_age_bucket, gmv_tier,
      prior_violations, kyb_verified, linked_accounts]
 - identity: sv_listings
   name: sv-listings
+  # value domain: price_vs_msrp = market | premium | deep_discount;
+  #   fulfillment = platform | seller; image_reuse = yes | no
+  #   (see ontology/entities.yaml)
   required_columns:
     [listing_id, seller_id, category, price_vs_msrp, fulfillment,
      listing_month, buyer_complaint_band, image_reuse, list_price]
 - identity: sv_reviews
   name: sv-reviews
+  # value domain: disposition = this workspace's disposition catalog
+  #   (cases/dispositions.yaml): remove_listing_enforce |
+  #   reject_claim_insufficient | suspend_seller_network |
+  #   request_authenticity_evidence | reinstate_seller_cleared |
+  #   escalate_priority_review | suppress_listing_pending_edit
+  # value domain: status = open | closed
+  # value domain: review_type / trigger_source / product_vertical /
+  #   claim_basis = the matching enum option sets in cases/fields.yaml
+  # value domain: velocity_band = normal | elevated | surge —
+  #   upstream-computed listing/price-change velocity, derived from the
+  #   listing book and carried on the review row (the decision tables read
+  #   only sv-reviews columns)
   required_columns:
     [review_id, listing_id, review_type, trigger_source, product_vertical,
      claim_basis, severity, status, disposition, filed_month, age_days,
-     days_to_deadline, deadline_bucket, gmv_at_risk]
+     days_to_deadline, deadline_bucket, gmv_at_risk, velocity_band]

@@ -3,37 +3,47 @@
 # BRD 31 defines this as a LIBRARY pack: reusable investigation primitives
 # consumed by vertical packs (payer-fwa-siu, banking-aml) via depends_on, with
 # ZERO user-facing surface of its own. Today's Core can materialize the shared
-# role catalog, the investigation-lifecycle disposition vocabulary, and the
-# investigation-methodology grounding corpus (the knowledge INV-FR-090's
-# guardrails encode, as copilot RAG). Everything else — the abstract agent
-# recipes, graph MCP tools, rego guardrails, case schemas, eval sets, and the
-# pack_class/depends_on enforcement itself — awaits pack-service (BRD 23) and
-# is declared under `deferred`, never faked.
+# role catalog, the investigation-lifecycle disposition vocabulary, the shared
+# investigation case fields (the methodology's structured enforcement
+# surface), and the investigation-methodology grounding corpus (the knowledge
+# INV-FR-090's guardrails encode, as copilot RAG). Everything else — the
+# abstract agent recipes, graph MCP tools, rego guardrails, case schemas,
+# eval sets, and the pack_class/depends_on enforcement itself — awaits
+# pack-service (BRD 23) and is declared under `deferred`, never faked.
 #
 # pack_class/consumers_recommended are BRD-31 manifest fields (INV-FR-002)
 # carried verbatim for forward-compatibility; packctl ignores them.
 pack_manifest: 1
 name: investigation-framework
-version: 1.0.0
+version: 1.1.0
 pack_class: library
 consumers_recommended: [payer-fwa-siu, banking-aml]
 publisher: { id: pub-datacern, name: "Datacern Inc." }
 description: >-
   LIBRARY pack: reusable investigation primitives — shared investigator role
-  catalog, investigation-lifecycle disposition vocabulary, and the
-  investigation-methodology grounding corpus (chain-of-custody, tipping-off,
-  evidence-provenance, two-signature referral discipline) consumed by
-  investigation-heavy vertical packs. No end-user surface of its own.
+  catalog, investigation-lifecycle disposition vocabulary, shared
+  investigation case fields (evidence hash, two-signature referral, bounded
+  evidence loops), and the investigation-methodology grounding corpus
+  (chain-of-custody, tipping-off/SAR-confidentiality, evidence-provenance,
+  two-signature referral discipline) consumed by investigation-heavy
+  vertical packs. No end-user surface of its own.
 categories: [investigation, framework, library, base-pack]
 regulatory: []
 components:
   dispositions:
     - { file: "cases/dispositions.yaml", identity: "lifecycle_dispositions" }
+  case_fields:
+    - { file: "cases/fields.yaml", identity: "investigation_fields" }
   roles:
     - { file: "rbac/investigation_roles.yaml", identity: "investigation_roles" }
   memories:
     - { file: "memories/methodology.yaml", identity: "methodology" }
 deferred:
+  - kind: dependency_enforcement
+    reason: >-
+      `depends_on`/`pack_class` layering is not yet enforced by pack-service —
+      consumer packs (payer-fwa-siu, banking-aml) must be checked manually for
+      drift against this base until enforcement lands.
   - kind: agent_recipes
     reason: >-
       INV-FR-010..040 abstract 3-specialist agents (pattern_detector,

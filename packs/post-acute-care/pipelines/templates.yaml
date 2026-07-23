@@ -1,4 +1,4 @@
-# Pipeline seeds (BRD 29 §4 model archetype rehospitalization_30d_risk,
+# Pipeline templates (BRD 29 §4 model archetype rehospitalization_30d_risk,
 # expressed against the real pipeline-orchestrator algorithm catalog): a
 # 30-day rehospitalization risk classifier trained on the episode dataset
 # (readmitted_30d label; NFR target AUC >= 0.75 on held-out validation).

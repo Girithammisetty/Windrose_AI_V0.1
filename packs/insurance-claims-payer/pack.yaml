@@ -8,9 +8,15 @@
 # binding CONTRACTS resolved to the tenant's REAL data at install; cases arrive
 # from real rows via case triggers/intake, not seeds; eval golden sets are
 # curated by the tenant from its own adjudicated history.
+# v2.1.0 (audited depth rework): fabricated plan-history grounding removed;
+# SME-depth triage instructions; PA/appeal decision tables extended (overdue
+# escalation, missing-clinical-info deferral, CO-151/PR-204 appeal routes);
+# turnaround grounding extended with CMS-0057-F, which carries the
+# 72h-expedited / 7-day-standard prior-auth windows to Medicaid, CHIP, and
+# FFE QHP issuers (compliance from Jan 1 2026; PA API phased 2026-2027).
 pack_manifest: 1
 name: insurance-claims-payer
-version: 2.0.0
+version: 2.1.0
 publisher: { id: pub-datacern, name: "Datacern Inc." }
 description: >-
   AI-assisted prior-auth review, appeal analysis, and denial analytics for US
@@ -21,7 +27,7 @@ description: >-
   connections (X12 837 intake, claim-status sync), and a PA-approval training
   pipeline with its governed model blueprint.
 categories: [insurance, health, payer, claims, prior-auth, appeals, denials]
-regulatory: [cms_4201_f, cms_2024_ma_ai_review, naic_ai_bulletin, hipaa]
+regulatory: [cms_4201_f, cms_0057_f, cms_2024_ma_ai_review, naic_ai_bulletin, hipaa]
 components:
   datasets:
     - { file: "data/datasets.yaml", identity: "datasets" }

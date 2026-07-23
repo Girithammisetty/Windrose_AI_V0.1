@@ -10,7 +10,7 @@
 # are curated by the tenant from its own adjudicated history.
 pack_manifest: 1
 name: trucking-claims
-version: 2.0.0
+version: 2.1.0
 publisher: { id: pub-datacern, name: "Datacern Inc." }
 description: >-
   AI-assisted trucking and logistics claims & safety adjudication for motor
@@ -24,7 +24,10 @@ description: >-
   model and dashboards (pay rate, denial rate, recovery rate, deadline
   runway, coaching closure, carrier risk mix, on-time share), carrier-lane
   network analytics, claims-practice grounding memories, and
-  shipment-anomaly + claim-outcome training pipelines.
+  shipment-anomaly + claim-outcome training pipelines. Scope: cargo/OS&D
+  claims, telematics safety review, and carrier vetting — third-party
+  auto-liability (BI/PD) casualty claims and MCS-90 obligations are out of
+  scope for this pack.
 categories: [logistics, trucking, cargo_claims, safety, carrier_fraud]
 regulatory: [carmack_amendment, cfr49_part370, fmcsa_csa, bill_of_lading_terms]
 components:

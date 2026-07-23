@@ -46,6 +46,26 @@
   field_meta:
     label: "Claimed amount (USD)"
     required: false
+- name: adjusted_amount
+  data_type: float
+  purpose: both
+  field_meta:
+    label: "Approved payment after adjustment (USD)"
+    required: false
+- name: usage_band
+  data_type: string
+  purpose: both
+  field_meta:
+    # string — mirrors the wa_claims dataset column; band unit flavor varies
+    # by industry (hours vs miles), so no fixed enum is imposed here
+    label: "Usage at failure (band)"
+    required: false
+- name: build_batch
+  data_type: string
+  purpose: both
+  field_meta:
+    label: "Build batch"   # string — mirrors the wa_units dataset column
+    required: false
 - name: recovery_amount
   data_type: float
   purpose: both

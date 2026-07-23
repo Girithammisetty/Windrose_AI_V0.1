@@ -1,7 +1,7 @@
 # Governed decision table (BRD 54) — a deterministic, explainable, no-LLM
 # first-cut triage over the columns cases created from real aml-alerts rows
-# project (typology, scenario_rule, match_score, amount_involved — all in the
-# aml_alerts binding contract). It EXECUTES to the same governed four-eyes
+# project (typology, scenario_rule, match_score, amount_involved, status,
+# age_days — all in the aml_alerts binding contract). It EXECUTES to the same governed four-eyes
 # proposal an agent produces: an operator dry-runs or batch-runs it across
 # the worklist, and every matched case becomes a case.apply_disposition
 # proposal a human reviewer must approve. No autonomous determination — the
@@ -15,6 +15,19 @@
 - identity: alert_triage
   name: "AML alert triage table"
   rules:
+    # Aged open alert — past the program-configured escalation age. The
+    # contract carries no deadline-days column, so aging stands in for the
+    # clock posture; the cut-off is program-configured, and the table
+    # asserts no regulatory day-count of its own (the SAR clock anchors on
+    # the date of initial detection, tracked upstream).
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: age_days, op: gte, value: 30 }
+      then: { disposition_code: escalate_l2, severity: critical }
+      note: >-
+        Open alert has aged past the program-configured escalation age —
+        route to an investigator immediately so any downstream SAR
+        recommendation still reaches the MLRO with filing runway.
     # Sanctions near-match with a high fuzzy score — the one queue where
     # waiting is not an option, but the true-hit call stays human.
     - when:

@@ -16,7 +16,8 @@
   purpose: both
   field_meta:
     label: "Policy area"
-    options: [adult, counterfeit, harassment, hate_speech, misinformation, spam, violence]
+    options: [adult, child_safety, counterfeit, harassment, hate_speech,
+              misinformation, spam, terrorist_content, violence]
     required: false
 - name: enforcement_source
   data_type: enum
@@ -31,6 +32,15 @@
   field_meta:
     label: "Appellant enforcement standing"
     options: [first_strike, repeat, power_user]
+    required: false
+# DSA Arts. 20/21 cover rejected-notice submitters too — appeals from the
+# reporter side share this queue with enforced-user appeals.
+- name: appeal_origin
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Appeal origin (enforced user vs notice submitter)"
+    options: [enforced_user, notice_submitter]
     required: false
 - name: decision_id
   data_type: string

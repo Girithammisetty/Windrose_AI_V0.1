@@ -10,7 +10,7 @@
 # are curated by the tenant from its own assessed case history.
 pack_manifest: 1
 name: pharmacovigilance
-version: 2.0.0
+version: 2.1.0
 publisher: { id: pub-datacern, name: "Datacern Inc." }
 description: >-
   AI-assisted pharmacovigilance case processing (FDA 21 CFR 314.80/312.32,

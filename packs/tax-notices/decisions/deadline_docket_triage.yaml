@@ -17,6 +17,24 @@
 - identity: deadline_docket_triage
   name: "Notice response-window docket triage"
   rules:
+    # Response window already LAPSED — an already-lapsed window inverts the
+    # posture: this is no longer runway management but damage control, with
+    # a default assessment forming and the remedies narrowing toward
+    # pay-and-claim-refund or litigation.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: days_to_deadline, op: lt, value: 0 }
+      then: { disposition_code: escalate_notice_review, severity: critical }
+      note: "Response window already lapsed — a default assessment is forming and the remedies are narrowing; immediate senior review to assess what late-response, reopening, or refund-claim path remains"
+    # LT11/L1058 final intent to levy — the CDP docket item: 30 days from
+    # this notice to request a Collection Due Process hearing, which
+    # suspends levy and preserves Tax Court review. Outranks earlier
+    # collection-stream reminders at the same dollars.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: notice_type, op: eq, value: lt11_final_intent_levy }
+      then: { disposition_code: escalate_notice_review, severity: critical }
+      note: "Final notice of intent to levy (LT11/L1058) — the 30-day Collection Due Process window is running; a timely CDP request suspends levy and preserves Tax Court review, so this docket item outranks every earlier collection-stream notice"
     # Response window nearly exhausted — a missed window typically forfeits
     # administrative appeal rights and lets a proposed assessment go final by
     # default. Deadline outranks FIFO.
@@ -38,6 +56,15 @@
         - { column: tax_type, op: eq, value: payroll }
       then: { disposition_code: escalate_notice_review, severity: high }
       note: "Trust-fund exposure (payroll withholding) with potential personal responsible-person liability — triaged ahead of same-dollar income or franchise notices"
+    # Collected sales tax is trust-fund money too — a sales & use ASSESSMENT
+    # notice carries the same responsible-person exposure as payroll
+    # withholding, so it gets the same elevation.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: tax_type, op: eq, value: sales_use }
+        - { column: notice_type, op: eq, value: sales_use_assessment }
+      then: { disposition_code: escalate_notice_review, severity: high }
+      note: "Trust-fund exposure (collected sales tax is money held for the state, not the business) with potential personal responsible-person liability — same elevation as payroll withholding, ahead of same-dollar income or franchise notices"
     # Catch-all for the OPEN worklist: nothing matched deterministically ->
     # standard human review at low severity. The neutral human-review code is
     # the ONLY thing this table ever proposes — never a payment, concession,

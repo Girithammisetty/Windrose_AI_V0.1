@@ -17,7 +17,7 @@
   tags: [seller_vetting, network, rings, pack]
 - identity: high_exposure_open_reviews
   name: "Seller vetting: high-exposure open queue"
-  description: "Open reviews ranked by listing GMV at risk — the analyst ranked-queue seed (deadline x GMV x severity, not FIFO)."
+  description: "Open reviews ranked by listing GMV at risk — the analyst ranked-queue ordering (deadline x GMV x severity, not FIFO)."
   sql: >-
     SELECT review_id, listing_id, review_type, trigger_source, claim_basis,
            severity,

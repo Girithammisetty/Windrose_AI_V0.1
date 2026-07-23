@@ -7,10 +7,30 @@
 # pack's governed source connectors (connections/sources.yaml) or file upload.
 - identity: lm_applications
   name: lm-applications
+  # Columns the decision tables and semantic/query filters compare to
+  # literals carry their value domains below, so bound tenant data can be
+  # checked against what the rules actually match.
   required_columns:
-    [app_id, loan_id, request_type, hardship_reason, delinquency_bucket,
-     investor, doc_status, dual_track_hold, prior_workout_flag, severity,
-     status, disposition, filed_month, age_days, days_to_deadline,
+    [app_id, loan_id,
+     # value domain: modification | forbearance | repayment_plan | short_sale | deed_in_lieu
+     request_type,
+     # value domain: institution-configured hardship taxonomy; 'disaster' is the value the triage table matches
+     hardship_reason,
+     # value domain: 30 | 60 | 90 | 120_plus
+     delinquency_bucket,
+     investor,
+     # value domain: complete | incomplete
+     doc_status,
+     # value domain: yes | no
+     dual_track_hold,
+     # value domain: yes | no
+     prior_workout_flag,
+     severity,
+     # value domain: open | closed
+     status,
+     # value domain: the codes in cases/dispositions.yaml
+     disposition,
+     filed_month, age_days, days_to_deadline,
      deadline_bucket, upb_band, arrearage_amount]
 - identity: lm_loans
   name: lm-loans

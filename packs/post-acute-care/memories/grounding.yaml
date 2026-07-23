@@ -36,9 +36,10 @@
     OASIS-E is the CMS home health assessment instrument. Start-of-care
     assessment must be completed within 5 days of SOC, and the assessment must
     be locked/submitted within 30 days of completion (BR-2 SLA). OASIS answers
-    drive both PDGM functional level and public quality measures, and CMS
-    publishes annual item-set updates (typically October 1) that ship as pack
-    point releases (BR-9).
+    drive both PDGM functional level and public quality measures. OASIS
+    item-set updates take effect January 1 (OASIS-E on 2023-01-01, OASIS-E1
+    on 2025-01-01) — October 1 is the SNF MDS / IRF-PAI update cycle, not
+    OASIS — and each item-set update ships as a pack point release (BR-9).
   tags: [oasis, home_health, timing, compliance]
   confidence: 0.95
 - content: >-
@@ -65,7 +66,8 @@
     Determination) criteria published per MAC — e.g. dementia eligibility
     typically cites FAST stage 7A or beyond plus comorbid decline indicators
     such as weight loss and ADL dependence; a face-to-face encounter is
-    required for recertification. The copilot only drafts the certification
+    required prior to the THIRD benefit-period recertification and each
+    subsequent one (not every recertification). The copilot only drafts the certification
     narrative — the physician makes every eligibility determination and signs
     (BR-5, PAC-FR-080). Hospice election revocation is a hard boundary: block
     downstream hospice-only workflows immediately (BR-10).

@@ -19,6 +19,28 @@
   tags: [mrb, authority_limits, use_as_is, critical_characteristics, concession]
   confidence: 0.95
 - content: >-
+    MRB composition and authority: the board minimally includes engineering
+    and quality authority over the affected product; where contracts specify
+    it, a customer or government representative (e.g. DCMA on U.S. defense
+    contracts) participates in — or must concur with — board decisions.
+    Use-as-is and repair on customer-designed product or on critical
+    characteristics exceed internal MRB authority: they require a customer
+    or design-authority concession beyond the board itself, however the
+    board is composed.
+  tags: [mrb, board_composition, dcma, customer_representative, concession]
+  confidence: 0.92
+- content: >-
+    Rework vs repair: rework brings the material back into FULL conformance
+    with the drawing and specification — after re-verification it is
+    indistinguishable from conforming product, so internal MRB authority is
+    sufficient. Repair restores FUNCTION without restoring full conformance
+    — the deviation remains in the delivered article — so it requires
+    design-authority approval, and customer concession on customer-designed
+    product. The distinction drives who may approve the disposition, not
+    merely how the work is planned.
+  tags: [mrb, rework, repair, design_authority, authority_limits]
+  confidence: 0.95
+- content: >-
     AS9100 control of nonconforming outputs: nonconforming product must be
     identified, documented, segregated (or otherwise positively controlled)
     to prevent unintended use or delivery, evaluated, and dispositioned by
@@ -33,9 +55,13 @@
   tags: [as9100, nonconforming_product, counterfeit_parts, certs, aerospace]
   confidence: 0.95
 - content: >-
-    Medical-device nonconforming product control (ISO 13485 and FDA 21 CFR
-    820.90): the manufacturer must identify, document, evaluate, segregate,
-    and disposition nonconforming product, and the evaluation must include
+    Medical-device nonconforming product control (ISO 13485 §8.3; in the US
+    the FDA Quality Management System Regulation (QMSR) is in effect as of
+    February 2, 2026 — 21 CFR 820 now incorporates ISO 13485:2016 by
+    reference, so nonconforming-product control flows through ISO 13485 §8.3
+    rather than the former §820.90): the manufacturer must identify,
+    document, evaluate, segregate, and disposition nonconforming product,
+    and the evaluation must include
     whether an investigation is needed and whether external parties are
     notified. Acceptance by concession (use-as-is) is permitted only with
     documented justification and authorization by designated personnel, and
@@ -46,7 +72,7 @@
     device history record. Nonconformity discovered after delivery triggers
     action appropriate to the effects — including the correction-and-removal
     / advisory-notice path.
-  tags: [iso13485, fda_820_90, medical_device, use_as_is, rework, reverification]
+  tags: [iso13485, fda_qmsr, medical_device, use_as_is, rework, reverification]
   confidence: 0.95
 - content: >-
     8D / CAPA methodology: the eight disciplines run D0 plan, D1 team, D2

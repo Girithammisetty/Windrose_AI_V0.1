@@ -16,7 +16,8 @@
   purpose: both
   field_meta:
     label: "Screening list matched"
-    options: [sdn, entity_list, unlisted]
+    options: [sdn, entity_list, denied_persons, unverified_list, ddtc_debarred,
+              uflpa_entity_list, unlisted]
     required: false
 - name: match_score
   data_type: float
@@ -42,7 +43,7 @@
   purpose: both
   field_meta:
     label: "Entered-value band (USD)"
-    options: [10k_50k, 50k_250k, over_250k]
+    options: [under_10k, 10k_50k, 50k_250k, over_250k]
     required: false
 - name: origin_country
   data_type: string

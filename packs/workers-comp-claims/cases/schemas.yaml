@@ -21,3 +21,8 @@
     - { name: incurred_reserve,   data_type: float,   label: "Incurred reserve (USD)",                              required: false }
     - { name: paid_to_date,       data_type: float,   label: "Paid to date (USD)",                                  required: false }
     - { name: days_to_deadline,   data_type: integer, label: "Compensability decision clock — days left",           required: false }
+    - { name: body_part,          data_type: string,  label: "Body part",                                           required: false }
+    - { name: mmi_status,         data_type: enum,    label: "Maximum medical improvement status",                  required: false }
+    - { name: avg_weekly_wage,    data_type: float,   label: "Average weekly wage (USD)",                           required: false }
+    - { name: report_lag_days,    data_type: integer, label: "Injury-to-report lag (days)",                         required: false }
+    - { name: attorney_represented, data_type: enum,  label: "Attorney represented",                                required: false }

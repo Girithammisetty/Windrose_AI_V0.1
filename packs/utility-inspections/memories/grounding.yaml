@@ -69,6 +69,20 @@
   tags: [audit, inspection_cycles, corrective_action, compliance]
   confidence: 0.9
 - content: >-
+    Wood-pole intrusive inspection: utilities run periodic intrusive
+    test-and-treat programs on in-service wood poles — boring, sounding,
+    and/or partial excavation below groundline to find internal and
+    below-grade decay that a visual patrol cannot see, with preservative
+    treatment applied at inspection. Cycles are multi-year, set by state
+    rules and the utility's own standard, and commonly on the order of
+    10-20 years depending on region, species, and prior treatment; exact
+    intervals vary by jurisdiction, so apply the tenant's program standard.
+    Intrusive-inspection records (remaining shell thickness, decay pockets,
+    reject/reinforce determinations) feed the pole replacement and
+    reinforcement prioritization queue.
+  tags: [wood_poles, intrusive_inspection, test_and_treat, decay, replacement_prioritization]
+  confidence: 0.9
+- content: >-
     Deferred-maintenance liability: in post-incident litigation and
     regulatory investigation, a utility's own inspection findings and
     deferral decisions are discoverable, and a record showing a known

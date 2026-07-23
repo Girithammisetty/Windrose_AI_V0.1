@@ -17,5 +17,8 @@
     - { name: labor_op_band,     data_type: enum,    label: "Labor operations billed",           required: false }
     - { name: in_warranty,       data_type: enum,    label: "In-warranty status",                required: true }
     - { name: claim_amount,      data_type: float,   label: "Claimed amount (USD)",              required: true }
+    - { name: adjusted_amount,   data_type: float,   label: "Approved payment after adjustment (USD)", required: false }
+    - { name: usage_band,        data_type: string,  label: "Usage at failure (band)",           required: false }
+    - { name: build_batch,       data_type: string,  label: "Build batch",                       required: false }
     - { name: recovery_amount,   data_type: float,   label: "Recovered from supplier (USD)",     required: false }
     - { name: days_to_deadline,  data_type: integer, label: "Payment-decision clock — days left", required: false }

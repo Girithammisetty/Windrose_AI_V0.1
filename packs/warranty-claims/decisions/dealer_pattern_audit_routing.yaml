@@ -1,10 +1,12 @@
 # Second governed decision table (BRD 54): deterministic dealer-pattern and
 # field-quality ROUTING — the surveillance complement to claim_intake_routing.
 # Operates ONLY on wa_claims binding-contract columns (labor_op_band,
-# claim_amount, usage_band, severity, failure_mode, claim_type). ROUTING
-# ONLY: escalate_dealer_audit places a claim in the dealer-audit program's
-# review queue and escalate_claim_review names the quality-engineering queue
-# in its note — a statistical pattern is a signal, not proof, so each claim
+# claim_amount, usage_band, severity, failure_mode, claim_type,
+# repeat_repair_flag). ROUTING ONLY: escalate_dealer_audit places a claim in
+# the dealer-audit program's review queue, route_quality_engineering places
+# field-quality signals in the quality-engineering queue, and
+# refer_repurchase_review sends repeat-repair units to repurchase/lemon-law
+# evaluation — a statistical pattern is a signal, not proof, so each claim
 # is still adjudicated by a human on its own evidence, and the table never
 # proposes paying, denying, or charging back anyone. Executes to the same
 # governed four-eyes proposal path.
@@ -32,14 +34,20 @@
     - when:
         - { column: usage_band, op: eq, value: under_250_hrs }
         - { column: severity, op: eq, value: high }
-      then: { disposition_code: escalate_claim_review, severity: high }
-      note: "Severe failure under 250 hours — quality-engineering review queue (build-batch early-warning check)"
+      then: { disposition_code: route_quality_engineering, severity: high }
+      note: "Severe failure under 250 hours — quality-engineering review (build-batch early-warning check)"
     # Wear-mode failures at low hours suggest a component/supplier issue.
     - when:
         - { column: failure_mode, op: in, value: [seal_leak, premature_wear] }
         - { column: usage_band, op: eq, value: under_250_hrs }
-      then: { disposition_code: escalate_claim_review, severity: medium }
+      then: { disposition_code: route_quality_engineering, severity: medium }
       note: "Wear-class failure at low hours — quality-engineering review for supplier/part cluster analysis"
+    # Repeated failed repairs of the same defect on the unit — repurchase
+    # exposure, evaluated under the unit's own jurisdiction's lemon law.
+    - when:
+        - { column: repeat_repair_flag, op: eq, value: "yes" }
+      then: { disposition_code: refer_repurchase_review, severity: high }
+      note: "Repeated failed repairs of the same defect trigger repurchase evaluation under state lemon laws — jurisdiction-specific; attach the unit's repair history"
   # No default_outcome ON PURPOSE: this is a surveillance overlay — a claim
   # that matches no pattern rule simply stays on the intake-routing path
   # (claim_intake_routing) instead of being force-routed here.

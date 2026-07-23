@@ -47,6 +47,15 @@ charts:
     sources: [ { measure: total_expected_reimbursement } ]
     w: 6
     h: 4
+  - name: "LUPA-risk watch by facility"
+    chart_type: vertical_bar_chart
+    description: "Open PDGM periods trending under their LUPA visit threshold (payment cliff)"
+    config:
+      x: { dimension: facility }
+      y: [ { measure: lupa_risk_count, agg_fn: count } ]
+    sources: [ { measure: lupa_risk_count } ]
+    w: 6
+    h: 4
   - name: "Network episode grid"
     chart_type: grid_chart
     description: "Episodes, active census, LOS, and reimbursement by care setting"

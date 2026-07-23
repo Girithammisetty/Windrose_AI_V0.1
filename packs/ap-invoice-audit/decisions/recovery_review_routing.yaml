@@ -11,6 +11,13 @@
 - identity: recovery_review_routing
   name: "Exception recovery-review routing"
   rules:
+    # Banking-change exceptions go to fraud investigation FIRST, regardless
+    # of what fraud_indicator says: a banking change is BEC-suspect until it
+    # is out-of-band verified against a known-good number.
+    - when:
+        - { column: exception_type, op: eq, value: suspicious_banking_change }
+      then: { disposition_code: escalate_fraud_investigation, severity: high }
+      note: "Banking-change exception — BEC-suspect until verified out-of-band against a known-good number (never the number on the change request itself); hold payment while verification runs (routing, not a finding)"
     # Fraud-PATTERN indicators route to the investigations team first — an
     # escalation for human investigation, never a fraud finding.
     - when:
@@ -35,7 +42,24 @@
         - { column: exception_type, op: eq, value: quantity_mismatch }
       then: { disposition_code: escalate_recovery_review, severity: medium }
       note: "Quantity billed exceeds quantity received — recovery review against the goods receipt"
+    # Vendor-master change on the invoice's vendor — human review of the
+    # change record before the invoice pays.
+    - when:
+        - { column: exception_type, op: eq, value: vendor_master_change }
+      then: { disposition_code: escalate_recovery_review, severity: medium }
+      note: "Vendor-master-data change coincident with the invoice — recovery review verifies the change record and approver before payment"
+    # Non-PO spend is the weakest control path — no PO to match against.
+    - when:
+        - { column: exception_type, op: eq, value: missing_po }
+      then: { disposition_code: escalate_recovery_review, severity: medium }
+      note: "Missing PO — non-PO spend is the weakest control path (no commitment to match against); recovery review confirms authorization and receipt evidence"
+    # Weekend/off-hours submission — a timing oddity worth a look, not an
+    # accusation; low severity keeps it behind the dollar and fraud lanes.
+    - when:
+        - { column: exception_type, op: eq, value: weekend_submission }
+      then: { disposition_code: escalate_recovery_review, severity: low }
+      note: "Weekend/off-hours submission — timing anomaly review; often benign (vendor batch runs), but off-hours entry is a known control-evasion pattern worth a human glance"
   # No default_outcome ON PURPOSE: an unmatched exception stays in the
-  # worklist for a human analyst — the table never guesses on ambiguous
-  # exception types (missing_po, missing_receipt, banking/vendor-master
-  # changes need row-level evidence a deterministic rule cannot weigh).
+  # worklist for a human analyst — the table never guesses on the remaining
+  # ambiguous exception type (missing_receipt needs row-level evidence a
+  # deterministic rule cannot weigh).

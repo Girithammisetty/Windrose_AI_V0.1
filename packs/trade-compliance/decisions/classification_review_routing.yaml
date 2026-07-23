@@ -11,6 +11,16 @@
 - identity: classification_review_routing
   name: "Classification-review routing table"
   rules:
+    # Action clock already LAPSED — overdue outranks every still-open runway.
+    - when:
+        - { column: item_type, op: eq, value: hs_classification }
+        - { column: days_to_deadline, op: lt, value: 0 }
+      then: { disposition_code: escalate_compliance_review, severity: critical }
+      note: >-
+        Action clock already lapsed — an overdue classification review is a
+        live exposure (a corrected entry or disclosure window may already be
+        closing), not a deadline risk; expedite ahead of every still-open
+        runway. Confirm vs reclassify remains a human four-eyes call.
     # Corrected-entry window nearly exhausted — expedite regardless of topic.
     - when:
         - { column: item_type, op: eq, value: hs_classification }
@@ -28,6 +38,18 @@
         Declared chapter is on the program-configured dual-use watch list —
         route to the licensing specialist queue for a license-condition /
         export-control determination; the determination itself stays human.
+    # Steel/aluminum article chapters -> origin-verification / duty-risk
+    # review (AD/CVD and trade-remedy exposure commonly attaches here).
+    - when:
+        - { column: item_type, op: eq, value: hs_classification }
+        - { column: declared_hs_chapter, op: in, value: ["73", "76"] }
+      then: { disposition_code: escalate_compliance_review, severity: medium }
+      note: >-
+        Declared chapter is in the steel (73) / aluminum (76) articles
+        range, where anti-dumping/countervailing and trade-remedy exposure
+        commonly attaches — route for origin verification and duty-risk
+        review; whether any AD/CVD order actually covers the goods is
+        order- and product-specific and stays a human determination.
     # High duty/penalty exposure -> senior classification review.
     - when:
         - { column: item_type, op: eq, value: hs_classification }

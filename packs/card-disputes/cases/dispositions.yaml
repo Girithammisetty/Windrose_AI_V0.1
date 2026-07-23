@@ -3,10 +3,17 @@
 # other} (CASE-FR-020). resolve_cardholder_favor and deny_no_error_found are
 # the Reg E/Z investigation outcomes; file_chargeback is the merchant-recovery
 # action (requires_note captures the compelling evidence the representment
-# will cite); denial notes feed the adverse-action letter the cardholder must
-# receive with specific investigation findings.
-- { code: resolve_cardholder_favor, label: "Resolve in cardholder's favor — error confirmed",   category: true_positive,  requires_note: true }
-- { code: deny_no_error_found,      label: "Deny — investigation found no error",                category: false_positive, requires_note: true }
-- { code: file_chargeback,          label: "File chargeback — recover from merchant",            category: other,          requires_note: true }
-- { code: escalate_fraud_review,    label: "Escalate to fraud investigation (first-party watch)", category: inconclusive,   requires_note: true }
-- { code: close_merchant_credited,  label: "Close — merchant already credited",                  category: benign,         requires_note: true }
+# will cite), and chargeback_won / chargeback_lost record the network's
+# eventual ruling on a filed chargeback; route_investigation_review is the
+# neutral routing outcome for disputes that need a human investigation review
+# without prejudging fraud (a clock breach or an unmatched claim is not a
+# fraud question); denial notes feed the adverse-action letter the cardholder
+# must receive with specific investigation findings.
+- { code: resolve_cardholder_favor,   label: "Resolve in cardholder's favor — error confirmed",     category: true_positive,  requires_note: true }
+- { code: deny_no_error_found,        label: "Deny — investigation found no error",                  category: false_positive, requires_note: true }
+- { code: file_chargeback,            label: "File chargeback — recover from merchant",              category: other,          requires_note: true }
+- { code: chargeback_won,             label: "Chargeback won — funds recovered from merchant",       category: true_positive,  requires_note: true }
+- { code: chargeback_lost,            label: "Chargeback lost — representment/arbitration upheld",   category: other,          requires_note: true }
+- { code: escalate_fraud_review,      label: "Escalate to fraud investigation (first-party watch)",  category: inconclusive,   requires_note: true }
+- { code: route_investigation_review, label: "Route to dispute investigation review",                category: inconclusive,   requires_note: true }
+- { code: close_merchant_credited,    label: "Close — merchant already credited",                    category: benign,         requires_note: true }

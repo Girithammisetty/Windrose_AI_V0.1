@@ -1,6 +1,6 @@
-# Pipeline seeds (expressed against the real pipeline-orchestrator algorithm
+# Pipeline templates (expressed against the real pipeline-orchestrator algorithm
 # catalog): an unsupervised event-anomaly detector over the coded event book
-# (the quantitative signal-screening seed) and a supervised case-priority
+# (the quantitative signal-screening scan) and a supervised case-priority
 # scorer trained on human reporting decisions (the intake pre-router).
 # Trained models require review before promotion — the Safety Officer
 # approves promotions; model documentation expectations are captured in the

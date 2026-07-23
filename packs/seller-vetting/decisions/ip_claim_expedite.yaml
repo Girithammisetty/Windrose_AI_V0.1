@@ -1,9 +1,9 @@
 # Governed decision table (BRD 54) — a deterministic, explainable, no-LLM
 # ROUTING pass over the enforcement worklist, on columns the sv-reviews
 # binding contract guarantees (review_type, trigger_source, claim_basis,
-# days_to_deadline, gmv_at_risk). It EXECUTES to the same governed four-eyes
-# proposal an agent produces: every matched case becomes a
-# case.apply_disposition proposal a human must approve. The table ONLY
+# days_to_deadline, gmv_at_risk, velocity_band). It EXECUTES to the same
+# governed four-eyes proposal an agent produces: every matched case becomes
+# a case.apply_disposition proposal a human must approve. The table ONLY
 # routes to the expedited human review track (escalate_priority_review,
 # category inconclusive — the pack's single allegation-neutral routing
 # code): it NEVER proposes a listing takedown, claim rejection, seller
@@ -13,12 +13,22 @@
 # this workspace's disposition catalog at install, so `dispositions`
 # installs first.
 #
-# The contract has no rights-holder-verification or listing-velocity column;
-# gmv_at_risk is the exposure proxy that stands in for "high-velocity /
-# high-exposure listing" — noted here rather than invented as data.
+# The contract has no rights-holder-verification column; gmv_at_risk is the
+# exposure proxy for "high-exposure listing" — noted here rather than
+# invented as data. Listing velocity arrives as the upstream-computed
+# velocity_band on sv-reviews (normal | elevated | surge).
 - identity: ip_claim_expedite
   name: "Rights-holder claim expedited-review routing"
   rules:
+    # Rights-holder IP claim whose response clock has already LAPSED
+    # (negative runway) — an overdue statutory/program clock outranks the
+    # near-deadline band.
+    - when:
+        - { column: review_type, op: eq, value: ip_infringement_claim }
+        - { column: trigger_source, op: eq, value: brand_owner_complaint }
+        - { column: days_to_deadline, op: lt, value: 0 }
+      then: { disposition_code: escalate_priority_review, severity: critical }
+      note: "Response clock LAPSED — overdue rights-holder claim; escalate to the front of the human IP-review track"
     # Rights-holder IP claim with the response clock nearly exhausted — the
     # tightest window in the workflow; late handling harms claimant and
     # seller alike, so it goes to the front of the human IP-review track.
@@ -44,6 +54,20 @@
         - { column: claim_basis, op: eq, value: safety }
       then: { disposition_code: escalate_priority_review, severity: critical }
       note: "Product-safety signal — front of the human review queue; enforcement itself remains a four-eyes human decision"
+    # Counterfeit review triggered by a failed test buy: the strongest
+    # single piece of counterfeiting evidence in the workflow — the physical
+    # article was purchased and examined.
+    - when:
+        - { column: review_type, op: eq, value: counterfeit_takedown }
+        - { column: trigger_source, op: eq, value: test_buy }
+      then: { disposition_code: escalate_priority_review, severity: high }
+      note: "A failed test buy is the strongest single piece of counterfeiting evidence — expedited human review"
+    # Listing-velocity surge (mass listing creation, price-drop sweeps) —
+    # the classic account-hijack / counterfeit-influx signature.
+    - when:
+        - { column: velocity_band, op: eq, value: surge }
+      then: { disposition_code: escalate_priority_review, severity: medium }
+      note: "Velocity surge (mass listing creation, price-drop sweeps) is the classic hijack/counterfeit-influx signature — expedited review"
   # default_outcome deliberately OMITTED: every other catalog code is an
   # adjudication outcome (removal, claim rejection, suspension, evidence
   # request, reinstatement) this routing table must never propose. Unmatched

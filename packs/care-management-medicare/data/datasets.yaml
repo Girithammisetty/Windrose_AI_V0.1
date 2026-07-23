@@ -10,6 +10,10 @@
 # the pipeline ref keep resolving.
 - identity: care_patients
   name: care-patients
+  # value domain: program_code = apcm|bhi|ccm|cocm|pcm|rpm|rtm|tcm;
+  #   enrollment_status = 'active'|... (semantic filters test 'active');
+  #   apcm_tier = 'none'|tier values; recent_discharge_flag / tcm_contact_2bd
+  #   / readmitted_30d = 'yes'|'no'
   required_columns:
     [patient_id, mbi_last4, plan_type, qmb_flag, fqhc_flag, provider_npi,
      provider_specialty, chronic_condition_count, primary_icd10,
@@ -24,12 +28,19 @@
      billable_flag, note_status, proposed_by]
 - identity: care_billing_candidates
   name: care-billing-candidates
+  # value domain: decision = 'bill'|'hold'; hold_reason = none|missing_time|
+  #   no_consent|consent_revoked|code_mutual_exclusion|rpm_16day_not_met|
+  #   tcm_window_missed|care_plan_overdue; audit_package_status =
+  #   complete|incomplete; fqhc_flag = 'yes'|'no'; cpt_code = CPT/HCPCS
+  #   literal (the triage table tests '99490'/'99487'/'99424'/'99484'/'99457')
   required_columns:
     [candidate_id, patient_id, program_code, cpt_code, service_month,
      total_time_min, expected_reimbursement, decision, hold_reason,
      proposed_by, billing_provider_npi, fqhc_flag, audit_package_status]
 - identity: care_rpm_readings
   name: care-rpm-readings
+  # value domain: fda_cleared_flag / meets_16day_flag = 'yes'|'no';
+  #   review_note_status = pending|approved (routing table tests both)
   required_columns:
     [reading_id, patient_id, reading_month, device_type, device_vendor,
      fda_cleared_flag, reading_days, anomaly_count, review_minutes,

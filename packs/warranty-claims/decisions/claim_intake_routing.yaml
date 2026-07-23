@@ -22,8 +22,8 @@
     # table outcome — safety routing is always a human call.
     - when:
         - { column: claim_type, op: eq, value: recall_related }
-      then: { disposition_code: escalate_claim_review, severity: critical }
-      note: "Recall-related claim — route to the safety-campaign reviewer; never adjudicated by rule"
+      then: { disposition_code: route_safety_campaign, severity: critical }
+      note: "Recall-related claim — safety/recall campaign review queue; never adjudicated by rule"
     # High-value claims get the enhanced-documentation audit queue.
     - when:
         - { column: claim_amount, op: gte, value: 5000 }

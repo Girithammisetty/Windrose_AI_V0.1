@@ -45,6 +45,32 @@
     ORDER BY denied_dollars DESC
   model: rcm_claims
   tags: [denials, carc, pack]
+- nl_text: "Which denials are nearing their payer appeal deadline?"
+  sql_text: >-
+    SELECT payer_name,
+           count(*) AS denials_at_risk,
+           round(sum(cast(denied_amount AS double)), 2) AS dollars_at_risk
+    FROM {{dataset('rcm-denials')}}
+    WHERE cast(appeal_deadline_days AS integer) < 14
+      AND appeal_status = 'not_appealed'
+    GROUP BY payer_name
+    ORDER BY dollars_at_risk DESC
+  model: rcm_claims
+  tags: [denials, appeal-deadline, at-risk, pack]
+- nl_text: "What's our net collection rate by payer?"
+  sql_text: >-
+    SELECT payer_name,
+           count(*) AS claims,
+           round(sum(cast(paid_amount AS double)), 2) AS paid,
+           round(sum(cast(net_charges AS double)), 2) AS net_charges,
+           round(sum(cast(paid_amount AS double))
+                 / nullif(sum(cast(net_charges AS double)), 0), 4)
+             AS net_collection_rate
+    FROM {{dataset('rcm-claims')}}
+    GROUP BY payer_name
+    ORDER BY net_collection_rate ASC
+  model: rcm_claims
+  tags: [net-collection, kpi, pack]
 - nl_text: "How much A/R is aged over 90 days, by payer?"
   sql_text: >-
     SELECT payer_name,

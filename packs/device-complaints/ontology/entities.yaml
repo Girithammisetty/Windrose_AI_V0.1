@@ -34,8 +34,9 @@
 - entity_key: complaint
   name: "Device complaint"
   description: >-
-    A 21 CFR 820.198 complaint file entry: the reported event, its harm and
-    device-problem coding, and the regulatory reporting clock it runs under.
+    A QMSR complaint-file entry (ISO 13485 §8.2.2 / 21 CFR 820.35 records):
+    the reported event, its harm and device-problem coding, and the
+    regulatory reporting clock it runs under.
   attributes:
     - { name: complaint_source, data_type: string }
     - { name: event_type, data_type: string }

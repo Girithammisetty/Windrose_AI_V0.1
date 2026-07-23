@@ -1,4 +1,4 @@
-# Pipeline seeds (BRD 28 §4 model archetypes, expressed against the real
+# Pipeline templates (BRD 28 §4 model archetypes, expressed against the real
 # pipeline-orchestrator algorithm catalog): a PA auto-decision classifier
 # trained on the Rx prior-auth dataset (rx_pa_confidence archetype precursor
 # — predicts approve vs deny/escalate so clean PAs can be one-click

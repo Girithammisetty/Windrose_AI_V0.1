@@ -61,3 +61,35 @@
     ORDER BY filed_month ASC
   model: ap_audit_core
   tags: [ap, duplicates, trend, kpi, pack]
+# Split-invoicing screen: repeated same-vendor same-month invoicing where each
+# individual invoice stays small. The approval threshold is tenant-configured,
+# so the query surfaces the count/max profile and the analyst applies the
+# local threshold — clusters whose largest single invoice sits just under it
+# are the split-invoicing pattern.
+- nl_text: "Split-invoicing screen — vendors with 3+ invoices in one month (analyst applies the local approval threshold)"
+  sql_text: >-
+    SELECT vendor_id, invoice_month,
+           count(*) AS invoices_in_month,
+           sum(cast(invoice_amount AS double)) AS total_billed,
+           max(cast(invoice_amount AS double)) AS largest_single_invoice,
+           round(avg(cast(invoice_amount AS double)), 2) AS avg_invoice_amount
+    FROM {{dataset('ap-invoices')}}
+    GROUP BY vendor_id, invoice_month
+    HAVING count(*) >= 3
+    ORDER BY invoices_in_month DESC, total_billed DESC
+  model: ap_audit_core
+  tags: [ap, split_invoicing, approval_threshold, fraud, pack]
+- nl_text: "Early-pay discounts at risk — held invoices by payment terms while the exception queue burns the discount window"
+  sql_text: >-
+    SELECT i.payment_terms,
+           count(*) AS held_invoices,
+           sum(cast(e.invoice_amount AS double)) AS held_dollars,
+           round(avg(cast(e.days_to_deadline AS double)), 1) AS avg_days_to_payment_run,
+           round(avg(cast(e.age_days AS double)), 1) AS avg_hold_age_days
+    FROM {{dataset('ap-exceptions')}} e
+    LEFT JOIN {{dataset('ap-invoices')}} i ON e.invoice_id = i.invoice_id
+    WHERE e.status = 'open'
+    GROUP BY i.payment_terms
+    ORDER BY held_dollars DESC
+  model: ap_audit_core
+  tags: [ap, early_pay_discount, payment_terms, working_capital, pack]

@@ -13,7 +13,16 @@
     [claim_id, encounter_id, patient_account_id, payer_name, payer_type,
      rendering_provider_npi, service_line, cpt_code, icd10_code, service_month,
      billed_amount, contractual_adjustment, net_charges, expected_paid,
-     paid_amount, patient_responsibility, status, clean_claim, first_pass,
+     paid_amount, patient_responsibility,
+     # value domain: status — 'denied' and 'paid' are matched literally by
+     # semantic filters and verified queries
+     status,
+     # value domain: clean_claim = yes|no — matched literally by semantic
+     # filters and verified queries
+     clean_claim,
+     # value domain: first_pass = yes|no — matched literally by semantic
+     # filters
+     first_pass,
      days_to_payment]
 - identity: rcm_remits
   name: rcm-remits
@@ -21,16 +30,30 @@
     [remit_id, claim_id, payer_name, remit_month, carc_code, rarc_code,
      billed_amount, allowed_amount, paid_amount, expected_paid,
      payment_variance, contractual_adjustment, patient_responsibility,
+     # value domain: underpayment_flag = yes|no — matched literally by
+     # semantic filters
      underpayment_flag]
 - identity: rcm_denials
   name: rcm-denials
   required_columns:
     [denial_id, claim_id, carc_code, rarc_code, denial_reason_text,
-     denial_category, cpt_code, service_line, payer_name, denial_month,
-     denied_amount, appeal_status, appeal_deadline_days]
+     # value domain: denial_category = administrative|coverage|documentation|
+     # bundling|timely_filing|medical_necessity — matched literally by the
+     # decision tables
+     denial_category,
+     cpt_code, service_line, payer_name, denial_month, denied_amount,
+     # value domain: appeal_status = not_appealed|appeal_pending|
+     # corrected_resubmit|overturned|upheld — matched literally by the
+     # decision tables, semantic filters, and verified queries
+     appeal_status,
+     appeal_deadline_days]
 - identity: rcm_ar_aging
   name: rcm-ar-aging
   required_columns:
     [ar_id, claim_id, patient_account_id, payer_name, payer_type, service_line,
-     aging_bucket, over_90, balance_type, balance_amount, days_outstanding,
+     aging_bucket,
+     # value domain: over_90 = yes|no — matched literally by semantic filters
+     # and verified queries
+     over_90,
+     balance_type, balance_amount, days_outstanding,
      followup_priority_score, last_action, as_of_month]

@@ -22,7 +22,8 @@
   purpose: both
   field_meta:
     label: "Denial category (BR-4 class)"
-    options: [administrative, coverage, documentation, bundling, timely_filing]
+    options: [administrative, coverage, documentation, bundling, timely_filing,
+              medical_necessity]
     required: false
 - name: appeal_status
   data_type: enum

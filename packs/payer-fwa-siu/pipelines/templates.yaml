@@ -1,4 +1,4 @@
-# Pipeline seeds (BRD 27 §4 model archetypes fwa_ensemble_v1 /
+# Pipeline templates (BRD 27 §4 model archetypes fwa_ensemble_v1 /
 # provider_outlier_v1, expressed against the real pipeline-orchestrator
 # algorithm catalog). isolation_forest is the unsupervised claim-line
 # outlier detector (FWA-FR-040 statistical-outlier stage); xgboost is the

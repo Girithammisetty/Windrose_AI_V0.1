@@ -1,6 +1,7 @@
 # Governed decision table (BRD 54) — a deterministic, explainable, no-LLM
 # first-cut triage over the complaint queue's binding-contract columns
-# (patient_harm, days_to_deadline, investigation_status). It EXECUTES to the
+# (patient_harm, event_type, device_problem, reportability,
+# days_to_deadline, investigation_status). It EXECUTES to the
 # same governed four-eyes proposal an agent produces: an operator dry-runs or
 # batch-runs it across the worklist, and every matched case becomes a
 # case.apply_disposition proposal the Quality & Regulatory Manager must
@@ -14,6 +15,12 @@
 - identity: complaint_triage_routing
   name: "Complaint triage routing table"
   rules:
+    # Regulatory reporting clock already LAPSED — a late-filing exposure,
+    # not a runway risk; leads every queue.
+    - when:
+        - { column: days_to_deadline, op: lt, value: 0 }
+      then: { disposition_code: request_device_return_info, severity: critical }
+      note: "Regulatory reporting clock already lapsed — a late-MDR-filing exposure, not a deadline risk; complete the decision file and file on the available information immediately, ahead of every still-open runway; the reportability determination itself stays human"
     # Reported death with the investigation still open — the reportability
     # presumption applies, so the evidence file must be completed fastest.
     - when:
@@ -27,6 +34,21 @@
         - { column: investigation_status, op: in, value: [not_started, in_progress] }
       then: { disposition_code: request_device_return_info, severity: critical }
       note: "Regulatory reporting clock nearly exhausted — expedite the evidence file now; the human determination can be made on the available information and must never be held for the device"
+    # Reportability still pending inside the clock's last 10 days — fills the
+    # gap the rule above leaves: files whose investigation is already
+    # complete (or justified as none) but whose decision has not been made.
+    - when:
+        - { column: reportability, op: eq, value: pending }
+        - { column: days_to_deadline, op: between, value: [0, 10] }
+      then: { disposition_code: request_device_return_info, severity: high }
+      note: "Reportability decision still pending with 10 or fewer days on the clock — complete the decision file now regardless of investigation state; the determination can be made on the available information and is always the human analyst's"
+    # Alarm failure on a malfunction event — the textbook likely-to-recur
+    # reportable malfunction class; expedite the evidence file.
+    - when:
+        - { column: event_type, op: eq, value: malfunction }
+        - { column: device_problem, op: eq, value: alarm_failure }
+      then: { disposition_code: request_device_return_info, severity: high }
+      note: "Alarm failure on a monitoring/life-supporting device is the textbook likely-to-recur reportable malfunction — expedite device return and evidence completion even with no harm this event; the could-recur reportability evaluation remains the human analyst's"
     # Serious patient harm with the investigation still open.
     - when:
         - { column: patient_harm, op: eq, value: serious }

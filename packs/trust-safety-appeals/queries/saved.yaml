@@ -18,7 +18,7 @@
   tags: [appeals, network, enforcement, repeat_violators, pack]
 - identity: ts_priority_open_appeals
   name: "Appeals: deadline-ranked open queue"
-  description: "Open appeals ranked by deadline runway then severity — the reviewer ranked-queue seed (deadline x severity x standing, not FIFO)."
+  description: "Open appeals ranked by deadline runway then severity — the reviewer ranked queue (deadline x severity x standing, not FIFO)."
   sql: >-
     SELECT appeal_id, decision_id, appeal_type, policy_area,
            enforcement_source, user_standing, severity,

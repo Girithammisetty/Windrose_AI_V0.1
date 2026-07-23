@@ -17,7 +17,7 @@
   tags: [representment, network, customers, pack]
 - identity: high_value_open_chargebacks
   name: "Representment: high-value open queue"
-  description: "Open chargebacks ranked by dollar exposure — the analyst ranked-queue seed (deadline x dollar x evidence, not FIFO)."
+  description: "Open chargebacks ranked by dollar exposure — the analyst ranked-queue view (deadline x dollar x evidence, not FIFO)."
   sql: >-
     SELECT chargeback_id, order_id, network, reason_code, reason_family,
            evidence_strength, fight_economics, severity,

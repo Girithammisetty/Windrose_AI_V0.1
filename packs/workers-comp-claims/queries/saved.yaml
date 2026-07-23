@@ -17,7 +17,7 @@
   tags: [workers_comp, network, providers, bill_review, pack]
 - identity: wc_high_exposure_open_claims
   name: "WC: high-exposure open claims"
-  description: "Open claims ranked by incurred reserve — the adjuster ranked-queue seed (deadline x reserve x severity, not FIFO)."
+  description: "Open claims ranked by incurred reserve — the adjuster's default ranked queue (deadline x reserve x severity, not FIFO)."
   sql: >-
     SELECT claim_id, employer_id, jurisdiction_state, injury_type, claim_type,
            severity, litigation_flag,

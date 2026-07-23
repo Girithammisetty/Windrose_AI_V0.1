@@ -47,6 +47,15 @@ charts:
     sources: [ { measure: powertrain_claim_count } ]
     w: 6
     h: 4
+  - name: "Goodwill spend trend"
+    chart_type: line_chart
+    description: "Dollars approved on goodwill assistance requests by filed month (program spend watch)"
+    config:
+      x: { dimension: filed_month }
+      y: [ { measure: goodwill_dollars, agg_fn: sum } ]
+    sources: [ { measure: goodwill_dollars } ]
+    w: 6
+    h: 4
   - name: "Component signal grid"
     chart_type: grid_chart
     description: "Claims, replacements, supplier recoveries, claimed and recovered dollars by component"

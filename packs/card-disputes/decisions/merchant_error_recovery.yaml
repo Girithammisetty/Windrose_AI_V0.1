@@ -1,8 +1,8 @@
 # Second governed decision table (BRD 54): deterministic merchant-error
 # recovery routing — the non-fraud complement to reg_e_triage. Operates ONLY on
-# columns the v1 seeded queue projections already carry (dispute_type,
-# reason_code, amount, deadline_days_left), because an upgrade cannot alter an
-# existing case's display_projection. Executes to the same governed four-eyes
+# columns existing case projections already carry (dispute_type, reason_code,
+# amount, deadline_days_left — all in the cd_disputes binding contract),
+# because an upgrade cannot alter an existing case's display_projection. Executes to the same governed four-eyes
 # proposal path: the table proposes, the Dispute Operations Manager decides.
 - identity: merchant_error_recovery
   name: "Merchant error recovery routing"

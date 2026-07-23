@@ -15,11 +15,15 @@
         - { column: appeal_status, op: eq, value: not_appealed }
       then: { disposition_code: write_off, severity: low }
       note: "Below the institution-configured small-balance floor — recommend adjustment review; a human approves any write-off"
-    # NCCI bundling edits — verify the edit applies before chasing recovery.
+    # NCCI bundling edits — coder review FIRST: when a 59/XU/25 modifier
+    # legitimately applies (distinct site/session/service), a corrected
+    # resubmit recovers the line. balance_verified_correct is reserved for the
+    # post-review confirmation that the bundle was correct — never proposed
+    # pre-verification.
     - when:
         - { column: denial_category, op: eq, value: bundling }
-      then: { disposition_code: balance_verified_correct, severity: low }
-      note: "Bundling (NCCI-edit) denial — verify the edit applies; when the bundle is correct there is no recovery to pursue"
+      then: { disposition_code: corrected_resubmit, severity: low }
+      note: "Bundling (NCCI-edit) denial — coder review: corrected resubmit when a 59/XU/25 modifier legitimately applies; balance_verified_correct only after review confirms the bundle was correct"
     # Appeal already upheld at low dollar value — second-level appeal is
     # rarely economic; recommend adjustment review.
     - when:

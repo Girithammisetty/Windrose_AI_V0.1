@@ -9,3 +9,4 @@
 - { code: education_letter,   label: "Provider education letter (waste, not fraud)",    category: benign,         requires_note: true }
 - { code: no_findings,        label: "No findings — close as false positive",           category: false_positive, requires_note: true }
 - { code: pend_evidence,      label: "Pend — additional evidence needed",               category: inconclusive,   requires_note: false }
+- { code: refer_payment_suspension, label: "Refer for payment suspension / provider flag", category: other,       requires_note: true }

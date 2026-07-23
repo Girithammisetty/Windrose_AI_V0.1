@@ -13,7 +13,7 @@
 # process, never a carrier's underwriting guidelines.
 pack_manifest: 1
 name: underwriting-intake
-version: 2.0.0
+version: 2.1.0
 publisher: { id: pub-datacern, name: "Datacern Inc." }
 description: >-
   AI-assisted commercial underwriting submission intake and triage:

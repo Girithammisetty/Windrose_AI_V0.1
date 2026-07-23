@@ -1,4 +1,4 @@
-# Pipeline seeds (expressed against the real pipeline-orchestrator algorithm
+# Pipeline templates (expressed against the real pipeline-orchestrator algorithm
 # catalog): an unsupervised shipment-anomaly detector (valuation outliers,
 # transshipment-suspect lane shifts) and a supervised review-outcome scorer
 # trained on human dispositions (the deterministic-first pre-router for

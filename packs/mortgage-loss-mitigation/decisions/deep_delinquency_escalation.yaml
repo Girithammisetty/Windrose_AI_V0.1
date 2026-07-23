@@ -20,6 +20,16 @@
         - { column: doc_status, op: eq, value: incomplete }
       then: { disposition_code: escalate_underwriting_review, severity: critical }
       note: "Deep-delinquency file still incomplete — SPOC outreach escalation now, before the posture worsens further; never a referral proposal"
+    # 90-day bucket AND still incomplete — the last window that matters:
+    # completeness at the 120-day boundary determines whether the first
+    # foreclosure filing is barred under 1024.41(f), so the document chase
+    # must finish BEFORE the file crosses into the deep-delinquency band.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: delinquency_bucket, op: eq, value: "90" }
+        - { column: doc_status, op: eq, value: incomplete }
+      then: { disposition_code: escalate_underwriting_review, severity: high }
+      note: "90-day-delinquent file still incomplete — completeness at the 120-day boundary determines whether the first foreclosure filing is barred under 1024.41(f); finish the document chase before the band turns"
     # Large past-due exposure — risk-times-dollar ranking, not FIFO.
     - when:
         - { column: status, op: eq, value: open }

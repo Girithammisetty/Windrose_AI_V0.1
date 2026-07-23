@@ -18,14 +18,18 @@
 - content: >-
     Reg E consumer liability tiers (12 CFR 1005.6) for a lost or stolen
     access device: at most $50 if reported within 2 business days of
-    learning of the loss; up to $500 if reported later than 2 business days;
-    unlimited exposure only for unauthorized transfers appearing on a
-    periodic statement and not reported within 60 days of transmittal. For
-    unauthorized transactions NOT involving a lost access device (e.g., a
-    stolen card number used online), the consumer has no liability if
-    reported within the 60-day statement window. Network zero-liability
-    policies are usually more generous than the regulation — apply the more
-    protective standard the program has adopted.
+    learning of the loss; up to $500 if reported later than 2 business days.
+    Unlimited liability (12 CFR 1005.6(b)(3)) is narrower than often
+    assumed: it applies only to unauthorized transfers that OCCUR AFTER the
+    close of the 60-day statement-reporting window and before the consumer
+    gives notice — transfers occurring within the first 60 days after
+    statement transmittal remain protected (subject to the $50/$500
+    lost-device tiers where an access device was involved). For unauthorized
+    transactions NOT involving a lost access device (e.g., a stolen card
+    number used online), the consumer has no liability for transfers within
+    that 60-day window. Network zero-liability policies are usually more
+    generous than the regulation — apply the more protective standard the
+    program has adopted.
   tags: [reg_e, liability, fraud_unauthorized]
   confidence: 0.95
 - content: >-
@@ -67,11 +71,14 @@
     Visa Compelling Evidence 3.0 (effective April 2023) for 10.4 CNP fraud
     disputes: the merchant can block or remedy the dispute by showing two or
     more prior undisputed transactions on the same card, 120-365 days old,
-    that share qualifying data elements with the disputed transaction (such
-    as device ID/fingerprint, IP address, shipping address, account login) —
-    shifting liability back to the issuer. Pre-screen 10.4 candidates for CE
-    3.0 exposure before filing: a chargeback likely to be defeated by CE 3.0
-    evidence wastes cycle time and network fees.
+    each matching the disputed transaction on at least TWO qualifying data
+    elements — one of which MUST be the device ID/device fingerprint or the
+    IP address (the remaining element may be the shipping address or account
+    login ID) — shifting liability back to the issuer. Visa revises the
+    operational matching criteria periodically — confirm current CE 3.0
+    rules before relying on a qualification call. Pre-screen 10.4 candidates
+    for CE 3.0 exposure before filing: a chargeback likely to be defeated by
+    CE 3.0 evidence wastes cycle time and network fees.
   tags: [visa, ce30, compelling_evidence, cnp, chargebacks]
   confidence: 0.9
 - content: >-

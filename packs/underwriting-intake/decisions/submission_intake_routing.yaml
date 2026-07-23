@@ -1,6 +1,7 @@
 # Governed decision table (BRD 54) — deterministic, explainable, no-LLM
-# ROUTING over the submission queue's binding-contract columns (appetite_fit,
-# completeness, priority_band, days_to_deadline). It EXECUTES to the same
+# ROUTING over the submission queue's binding-contract columns
+# (clearance_status, appetite_fit, completeness, priority_band,
+# days_to_deadline). It EXECUTES to the same
 # governed four-eyes proposal an agent produces: an operator dry-runs or
 # batch-runs it across the worklist, and every matched case becomes a
 # case.apply_disposition proposal the Underwriting Operations Manager must
@@ -13,6 +14,27 @@
 - identity: submission_intake_routing
   name: "Submission intake routing table"
   rules:
+    # Needed-by date already PASSED — an already-lapsed window inverts the
+    # posture: this is no longer speed-to-first-touch work; the broker has
+    # most likely placed the risk elsewhere, so the play is
+    # withdrawal-confirmation outreach, not underwriting.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: days_to_deadline, op: lt, value: 0 }
+      then: { disposition_code: escalate_referral_review, severity: critical }
+      note: "Broker needed-by date already lapsed — route to withdrawal-confirmation outreach: confirm with the broker whether the risk was placed elsewhere before any further triage effort; close_broker_withdrawn only after the broker confirms"
+    # Clearance runs BEFORE appetite or completeness: a later duplicate of an
+    # earlier-cleared submission is blocked, first-in-time.
+    - when:
+        - { column: clearance_status, op: eq, value: duplicate_pending }
+      then: { disposition_code: blocked_duplicate_submission, severity: medium }
+      note: "Duplicate of an earlier-cleared submission — first-in-time clearance holds the market; the later duplicate is blocked pending broker-of-record resolution, and the note names the earlier-cleared submission"
+    # Contested broker of record — a BOR letter's rescission window is open,
+    # so neither broker's submission moves until it resolves.
+    - when:
+        - { column: clearance_status, op: eq, value: bor_contested }
+      then: { disposition_code: escalate_referral_review, severity: high }
+      note: "Broker-of-record contest in progress — the BOR letter's rescission window lets the incumbent contest; hold BOTH submissions until the BOR resolves, then clear the prevailing broker"
     # Urgent-priority, in-appetite, complete file — first-touch today: the
     # renewal-defense / tight needed-by slice where speed drives hit ratio.
     - when:

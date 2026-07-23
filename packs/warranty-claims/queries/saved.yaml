@@ -18,7 +18,7 @@
   tags: [warranty, network, dealers, pack]
 - identity: high_dollar_open_claims
   name: "Warranty: high-dollar open queue"
-  description: "Open warranty claims ranked by dollar exposure — the analyst ranked-queue seed (deadline x dollar x severity, not FIFO)."
+  description: "Open warranty claims ranked by dollar exposure — the analyst's default ranked queue (deadline x dollar x severity, not FIFO)."
   sql: >-
     SELECT claim_id, dealer_id, unit_id, claim_type, component_system,
            failure_mode, severity, in_warranty,

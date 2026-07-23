@@ -14,9 +14,14 @@
 # position on the merits — it is the only code the pack's decision tables
 # (decisions/) ever propose; enforcement outcomes remain human four-eyes
 # decisions with documented findings.
+# suppress_listing_pending_edit is the soft-enforcement outcome between
+# removal and claim rejection: the listing is hidden from sale while the
+# seller edits it or appeals (the note records what must change and the
+# appeal window) — it neither confirms the violation nor clears the seller.
 - { code: remove_listing_enforce,        label: "Remove listing — counterfeit/IP/safety violation confirmed", category: true_positive,  requires_note: true }
 - { code: reject_claim_insufficient,     label: "Reject claim — insufficient evidence of infringement",        category: false_positive, requires_note: true }
 - { code: suspend_seller_network,        label: "Suspend seller network — linked-account ring confirmed",      category: other,          requires_note: true }
 - { code: request_authenticity_evidence, label: "Request authenticity evidence — invoices / test buy",         category: inconclusive,   requires_note: true }
 - { code: reinstate_seller_cleared,      label: "Clear or reinstate seller — verification passed",             category: benign,         requires_note: true }
 - { code: escalate_priority_review,      label: "Escalate — priority human review (routing only, no enforcement)", category: inconclusive, requires_note: true }
+- { code: suppress_listing_pending_edit, label: "Suppress listing pending edit / appeal",                       category: inconclusive,   requires_note: true }

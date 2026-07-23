@@ -37,6 +37,15 @@ charts:
     sources: [ { measure: avg_response_hours } ]
     w: 6
     h: 4
+  - name: "Declines by reason"
+    chart_type: vertical_bar_chart
+    description: "Declined referrals by documented rationale (BR-6 requires one for every decline)"
+    config:
+      x: { dimension: decline_reason }
+      y: [ { measure: declined_referral_count, agg_fn: count } ]
+    sources: [ { measure: declined_referral_count } ]
+    w: 6
+    h: 4
   - name: "Intake grid by hospital"
     chart_type: grid_chart
     description: "Referrals, acceptances, declines, and response hours by hospital"

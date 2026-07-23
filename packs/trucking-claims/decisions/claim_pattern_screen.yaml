@@ -28,6 +28,12 @@
         - { column: liability_band, op: eq, value: undetermined }
       then: { disposition_code: escalate_fraud_investigation, severity: medium }
       note: "Undetermined-liability shortage — investigator resolves origin count vs transit loss from seal/count/CCTV records; neutral evidence review"
+    # Reefer breakdown claims turn on the temperature record — collect the
+    # evidence file before anyone takes a liability position.
+    - when:
+        - { column: claim_type, op: eq, value: reefer_breakdown }
+      then: { disposition_code: request_documentation, severity: medium }
+      note: "Reefer temperature-excursion claim — collect the reefer download, origin pre-cool record, and pulping temperatures before liability analysis"
   # No default_outcome ON PURPOSE: everything else stays with the assigned
   # analyst — this screen only ADDS investigator review where the pattern
   # warrants it, it never disposes of a claim.

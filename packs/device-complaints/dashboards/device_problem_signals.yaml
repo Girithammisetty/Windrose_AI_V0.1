@@ -1,15 +1,15 @@
 # Device Problem Signals: the trending/signal-detection view — problem-code
-# mix, patient-harm mix, the post-rollout software-anomaly trend, the fleet
-# software-version surface, and the per-product signal grid (820.100 CAPA
-# trend triggers start here).
+# mix, patient-harm mix, the recent-version software-anomaly cluster watch,
+# the fleet software-version surface, and the per-product signal grid (CAPA
+# trend triggers under ISO 13485 §8.5.2/8.5.3 start here).
 name: "Device Problem Signals"
 module: insights
 semantic_model: complaints_core
 description: >-
   Portfolio signal surveillance: complaints by device-problem code, patient
-  harm mix, the software-anomaly trend after the v4.0 rollout, device fleet
-  by software version, and the product signal grid feeding 820.100 CAPA
-  trending review.
+  harm mix, the software-anomaly trend by month (recent-version cluster
+  watch), device fleet by software version, and the product signal grid
+  feeding CAPA trending review under ISO 13485 §8.5.2/8.5.3.
 tags: [medtech, complaints, trending, capa, signal, pack]
 charts:
   - name: "Complaints by device problem"
@@ -32,7 +32,7 @@ charts:
     h: 4
   - name: "Software-anomaly trend"
     chart_type: line_chart
-    description: "Software-anomaly complaints by month — the v4.0 rollout cluster"
+    description: "Software-anomaly complaints by month — recent-version cluster watch (complaint concentration by device model/version)"
     config:
       x: { dimension: filed_month }
       y: [ { measure: software_anomaly_count, agg_fn: count } ]

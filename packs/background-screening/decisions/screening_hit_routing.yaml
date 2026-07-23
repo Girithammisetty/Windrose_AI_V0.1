@@ -1,6 +1,7 @@
 # Governed decision table (BRD 54) — a deterministic, explainable, no-LLM
 # intake-triage ROUTER over bs_reviews binding-contract columns (status,
-# identity_confidence, hit_type, record_age_band). It EXECUTES to the same
+# identity_confidence, hit_type, record_age_band, common_name_flag). It
+# EXECUTES to the same
 # governed four-eyes proposal an agent produces: an operator dry-runs or
 # batch-runs it across the worklist, and every matched case becomes a
 # case.apply_disposition proposal a human must approve. The table ONLY
@@ -37,6 +38,31 @@
         Route to identity resolution regardless of recorded confidence; the
         suppression decision after identity work is the adjudicator's, never
         this table's.
+    # Common-name applicant with a criminal-record hit — the matching
+    # standard goes UP, never down.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: common_name_flag, op: eq, value: "yes" }
+        - { column: hit_type, op: in, value: [felony, misdemeanor, pending_charge] }
+      then: { disposition_code: request_identity_verification, severity: medium }
+      note: >-
+        Common-name applicant with a criminal-record hit — heightened
+        matching review: the match must be confirmed on full identifiers
+        (name plus full DOB plus address history or SSN fragment where
+        lawfully available) before anything is reported; the match/no-match
+        call and any reporting stay human.
+    # Verification discrepancy (employment/education mismatch) — reverify at
+    # the source before it can ever be reported.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: hit_type, op: eq, value: discrepancy }
+      then: { disposition_code: escalate_adjudication_review, severity: medium }
+      note: >-
+        Verification discrepancy — a mismatch between the applicant's claim
+        and the source's answer gets source reverification before reporting
+        (FCRA 607(b) maximum possible accuracy: discrepancies are often
+        clerical — date rounding, acquired employers, registrar lag). What
+        is reported, if anything, is the adjudicator's decision.
     # Pending charge: not a conviction — the job-relatedness analysis is a
     # human assessment, never a rule outcome.
     - when:

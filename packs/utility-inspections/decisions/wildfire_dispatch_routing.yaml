@@ -20,6 +20,14 @@
         - { column: severity, op: eq, value: high }
       then: { disposition_code: dispatch_immediate_repair, severity: critical }
       note: "Tier-3 high fire-threat district + safety severity — expedited crew dispatch queue; human approves before any work order"
+    # Immediate-priority finding whose program-configured make-safe clock has
+    # already LAPSED (negative runway) — overdue corrective actions are
+    # citable audit findings; front of the queue.
+    - when:
+        - { column: priority, op: eq, value: immediate }
+        - { column: days_to_deadline, op: lt, value: 0 }
+      then: { disposition_code: dispatch_immediate_repair, severity: critical }
+      note: "Make-safe deadline LAPSED — overdue immediate-priority finding; escalate to the front of the dispatch queue"
     # Immediate-priority finding with its program-configured make-safe clock
     # nearly expired — cannot wait for routine queue ordering.
     - when:
@@ -27,6 +35,12 @@
         - { column: days_to_deadline, op: between, value: [0, 3] }
       then: { disposition_code: dispatch_immediate_repair, severity: critical }
       note: "Immediate-priority finding within 3 days of its program-configured make-safe deadline — expedite"
+    # Infrared thermal hotspot — a pre-ignition indicator (failing splice,
+    # loose connector, overloaded equipment) regardless of fire-threat tier.
+    - when:
+        - { column: finding_type, op: eq, value: thermal_hotspot }
+      then: { disposition_code: dispatch_immediate_repair, severity: high }
+      note: "Infrared thermal signature is a pre-ignition indicator — dispatch or re-fly within days regardless of zone tier"
     # Safety-severity gas leak indication — existing/probable-hazard profile.
     - when:
         - { column: finding_type, op: eq, value: leak_indication }

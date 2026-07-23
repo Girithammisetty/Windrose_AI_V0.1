@@ -23,3 +23,5 @@
     - { name: chargeback_amount, data_type: float,   label: "Liability at stake (USD)",                        required: true }
     - { name: recovered_amount,  data_type: float,   label: "Recovered via representment (USD)",               required: false }
     - { name: days_to_deadline,  data_type: integer, label: "Network response window — days left",             required: false }
+    - { name: cycle_stage,       data_type: enum,    label: "Dispute cycle stage",                             required: false }
+    - { name: fee_at_risk,       data_type: float,   label: "Escalation fees at risk (USD)",                   required: false }

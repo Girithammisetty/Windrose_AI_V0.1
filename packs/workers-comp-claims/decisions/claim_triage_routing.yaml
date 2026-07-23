@@ -1,6 +1,7 @@
 # Governed decision table (BRD 54) — deterministic, explainable, no-LLM
 # ROUTING over the wc_claims binding-contract columns (claim_type, severity,
-# litigation_flag, days_to_deadline, incurred_reserve). It EXECUTES to the
+# injury_type, rtw_status, litigation_flag, days_to_deadline, age_days,
+# incurred_reserve). It EXECUTES to the
 # same governed four-eyes proposal an agent produces: every matched claim
 # becomes a case.apply_disposition proposal the WC Claims Manager must
 # approve. This table only ORDERS and ROUTES the queue — it NEVER proposes a
@@ -11,6 +12,12 @@
 - identity: claim_triage_routing
   name: "Claim triage routing — senior adjuster escalation"
   rules:
+    # Decision window ALREADY LAPSED — days_to_deadline has gone negative;
+    # deciding late without the jurisdiction's notice is a penalty exposure.
+    - when:
+        - { column: days_to_deadline, op: lt, value: 0 }
+      then: { disposition_code: issue_delay_notice, severity: critical }
+      note: "Compensability decision window lapsed — decide on the evidence in file or issue the jurisdiction's delay/investigation notice today"
     # Jurisdiction-configured accept/deny decision window nearly lapsed —
     # a senior adjuster must work the claim now (decide on the evidence in
     # file or issue the jurisdiction's delay/investigation notice).
@@ -18,6 +25,13 @@
         - { column: days_to_deadline, op: between, value: [0, 3] }
       then: { disposition_code: escalate_senior_adjuster, severity: critical }
       note: "Compensability decision clock ≤ 3 days (jurisdiction-configured window) — senior adjuster now"
+    # Catastrophic-pattern injury on a lost-time claim — senior adjuster
+    # ownership plus nurse-case-management engagement from day one.
+    - when:
+        - { column: injury_type, op: in, value: [crush_injury, concussion, fracture] }
+        - { column: claim_type, op: eq, value: indemnity }
+      then: { disposition_code: escalate_senior_adjuster, severity: high }
+      note: "Catastrophic-pattern injury on a lost-time claim — senior adjuster ownership with nurse case manager engaged for medical management"
     # Lost-time claim already marked high severity — senior handling.
     - when:
         - { column: claim_type, op: eq, value: indemnity }
@@ -35,6 +49,13 @@
         - { column: litigation_flag, op: eq, value: "yes" }
       then: { disposition_code: escalate_senior_adjuster, severity: high }
       note: "Attorney representation / active litigation — senior adjuster; all claimant contact via counsel"
+    # RTW stalled — claimant not released after 90 days on the book; a
+    # structured return-to-work plan review, not passive aging.
+    - when:
+        - { column: rtw_status, op: eq, value: not_released }
+        - { column: age_days, op: gte, value: 90 }
+      then: { disposition_code: escalate_senior_adjuster, severity: medium }
+      note: "Not released to work at 90+ days — build/refresh the return-to-work plan; RTW facilitation is the best-evidenced cost lever"
   # default_outcome deliberately OMITTED: an unmatched claim (e.g. a clean
   # medical-only claim) simply stays in the standard adjuster queue. The
   # disposition catalog has no "no-action" code, and a routing table must

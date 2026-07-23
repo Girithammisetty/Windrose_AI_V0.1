@@ -17,7 +17,7 @@
   tags: [banking, aml, network, ownership, pack]
 - identity: high_value_open_alerts
   name: "AML: high-value open alerts"
-  description: "Open alerts ranked by dollar exposure — the L1 ranked queue seed (US-1: risk x dollar x age, not FIFO)."
+  description: "Open alerts ranked by dollar exposure — the L1 ranked-queue view (US-1: risk x dollar x age, not FIFO)."
   sql: >-
     SELECT alert_id, party_id, typology, severity, assigned_tier,
            cast(age_days AS double) AS age_days,

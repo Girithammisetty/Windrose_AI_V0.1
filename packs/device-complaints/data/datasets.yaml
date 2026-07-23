@@ -9,17 +9,42 @@
 # distributor portals.
 - identity: dc_complaints
   name: dc-complaints
+  # Columns the decision tables and semantic/query filters compare to
+  # literals carry their value domains below, so bound tenant data can be
+  # checked against what the rules actually match.
   required_columns:
-    [complaint_id, device_id, complaint_source, event_type, device_problem,
-     patient_harm, reportability, investigation_status, severity, status,
-     disposition, filed_month, age_days, days_to_deadline, deadline_bucket]
+    [complaint_id, device_id, complaint_source,
+     # value domain: death | serious_injury | malfunction | use_error | no_harm
+     event_type,
+     # value domain: alarm_failure | battery_failure | software_anomaly | sensor_drift | breakage | connector | labeling_confusion | no_problem_found | unknown
+     device_problem,
+     # value domain: none | minor | serious | death
+     patient_harm,
+     # value domain: pending | mdr_reportable | not_reportable
+     reportability,
+     # value domain: not_started | in_progress | complete | no_investigation_justified
+     investigation_status,
+     severity,
+     # value domain: open | closed
+     status,
+     # value domain: the codes in cases/dispositions.yaml
+     disposition,
+     # value domain: yes | no | na (na = no filing was due)
+     filed_late,
+     filed_month, age_days, days_to_deadline, deadline_bucket]
 - identity: dc_devices
   name: dc-devices
   required_columns:
     [device_id, product_id, lot_batch, manufacture_year, region_sold,
-     software_version, service_history]
+     software_version,
+     # value domain: none | routine | multiple_repairs
+     service_history]
 - identity: dc_products
   name: dc-products
   required_columns:
-    [product_id, product_name, device_class, therapeutic_area,
-     regulatory_pathway, recall_history]
+    [product_id, product_name,
+     # value domain: i | ii | iii
+     device_class,
+     therapeutic_area, regulatory_pathway,
+     # value domain: yes | no
+     recall_history]

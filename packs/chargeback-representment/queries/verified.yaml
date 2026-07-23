@@ -67,3 +67,19 @@
     ORDER BY first_party_suspect DESC
   model: representment_core
   tags: [chargebacks, friendly_fraud, first_party, pack]
+# Monitoring-program thresholds (Visa VAMP, Mastercard ECM/HECM) are
+# acquirer/program-defined and revised on the networks' own schedule — this
+# query trends the merchant's dispute intake by network and month so
+# operations can compare it against the acquirer-confirmed threshold; it
+# asserts no threshold of its own.
+- nl_text: "How is our current-month dispute count by network trending against our monitoring-program threshold?"
+  sql_text: >-
+    SELECT network, filed_month,
+           count(*) AS chargebacks,
+           sum(CASE WHEN reason_family = 'fraud' THEN 1 ELSE 0 END) AS fraud_family,
+           sum(cast(amount AS double)) AS disputed_dollars
+    FROM {{dataset('mr-chargebacks')}}
+    GROUP BY network, filed_month
+    ORDER BY network, filed_month
+  model: representment_core
+  tags: [chargebacks, monitoring_programs, headroom, trend, pack]

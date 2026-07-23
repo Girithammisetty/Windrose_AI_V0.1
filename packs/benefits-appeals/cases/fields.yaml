@@ -52,3 +52,16 @@
   field_meta:
     label: "Overpayment at issue (USD)"
     required: false
+- name: aid_paid_pending
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Aid paid pending appeal"
+    options: ["no", "yes"]
+    required: false
+- name: notice_language
+  data_type: string
+  purpose: both
+  field_meta:
+    label: "Notice language"
+    required: false

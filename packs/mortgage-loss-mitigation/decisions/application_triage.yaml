@@ -15,6 +15,15 @@
 - identity: lossmit_application_triage
   name: "Loss-mitigation application triage routing"
   rules:
+    # Clock already LAPSED — an already-overdue window inverts the posture:
+    # this is no longer runway management but a live compliance breach. An
+    # overdue written 1024.41(c) evaluation decision is a live Reg X
+    # violation, so the file outranks every merely-tight deadline.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: days_to_deadline, op: lt, value: 0 }
+      then: { disposition_code: escalate_underwriting_review, severity: critical }
+      note: "Evaluation clock already lapsed — an overdue written 1024.41(c) evaluation decision is a live Reg X violation, not a deadline risk; immediate human review and remediation posture, ahead of every still-open runway"
     # Complete application deep into its servicing-rule evaluation clock —
     # the written-decision runway is nearly consumed.
     - when:
@@ -49,6 +58,24 @@
         - { column: prior_workout_flag, op: eq, value: "yes" }
       then: { disposition_code: escalate_underwriting_review, severity: high }
       note: "Repeat request after prior loss-mitigation history — an underwriter checks the investor's re-eligibility rules before the waterfall evaluation"
+    # Non-retention track (short sale / deed-in-lieu): a different document
+    # set and counseling path than retention workouts. 1024.41's evaluate-
+    # all-options and anti-evasion posture means the request still gets the
+    # full-waterfall review — the borrower's stated preference never
+    # short-circuits the retention evaluation.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: request_type, op: in, value: [short_sale, deed_in_lieu] }
+      then: { disposition_code: escalate_underwriting_review, severity: high }
+      note: "Non-retention request (short sale / DIL) — route to the non-retention track's document set and counseling path; under 1024.41 the file is still evaluated for ALL available options (anti-evasion), and every foreclosure-alternatives referral remains a human four-eyes determination"
+    # Disaster hardship — deferral-first review posture: disaster files
+    # typically flow through forbearance to a deferral evaluation before any
+    # modification, so they get an expedited specialist look.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: hardship_reason, op: eq, value: disaster }
+      then: { disposition_code: escalate_underwriting_review, severity: high }
+      note: "Disaster-related hardship — expedited, deferral-first review: disaster files typically resolve through forbearance into a deferral evaluation before any modification is considered"
     # Catch-all for the OPEN worklist: nothing matched deterministically ->
     # standard human review at low severity. The neutral human-review code is
     # the ONLY thing this table ever proposes by default — never an approval,

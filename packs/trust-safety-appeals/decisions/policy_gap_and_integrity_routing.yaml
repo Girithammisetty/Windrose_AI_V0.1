@@ -9,6 +9,12 @@
 - identity: policy_gap_and_integrity_routing
   name: "Policy-gap and report-integrity routing"
   rules:
+    # Child-safety carve-out: appeals in this policy area NEVER take the
+    # normal restore path and are never exposed to general reviewers.
+    - when:
+        - { column: policy_area, op: eq, value: child_safety }
+      then: { disposition_code: route_specialist_review, severity: critical }
+      note: "Child-safety policy area — CSAM carve-out: never restore pending specialist review and never expose the content to general reviewers; route to the specialist queue with strict access controls (mandatory-reporting and preservation duties may attach)"
     # Misinformation demonetization — the satire/parody precedent family the
     # pack's grounding flags as a policy-text gap; route for a precedent
     # ruling rather than case-by-case re-decision.
@@ -17,6 +23,13 @@
         - { column: appeal_type, op: eq, value: demonetization }
       then: { disposition_code: escalate_policy_team, severity: medium }
       note: "Misinformation demonetization — satire/parody precedent question for the policy team"
+    # Violence content removal — documentary/newsworthiness context risk
+    # (conflict footage, atrocity documentation); precedent screen.
+    - when:
+        - { column: policy_area, op: eq, value: violence }
+        - { column: appeal_type, op: eq, value: content_removal }
+      then: { disposition_code: escalate_policy_team, severity: medium }
+      note: "Violence content removal — documentary/newsworthiness screen (conflict footage, atrocity documentation, awareness-raising context); precedent question for the policy team, not case-by-case re-decision"
     # Classifier-initiated enforcement in context-sensitive policy areas
     # (counter-speech, quoted-slur, documentary context risk) — specialist
     # review before determination.

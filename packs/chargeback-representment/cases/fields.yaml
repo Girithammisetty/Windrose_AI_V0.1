@@ -56,3 +56,16 @@
   field_meta:
     label: "Network response window — days left"
     required: false
+- name: cycle_stage
+  data_type: enum
+  purpose: both
+  field_meta:
+    label: "Dispute cycle stage"
+    options: [first_chargeback, pre_arbitration, arbitration]
+    required: false
+- name: fee_at_risk
+  data_type: float
+  purpose: both
+  field_meta:
+    label: "Escalation fees at risk (USD)"
+    required: false

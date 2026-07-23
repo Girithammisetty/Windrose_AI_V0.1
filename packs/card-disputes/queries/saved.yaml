@@ -16,7 +16,7 @@
   tags: [disputes, network, merchants, pack]
 - identity: high_value_open_disputes
   name: "Disputes: high-value open queue"
-  description: "Open disputes ranked by dollar exposure — the analyst ranked-queue seed (deadline x dollar x severity, not FIFO)."
+  description: "Open disputes ranked by dollar exposure — the analyst ranked-queue view (deadline x dollar x severity, not FIFO)."
   sql: >-
     SELECT dispute_id, cardholder_id, dispute_type, reason_code, severity,
            reg_flag, provisional_credit,

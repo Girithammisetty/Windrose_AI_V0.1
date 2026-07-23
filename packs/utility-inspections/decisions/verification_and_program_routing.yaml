@@ -26,6 +26,15 @@
         - { column: asset_class, op: in, value: [pipeline_segment, regulator_station] }
       then: { disposition_code: request_field_verification, severity: high }
       note: "Corrosion on a gas-system asset — route to engineering integrity review; deferral requires documented risk-based rationale"
+    # Customer-reported leak indication — a gas-odor call carries an
+    # emergency-response clock (state rules set response-time obligations),
+    # so it outranks the routine instrument re-survey lane whatever the
+    # recorded severity grade.
+    - when:
+        - { column: detection_source, op: eq, value: customer_report }
+        - { column: finding_type, op: eq, value: leak_indication }
+      then: { disposition_code: request_field_verification, severity: high }
+      note: "Customer gas-odor reports carry emergency-response clocks — expedited field verification"
     # Non-high-severity leak indication — grading is re-assessed in the
     # field with instruments; the table never grades a leak from data alone.
     - when:

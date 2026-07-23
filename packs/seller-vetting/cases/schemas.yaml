@@ -20,3 +20,5 @@
     - { name: kyb_verified,     data_type: enum,    label: "Seller KYB verification state",        required: false }
     - { name: gmv_at_risk,      data_type: float,   label: "Listing GMV at risk (USD)",            required: false }
     - { name: days_to_deadline, data_type: integer, label: "Response/takedown clock — days left",  required: false }
+    - { name: counter_notice_received, data_type: enum, label: "Counter-notice received",          required: false }
+    - { name: counter_notice_deadline, data_type: date, label: "Counter-notice restoration deadline (DMCA 10-14 business days)", required: false }

@@ -14,6 +14,11 @@
 - identity: appeal_priority_routing
   name: "Appeal priority routing table"
   rules:
+    # SLA already LAPSED — an overdue appeal outranks every still-open runway.
+    - when:
+        - { column: days_to_deadline, op: lt, value: 0 }
+      then: { disposition_code: escalate_senior_review, severity: critical }
+      note: "Policy-configured complaint-handling SLA already lapsed — the overdue appeal leads the queue; expedited senior review ahead of every still-open runway (the SLA itself is tenant policy, not a statutory day-count)"
     # Complaint-handling clock nearly exhausted — expedited senior queue.
     - when:
         - { column: days_to_deadline, op: between, value: [0, 2] }

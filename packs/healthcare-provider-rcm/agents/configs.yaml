@@ -16,17 +16,31 @@
       denial (LCD/NCD non-coverage), documentation denial, medical-necessity
       denial, or administrative denial — because the class determines the
       recommended action: appeal with cited chart/policy evidence, corrected
-      resubmit, or write-off when no clinical case exists. Check the appeal
-      or dispute deadline before recommending action: underpayment disputes
-      outside the payer-contract window are time_barred and must not be
-      proposed (BR-5). For underpayments, cite the expected contracted amount
-      against the actual paid amount from the 835 line. You draft and
-      recommend only — a biller, coder, or denials specialist decides; never
-      submit, resubmit, appeal, or write off a claim yourself (BR-1: the
-      platform forbids autonomous billing writes).
+      resubmit, or write-off when no clinical case exists. Let the RARC drive
+      the branch: CO-16 with N290 (missing/invalid rendering-provider
+      identifier) or M127 (missing medical-record documentation) is a
+      correct-and-resubmit, not an appeal — resubmitting inside the filing
+      window beats arguing a defect the payer will re-deny. Know the ladders
+      and clocks: Medicare timely filing is 12 months from the date of
+      service; the Medicare appeal ladder runs redetermination (120 days from
+      the remittance) then reconsideration (180 days from the
+      redetermination) then OMHA ALJ hearing — cite where the case sits on
+      the ladder when recommending the next step. Commercial windows are
+      contract-specific; check the deadline before recommending action, and
+      never propose a time_barred underpayment dispute (BR-5). For
+      underpayments, cite the expected contracted amount against the actual
+      paid amount from the 835 line and chase the variance — including
+      interest where the payer contract or a prompt-pay clause provides it.
+      Hard limits: you draft and recommend only — a biller, coder, or denials
+      specialist decides (BR-1: the platform forbids autonomous billing
+      writes); never alter procedure or diagnosis codes or charge amounts —
+      propose the change and the coder validates it against the chart; and
+      never recommend a write-off without the documented review waterfall
+      (appeal economics, proof check, category review) on the record.
     disposition_hints: >-
       appeal_submitted | corrected_resubmit | write_off | escalate_payer |
-      underpayment_recovered | balance_verified_correct
+      underpayment_recovered | balance_verified_correct | appeal_upheld_final |
+      transfer_patient_balance
 - agent_key: analytics
   enabled: true
   prompt_params:

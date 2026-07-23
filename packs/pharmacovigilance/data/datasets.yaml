@@ -12,13 +12,31 @@
      formulation, region_scope, rems_flag, launch_month]
 - identity: pv_cases
   name: pv-cases
+  # value domain: status = 'open'|'closed'; serious = 'yes'|'no';
+  #   seriousness_criteria = the six ICH E2A criteria + non_serious (death|
+  #   life_threatening|hospitalization|disability|congenital_anomaly|
+  #   other_medically_important|non_serious); case_type = spontaneous|
+  #   solicited|literature|clinical; expectedness = listed|unlisted|pending;
+  #   causality = certain|probable|possible|unlikely|unassessable|pending;
+  #   outcome / patient_age_group / patient_sex may be 'unknown';
+  #   disposition = the SAFETY SYSTEM-OF-RECORD's closure vocabulary
+  #   (expedited_report_filed | periodic_report | non_reportable |
+  #   nullified_duplicate), deliberately DISTINCT from the case catalog's
+  #   review-queue codes — see semantic/pv_core.yaml;
+  #   special_situation = none | pregnancy_exposure | overdose |
+  #   medication_error | off_label | lack_of_effect;
+  #   submitted_late = yes|no|na — submission timeliness vs the applicable
+  #   expedited clock (na for cases with no expedited obligation)
   required_columns:
     [case_id, product_id, case_type, source, report_country, serious,
      seriousness_criteria, expectedness, causality, status, disposition,
      deadline_bucket, received_month, age_days, days_to_deadline,
-     patient_age_group, patient_sex, outcome]
+     patient_age_group, patient_sex, outcome, special_situation,
+     submitted_late]
 - identity: pv_events
   name: pv-events
+  # value domain: listed = 'yes'|'no'; severity values include 'severe'
+  #   (semantic measures filter on it)
   required_columns:
     [event_id, case_id, product_id, event_pt, soc, listed, severity,
      outcome, onset_days]

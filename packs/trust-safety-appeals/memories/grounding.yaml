@@ -135,3 +135,31 @@
     even when each individual file appears defensible.
   tags: [ai_governance, provenance, audit, training_labels, non_discrimination]
   confidence: 0.9
+- content: >-
+    Child-safety carve-out: apparent child sexual abuse material (CSAM) is
+    excluded from normal appeal and restore paths — such content must never
+    be restored, and never re-exposed to general reviewers, pending
+    specialist review. US providers have a mandatory duty to report
+    apparent violations to the NCMEC CyberTipline (18 USC 2258A), with
+    preservation obligations for reported material — extended
+    reporting-related preservation under the 2024 REPORT Act. Appeals that
+    touch this policy area route to a specialist queue operating under
+    strict access controls, wellness protections, and evidence-handling
+    procedures; beyond the cited duties, the operational specifics
+    (retention periods, hashing programs, law-enforcement liaison) are
+    program- and jurisdiction-configured.
+  tags: [child_safety, csam, ncmec, mandatory_reporting, specialist_queue]
+  confidence: 0.92
+- content: >-
+    EU terrorist-content removal orders: under the EU Terrorist Content
+    Online Regulation (TCO), hosting service providers must remove or
+    disable access to flagged terrorist content within ONE HOUR of
+    receiving a removal order from a competent authority. An appeal never
+    suspends compliance with a removal order — the content stays down while
+    any challenge (by the provider or the content provider, through the
+    order's own redress mechanisms) runs its course; internal appeals in
+    this policy area therefore adjudicate the platform's own enforcement
+    posture, not the order. Related duties (specific measures, transparency
+    reporting) apply qualitatively by provider exposure.
+  tags: [terrorist_content, tco, removal_orders, one_hour, appeals]
+  confidence: 0.9

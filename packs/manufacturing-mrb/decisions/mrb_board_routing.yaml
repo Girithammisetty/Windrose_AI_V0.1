@@ -34,6 +34,13 @@
         - { column: detection_point, op: eq, value: customer_return }
       then: { disposition_code: quarantine_pending_analysis, severity: high }
       note: "Escape (customer-detected) — board review plus customer-notification assessment"
+    # Deadline already LAPSED (negative runway): an overdue open NC is a
+    # standing audit finding in its own right — above the near-deadline band.
+    - when:
+        - { column: status, op: eq, value: open }
+        - { column: days_to_deadline, op: lt, value: 0 }
+      then: { disposition_code: quarantine_pending_analysis, severity: critical }
+      note: "Disposition deadline LAPSED — overdue open nonconformance; escalate to the current board session"
     # Disposition-deadline runway nearly exhausted on the open book — pull to
     # the front of the board's agenda before the clock lapses.
     - when:
@@ -41,8 +48,23 @@
         - { column: days_to_deadline, op: between, value: [0, 3] }
       then: { disposition_code: quarantine_pending_analysis, severity: high }
       note: "Disposition deadline within 3 days — expedite to the next board session"
+    # Large lot on a critical/major characteristic: the affected population
+    # widens the containment sweep even before severity is graded.
+    - when:
+        - { column: quantity_band, op: eq, value: over_50 }
+        - { column: spec_class, op: in, value: [critical_characteristic, major] }
+      then: { disposition_code: quarantine_pending_analysis, severity: high }
+      note: "Large-lot critical exposure (50+ units on a critical/major characteristic) widens the containment sweep — expedited board review"
+    # Low-severity documentation NC (cert/paperwork): a fast-track
+    # cert-review lane before release — distinct from physical NCs, but the
+    # material still holds until the paperwork chain is verified.
+    - when:
+        - { column: nc_type, op: eq, value: documentation }
+        - { column: severity, op: eq, value: low }
+      then: { disposition_code: quarantine_pending_analysis, severity: low }
+      note: "Low-severity documentation NC — fast-track cert-review lane before release; distinct from physical nonconformances"
   # default_outcome deliberately OMITTED: an unmatched nonconformance (e.g. a
-  # low-severity cosmetic or documentation NC) stays in the standard human
+  # low-severity cosmetic surface-finish NC) stays in the standard human
   # triage queue with NO rule-generated proposal — defaulting to quarantine
   # would over-contain conforming-adjacent material, and no other disposition
   # code is routing-neutral.

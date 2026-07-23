@@ -18,7 +18,7 @@
   tags: [screening, network, employers, pack]
 - identity: priority_open_reviews
   name: "Screening: priority open adjudication queue"
-  description: "Open screening-hit reviews ranked by deadline runway then severity — the adjudicator ranked-queue seed (clock x severity x identity risk, not FIFO)."
+  description: "Open screening-hit reviews ranked by deadline runway then severity — the adjudicator ranked queue (clock x severity x identity risk, not FIFO)."
   sql: >-
     SELECT review_id, order_id, check_type, hit_type, record_age_band,
            relevance, identity_confidence, severity,

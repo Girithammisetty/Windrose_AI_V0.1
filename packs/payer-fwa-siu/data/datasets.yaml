@@ -10,9 +10,16 @@
   name: fwa-claim-lines
   required_columns:
     [claim_line_id, claim_id, member_id, provider_npi, provider_specialty,
-     service_month, place_of_service, cpt_code, units, billed_amount,
-     allowed_amount, paid_amount, diagnosis_code, fwa_flag, flagged,
-     fwa_score, member_state]
+     service_month,
+     # value domain: service_date = ISO date (YYYY-MM-DD) — per-day grain the
+     # impossible-day screen aggregates on
+     service_date,
+     place_of_service, cpt_code, units, billed_amount,
+     allowed_amount, paid_amount, diagnosis_code,
+     # value domain: fwa_flag = typology labels (e.g. 'unbundling') — matched
+     # literally by verified queries
+     fwa_flag,
+     flagged, fwa_score, member_state]
 - identity: fwa_provider_profiles
   name: fwa-provider-profiles
   required_columns:
@@ -23,10 +30,30 @@
 - identity: fwa_leads
   name: fwa-leads
   required_columns:
-    [lead_id, provider_npi, lead_source, fwa_typology, fwa_score,
-     exposure_amount, status, priority, opened_month, assigned_to, outcome]
+    [lead_id, provider_npi,
+     # value domain: lead_source = nightly_scan|data_mining|member_complaint|
+     # hotline|leie_refresh — matched literally by the triage table
+     lead_source,
+     # value domain: fwa_typology = upcoding|unbundling|phantom_billing|
+     # impossible_day|kickback_referral_scheme|medical_necessity_abuse —
+     # matched literally by the triage table
+     fwa_typology,
+     fwa_score, exposure_amount,
+     # value domain: status — 'open_investigation' and 'referred' are matched
+     # literally by semantic filters
+     status,
+     # value domain: priority = critical|high|medium|low — matched literally
+     # by the triage table
+     priority,
+     opened_month, assigned_to,
+     # value domain: outcome — 'confirmed' and 'false_positive' are matched
+     # literally by semantic filters and verified queries
+     outcome]
 - identity: fwa_recoveries
   name: fwa-recoveries
   required_columns:
     [recovery_id, lead_id, provider_npi, recovery_method, demanded_amount,
-     recovered_amount, status, recovery_month, cycle_days]
+     recovered_amount, status, recovery_month, cycle_days,
+     # value domain: overpayment_identified_date = ISO date (YYYY-MM-DD) —
+     # start of the 60-day report-and-return clock (42 CFR 401.305)
+     overpayment_identified_date]

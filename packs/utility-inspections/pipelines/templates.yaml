@@ -1,4 +1,4 @@
-# Pipeline seeds (expressed against the real pipeline-orchestrator algorithm
+# Pipeline templates (expressed against the real pipeline-orchestrator algorithm
 # catalog): an unsupervised asset-condition anomaly detector (which assets in
 # the registry look unlike their peers — age/material/criticality/inspection
 # recency outliers, the proactive-inspection surface scan) and a supervised

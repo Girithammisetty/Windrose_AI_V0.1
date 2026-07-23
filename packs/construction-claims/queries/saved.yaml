@@ -17,7 +17,7 @@
   tags: [claims, network, parties, projects, pack]
 - identity: high_value_open_claims
   name: "Claims: high-value open queue"
-  description: "Open claims ranked by claimed-dollar exposure — the analyst ranked-queue seed (deadline x dollar x severity, not FIFO)."
+  description: "Open claims ranked by claimed-dollar exposure — the analyst's default ranked queue (deadline x dollar x severity, not FIFO)."
   sql: >-
     SELECT claim_id, contract_id, claim_type, entitlement_basis, severity,
            schedule_impact, notice_timely,

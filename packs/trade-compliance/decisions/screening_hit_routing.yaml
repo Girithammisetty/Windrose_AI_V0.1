@@ -17,6 +17,16 @@
 - identity: screening_hit_routing
   name: "Screening-hit routing table"
   rules:
+    # Action clock already LAPSED — overdue outranks every still-open runway.
+    - when:
+        - { column: item_type, op: eq, value: screening_alert }
+        - { column: days_to_deadline, op: lt, value: 0 }
+      then: { disposition_code: escalate_compliance_review, severity: critical }
+      note: >-
+        Action clock already lapsed — an overdue screening adjudication is a
+        live exposure, not a deadline risk; expedited human adjudication
+        ahead of every still-open runway. The hold/release and true-hit
+        calls stay human.
     # Action clock nearly exhausted — the one queue where waiting is not an
     # option; the hold/release call itself stays human.
     - when:
@@ -27,6 +37,20 @@
         Screening alert inside the program-configured action-clock runway —
         route to expedited human adjudication now. The table routes; it
         never makes the hold/release or true-hit call.
+    # SDN match in the high score band — the potential-blocking class gets
+    # its own lane ahead of the generic score rule: a confirmed SDN true hit
+    # means block, plus a blocking report to OFAC on a 10-business-day clock.
+    - when:
+        - { column: item_type, op: eq, value: screening_alert }
+        - { column: screening_list, op: eq, value: sdn }
+        - { column: match_score, op: gte, value: 0.85 }
+      then: { disposition_code: escalate_compliance_review, severity: critical }
+      note: >-
+        SDN match at/above the expedited score floor — the potential-blocking
+        class: an SDN true hit means block the shipment/property and file the
+        blocking report to OFAC within 10 business days of blocking, so this
+        queue leads. The true-hit call itself remains a human four-eyes
+        determination on distinguishing evidence, never this table's.
     # High fuzzy match score above the program-configured expedited floor.
     - when:
         - { column: item_type, op: eq, value: screening_alert }
@@ -45,8 +69,21 @@
       then: { disposition_code: escalate_licensing_review, severity: high }
       note: >-
         Entity-list match — route to the licensing specialist queue for a
-        license-requirement analysis; the licensing determination and any
-        hold/release remain human decisions.
+        license-requirement analysis (Entity List consequences are
+        supplemental license requirements, not automatic blocking); the
+        licensing determination and any hold/release remain human decisions.
+    # UFLPA Entity List match — the forced-labor ADMISSIBILITY track, not a
+    # sanctions-blocking or licensing track.
+    - when:
+        - { column: item_type, op: eq, value: screening_alert }
+        - { column: screening_list, op: eq, value: uflpa_entity_list }
+      then: { disposition_code: hold_uflpa_review, severity: high }
+      note: >-
+        UFLPA Entity List match — the rebuttable presumption bars entry of
+        goods tied to a listed party; route to the forced-labor
+        admissibility-review queue to assemble supply-chain tracing evidence
+        (or plan re-export). The detention-response strategy and any
+        rebuttal submission stay human decisions.
     # High-severity alerts (program-configured high-risk lane/party scoring
     # feeds severity) jump the standard queue.
     - when:

@@ -25,6 +25,14 @@
         - { column: review_type, op: eq, value: seller_fraud_alert }
       then: { disposition_code: escalate_priority_review, severity: high }
       note: "Seller-fraud / linked-account signal — enhanced-vetting track; any network suspension requires a human four-eyes decision naming the corroborated shared attributes"
+    # KYB verification mismatch whose verification clock has already LAPSED
+    # (negative runway) — the verify-or-restrict notice period is exhausted;
+    # overdue outranks the near-deadline band.
+    - when:
+        - { column: claim_basis, op: eq, value: kyb_mismatch }
+        - { column: days_to_deadline, op: lt, value: 0 }
+      then: { disposition_code: escalate_priority_review, severity: critical }
+      note: "Verification clock LAPSED — overdue KYB mismatch; expedited human verification review (any restriction remains a human decision)"
     # KYB verification mismatch with the verification clock nearly
     # exhausted (INFORM-style: verify or restrict after notice — the
     # restriction decision is human).

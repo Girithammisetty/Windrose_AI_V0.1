@@ -1,6 +1,6 @@
 # Program Health & Thresholds: network mix, friendly-fraud exposure,
 # fight-economics posture and the fraud-family trend that feeds the
-# Visa/Mastercard monitoring-program ratios (VDMP/VFMP, ECM/HECM).
+# Visa/Mastercard monitoring-program ratios (Visa VAMP, Mastercard ECM/HECM).
 name: "Program Health & Thresholds"
 module: insights
 semantic_model: representment_core

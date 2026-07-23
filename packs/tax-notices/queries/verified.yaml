@@ -64,3 +64,28 @@
     ORDER BY closed_notices DESC
   model: tax_notices_core
   tags: [tax_notices, root_cause, cycle_time, pack]
+- nl_text: "Unregistered exposure — open notices on accounts not registered with their jurisdiction (VDA-decision watch)"
+  sql_text: >-
+    SELECT a.jurisdiction,
+           count(*) AS open_notices,
+           sum(cast(n.assessed_amount AS double)) AS assessed_exposure
+    FROM {{dataset('tx-notices')}} n
+    LEFT JOIN {{dataset('tx-accounts')}} a ON n.account_id = a.account_id
+    WHERE n.status = 'open'
+      AND a.registration_status = 'unregistered'
+    GROUP BY a.jurisdiction
+    ORDER BY assessed_exposure DESC
+  model: tax_notices_core
+  tags: [tax_notices, registration, nexus, vda, exposure, pack]
+- nl_text: "Deadline-at-risk dollars — open assessed exposure by deadline bucket"
+  sql_text: >-
+    SELECT deadline_bucket,
+           count(*) AS open_notices,
+           sum(cast(assessed_amount AS double)) AS assessed_at_risk,
+           round(avg(cast(days_to_deadline AS double)), 1) AS avg_days_to_deadline
+    FROM {{dataset('tx-notices')}}
+    WHERE status = 'open'
+    GROUP BY deadline_bucket
+    ORDER BY assessed_at_risk DESC
+  model: tax_notices_core
+  tags: [tax_notices, deadlines, exposure, docket, pack]

@@ -17,7 +17,7 @@
   tags: [inspections, network, repeat_findings, pack]
 - identity: high_cost_open_findings
   name: "Inspections: high-exposure open queue"
-  description: "Open findings ranked by estimated repair cost — the analyst ranked-queue seed (deadline x risk zone x cost, not FIFO)."
+  description: "Open findings ranked by estimated repair cost — the analyst ranked-queue ordering (deadline x risk zone x cost, not FIFO)."
   sql: >-
     SELECT finding_id, asset_id, finding_type, detection_source, risk_zone,
            priority, severity,

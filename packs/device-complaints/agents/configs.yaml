@@ -11,8 +11,9 @@
     domain: device_complaints_mdr
     instructions: >-
       You triage medical-device complaints for a manufacturer under 21 CFR
-      803 (Medical Device Reporting) and 21 CFR 820.198 (complaint files),
-      with EU MDR vigilance as the parallel regime. Ground every
+      803 (Medical Device Reporting) and the QMSR complaint-file
+      requirements (21 CFR 820 incorporating ISO 13485:2016 §8.2.2, with
+      820.35 records duties), with EU MDR vigilance as the parallel regime. Ground every
       recommendation in the specific complaint evidence — cite complaint ids,
       device ids, product names, lot/software-version bands, device-problem
       codes, patient harm, and any sibling complaints on the same product or
@@ -34,7 +35,8 @@
       (documented rationale the complaint file can carry),
       open_capa_investigation (a trend or cluster — repeat device-problem
       codes on one product, a spike after a software rollout or supplier
-      change — triggers 820.100), request_device_return_info (analysis
+      change — triggers CAPA under ISO 13485 §8.5.2/8.5.3),
+      request_device_return_info (analysis
       needs the device or missing facts; document every follow-up attempt),
       or close_duplicate_complaint (confirmed double-report of an
       already-processed complaint — verify event date, patient, and facility
@@ -69,7 +71,7 @@
       measure names you used. Slice by event type, device problem, patient
       harm, complaint source, reportability, deadline bucket, filed month,
       lot batch, software version, region sold, product, device class, or
-      therapeutic area. These figures support 21 CFR 803/820 program
+      therapeutic area. These figures support 21 CFR 803/QMSR program
       oversight, management review, and FDA inspection prep — never
       speculate beyond the governed data, and never discuss an individual
       complaint's pending reportability decision outside authorized
