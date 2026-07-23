@@ -124,6 +124,21 @@ export function useMe() {
   });
 }
 
+/** BRD 60 WS5 — the tamper-evident auditor evidence pack for one decision.
+ * Lazy: only fetched once `enabled` (the user clicks "View evidence pack"), so
+ * a decision detail doesn't hit audit-service unless the pack is requested. */
+export function useEvidencePack(proposalId: string, enabled = false) {
+  return useQuery({
+    queryKey: qk.evidencePack(proposalId),
+    queryFn: () =>
+      graphqlRequest<ops.EvidencePackResult>(ops.EVIDENCE_PACK, { proposalId }).then(
+        (r) => r.evidencePack,
+      ),
+    enabled: enabled && !!proposalId,
+    staleTime: 60_000,
+  });
+}
+
 /** All tenants — platform-admin only (identity's requireSuperAdmin enforces;
  * a tenant admin's query 403s downstream). */
 export function useTenants(enabled = true) {

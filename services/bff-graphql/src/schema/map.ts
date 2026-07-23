@@ -66,6 +66,7 @@ import type {
   AuditEventDTO,
   ChainVerifyResultDTO,
   ComplianceJobDTO,
+  EvidencePackDTO,
   OperationDTO,
   SiemConfigDTO,
   SiemConfigStateDTO,
@@ -316,6 +317,59 @@ export function mapComplianceJob(d: ComplianceJobDTO | OperationDTO) {
     status: d.status,
     resultUrl: "result_url" in d ? d.result_url ?? null : null,
     error: "error" in d ? d.error ?? null : null,
+  };
+}
+
+export function mapEvidencePack(d: EvidencePackDTO) {
+  return {
+    __typename: "EvidencePack" as const,
+    kind: d.kind,
+    tenantId: d.tenant_id,
+    proposalId: d.proposal_id,
+    proposalUrn: d.proposal_urn,
+    generatedAt: d.generated_at,
+    decision: {
+      __typename: "EvidenceDecision" as const,
+      agentId: d.decision.agent_id,
+      agentVersion: d.decision.agent_version,
+      onBehalfOf: d.decision.on_behalf_of,
+      approver: d.decision.approver,
+      outcome: d.decision.outcome,
+      fourEyes: d.decision.four_eyes,
+      proposedAt: d.decision.proposed_at,
+      decidedAt: d.decision.decided_at,
+      toolId: d.decision.tool_id,
+      toolVersion: d.decision.tool_version,
+      argsDigest: d.decision.args_digest,
+      affectedUrns: d.decision.affected_urns ?? [],
+    },
+    events: (d.events ?? []).map((e) => ({
+      __typename: "EvidenceEvent" as const,
+      eventId: e.event_id,
+      eventType: e.event_type,
+      resourceUrn: e.resource_urn,
+      actorType: e.actor_type,
+      actorId: e.actor_id,
+      viaAgentId: e.via_agent_id ?? null,
+      oboUserId: e.obo_user_id ?? null,
+      occurredAt: e.occurred_at,
+      payloadDigest: e.payload_digest,
+      chainDate: e.chain_date,
+      chainSeq: e.chain_seq,
+      chainHash: e.chain_hash,
+    })),
+    chainProof: (d.chain_proof ?? []).map((p) => ({
+      __typename: "EvidenceDayProof" as const,
+      chainDate: p.chain_date,
+      sealed: p.sealed,
+      valid: p.valid,
+      manifestMatch: p.manifest_match,
+      eventsChecked: p.events_checked,
+      manifestUri: p.manifest_uri ?? null,
+      manifestSha256: p.manifest_sha256 ?? null,
+      note: p.note ?? null,
+    })),
+    integrity: d.integrity,
   };
 }
 

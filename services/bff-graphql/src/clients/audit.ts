@@ -93,6 +93,55 @@ export interface SiemConfigStateDTO {
   history: SiemConfigDTO[];
 }
 
+/** BRD 60 WS5 — auditor evidence pack for one decision. Mirrors
+ * audit-service internal/compliance/evidence.go (snake_case wire shape). */
+export interface EvidencePackDTO {
+  kind: string;
+  tenant_id: string;
+  proposal_id: string;
+  proposal_urn: string;
+  generated_at: string;
+  decision: {
+    agent_id: string;
+    agent_version: string;
+    on_behalf_of: string;
+    approver: string;
+    outcome: string;
+    four_eyes: boolean;
+    proposed_at: string;
+    decided_at: string;
+    tool_id: string;
+    tool_version: string;
+    args_digest: string;
+    affected_urns: string[] | null;
+  };
+  events: Array<{
+    event_id: string;
+    event_type: string;
+    resource_urn: string;
+    actor_type: string;
+    actor_id: string;
+    via_agent_id?: string;
+    obo_user_id?: string;
+    occurred_at: string;
+    payload_digest: string;
+    chain_date: string;
+    chain_seq: number;
+    chain_hash: string;
+  }>;
+  chain_proof: Array<{
+    chain_date: string;
+    sealed: boolean;
+    valid: boolean;
+    manifest_match: boolean;
+    events_checked: number;
+    manifest_uri?: string;
+    manifest_sha256?: string;
+    note?: string;
+  }>;
+  integrity: string;
+}
+
 export class AuditClient {
   constructor(private readonly http: ServiceClient) {}
 
@@ -142,6 +191,16 @@ export class AuditClient {
    * audit.compliance.read. */
   operation(id: string): Promise<OperationDTO> {
     return this.http.get<OperationDTO>(`/api/v1/operations/${encodeURIComponent(id)}`);
+  }
+
+  /** POST /api/v1/compliance/evidence-pack (BRD 60 WS5) — synchronous,
+   * single-decision auditor evidence pack (four-eyes summary + every WORM
+   * event's chain position + per-day tamper-evidence). Needs
+   * audit.compliance.read. */
+  evidencePack(proposalId: string): Promise<EvidencePackDTO> {
+    return this.http.post<EvidencePackDTO>("/api/v1/compliance/evidence-pack", {
+      body: { proposal_id: proposalId },
+    });
   }
 
   /** GET /api/v1/audit/siemconfig — the tenant's SIEM export state (BRD 59

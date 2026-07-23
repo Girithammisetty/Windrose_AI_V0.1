@@ -680,6 +680,74 @@ type ComplianceJob {
   error: String
 }
 
+"""
+BRD 60 WS5 — the four-eyes decision summary at the heart of an evidence
+pack. `fourEyes` is proven from the events below: a DISTINCT human approver
+(`approver` != `onBehalfOf`).
+"""
+type EvidenceDecision {
+  agentId: String!
+  agentVersion: String!
+  onBehalfOf: String!
+  approver: String!
+  outcome: String!
+  fourEyes: Boolean!
+  proposedAt: String!
+  decidedAt: String!
+  toolId: String!
+  toolVersion: String!
+  argsDigest: String!
+  affectedUrns: [String!]!
+}
+
+"""One WORM event with its immutable hash-chain position."""
+type EvidenceEvent {
+  eventId: ID!
+  eventType: String!
+  resourceUrn: String!
+  actorType: String!
+  actorId: String!
+  viaAgentId: String
+  oboUserId: String
+  occurredAt: String!
+  payloadDigest: String!
+  chainDate: String!
+  chainSeq: Int!
+  chainHash: String!
+}
+
+"""
+Tamper-evidence for one chain-day: the hash chain re-verified against its
+sealed WORM (Object-Lock) manifest. An unsealed day reports `sealed:false`
+with a note — never a faked verification.
+"""
+type EvidenceDayProof {
+  chainDate: String!
+  sealed: Boolean!
+  valid: Boolean!
+  manifestMatch: Boolean!
+  eventsChecked: Int!
+  manifestUri: String
+  manifestSha256: String
+  note: String
+}
+
+"""
+The auditor evidence pack for one governed decision (audit-service
+POST /compliance/evidence-pack).
+"""
+type EvidencePack {
+  kind: String!
+  tenantId: String!
+  proposalId: ID!
+  proposalUrn: String!
+  generatedAt: String!
+  decision: EvidenceDecision!
+  events: [EvidenceEvent!]!
+  chainProof: [EvidenceDayProof!]!
+  integrity: String!
+}
+
 """A dataset in the catalog (dataset-service GET /datasets/{id})."""
 type Dataset implements Node {
   id: ID!
@@ -4427,6 +4495,13 @@ type Query {
   /operations/{id}). Needs audit.compliance.read.
   """
   complianceOperation(id: ID!): ComplianceJob
+  """
+  BRD 60 WS5 — the tamper-evident auditor evidence pack for ONE governed
+  decision (audit-service POST /compliance/evidence-pack): who proposed, who
+  approved (a distinct human), the exact tool call, and cryptographic proof
+  the record wasn't altered. Needs audit.compliance.read.
+  """
+  evidencePack(proposalId: ID!): EvidencePack!
   dataset(id: ID!): Dataset
   datasets(first: Int = 50, after: String, q: String, filter: DatasetFilter): DatasetConnection!
   """

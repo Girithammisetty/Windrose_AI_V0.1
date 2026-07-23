@@ -4779,3 +4779,99 @@ export const DELETE_MODEL_ARCHETYPE = /* GraphQL */ `
     deleteModelArchetype(archetypeKey: $archetypeKey, workspaceId: $workspaceId)
   }
 `;
+
+// --- BRD 60 WS5: auditor evidence pack for one governed decision -------------
+
+export const EVIDENCE_PACK = /* GraphQL */ `
+  query EvidencePack($proposalId: ID!) {
+    evidencePack(proposalId: $proposalId) {
+      kind
+      proposalId
+      proposalUrn
+      generatedAt
+      integrity
+      decision {
+        agentId
+        agentVersion
+        onBehalfOf
+        approver
+        outcome
+        fourEyes
+        proposedAt
+        decidedAt
+        toolId
+        toolVersion
+        argsDigest
+        affectedUrns
+      }
+      events {
+        eventId
+        eventType
+        resourceUrn
+        actorType
+        actorId
+        viaAgentId
+        occurredAt
+        chainDate
+        chainSeq
+        chainHash
+      }
+      chainProof {
+        chainDate
+        sealed
+        valid
+        manifestMatch
+        eventsChecked
+        manifestUri
+        note
+      }
+    }
+  }
+`;
+
+export interface EvidencePack {
+  kind: string;
+  proposalId: string;
+  proposalUrn: string;
+  generatedAt: string;
+  integrity: string;
+  decision: {
+    agentId: string;
+    agentVersion: string;
+    onBehalfOf: string;
+    approver: string;
+    outcome: string;
+    fourEyes: boolean;
+    proposedAt: string;
+    decidedAt: string;
+    toolId: string;
+    toolVersion: string;
+    argsDigest: string;
+    affectedUrns: string[];
+  };
+  events: Array<{
+    eventId: string;
+    eventType: string;
+    resourceUrn: string;
+    actorType: string;
+    actorId: string;
+    viaAgentId: string | null;
+    occurredAt: string;
+    chainDate: string;
+    chainSeq: number;
+    chainHash: string;
+  }>;
+  chainProof: Array<{
+    chainDate: string;
+    sealed: boolean;
+    valid: boolean;
+    manifestMatch: boolean;
+    eventsChecked: number;
+    manifestUri: string | null;
+    note: string | null;
+  }>;
+}
+
+export interface EvidencePackResult {
+  evidencePack: EvidencePack;
+}

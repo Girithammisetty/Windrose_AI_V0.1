@@ -7,6 +7,7 @@ import { AiLabel } from "@/components/primitives/AiLabel";
 import { DiffView } from "@/components/primitives/DiffView";
 import { UrnLink } from "@/components/primitives/UrnLink";
 import { StatusChip } from "@/components/primitives/StatusChip";
+import { EvidencePackPanel } from "@/components/inbox/EvidencePackPanel";
 import { useDecideProposal } from "@/lib/graphql/hooks";
 import { useToasts } from "@/stores/ui";
 import { normalizeArgsDiff } from "@/lib/diff";
@@ -208,6 +209,8 @@ export function ProposalDetail({ proposal }: { proposal: Proposal }) {
           <h3 className="mb-1 text-xs font-semibold uppercase text-muted-foreground">Proposed args</h3>
           <DiffView argsDiff={proposal.argsDiff} />
         </section>
+
+        <EvidencePackPanel proposalId={proposal.id} />
 
         {mode === "view" && (
           <div className="flex flex-wrap gap-2">

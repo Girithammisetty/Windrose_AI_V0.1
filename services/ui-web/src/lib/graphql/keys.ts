@@ -6,6 +6,7 @@ export const qk = {
   me: () => ["platform", "me"] as const,
   tenants: () => ["platform", "tenants"] as const,
   user: (id: string) => ["platform", "user", id] as const,
+  evidencePack: (proposalId: string) => ["governance", "evidencePack", proposalId] as const,
 
   datasets: (filters: unknown) => ["data", "datasets", filters] as const,
   dataset: (id: string) => ["data", "dataset", id] as const,

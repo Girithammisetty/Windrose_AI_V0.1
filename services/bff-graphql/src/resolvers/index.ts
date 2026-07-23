@@ -38,7 +38,7 @@ import {
   // Tier 4b: identity/rbac admin (lifecycle, roles, grants, bulk membership).
   mapCreatedServiceAccount, mapEffectiveAccessEntry, mapContentGrant, mapBulkGroupMembershipResult,
   mapBudget, mapRateCard, mapAnomaly, mapReportSubscription,
-  mapChainVerifyResult, mapComplianceJob, mapSiemConfig, mapSiemConfigState,
+  mapChainVerifyResult, mapComplianceJob, mapEvidencePack, mapSiemConfig, mapSiemConfigState,
   decisionAction, urnId,
   mapEvalSuite, mapEvalRun, mapEvalCaseResult, mapEvalDataset, mapEvalCase, mapEvalScorer,
   mapEvalGateResult, mapEvalCanary, mapEvalTrendPoint, mapEvalSloRow,
@@ -576,6 +576,12 @@ export const resolvers = {
 
     complianceOperation: (_p: unknown, a: { id: string }, ctx: GraphQLContext) =>
       nullOn404(ctx.clients.audit.operation(a.id).then((d) => mapComplianceJob(d))),
+
+    // BRD 60 WS5: the tamper-evident evidence pack for one governed decision.
+    evidencePack: async (_p: unknown, a: { proposalId: string }, ctx: GraphQLContext) => {
+      const d = await ctx.clients.audit.evidencePack(a.proposalId);
+      return mapEvidencePack(d);
+    },
 
     // BRD 59 WS2: the caller tenant's SIEM export destination state.
     siemConfig: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {

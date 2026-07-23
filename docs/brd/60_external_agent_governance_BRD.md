@@ -133,7 +133,8 @@ a thin client SDK (the customer's agent calls "propose(tool, args)").
 ### Implement / Test
 - [x] auditor evidence-pack endpoint (audit-service) — see Implementation & Test
   log; live-verified through the real OPA auth path against the running WORM store.
-- [ ] BFF query + ui-web "download/view evidence pack" on the decision detail.
+- [x] BFF query + ui-web "view/download evidence pack" on the decision detail —
+  live-verified in the browser end to end.
 - [ ] thin client SDK (propose/list-tools helpers).
 
 ---
@@ -251,3 +252,32 @@ today's still-unsealed day honestly reported `sealed: false` / "verifiable once
 the daily WORM export seals it" rather than fabricating a verification. A token
 WITHOUT the scope → `403` (the OPA gate bites); an unknown proposal → `404` (no
 fabricated empty pack).
+
+### WS5 — BFF + UI evidence-pack surface — DONE
+
+**BFF:** `AuditClient.evidencePack(proposalId)` + `EvidencePackDTO` (mirrors the
+Go wire shape), a fully-modeled GraphQL `EvidencePack`/`EvidenceDecision`/
+`EvidenceEvent`/`EvidenceDayProof` type set, `mapEvidencePack` (snake→camel),
+and a JWT-passthrough `evidencePack(proposalId)` query resolver. Typecheck +
+lint clean, `schema.graphql` snapshot regenerated (scoped to the evidence
+additions), full bff suite 296 tests green.
+
+**UI:** new `EvidencePackPanel` on `ProposalDetail` — a lazy "View evidence
+pack" that fetches only on click (`useEvidencePack`, `enabled`-gated), then
+renders the four-eyes claim as a prominent green/amber badge, the
+proposer→approver + tool call, a per-chain-day tamper-evidence list (re-verified
+vs. the sealed manifest, or the honest "not sealed yet" note), and a client-side
+"Download JSON" of the pack. Typecheck + lint clean of new issues, full ui-web
+suite 479 tests green.
+
+**Live-verified end to end in the browser** (user-approved bff-graphql restart;
+ui-web hot-reloaded): logged in as Admin, opened the WS1 external agent's pending
+proposal in the Approval inbox, clicked "View evidence pack" → the panel rendered
+from the **real UI→BFF→audit-service path** (the Admin's own JWT, not a service
+token): the amber "No distinct human approval recorded yet" badge (correct — the
+proposal is pending), "Proposed by acme-ext-bot@1 (autonomous)", and a
+"TAMPER-EVIDENCE · PENDING SEAL" panel honestly showing today's still-unsealed
+day rather than faking a verification. Zero console errors. The same query
+through the BFF directly returns the mapped camelCase pack with the real
+`chainSeq: 407`. The four-eyes/sealed happy path stays covered by the
+audit-service integration test (a real sealed, approved decision).
