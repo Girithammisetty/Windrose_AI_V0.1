@@ -83,11 +83,26 @@ Implementation:
   branch passes `env.TenantID` (already decoded, threaded through instead of
   discarded).
 
-Did not touch `tool-plane`'s analogous `domain.PlatformTenant == uuid.Nil`
-finding from the same BRD 58 WS5 pass — same conformance bug, but it spans
-every platform-scoped `tool.events.v1` lifecycle event (registered, deprecated,
-retired, killed, SLA-breached, etc.), not just a DLQ path, and is explicitly
-tracked as a separate, broader follow-up in BRD 58.
+**Update 2026-07-23:** the note below is now stale. `tool-plane`'s analogous
+`domain.PlatformTenant == uuid.Nil` finding — spanning every platform-scoped
+`tool.events.v1` lifecycle event (registered, deprecated, retired, killed,
+SLA-breached, etc.), not just a DLQ path — was fixed the day after this doc
+was written, in commit `31372e5`: `services/tool-plane/internal/domain/types.go:73`
+now carries the same reserved-sentinel pattern
+(`00000000-0000-7000-8000-000000000001`), with a forward migration
+(`migrations/000004_platform_tenant_sentinel.up.sql`) re-pointing the RLS
+policy literal + already-persisted rows + queued outbox rows, and a
+regression test (`TestEnvelopeConformance_PlatformScoped`) locking it in.
+Verified 2026-07-23: tests pass, migration applied (`schema_migrations`
+version 5, not dirty), zero remaining `00000000-0000-0000-0000-000000000000`
+references in tool-plane Go source. No outstanding work here.
+
+_Original note (superseded):_ did not touch `tool-plane`'s analogous
+`domain.PlatformTenant == uuid.Nil` finding from the same BRD 58 WS5 pass —
+same conformance bug, but it spans every platform-scoped `tool.events.v1`
+lifecycle event (registered, deprecated, retired, killed, SLA-breached, etc.),
+not just a DLQ path, and is explicitly tracked as a separate, broader
+follow-up in BRD 58.
 
 ---
 

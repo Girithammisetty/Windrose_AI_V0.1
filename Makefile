@@ -1,7 +1,7 @@
 SERVICES := $(wildcard services/*)
 
 .PHONY: dev-up dev-down test test-unit lint e2e e2e-keep up up-platform down reset doctor soak soak-volume \
-        demo-list demo-load demo-clean demo-clean-all
+        demo-list demo-load demo-clean demo-clean-all security-probe
 
 # Capstone: provision the WHOLE platform locally and open it in a browser for
 # hands-on end-user testing. Preflight -> infra -> migrate+boot all 22 services
@@ -88,6 +88,16 @@ e2e:
 # Same, but leave all services running afterward (for inspection).
 e2e-keep:
 	deploy/e2e/run.sh --no-teardown
+
+# Cross-tenant authorization probe ("pen-test-lite", BRD 58 production-
+# readiness gap "no external pen test"): mints narrow-scoped tokens for two
+# REAL, already-seeded tenants and, purely over HTTP (no service code or DB
+# touched), tries to read/list/write tenant A's real resources with tenant
+# B's token across case-service/dataset-service/pipeline-orchestrator/
+# audit-service. Prints real HTTP status codes; exits non-zero on any leak.
+# Needs the stack up (`make up`). See docs/initiatives/cross-tenant-authz-probe.md.
+security-probe:
+	deploy/e2e/.venv/bin/python deploy/security/cross_tenant_authz_probe.py
 
 dev-up:
 	docker compose -f deploy/docker-compose.dev.yml up -d
