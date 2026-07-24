@@ -14,6 +14,7 @@ import (
 // Indexer is the search-projection port (satisfied by *search.Projector).
 type Indexer interface {
 	ProjectCase(ctx context.Context, tenant, id uuid.UUID) error
+	EnsureTenantIndex(ctx context.Context, tenant uuid.UUID) error
 }
 
 // SearchIndexHandler returns a go-common Kafka handler that reprojects a case
@@ -67,6 +68,21 @@ func IdentityHandler(c CaseCreator) func(ctx context.Context, env gcevent.Envelo
 			return nil
 		}
 		return c.UnassignUserCases(ctx, env.TenantID, userID)
+	}
+}
+
+// TenantHandler consumes identity-service's tenant.provisioned and creates the
+// tenant's OpenSearch case index up front, mirroring rbac-service's
+// tenant.provisioned projection seed. Without this, a freshly provisioned
+// tenant has no cases-<tenant> index until its first case is written (or an
+// operator runs POST /admin/reindex / doctor.sh's heal) and the Cases page
+// 503s on search in the meantime. Idempotent (EnsureIndex no-ops if present).
+func TenantHandler(idx Indexer) func(ctx context.Context, env gcevent.Envelope) error {
+	return func(ctx context.Context, env gcevent.Envelope) error {
+		if env.EventType != "tenant.provisioned" {
+			return nil
+		}
+		return idx.EnsureTenantIndex(ctx, env.TenantID)
 	}
 }
 

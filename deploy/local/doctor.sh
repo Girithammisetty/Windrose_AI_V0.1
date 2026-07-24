@@ -54,9 +54,18 @@ PY
 if [ -z "$TENANTS" ]; then note "no active tenants (fresh/empty platform) — nothing to reconcile"; else
   n=$(printf '%s\n' "$TENANTS" | grep -c .); ok "$n active tenant(s)"; fi
 
+# ---- heal (optional; must run BEFORE the numbered projection checks below, so
+#      HEAL=1's summary reflects the post-heal state instead of the pre-heal
+#      one) -----------------------------------------------------------------
+if [ "$HEAL" = 1 ] && [ -n "$TENANTS" ]; then
+  hdr "Healing (rebuilding projections from Postgres)"
+  ( cd "$LOCAL_DIR" && ./reconcile.sh ) 2>&1 | sed 's/^/  /' || true
+  ( cd "$LOCAL_DIR" && ./reconcile_cases.sh ) 2>&1 | sed 's/^/  /' || true
+fi
+
 # ---- 3. derived projections rebuilt from the source of truth ------------------
 hdr "3. Derived projections (must be rebuildable on boot, not lost)"
-# 3a. Redis rbac permissions projection per tenant (the "403 after restart" class).
+# 4a. Redis rbac permissions projection per tenant (the "403 after restart" class).
 # Prefer the host redis-cli; fall back to the container's (host usually lacks it).
 RCLI=""
 if command -v redis-cli >/dev/null 2>&1 && redis-cli -u "redis://$REDIS" ping >/dev/null 2>&1; then
@@ -73,7 +82,7 @@ if [ -n "$RCLI" ]; then
       || note "rbac projection MISSING · $t (heal: ./reconcile.sh $t; runtime SQL fallback covers reads meanwhile)"
   done
 else note "redis unreachable — skipped rbac projection check"; fi
-# 3b. OpenSearch case index per tenant (the "search projection unavailable" class)
+# 4b. OpenSearch case index per tenant (the "search projection unavailable" class)
 if curl -sf "$OS_URL/_cluster/health" >/dev/null 2>&1; then
   ok "opensearch reachable"
   idx="$(curl -s "$OS_URL/_cat/indices/cases-*?h=index" 2>/dev/null)"
@@ -82,13 +91,6 @@ if curl -sf "$OS_URL/_cluster/health" >/dev/null 2>&1; then
       || bad "case index MISSING · $t (heal: ./reconcile_cases.sh $t) — Cases page will 503"
   done
 else bad "opensearch unreachable at $OS_URL — Cases search is down"; fi
-
-# ---- 4. heal ------------------------------------------------------------------
-if [ "$HEAL" = 1 ] && [ -n "$TENANTS" ]; then
-  hdr "4. Healing (rebuilding projections from Postgres)"
-  ( cd "$LOCAL_DIR" && ./reconcile.sh ) 2>&1 | sed 's/^/  /' || true
-  ( cd "$LOCAL_DIR" && ./reconcile_cases.sh ) 2>&1 | sed 's/^/  /' || true
-fi
 
 # ---- summary ------------------------------------------------------------------
 hdr "Summary"

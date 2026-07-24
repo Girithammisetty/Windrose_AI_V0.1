@@ -242,6 +242,9 @@ func main() {
 			if err := events.IngestionTriggerHandler(applier)(ctx, e); err != nil {
 				return err
 			}
+			if err := events.TenantHandler(projector)(ctx, e); err != nil {
+				return err
+			}
 			return events.IdentityHandler(creator)(ctx, e)
 		}
 		inbound := gckafka.NewConsumerGroup(gckafka.ConsumerConfig{

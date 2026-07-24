@@ -36,6 +36,16 @@ type Projector struct {
 	Search *Client
 }
 
+// EnsureTenantIndex creates the tenant's (empty) OpenSearch index + alias if
+// absent. Wired to the tenant.provisioned event (see events.TenantHandler) so
+// a brand-new tenant with zero cases still gets a queryable cases-<tenant>
+// index instead of relying on its first case write or a manual/doctor reindex
+// to create it (doctor.sh "case index MISSING ... Cases page will 503").
+// Idempotent: EnsureIndex no-ops if the alias already exists.
+func (p *Projector) EnsureTenantIndex(ctx context.Context, tenant uuid.UUID) error {
+	return p.Search.EnsureIndex(ctx, tenant)
+}
+
 // ProjectCase re-reads a case from Postgres and upserts its search doc.
 // A deleted/absent case is a no-op (nothing to index).
 func (p *Projector) ProjectCase(ctx context.Context, tenant, id uuid.UUID) error {
