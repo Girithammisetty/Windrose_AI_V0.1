@@ -71,7 +71,13 @@ def _validate(spec: RetentionSpec) -> None:
 
 def _build_delete(spec: RetentionSpec) -> sa.TextClause:
     null_guard = f"{spec.ts_col} IS NOT NULL AND " if spec.require_not_null else ""
-    age_expr = "now() - (:retention_seconds::text || ' seconds')::interval"
+    # NOTE: the bind param must NOT be immediately followed by a `::` cast —
+    # sqlalchemy.text()'s bind regex has a negative lookahead for `:`, so
+    # `:retention_seconds::text` is silently NOT treated as a bind param and
+    # reaches the driver as literal text (PostgresSyntaxError). This shipped
+    # broken originally because the unit tests used a fake session; caught by
+    # the first live-Postgres verification (see test_retention_live.py).
+    age_expr = "now() - (interval '1 second' * :retention_seconds)"
     return sa.text(
         f"WITH doomed AS ("
         f"  SELECT ctid FROM {spec.table} "

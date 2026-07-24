@@ -199,6 +199,49 @@ shape, not yet applied. rbac-service's `outbox` table is Go (already covered,
 (does the GUC actually work against a real RLS-enforced Postgres, not just unit
 fakes) is pending the next full-stack boot.
 
+### B6/B7 amendment (2026-07-23) — the shared Python reaper's SQL never worked; found via live-Postgres verification — FIXED
+
+While wiring the last remaining B7 owner (inference-service, below), the
+first-ever run of `datacern_common.retention.prune_table` against a REAL
+Postgres exposed that its DELETE statement was broken from the day it landed:
+`sqlalchemy.text()`'s bind-param regex has a negative lookahead for `:`, so
+the original `:retention_seconds::text` was silently NOT treated as a bind
+param — the statement reached the driver with a literal colon and raised
+`PostgresSyntaxError` on every invocation. Every wired service's hourly sweep
+(dataset-service, memory-service since landing) failed and swallowed the error
+via `logger.exception("retention prune failed")` — the exact silent-no-op
+failure mode B6/B7 was meant to close. **Root cause of the test gap:** the
+original `test_retention.py` used a fake async session (its own docstring says
+so) — the SQL string was asserted on but never executed, violating the
+no-fakes rule and letting unexecutable SQL ship.
+
+**Fix:** `age_expr` rewritten to `now() - (interval '1 second' *
+:retention_seconds)` (bind param not adjacent to a cast). **New
+`libs/py-common/tests/test_retention_live.py`** — 4 tests against the REAL
+dev-infra Postgres (conftest reachability-skip pattern), on a scratch table
+with the exact FORCE-RLS shape `processed_events` has in every owner, run as a
+scratch NON-superuser role so RLS genuinely applies: (1) no worker GUC → the
+silent RLS no-op trap, 0 rows; (2) production spec → both tenants' aged rows
+deleted, fresh kept, idempotent; (3) outbox shape → aged-but-unpublished rows
+survive; (4) batch_size smaller than doomed set → sweeps until drained. The
+15 fake-session logic tests are kept for batching/identifier-safety, but SQL
+shape is now proven by execution, not string assertion.
+
+### B7 — inference-service (the last unwired owner) — DONE
+
+`processed_events` had only the tenant-isolation policy (0001) — a worker
+sweep would RLS-no-op. New migration `0002_processed_events_worker_policy.py`
+(exact mirror of the other owners); new `WorkerSet._retention_loop` in
+`app/workers.py` (inference's own worker idiom), hourly, same specs as every
+other owner (`outbox` 30d published-only + `processed_events` 48h), same
+`app.worker='true'` GUC its own worker sessions already use (`store/sql.py`).
+**Live-verified end-to-end on real Postgres:** fresh `inference` DB, alembic
+0001→0002 applied, seeded 2 tenants' aged rows + 1 fresh row, ran
+`prune_table` as the real non-superuser `inference_app` role: without GUC →
+0 deleted (trap proven), with GUC → exactly 2 deleted, second sweep → 0,
+fresh row intact. Full inference-service suite 52 passed; ruff clean;
+`alembic heads` single head (0002).
+
 ### B3 — wrap ExecSQL with the caller's LIMIT for all callers — DONE
 
 **Root cause confirmed, not assumed:** `query-service/internal/exec/plan.go`'s

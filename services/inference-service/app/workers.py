@@ -5,6 +5,9 @@
   each with Redis dedup + DLQ (via the shared ``datacern_common`` KafkaConsumer).
 * Scheduler tick — fires due scoring schedules (INF-FR-050).
 * Reaper — fails jobs stuck past max duration / queued timeout (INF-FR-042).
+* Retention — hourly prune of published ``outbox`` rows + aged
+  ``processed_events`` dedup rows (B6/B7, BRD 58), which otherwise grow
+  unboundedly forever.
 
 All loops are defensive: a transient error is logged and retried, never crashing
 the app.
@@ -44,6 +47,7 @@ class WorkerSet:
             self._tasks.append(asyncio.create_task(self._reaper_loop()))
         if s.consumers_enabled:
             await self._start_consumers()
+        self._tasks.append(asyncio.create_task(self._retention_loop()))
 
     async def _start_consumers(self) -> None:
         from datacern_common.kafka import KafkaConfig, KafkaConsumer
@@ -127,6 +131,40 @@ class WorkerSet:
             except Exception:  # noqa: BLE001
                 logger.exception("reaper loop error")
             await asyncio.sleep(60.0)
+
+    async def _retention_loop(self) -> None:
+        """B6/B7 (BRD 58): outbox rows are drained by _outbox_loop but never
+        pruned, and processed_events (consumer dedup) has no TTL -- both grow
+        unboundedly forever. Both tables gate cross-tenant access behind
+        app.worker='true' (outbox: migration 0001 worker_outbox;
+        processed_events: migration 0002 worker_processed_events) -- the SAME
+        GUC this service's own worker sessions already set (store/sql.py).
+        Sweep both hourly, matching the other B6/B7 owners exactly."""
+        from datetime import timedelta
+
+        from datacern_common.retention import RetentionSpec, prune_table
+
+        specs = [
+            RetentionSpec(table="outbox", ts_col="published_at",
+                          retention=timedelta(days=30), require_not_null=True,
+                          worker_guc="app.worker", worker_val="true"),
+            RetentionSpec(table="processed_events", ts_col="created_at",
+                          retention=timedelta(hours=48),
+                          worker_guc="app.worker", worker_val="true"),
+        ]
+        while not self._stop.is_set():
+            await asyncio.sleep(3600)
+            if self._stop.is_set():
+                return
+            for spec in specs:
+                try:
+                    n = await prune_table(self.session_factory, spec)
+                    if n:
+                        logger.info("retention pruned",
+                                    extra={"table": spec.table, "deleted": n})
+                except Exception:  # noqa: BLE001
+                    logger.exception("retention prune failed",
+                                     extra={"table": spec.table})
 
     async def stop(self) -> None:
         self._stop.set()
