@@ -593,6 +593,13 @@ roles:
       # memory-service ON BEHALF OF the analyst (OBO token), so the analyst's
       # own projection must allow memory retrieval (memory.memory.read).
       - memory.memory.read
+      # Knowledge Spine WS1: agent-runtime also grounds the copilot in the
+      # workspace's governed domain model (ontology entity types) ON BEHALF OF the
+      # analyst, so the analyst's projection must allow reading it. Read-only
+      # domain METADATA (types/attributes/relationships), not row data; authoring
+      # stays with the Use case Admin.
+      - dataset.ontology.read
+      - dataset.ontology.list
       # Dashboards nav (registry "dashboards" -> chart.dashboard.read).
       - chart.dashboard.read
       - chart.dashboard.list
@@ -653,6 +660,10 @@ roles:
       - ai.agent_session.execute
       # Copilot grounding retrieval via OBO (see Case Analyst).
       - memory.memory.read
+      # Knowledge Spine WS1: governed domain-model grounding via OBO (see Case
+      # Analyst) — read-only ontology metadata.
+      - dataset.ontology.read
+      - dataset.ontology.list
       # Dashboards nav (registry "dashboards" -> chart.dashboard.read). The
       # manager oversees AND authors dashboards (no-code chart editor): full
       # create/edit/delete of dashboards + charts, and creates cases from grids.

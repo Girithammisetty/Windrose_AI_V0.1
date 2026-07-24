@@ -2,14 +2,14 @@
 
 **Status:** DONE — 2026-07-23 · part of the [Datacern pipeline/ML parity index](62_pipeline_ml_parity_index.md)
 **Owner:** platform · **Service:** `pipeline-orchestrator`
-**Gap closed:** P2 (Datacern persisted computed data only to Iceberg bronze; Nemesis
+**Gap closed:** P2 (Datacern persisted computed data only to Iceberg bronze; Datacern
 lands results in cloud-native warehouses via `warehouse_writer_{aws,gcp,azure}`).
 
 ---
 
 ## Analysis
 
-Nemesis's `write-to-warehouse` component lands a computed DataFrame in the tenant's
+Datacern's `write-to-warehouse` component lands a computed DataFrame in the tenant's
 cloud-native warehouse (Athena/S3 on AWS, BigQuery on GCP, Synapse on Azure).
 Datacern had no equivalent write sink — the query-service warehouse adapter is a
 read-side `ENotImplemented` stub, and pipeline outputs had nowhere durable to land.
@@ -33,7 +33,7 @@ name) -> SinkResult` (ref + uri + row/column counts):
 - **`athena` / `bigquery` / `synapse`** — real cloud-warehouse adapters, **config-
   gated**: they read their connection from `settings.warehouse_conn[<name>]` and
   raise `DependencyUnavailable` when it's absent — honest, never a faked write. This
-  mirrors Nemesis's per-cloud writers and matches Datacern's existing "control-plane
+  mirrors Datacern's per-cloud writers and matches Datacern's existing "control-plane
   real, cloud compute infra-gated" pattern (Argo, GPU trainer, KServe).
 
 Config: `settings.warehouse_sink` (default `objectstore`) + `warehouse_conn` (dict).

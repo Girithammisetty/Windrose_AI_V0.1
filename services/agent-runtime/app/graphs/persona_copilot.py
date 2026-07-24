@@ -45,7 +45,9 @@ from app.graphs.triage import (
     _evidence_effect_flags,
     _extract_json,
     _fetch_evidence,
+    _fetch_ontology,
     _format_evidence,
+    _format_ontology,
     _normalise,
     _resolve_disposition_id,
 )
@@ -97,6 +99,10 @@ def build_persona_copilot_graph(deps: GraphDeps):
                     tenant_id=state["tenant_id"], auth_token=deps.obo_token or "")
         state["case"] = case
         state["dispositions"] = dispositions
+        # Ground in the workspace's governed domain model (Knowledge Spine WS1) —
+        # after the data-scope check + state["case"], so an out-of-scope case
+        # (early-returned above) never triggers an ontology read.
+        await _fetch_ontology(deps, state)
         # Reason over the case's attached documents (not just the row projection).
         await _fetch_evidence(deps, state)
         memories: list[dict] = []
@@ -132,9 +138,11 @@ def build_persona_copilot_graph(deps: GraphDeps):
                    for d in state.get("dispositions", [])][:40]
         mems = [m.get("content", m) for m in state.get("memories", [])]
         evidence_block = _format_evidence(state.get("evidence_docs", []))
+        ontology_block = _format_ontology(state.get("ontology_types", []))
         user = (
             f"Persona: {persona}\n"
             f"Tenant instruction: {tenant_instruction or '(none)'}\n"
+            f"{ontology_block}"
             f"Claim case (JSON): {json.dumps(state.get('case') or {}, default=str)[:1500]}\n"
             f"Similar resolved cases: {json.dumps(mems, default=str)[:1000]}\n"
             f"{evidence_block}"

@@ -49,6 +49,21 @@ spec:
           {{- with $svc.env }}
           env:
             {{- toYaml . | nindent 12 }}
+            {{- /* B9 HA ClickHouse: audit-service only, opt-in, additive to the
+                   CLICKHOUSE_ADDR/USER/PASSWORD env above. Both .Values.clickhouse
+                   keys default empty/false, so a default install renders neither
+                   line and CLICKHOUSE_ADDR-only single-node behavior is
+                   unchanged. See values.yaml's clickhouse: section header. */}}
+            {{- if eq $svc.name "audit-service" }}
+            {{- if $root.Values.clickhouse.addrs }}
+            - name: CLICKHOUSE_ADDRS
+              value: {{ join "," $root.Values.clickhouse.addrs | quote }}
+            {{- end }}
+            {{- if $root.Values.clickhouse.replicated }}
+            - name: CLICKHOUSE_REPLICATED
+              value: "true"
+            {{- end }}
+            {{- end }}
           {{- end }}
           startupProbe:
             httpGet:

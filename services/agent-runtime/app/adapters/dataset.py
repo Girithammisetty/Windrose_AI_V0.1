@@ -54,6 +54,32 @@ class DatasetServiceClient:
         data = resp.json().get("data")
         return data if isinstance(data, list) else []
 
+    async def list_ontology_types(self, *, tenant_id: str, workspace_id: str,
+                                  auth_token: str) -> list[dict]:
+        """The workspace's governed ontology entity TYPES (entity_key / name /
+        attributes / relationships) — the domain model an agent grounds its
+        reasoning on (Knowledge Spine WS1). Returns [] on any failure OR authz
+        denial: the ontology is governed domain metadata, and a caller lacking
+        ``dataset.ontology.read`` simply reasons without it (grounding degrades to
+        empty, never SILENT — every non-200/transport error is logged WARN)."""
+        url = f"{self._base}/api/v1/ontology/entities"
+        headers = {"Authorization": f"Bearer {auth_token}"}
+        # dataset-service filters the workspace via a bracketed query param.
+        params = {"filter[workspace_id]": workspace_id}
+        try:
+            async with httpx.AsyncClient(timeout=self._timeout) as client:
+                resp = await client.get(url, headers=headers, params=params)
+        except httpx.HTTPError as exc:
+            logger.warning("ontology read failed (grounding degraded to empty): "
+                           "err=%r", exc)
+            return []
+        if resp.status_code != 200:
+            logger.warning("ontology read failed (grounding degraded to empty): "
+                           "status=%s body=%s", resp.status_code, resp.text[:300])
+            return []
+        data = resp.json().get("data")
+        return data if isinstance(data, list) else []
+
     async def get_schema(self, *, tenant_id: str, dataset_id: str,
                          auth_token: str) -> dict:
         """The dataset's newest version schema + row_count for compatibility

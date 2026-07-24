@@ -90,6 +90,10 @@ def build_triage_graph(deps: GraphDeps):
                      "status": exc.status_code})
         state["case"] = case
         state["memories"] = memories
+        # Operationalize the ontology (Knowledge Spine WS1): ground the model in
+        # the workspace's governed domain model so it reasons over business
+        # meaning, not just the raw row. Needs state["case"] set (workspace source).
+        await _fetch_ontology(deps, state)
         state.setdefault("trace", []).append(
             {"event": "tool_call_result", "tool_id": "case.get",
              "digest": state["case_id"], "memories": len(memories)})
@@ -106,8 +110,10 @@ def build_triage_graph(deps: GraphDeps):
                    for d in state.get("dispositions", [])][:40]
         catalog_json = json.dumps(catalog, default=str)
         evidence_block = _format_evidence(state.get("evidence_docs", []))
+        ontology_block = _format_ontology(state.get("ontology_types", []))
         user = (
             f"Persona: {persona}\n"
+            f"{ontology_block}"
             f"Claim case (JSON): {case_json}\n"
             f"Similar resolved cases: {mem_json}\n"
             f"{evidence_block}"
@@ -215,6 +221,63 @@ async def _fetch_evidence(deps: GraphDeps, state: dict) -> list[dict]:
              "extracted": sum(1 for d in docs if d.get("extracted")),
              "files": [d.get("filename") for d in docs][:10]})
     return docs
+
+
+async def _fetch_ontology(deps: GraphDeps, state: dict) -> list[dict]:
+    """Read the case's workspace governed ontology entity TYPES into
+    ``state['ontology_types']`` (best-effort, bounded, never raises) so the model
+    resolves business meaning — attribute semantics, enums, typed relationships —
+    against the governed domain model, not just the raw case-row JSON. The
+    ontology is workspace-scoped domain METADATA (not row data); a caller lacking
+    ``dataset.ontology.read`` simply grounds without it. Shared by triage +
+    copilot. This is what operationalizes the ontology at reasoning time — the
+    Knowledge Spine WS1 (docs/initiatives/knowledge-spine-ontology.md)."""
+    types: list[dict] = []
+    ws = (state.get("case") or {}).get("workspace_id") or state.get("workspace_id")
+    reader = getattr(deps, "dataset_reader", None)
+    if reader is not None and ws and hasattr(reader, "list_ontology_types"):
+        try:
+            types = await reader.list_ontology_types(
+                tenant_id=state["tenant_id"], workspace_id=ws,
+                auth_token=deps.obo_token or "")
+        except Exception as exc:  # noqa: BLE001 — domain grounding is best-effort
+            state.setdefault("trace", []).append(
+                {"event": "ontology_grounding_failed", "error": type(exc).__name__})
+    state["ontology_types"] = types
+    if types:
+        state.setdefault("trace", []).append(
+            {"event": "ontology_grounded", "types": len(types),
+             "keys": [t.get("entity_key") for t in types][:20]})
+    return types
+
+
+def _format_ontology(types: list[dict]) -> str:
+    """Render the workspace ontology as a compact, labelled domain model the model
+    can resolve field meaning + relationships against. Bounded (packs declare
+    ~4-6 types) to keep the prompt small. This is TRUSTED governed metadata
+    (unlike untrusted case evidence), so it needs no XPIA defensive frame."""
+    if not types:
+        return ""
+    lines = ["Governed domain model (authoritative entity types for this "
+             "workspace — resolve field meaning and relationships against it):"]
+    for t in types[:12]:
+        key = t.get("entity_key") or t.get("name") or "entity"
+        name = t.get("name") or key
+        desc = (t.get("description") or "").strip()
+        lines.append((f"- {name} ({key})" + (f": {desc}" if desc else ""))[:300])
+        for a in (t.get("attributes") or [])[:20]:
+            an = a.get("name")
+            if not an:
+                continue
+            adt = a.get("data_type") or ""
+            adesc = (a.get("description") or "").strip()
+            seg = f"    - {an}" + (f" [{adt}]" if adt else "")
+            lines.append((seg + (f" - {adesc}" if adesc else ""))[:200])
+        for r in (t.get("relationships") or [])[:12]:
+            rn, tgt, card = r.get("name"), r.get("target"), r.get("cardinality")
+            if rn and tgt:
+                lines.append(f"    -> {rn}: {card or 'related'} {tgt}"[:160])
+    return "\n".join(lines) + "\n"
 
 
 def _format_evidence(docs: list[dict]) -> str:

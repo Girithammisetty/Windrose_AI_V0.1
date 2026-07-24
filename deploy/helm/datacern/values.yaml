@@ -291,6 +291,66 @@ postgresBootstrap:
     - memory
     - semantic
 
+# --- ClickHouse (audit-service's append-only WORM store) -----------------------
+# B9 / audit-service HA: services/audit-service/internal/chstore/chstore.go
+# already supports a multi-node, Keeper-coordinated cluster (Config.Addrs +
+# Config.Replicated switch buildMigrateDDL to ReplicatedReplacingMergeTree) and
+# cmd/server/main.go already reads CLICKHOUSE_ADDRS (comma-separated) /
+# CLICKHOUSE_REPLICATED from the environment -- this section is what turns that
+# on via Helm. Every key below defaults to the single-node shape so a chart
+# install with no overrides is byte-for-byte the same as before this section
+# existed: CLICKHOUSE_ADDR/USER/PASSWORD only, ReplacingMergeTree (not
+# Replicated).
+clickhouse:
+  # Non-empty enables CLICKHOUSE_ADDRS on audit-service (comma-joined) instead
+  # of (in addition to) the single CLICKHOUSE_ADDR secret. Only meaningful
+  # against a real Keeper-coordinated ClickHouse cluster -- e.g. the addresses
+  # of the clickhouse.ha StatefulSet pods below, or an externally managed one.
+  addrs: []
+  # e.g. with clickhouse.ha.enabled: true and replicas: 3 —
+  #   - clickhouse-ha-0.clickhouse-ha-headless.<ns>.svc.cluster.local:9000
+  #   - clickhouse-ha-1.clickhouse-ha-headless.<ns>.svc.cluster.local:9000
+  #   - clickhouse-ha-2.clickhouse-ha-headless.<ns>.svc.cluster.local:9000
+
+  # Sets CLICKHOUSE_REPLICATED=true on audit-service, switching its DDL to
+  # ReplicatedReplacingMergeTree. Only safe once every node advertises the
+  # {shard}/{replica} macros a Keeper-coordinated cluster provides (see
+  # clickhouse.ha below) -- turning this on against a single/non-replicated
+  # ClickHouse will fail at migrate time by design (chstore.go comment).
+  replicated: false
+
+  # --- Self-managed HA ClickHouse + Keeper (NEW infra, opt-in only) -------------
+  # Genuinely new infrastructure this chart did not previously manage at all —
+  # deploy/k8s/data-tier/search-audit.yaml's single-node ClickHouse StatefulSet
+  # (plain kubectl apply, outside Helm) is untouched either way. When disabled
+  # (the default), templates/clickhouse-keeper.yaml and
+  # templates/clickhouse-ha.yaml render NOTHING. Authored + `helm lint` /
+  # `helm template` validated only -- there is no multi-node k8s cluster in
+  # this environment to actually apply it against, so treat this as reviewed
+  # IaC, not a live-proven HA deployment.
+  ha:
+    enabled: false
+    # ClickHouse data-node replicas. Each pod gets its own PVC + a per-ordinal
+    # macros.xml (shard "01", replica = pod ordinal) so
+    # ReplicatedReplacingMergeTree converges via Keeper.
+    replicas: 3
+    image: clickhouse/clickhouse-server:24.8
+    storageClassName: ""   # "" = cluster default StorageClass
+    storageSize: 20Gi
+    resources:
+      requests: { cpu: "500m", memory: 2Gi }
+      limits: { memory: 4Gi }
+    keeper:
+      # ClickHouse Keeper (drop-in ZooKeeper-protocol replacement) coordinating
+      # replica state. 3 is the minimum for quorum (tolerates 1 node down).
+      replicas: 3
+      image: clickhouse/clickhouse-keeper:24.8
+      storageClassName: ""
+      storageSize: 5Gi
+      resources:
+        requests: { cpu: "100m", memory: 256Mi }
+        limits: { memory: 512Mi }
+
 # --- Observability (Prometheus-Operator convention) -----------------------------
 # Metrics stay pull-based (every service exposes /metrics; see deploy/CONFIG.md).
 # Enable this for customers running the Prometheus Operator so scraping is
@@ -437,6 +497,12 @@ services:
     port: 8303
     migrate: true
     ingress: internal
+    # NOT bumped: app/main.py's _outbox_relay_loop ticks a bespoke
+    # ing_outbox_claim_pending SQL function (migrations/0005_outbox_relay_fn.py)
+    # that is a plain SELECT with no FOR UPDATE SKIP LOCKED, unlike every other
+    # service's outbox dispatcher. 2 replicas would both claim the same batch
+    # and double-publish e.g. ingestion.completed before either marks it
+    # published. Fix that function first, then this can go to 2.
     replicas: 1
     resources: *res-large
     # UNPREFIXED Python service. Reads: DATABASE_URL, INGESTION_MIGRATE_URL,
@@ -460,7 +526,10 @@ services:
     port: 8304
     migrate: true
     ingress: internal
-    replicas: 1
+    # Bumped to 2: pure request/response API, no in-process singleton loop.
+    # Its outbox/retention loops use OutboxDispatcher.run_once() (FOR UPDATE
+    # SKIP LOCKED) -- safe under N replicas.
+    replicas: 2
     resources: *res-large
     # Prefix DST_. Reads DB/migrate/redis/kafka/opa/rbac/s3(+region)/iceberg.
     env:
@@ -512,6 +581,12 @@ services:
     port: 8306
     migrate: true
     ingress: internal
+    # NOT bumped: app/runtime/retrain_scheduler.py's RetrainScheduler.run()
+    # polls store.list_due_retrain_watches() (a plain SELECT, no row locking)
+    # every AR_RETRAIN_SCHEDULER_INTERVAL_S. 2 replicas would both see the
+    # same due watch and both open a duplicate mlops.open_retrain proposal.
+    # Its outbox relay (same process) already uses FOR UPDATE SKIP LOCKED and
+    # is safe -- only the retrain scheduler blocks scaling this one.
     replicas: 1
     resources: *res-large
     # Prefix AR_. Reads AR_DATABASE_URL, AR_ADMIN_DATABASE_URL (privileged DDL),
@@ -537,7 +612,10 @@ services:
     port: 8307
     migrate: true
     ingress: internal
-    replicas: 1
+    # Bumped to 2: relay/retention/consume loops are a Kafka consumer group
+    # (partitions across replicas, safe) plus FOR UPDATE SKIP LOCKED outbox
+    # dispatch -- no singleton polling loop.
+    replicas: 2
     resources: *res-medium
     # Prefix MEM_. Reads MEM_DATABASE_URL, MEM_ADMIN_DATABASE_URL, MEM_MIGRATE_URL,
     # MEM_REDIS_URL, MEM_KAFKA_BOOTSTRAP_SERVERS, MEM_OPA_URL, MEM_RBAC_URL.
@@ -654,6 +732,14 @@ services:
     port: 8313
     migrate: true
     ingress: internal
+    # NOT bumped: app/main.py's scheduler_loop polls
+    # container.schedule_service.fire_due() -> SqlScheduleScanner.due() (a
+    # plain SELECT, no locking) on the recurring-pipeline schedule table, and
+    # _fire_one() creates the run BEFORE advancing next_fire_at. 2 replicas
+    # racing the same tick would both create a run for the same due schedule
+    # -- a double-fired pipeline execution. The separate outbox relay_loop in
+    # this same process IS safe (FOR UPDATE SKIP LOCKED); only the schedule
+    # scanner needs a lock/CAS before this can scale out.
     replicas: 1
     resources: *res-large
     # Prefix PPL_. Reads DB/migrate/redis/kafka/opa/rbac/s3(+region).
@@ -684,6 +770,14 @@ services:
     port: 8314
     migrate: true
     ingress: internal
+    # NOT bumped: app/workers/loops.py's reconcile_loop/expiry_loop/inbox_loop
+    # are all started unconditionally from _lifespan and each do a plain
+    # SELECT DISTINCT over tenants (no locking) before acting per-tenant
+    # (sweep_tenant / expire_pending_for_tenant / apply_inbox_once). 2
+    # replicas would run these concurrently with no coordination -- duplicate
+    # reconciliation repairs / duplicate inbox application. Only outbox_loop
+    # (FOR UPDATE SKIP LOCKED) is safe; the other three need leader election
+    # or per-tenant locking before this can scale out.
     replicas: 1
     resources: *res-medium
     # Prefix EXP_. Reads DB/migrate/redis/kafka/opa/rbac/s3(+region).
@@ -769,7 +863,9 @@ services:
     port: 8086
     migrate: true
     ingress: internal
-    replicas: 1
+    # Bumped to 2: only background loop is relay_loop (FOR UPDATE SKIP
+    # LOCKED outbox dispatch) -- pure request/response API otherwise.
+    replicas: 2
     resources: *res-medium
     # Prefix SEM_. Reads DB/migrate/redis/kafka/opa/rbac.
     env:
@@ -879,7 +975,9 @@ services:
     port: 8324
     migrate: true
     ingress: internal
-    replicas: 1
+    # Bumped to 2: only background loop is _relay_loop (FOR UPDATE SKIP
+    # LOCKED outbox dispatch) -- pure request/response API otherwise.
+    replicas: 2
     resources: *res-medium
     # Prefix EVAL_. Reads DB/migrate/redis/kafka/opa/rbac. (var name == secret key
     # for DATABASE/MIGRATE since PREFIX and DBKEY are both EVAL.)
@@ -902,7 +1000,9 @@ services:
     port: 8309
     migrate: true
     ingress: internal
-    replicas: 1
+    # Bumped to 2: no background loop in app/main.py at all -- pure
+    # request/response API.
+    replicas: 2
     resources: *res-medium
     # Prefix PACK_. Reads DB/migrate/redis/opa/rbac (NO kafka). Listed in
     # deploy/services.yaml but was previously missing from this chart list.
