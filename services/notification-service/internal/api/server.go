@@ -66,6 +66,15 @@ func (s *Server) Router() http.Handler {
 	// payload (allowlisted per provider, BR-13), not by a Datacern JWT.
 	r.Post("/api/v1/providers/{provider}/status", s.handleProviderStatus)
 
+	// Synthetic-fault endpoint for observability alerting drills ONLY (see
+	// deploy/observability/drill.sh + handleChaosError doc comment). Not under
+	// the JWT-authed /api/v1 group -- like the other /internal/* routes in this
+	// codebase (case-service, chart-service handleToolFacade), the caller here
+	// is a local drill script, not a human JWT. 404s unless
+	// CHAOS_ENDPOINTS_ENABLED=true is set on this process; never enable in a
+	// real environment.
+	r.Post("/internal/chaos/error", s.handleChaosError)
+
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Use(s.Verifier.Middleware(func(w http.ResponseWriter, req *http.Request, _ error) {
 			writeErrUnauth(w, req)
