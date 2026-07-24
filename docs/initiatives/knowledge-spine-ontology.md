@@ -1,6 +1,6 @@
 # The Knowledge Spine — operationalizing DataCern's ontology
 
-**Status:** analysis + design — 2026-07-23
+**Status:** analysis + design done · Increment 1 (WS1) built + unit-verified — 2026-07-23
 **Commits:** `<pending>`  ·  **Related:** [BRD 56](../brd/56_entity_resolution_BRD.md) (entity resolution), semantic-service (semantic models), dataset-service ontology (inc11), [BRD 57](../brd/57_standards_interop_BRD.md) (standards), memories `project_windrose_ontology`, `project_windrose_pack_blueprint`
 **Source of inspiration:** B. Ciric, "The Knowledge Spine: Why Your Ontology Needs to Grow a Backbone" (LinkedIn, 2025).
 
@@ -150,44 +150,56 @@ capability-only + four-eyes invariants.
 
 ## 3. Implementation & Test
 
-### Increment 1 (WS1) — ground agents in the workspace ontology
+### Increment 1 (WS1) — ground agents in the workspace ontology — BUILT
 
 **Design (grounded).** The agent grounding pipeline is `ground → reason →
-propose` (`app/graphs/triage.py`, `persona_copilot.py`). `GraphDeps` already
-carries `workspace_id` and `obo_token` (`app/graphs/base.py:41,74`), and the
+propose` (`app/graphs/triage.py`, `persona_copilot.py`). `GraphDeps` carries
+`obo_token` (`app/graphs/base.py:41`) and an existing `dataset_reader`
+(`DatasetServiceClient`, wired to `settings.dataset_service_url`); the workspace
+comes from the **case row**, which carries `workspace_id`
+(`case-service/internal/domain/types.go`), read in the `ground` node. The
 ontology list endpoint filters by workspace and is gated by `dataset.ontology.read`
 (`services/dataset-service/app/api/routes/ontology.py:43-49`,
-`GET /api/v1/ontology/entities?filter[workspace_id]=<ws>`). So the workspace's
-governed type graph can be fetched and injected with no new links required — the
+`GET /api/v1/ontology/entities?filter[workspace_id]=<ws>`). So the type graph is
+fetched and injected with **no new `GraphDeps` field and no new links** — the
 cleanest first slice.
 
-**Build:**
-1. New adapter `app/adapters/ontology.py` — `OntologyReader.list_types(tenant_id,
-   workspace_id, auth_token)` → `GET /api/v1/ontology/entities?filter[workspace_id]=`.
-   Best-effort: on error, record a `trace` event and continue (mirrors the
-   `grounding_degraded` visibility pattern in `triage.py:82-90`); absence of an
-   ontology is normal, not a degradation, and must **not** force human approval.
-2. Wire into the `ground` node of `triage.py` and `persona_copilot.py`: resolve
-   `ws = deps.workspace_id or state["case"].get("workspace_id")`; fetch types;
-   store `state["ontology_types"]`.
-3. `_format_ontology(types)` helper: render a **bounded** governed-domain-model
-   block (cap types/attributes to keep prompt size sane) into the `reason`
-   prompt — types, attribute names + descriptions/enums, typed relationships —
-   labelled as governed, authoritative domain context.
-4. RBAC wiring: the agent's OBO principal must hold `dataset.ontology.read`.
-   Verify the agent-serving personas carry it; if not, grant it in the rbac seed
-   (`services/rbac-service/seed/roles_actions.yaml`). **This is a required step,
-   not an assumption — confirm before asserting done.**
+**Built (this increment):**
+1. `DatasetServiceClient.list_ontology_types(tenant_id, workspace_id, auth_token)`
+   (`app/adapters/dataset.py`) → the workspace ontology; fail-soft (returns `[]`
+   on any error/authz denial, logs WARN — mirrors the adapter's existing
+   `list_datasets`/`get_schema` pattern). Reuses the existing `dataset_reader`;
+   no new adapter/dep.
+2. `_fetch_ontology(deps, state)` + `_format_ontology(types)` in `triage.py`
+   (shared, imported by `persona_copilot.py` — same convention as the evidence
+   helpers). `_fetch_ontology` resolves `ws = state["case"].get("workspace_id")`,
+   fetches types into `state["ontology_types"]`, records an `ontology_grounded`
+   trace event (or `ontology_grounding_failed` on error — best-effort, never
+   raises, never forces human approval). `_format_ontology` renders a **bounded**
+   governed-domain-model block (≤12 types, ≤20 attrs, ≤12 rels) — trusted
+   metadata, so no XPIA frame.
+3. Wired into the `ground` node of both `triage.py` and `persona_copilot.py`
+   (after `state["case"]` and, in the copilot, after the data-scope refusal so an
+   out-of-scope case never triggers a read); the block is injected into the
+   `reason` prompt ahead of the raw case JSON.
+4. RBAC: `dataset.ontology.read` + `dataset.ontology.list` granted to **Case
+   Analyst** and **Case Manager** in `services/rbac-service/seed/roles_actions.yaml`
+   — the exact roles that already carry `memory.memory.read` for OBO copilot
+   grounding (same precedent + comment). Read-only domain metadata; authoring
+   stays with Use case Admin. (Case Executive runs no copilot grounding, so it
+   was correctly left unchanged.)
 
-**Test:**
-- Unit (agent-runtime): the `ground` node populates `ontology_types` when the
-  reader returns types; the `reason` prompt includes the domain-model block;
-  absent/empty ontology is safe (no block, no degradation); a reader error is
-  surfaced in `trace`, not swallowed.
-- Live (per the verify skill): run a real triage on a pack tenant that ships an
-  ontology (e.g. ap-invoice-audit / a healthcare pack), confirm via the run
-  trace that the governed domain model was injected, and sanity-check that
-  reasoning references domain semantics. No mocks.
+**Verified:**
+- Unit (agent-runtime): `tests/unit/test_ontology_grounding.py` — 6 tests: both
+  triage and copilot inject the governed domain model (types + attribute enums +
+  typed relationships) fetched for the *case's* workspace; a reader error is
+  surfaced in the trace, not swallowed, and the run still produces its governed
+  proposal; no ontology source → unchanged prompt; `_format_ontology`
+  render/empty. Full suite **318 passed**; ruff clean.
+- **Deferred (honest):** live-verify (drive a real triage on a pack tenant and
+  confirm the domain model in the run trace) needs the running agent-runtime
+  reloaded (not started with `--reload`) **and** an rbac re-seed for the new
+  grants to apply. Not run here; the wiring is unit-proven and fail-soft.
 
 **Deliberately out of Increment 1:** per-case entity-TYPE resolution (inject only
 the specific type for the case, not the whole workspace graph) — deferred to WS2
@@ -202,7 +214,10 @@ navigable, contract-enforcing graph with standards export. WS5 makes it
 self-improving. Each is independently shippable and documented as its own
 increment here.
 
-**Honest status:** analysis + design complete and code-grounded; **no code
-written yet.** Increment 1 is specified to be buildable; the RBAC grant for
-`dataset.ontology.read` on agent personas is the one open wiring item to verify
-at build time.
+**Honest status:** analysis + design complete and code-grounded; **Increment 1
+(WS1) is built and unit-verified** (adapter + shared grounding helpers + both
+graphs wired + RBAC grants + 6 tests, full suite 318 green). Its live-verify is
+deferred (needs an agent-runtime reload + rbac re-seed). WS2–WS5 remain design.
+One correction vs the first draft of this doc: `workspace_id` lives on
+`WriteIntent`, not `GraphDeps` — the ground node sources the workspace from the
+case row instead (fixed in the design above).
